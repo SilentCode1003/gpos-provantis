@@ -1,0 +1,8 @@
+{
+  "packages": {
+    "gchron": {
+      "release-type": "dart",
+      "package-name": "gpos_provantis"
+    }
+  }
+}
