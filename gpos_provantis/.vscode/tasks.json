@@ -1,0 +1,45 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1. Initial Build (One-time)",
+      "type": "shell",
+      "command": "dart run build_runner build --delete-conflicting-outputs",
+      "presentation": {
+        "panel": "new",
+        "close": true
+      }
+    },
+    {
+      "label": "2. Run Windows App",
+      "type": "shell",
+      "command": "flutter run -d windows",
+      "dependsOn": "1. Initial Build (One-time)",
+      "isBackground": true,
+      "presentation": {
+        "panel": "new",
+        "group": "fmu-dev"
+      }
+    },
+    {
+      "label": "3. Watch Database Updates",
+      "type": "shell",
+      "command": "dart run build_runner watch --delete-conflicting-outputs",
+      "dependsOn": "1. Initial Build (One-time)",
+      "isBackground": true,
+      "presentation": {
+        "panel": "new",
+        "group": "fmu-dev"
+      }
+    },
+    {
+      "label": "FMU Start: Full Dev Environment",
+      "dependsOn": [
+        "2. Run Windows App",
+        "3. Watch Database Updates"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    }
+  ]
+}
