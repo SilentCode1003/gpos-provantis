@@ -1,6 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'app_routes.dart';
+import 'package:gpos_provantis/src/features/settings/presentation/screens/settings_screen.dart';
+
+import 'package:gpos_provantis/src/features/dashboard/presentation/screens/dashboard_screen.dart';
+
+import 'package:gpos_provantis/src/features/setup/presentation/screens/setup_screen.dart';
+
+import 'package:gpos_provantis/src/features/login/presentation/screens/login_screen.dart';
+
 
 import 'package:gpos_provantis/src/features/employees/presentation/screens/employees_screen.dart';
 
@@ -12,7 +20,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   // final authState = ref.watch(authStateProvider);
 
   return GoRouter(
-    initialLocation: '/employees',
+    initialLocation: '/login',
     debugLogDiagnostics: true, // Great for seeing route changes in the console
     // The redirect callback is your global route guard.
     // redirect: (context, state) {
@@ -38,6 +46,26 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       //   name: AppRoute.home.name,
       //   builder: (context, state) => const HomeScreen(),
       // ),
+          GoRoute(
+        path: '/login',
+        name: AppRoute.login.name,
+        builder: (context, state) => const LoginScreen(),
+      ),
+          GoRoute(
+        path: '/setup',
+        name: AppRoute.setup.name,
+        builder: (context, state) => const SetupScreen(),
+      ),
+          GoRoute(
+        path: '/dashboard',
+        name: AppRoute.dashboard.name,
+        builder: (context, state) => const DashboardScreen(),
+      ),
+          GoRoute(
+        path: '/settings',
+        name: AppRoute.settings.name,
+        builder: (context, state) => const SettingsScreen(),
+      ),
     ],
   );
 });
