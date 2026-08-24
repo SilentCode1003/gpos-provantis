@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import '../app_database.dart';
 // CRITICAL: You must import the specific migration file to use its functions
-import '../migrations/migration_2026_05_13_r1.dart';
+// import '../migrations/migration_2026_08_24.dart';
 
 class SchemaMigrator {
   final AppDatabase db;
@@ -18,7 +18,6 @@ class SchemaMigrator {
   Future<void> _runMigrationForVersion(int version) async {
     switch (version) {
       case 2:
-        // This calls the function imported from migration_2026_05_13_r1.dart
         // await migrateV2(m, db);
         break;
       default:

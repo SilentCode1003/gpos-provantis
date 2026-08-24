@@ -3,12 +3,12 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
-class $EmployeesTableTable extends EmployeesTable
-    with TableInfo<$EmployeesTableTable, EmployeesTableData> {
+class $POSConfigTableTable extends POSConfigTable
+    with TableInfo<$POSConfigTableTable, POSConfigTableData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $EmployeesTableTable(this.attachedDatabase, [this._alias]);
+  $POSConfigTableTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
@@ -17,49 +17,69 @@ class $EmployeesTableTable extends EmployeesTable
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    clientDefault: () => const Uuid().v4(),
+    defaultValue: const Constant('pos_config'),
   );
-  static const VerificationMeta _employeeIdMeta = const VerificationMeta(
-    'employeeId',
+  static const VerificationMeta _posIdMeta = const VerificationMeta('posId');
+  @override
+  late final GeneratedColumn<int> posId = GeneratedColumn<int>(
+    'pos_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _posNameMeta = const VerificationMeta(
+    'posName',
   );
   @override
-  late final GeneratedColumn<String> employeeId = GeneratedColumn<String>(
-    'employee_id',
+  late final GeneratedColumn<String> posName = GeneratedColumn<String>(
+    'pos_name',
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('MAIN_POS'),
   );
-  static const VerificationMeta _fullnameMeta = const VerificationMeta(
-    'fullname',
-  );
+  static const VerificationMeta _serialMeta = const VerificationMeta('serial');
   @override
-  late final GeneratedColumn<String> fullname = GeneratedColumn<String>(
-    'fullname',
+  late final GeneratedColumn<String> serial = GeneratedColumn<String>(
+    'serial',
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
   );
-  static const VerificationMeta _contactNoMeta = const VerificationMeta(
-    'contactNo',
-  );
+  static const VerificationMeta _minMeta = const VerificationMeta('min');
   @override
-  late final GeneratedColumn<String> contactNo = GeneratedColumn<String>(
-    'contact_no',
+  late final GeneratedColumn<String> min = GeneratedColumn<String>(
+    'min',
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
   );
-  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  static const VerificationMeta _ptuMeta = const VerificationMeta('ptu');
   @override
-  late final GeneratedColumn<String> email = GeneratedColumn<String>(
-    'email',
+  late final GeneratedColumn<String> ptu = GeneratedColumn<String>(
+    'ptu',
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('PENDING_SETUP'),
   );
   static const VerificationMeta _createdByMeta = const VerificationMeta(
     'createdBy',
@@ -70,75 +90,599 @@ class $EmployeesTableTable extends EmployeesTable
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _updatedByMeta = const VerificationMeta(
-    'updatedBy',
-  );
-  @override
-  late final GeneratedColumn<String> updatedBy = GeneratedColumn<String>(
-    'updated_by',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  @override
-  late final GeneratedColumnWithTypeConverter<DateTime, String> createdAt =
-      GeneratedColumn<String>(
-        'created_at',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        clientDefault: () => DateTime.now().toUtc().toIso8601String(),
-      ).withConverter<DateTime>($EmployeesTableTable.$convertercreatedAt);
-  @override
-  late final GeneratedColumnWithTypeConverter<DateTime, String> updatedAt =
-      GeneratedColumn<String>(
-        'updated_at',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        clientDefault: () => DateTime.now().toUtc().toIso8601String(),
-      ).withConverter<DateTime>($EmployeesTableTable.$converterupdatedAt);
-  static const VerificationMeta _isActiveMeta = const VerificationMeta(
-    'isActive',
-  );
-  @override
-  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
-    'is_active',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_active" IN (0, 1))',
-    ),
-    defaultValue: const Constant(true),
+    defaultValue: const Constant('SYSTEM_INITIALIZER'),
+  );
+  static const VerificationMeta _createdDateMeta = const VerificationMeta(
+    'createdDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdDate = GeneratedColumn<DateTime>(
+    'created_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    clientDefault: () => DateTime.now(),
   );
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    employeeId,
-    fullname,
-    contactNo,
-    email,
+    posId,
+    posName,
+    serial,
+    min,
+    ptu,
+    status,
     createdBy,
-    updatedBy,
-    createdAt,
-    updatedAt,
-    isActive,
+    createdDate,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'employees_table';
+  static const String $name = 'p_o_s_config_table';
   @override
   VerificationContext validateIntegrity(
-    Insertable<EmployeesTableData> instance, {
+    Insertable<POSConfigTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('pos_id')) {
+      context.handle(
+        _posIdMeta,
+        posId.isAcceptableOrUnknown(data['pos_id']!, _posIdMeta),
+      );
+    }
+    if (data.containsKey('pos_name')) {
+      context.handle(
+        _posNameMeta,
+        posName.isAcceptableOrUnknown(data['pos_name']!, _posNameMeta),
+      );
+    }
+    if (data.containsKey('serial')) {
+      context.handle(
+        _serialMeta,
+        serial.isAcceptableOrUnknown(data['serial']!, _serialMeta),
+      );
+    }
+    if (data.containsKey('min')) {
+      context.handle(
+        _minMeta,
+        min.isAcceptableOrUnknown(data['min']!, _minMeta),
+      );
+    }
+    if (data.containsKey('ptu')) {
+      context.handle(
+        _ptuMeta,
+        ptu.isAcceptableOrUnknown(data['ptu']!, _ptuMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    }
+    if (data.containsKey('created_date')) {
+      context.handle(
+        _createdDateMeta,
+        createdDate.isAcceptableOrUnknown(
+          data['created_date']!,
+          _createdDateMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  POSConfigTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return POSConfigTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      posId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pos_id'],
+      )!,
+      posName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pos_name'],
+      )!,
+      serial: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}serial'],
+      )!,
+      min: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}min'],
+      )!,
+      ptu: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ptu'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      )!,
+      createdDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_date'],
+      )!,
+    );
+  }
+
+  @override
+  $POSConfigTableTable createAlias(String alias) {
+    return $POSConfigTableTable(attachedDatabase, alias);
+  }
+}
+
+class POSConfigTableData extends DataClass
+    implements Insertable<POSConfigTableData> {
+  final String id;
+  final int posId;
+  final String posName;
+  final String serial;
+  final String min;
+  final String ptu;
+  final String status;
+  final String createdBy;
+  final DateTime createdDate;
+  const POSConfigTableData({
+    required this.id,
+    required this.posId,
+    required this.posName,
+    required this.serial,
+    required this.min,
+    required this.ptu,
+    required this.status,
+    required this.createdBy,
+    required this.createdDate,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['pos_id'] = Variable<int>(posId);
+    map['pos_name'] = Variable<String>(posName);
+    map['serial'] = Variable<String>(serial);
+    map['min'] = Variable<String>(min);
+    map['ptu'] = Variable<String>(ptu);
+    map['status'] = Variable<String>(status);
+    map['created_by'] = Variable<String>(createdBy);
+    map['created_date'] = Variable<DateTime>(createdDate);
+    return map;
+  }
+
+  POSConfigTableCompanion toCompanion(bool nullToAbsent) {
+    return POSConfigTableCompanion(
+      id: Value(id),
+      posId: Value(posId),
+      posName: Value(posName),
+      serial: Value(serial),
+      min: Value(min),
+      ptu: Value(ptu),
+      status: Value(status),
+      createdBy: Value(createdBy),
+      createdDate: Value(createdDate),
+    );
+  }
+
+  factory POSConfigTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return POSConfigTableData(
+      id: serializer.fromJson<String>(json['id']),
+      posId: serializer.fromJson<int>(json['posId']),
+      posName: serializer.fromJson<String>(json['posName']),
+      serial: serializer.fromJson<String>(json['serial']),
+      min: serializer.fromJson<String>(json['min']),
+      ptu: serializer.fromJson<String>(json['ptu']),
+      status: serializer.fromJson<String>(json['status']),
+      createdBy: serializer.fromJson<String>(json['createdBy']),
+      createdDate: serializer.fromJson<DateTime>(json['createdDate']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'posId': serializer.toJson<int>(posId),
+      'posName': serializer.toJson<String>(posName),
+      'serial': serializer.toJson<String>(serial),
+      'min': serializer.toJson<String>(min),
+      'ptu': serializer.toJson<String>(ptu),
+      'status': serializer.toJson<String>(status),
+      'createdBy': serializer.toJson<String>(createdBy),
+      'createdDate': serializer.toJson<DateTime>(createdDate),
+    };
+  }
+
+  POSConfigTableData copyWith({
+    String? id,
+    int? posId,
+    String? posName,
+    String? serial,
+    String? min,
+    String? ptu,
+    String? status,
+    String? createdBy,
+    DateTime? createdDate,
+  }) => POSConfigTableData(
+    id: id ?? this.id,
+    posId: posId ?? this.posId,
+    posName: posName ?? this.posName,
+    serial: serial ?? this.serial,
+    min: min ?? this.min,
+    ptu: ptu ?? this.ptu,
+    status: status ?? this.status,
+    createdBy: createdBy ?? this.createdBy,
+    createdDate: createdDate ?? this.createdDate,
+  );
+  POSConfigTableData copyWithCompanion(POSConfigTableCompanion data) {
+    return POSConfigTableData(
+      id: data.id.present ? data.id.value : this.id,
+      posId: data.posId.present ? data.posId.value : this.posId,
+      posName: data.posName.present ? data.posName.value : this.posName,
+      serial: data.serial.present ? data.serial.value : this.serial,
+      min: data.min.present ? data.min.value : this.min,
+      ptu: data.ptu.present ? data.ptu.value : this.ptu,
+      status: data.status.present ? data.status.value : this.status,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      createdDate: data.createdDate.present
+          ? data.createdDate.value
+          : this.createdDate,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('POSConfigTableData(')
+          ..write('id: $id, ')
+          ..write('posId: $posId, ')
+          ..write('posName: $posName, ')
+          ..write('serial: $serial, ')
+          ..write('min: $min, ')
+          ..write('ptu: $ptu, ')
+          ..write('status: $status, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdDate: $createdDate')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    posId,
+    posName,
+    serial,
+    min,
+    ptu,
+    status,
+    createdBy,
+    createdDate,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is POSConfigTableData &&
+          other.id == this.id &&
+          other.posId == this.posId &&
+          other.posName == this.posName &&
+          other.serial == this.serial &&
+          other.min == this.min &&
+          other.ptu == this.ptu &&
+          other.status == this.status &&
+          other.createdBy == this.createdBy &&
+          other.createdDate == this.createdDate);
+}
+
+class POSConfigTableCompanion extends UpdateCompanion<POSConfigTableData> {
+  final Value<String> id;
+  final Value<int> posId;
+  final Value<String> posName;
+  final Value<String> serial;
+  final Value<String> min;
+  final Value<String> ptu;
+  final Value<String> status;
+  final Value<String> createdBy;
+  final Value<DateTime> createdDate;
+  final Value<int> rowid;
+  const POSConfigTableCompanion({
+    this.id = const Value.absent(),
+    this.posId = const Value.absent(),
+    this.posName = const Value.absent(),
+    this.serial = const Value.absent(),
+    this.min = const Value.absent(),
+    this.ptu = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdDate = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  POSConfigTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.posId = const Value.absent(),
+    this.posName = const Value.absent(),
+    this.serial = const Value.absent(),
+    this.min = const Value.absent(),
+    this.ptu = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdDate = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  static Insertable<POSConfigTableData> custom({
+    Expression<String>? id,
+    Expression<int>? posId,
+    Expression<String>? posName,
+    Expression<String>? serial,
+    Expression<String>? min,
+    Expression<String>? ptu,
+    Expression<String>? status,
+    Expression<String>? createdBy,
+    Expression<DateTime>? createdDate,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (posId != null) 'pos_id': posId,
+      if (posName != null) 'pos_name': posName,
+      if (serial != null) 'serial': serial,
+      if (min != null) 'min': min,
+      if (ptu != null) 'ptu': ptu,
+      if (status != null) 'status': status,
+      if (createdBy != null) 'created_by': createdBy,
+      if (createdDate != null) 'created_date': createdDate,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  POSConfigTableCompanion copyWith({
+    Value<String>? id,
+    Value<int>? posId,
+    Value<String>? posName,
+    Value<String>? serial,
+    Value<String>? min,
+    Value<String>? ptu,
+    Value<String>? status,
+    Value<String>? createdBy,
+    Value<DateTime>? createdDate,
+    Value<int>? rowid,
+  }) {
+    return POSConfigTableCompanion(
+      id: id ?? this.id,
+      posId: posId ?? this.posId,
+      posName: posName ?? this.posName,
+      serial: serial ?? this.serial,
+      min: min ?? this.min,
+      ptu: ptu ?? this.ptu,
+      status: status ?? this.status,
+      createdBy: createdBy ?? this.createdBy,
+      createdDate: createdDate ?? this.createdDate,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (posId.present) {
+      map['pos_id'] = Variable<int>(posId.value);
+    }
+    if (posName.present) {
+      map['pos_name'] = Variable<String>(posName.value);
+    }
+    if (serial.present) {
+      map['serial'] = Variable<String>(serial.value);
+    }
+    if (min.present) {
+      map['min'] = Variable<String>(min.value);
+    }
+    if (ptu.present) {
+      map['ptu'] = Variable<String>(ptu.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (createdDate.present) {
+      map['created_date'] = Variable<DateTime>(createdDate.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('POSConfigTableCompanion(')
+          ..write('id: $id, ')
+          ..write('posId: $posId, ')
+          ..write('posName: $posName, ')
+          ..write('serial: $serial, ')
+          ..write('min: $min, ')
+          ..write('ptu: $ptu, ')
+          ..write('status: $status, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdDate: $createdDate, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserDataTableTable extends UserDataTable
+    with TableInfo<$UserDataTableTable, UserDataTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserDataTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('INVALID USER'),
+  );
+  static const VerificationMeta _employeeIdMeta = const VerificationMeta(
+    'employeeId',
+  );
+  @override
+  late final GeneratedColumn<String> employeeId = GeneratedColumn<String>(
+    'employee_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('INVALID USER'),
+  );
+  static const VerificationMeta _fullNameMeta = const VerificationMeta(
+    'fullName',
+  );
+  @override
+  late final GeneratedColumn<String> fullName = GeneratedColumn<String>(
+    'full_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('INVALID USER'),
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _contactInfoMeta = const VerificationMeta(
+    'contactInfo',
+  );
+  @override
+  late final GeneratedColumn<String> contactInfo = GeneratedColumn<String>(
+    'contact_info',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('INVALID USER'),
+  );
+  static const VerificationMeta _dateHiredMeta = const VerificationMeta(
+    'dateHired',
+  );
+  @override
+  late final GeneratedColumn<String> dateHired = GeneratedColumn<String>(
+    'date_hired',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('INVALID USER'),
+  );
+  static const VerificationMeta _userCodeMeta = const VerificationMeta(
+    'userCode',
+  );
+  @override
+  late final GeneratedColumn<int> userCode = GeneratedColumn<int>(
+    'user_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _accessTypeMeta = const VerificationMeta(
+    'accessType',
+  );
+  @override
+  late final GeneratedColumn<int> accessType = GeneratedColumn<int>(
+    'access_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('INVALID USER'),
+  );
+  static const VerificationMeta _apkMeta = const VerificationMeta('apk');
+  @override
+  late final GeneratedColumn<String> apk = GeneratedColumn<String>(
+    'apk',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('INVALID USER'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    employeeId,
+    fullName,
+    position,
+    contactInfo,
+    dateHired,
+    userCode,
+    accessType,
+    status,
+    apk,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_data_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserDataTableData> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -151,53 +695,56 @@ class $EmployeesTableTable extends EmployeesTable
         _employeeIdMeta,
         employeeId.isAcceptableOrUnknown(data['employee_id']!, _employeeIdMeta),
       );
-    } else if (isInserting) {
-      context.missing(_employeeIdMeta);
     }
-    if (data.containsKey('fullname')) {
+    if (data.containsKey('full_name')) {
       context.handle(
-        _fullnameMeta,
-        fullname.isAcceptableOrUnknown(data['fullname']!, _fullnameMeta),
+        _fullNameMeta,
+        fullName.isAcceptableOrUnknown(data['full_name']!, _fullNameMeta),
       );
-    } else if (isInserting) {
-      context.missing(_fullnameMeta);
     }
-    if (data.containsKey('contact_no')) {
+    if (data.containsKey('position')) {
       context.handle(
-        _contactNoMeta,
-        contactNo.isAcceptableOrUnknown(data['contact_no']!, _contactNoMeta),
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
       );
-    } else if (isInserting) {
-      context.missing(_contactNoMeta);
     }
-    if (data.containsKey('email')) {
+    if (data.containsKey('contact_info')) {
       context.handle(
-        _emailMeta,
-        email.isAcceptableOrUnknown(data['email']!, _emailMeta),
+        _contactInfoMeta,
+        contactInfo.isAcceptableOrUnknown(
+          data['contact_info']!,
+          _contactInfoMeta,
+        ),
       );
-    } else if (isInserting) {
-      context.missing(_emailMeta);
     }
-    if (data.containsKey('created_by')) {
+    if (data.containsKey('date_hired')) {
       context.handle(
-        _createdByMeta,
-        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+        _dateHiredMeta,
+        dateHired.isAcceptableOrUnknown(data['date_hired']!, _dateHiredMeta),
       );
-    } else if (isInserting) {
-      context.missing(_createdByMeta);
     }
-    if (data.containsKey('updated_by')) {
+    if (data.containsKey('user_code')) {
       context.handle(
-        _updatedByMeta,
-        updatedBy.isAcceptableOrUnknown(data['updated_by']!, _updatedByMeta),
+        _userCodeMeta,
+        userCode.isAcceptableOrUnknown(data['user_code']!, _userCodeMeta),
       );
-    } else if (isInserting) {
-      context.missing(_updatedByMeta);
     }
-    if (data.containsKey('is_active')) {
+    if (data.containsKey('access_type')) {
       context.handle(
-        _isActiveMeta,
-        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+        _accessTypeMeta,
+        accessType.isAcceptableOrUnknown(data['access_type']!, _accessTypeMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('apk')) {
+      context.handle(
+        _apkMeta,
+        apk.isAcceptableOrUnknown(data['apk']!, _apkMeta),
       );
     }
     return context;
@@ -206,9 +753,9 @@ class $EmployeesTableTable extends EmployeesTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  EmployeesTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  UserDataTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return EmployeesTableData(
+    return UserDataTableData(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -217,135 +764,118 @@ class $EmployeesTableTable extends EmployeesTable
         DriftSqlType.string,
         data['${effectivePrefix}employee_id'],
       )!,
-      fullname: attachedDatabase.typeMapping.read(
+      fullName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}fullname'],
+        data['${effectivePrefix}full_name'],
       )!,
-      contactNo: attachedDatabase.typeMapping.read(
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+      contactInfo: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}contact_no'],
+        data['${effectivePrefix}contact_info'],
       )!,
-      email: attachedDatabase.typeMapping.read(
+      dateHired: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}email'],
+        data['${effectivePrefix}date_hired'],
       )!,
-      createdBy: attachedDatabase.typeMapping.read(
+      userCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}user_code'],
+      )!,
+      accessType: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}access_type'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}created_by'],
+        data['${effectivePrefix}status'],
       )!,
-      updatedBy: attachedDatabase.typeMapping.read(
+      apk: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}updated_by'],
-      )!,
-      createdAt: $EmployeesTableTable.$convertercreatedAt.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}created_at'],
-        )!,
-      ),
-      updatedAt: $EmployeesTableTable.$converterupdatedAt.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}updated_at'],
-        )!,
-      ),
-      isActive: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}is_active'],
+        data['${effectivePrefix}apk'],
       )!,
     );
   }
 
   @override
-  $EmployeesTableTable createAlias(String alias) {
-    return $EmployeesTableTable(attachedDatabase, alias);
+  $UserDataTableTable createAlias(String alias) {
+    return $UserDataTableTable(attachedDatabase, alias);
   }
-
-  static TypeConverter<DateTime, String> $convertercreatedAt =
-      const IsoDateTimeConverter();
-  static TypeConverter<DateTime, String> $converterupdatedAt =
-      const IsoDateTimeConverter();
 }
 
-class EmployeesTableData extends DataClass
-    implements Insertable<EmployeesTableData> {
+class UserDataTableData extends DataClass
+    implements Insertable<UserDataTableData> {
   final String id;
   final String employeeId;
-  final String fullname;
-  final String contactNo;
-  final String email;
-  final String createdBy;
-  final String updatedBy;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final bool isActive;
-  const EmployeesTableData({
+  final String fullName;
+  final int position;
+  final String contactInfo;
+  final String dateHired;
+  final int userCode;
+  final int accessType;
+  final String status;
+  final String apk;
+  const UserDataTableData({
     required this.id,
     required this.employeeId,
-    required this.fullname,
-    required this.contactNo,
-    required this.email,
-    required this.createdBy,
-    required this.updatedBy,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.isActive,
+    required this.fullName,
+    required this.position,
+    required this.contactInfo,
+    required this.dateHired,
+    required this.userCode,
+    required this.accessType,
+    required this.status,
+    required this.apk,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['employee_id'] = Variable<String>(employeeId);
-    map['fullname'] = Variable<String>(fullname);
-    map['contact_no'] = Variable<String>(contactNo);
-    map['email'] = Variable<String>(email);
-    map['created_by'] = Variable<String>(createdBy);
-    map['updated_by'] = Variable<String>(updatedBy);
-    {
-      map['created_at'] = Variable<String>(
-        $EmployeesTableTable.$convertercreatedAt.toSql(createdAt),
-      );
-    }
-    {
-      map['updated_at'] = Variable<String>(
-        $EmployeesTableTable.$converterupdatedAt.toSql(updatedAt),
-      );
-    }
-    map['is_active'] = Variable<bool>(isActive);
+    map['full_name'] = Variable<String>(fullName);
+    map['position'] = Variable<int>(position);
+    map['contact_info'] = Variable<String>(contactInfo);
+    map['date_hired'] = Variable<String>(dateHired);
+    map['user_code'] = Variable<int>(userCode);
+    map['access_type'] = Variable<int>(accessType);
+    map['status'] = Variable<String>(status);
+    map['apk'] = Variable<String>(apk);
     return map;
   }
 
-  EmployeesTableCompanion toCompanion(bool nullToAbsent) {
-    return EmployeesTableCompanion(
+  UserDataTableCompanion toCompanion(bool nullToAbsent) {
+    return UserDataTableCompanion(
       id: Value(id),
       employeeId: Value(employeeId),
-      fullname: Value(fullname),
-      contactNo: Value(contactNo),
-      email: Value(email),
-      createdBy: Value(createdBy),
-      updatedBy: Value(updatedBy),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
-      isActive: Value(isActive),
+      fullName: Value(fullName),
+      position: Value(position),
+      contactInfo: Value(contactInfo),
+      dateHired: Value(dateHired),
+      userCode: Value(userCode),
+      accessType: Value(accessType),
+      status: Value(status),
+      apk: Value(apk),
     );
   }
 
-  factory EmployeesTableData.fromJson(
+  factory UserDataTableData.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return EmployeesTableData(
+    return UserDataTableData(
       id: serializer.fromJson<String>(json['id']),
       employeeId: serializer.fromJson<String>(json['employeeId']),
-      fullname: serializer.fromJson<String>(json['fullname']),
-      contactNo: serializer.fromJson<String>(json['contactNo']),
-      email: serializer.fromJson<String>(json['email']),
-      createdBy: serializer.fromJson<String>(json['createdBy']),
-      updatedBy: serializer.fromJson<String>(json['updatedBy']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      isActive: serializer.fromJson<bool>(json['isActive']),
+      fullName: serializer.fromJson<String>(json['fullName']),
+      position: serializer.fromJson<int>(json['position']),
+      contactInfo: serializer.fromJson<String>(json['contactInfo']),
+      dateHired: serializer.fromJson<String>(json['dateHired']),
+      userCode: serializer.fromJson<int>(json['userCode']),
+      accessType: serializer.fromJson<int>(json['accessType']),
+      status: serializer.fromJson<String>(json['status']),
+      apk: serializer.fromJson<String>(json['apk']),
     );
   }
   @override
@@ -354,70 +884,74 @@ class EmployeesTableData extends DataClass
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'employeeId': serializer.toJson<String>(employeeId),
-      'fullname': serializer.toJson<String>(fullname),
-      'contactNo': serializer.toJson<String>(contactNo),
-      'email': serializer.toJson<String>(email),
-      'createdBy': serializer.toJson<String>(createdBy),
-      'updatedBy': serializer.toJson<String>(updatedBy),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'isActive': serializer.toJson<bool>(isActive),
+      'fullName': serializer.toJson<String>(fullName),
+      'position': serializer.toJson<int>(position),
+      'contactInfo': serializer.toJson<String>(contactInfo),
+      'dateHired': serializer.toJson<String>(dateHired),
+      'userCode': serializer.toJson<int>(userCode),
+      'accessType': serializer.toJson<int>(accessType),
+      'status': serializer.toJson<String>(status),
+      'apk': serializer.toJson<String>(apk),
     };
   }
 
-  EmployeesTableData copyWith({
+  UserDataTableData copyWith({
     String? id,
     String? employeeId,
-    String? fullname,
-    String? contactNo,
-    String? email,
-    String? createdBy,
-    String? updatedBy,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    bool? isActive,
-  }) => EmployeesTableData(
+    String? fullName,
+    int? position,
+    String? contactInfo,
+    String? dateHired,
+    int? userCode,
+    int? accessType,
+    String? status,
+    String? apk,
+  }) => UserDataTableData(
     id: id ?? this.id,
     employeeId: employeeId ?? this.employeeId,
-    fullname: fullname ?? this.fullname,
-    contactNo: contactNo ?? this.contactNo,
-    email: email ?? this.email,
-    createdBy: createdBy ?? this.createdBy,
-    updatedBy: updatedBy ?? this.updatedBy,
-    createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
-    isActive: isActive ?? this.isActive,
+    fullName: fullName ?? this.fullName,
+    position: position ?? this.position,
+    contactInfo: contactInfo ?? this.contactInfo,
+    dateHired: dateHired ?? this.dateHired,
+    userCode: userCode ?? this.userCode,
+    accessType: accessType ?? this.accessType,
+    status: status ?? this.status,
+    apk: apk ?? this.apk,
   );
-  EmployeesTableData copyWithCompanion(EmployeesTableCompanion data) {
-    return EmployeesTableData(
+  UserDataTableData copyWithCompanion(UserDataTableCompanion data) {
+    return UserDataTableData(
       id: data.id.present ? data.id.value : this.id,
       employeeId: data.employeeId.present
           ? data.employeeId.value
           : this.employeeId,
-      fullname: data.fullname.present ? data.fullname.value : this.fullname,
-      contactNo: data.contactNo.present ? data.contactNo.value : this.contactNo,
-      email: data.email.present ? data.email.value : this.email,
-      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
-      updatedBy: data.updatedBy.present ? data.updatedBy.value : this.updatedBy,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      fullName: data.fullName.present ? data.fullName.value : this.fullName,
+      position: data.position.present ? data.position.value : this.position,
+      contactInfo: data.contactInfo.present
+          ? data.contactInfo.value
+          : this.contactInfo,
+      dateHired: data.dateHired.present ? data.dateHired.value : this.dateHired,
+      userCode: data.userCode.present ? data.userCode.value : this.userCode,
+      accessType: data.accessType.present
+          ? data.accessType.value
+          : this.accessType,
+      status: data.status.present ? data.status.value : this.status,
+      apk: data.apk.present ? data.apk.value : this.apk,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('EmployeesTableData(')
+    return (StringBuffer('UserDataTableData(')
           ..write('id: $id, ')
           ..write('employeeId: $employeeId, ')
-          ..write('fullname: $fullname, ')
-          ..write('contactNo: $contactNo, ')
-          ..write('email: $email, ')
-          ..write('createdBy: $createdBy, ')
-          ..write('updatedBy: $updatedBy, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('isActive: $isActive')
+          ..write('fullName: $fullName, ')
+          ..write('position: $position, ')
+          ..write('contactInfo: $contactInfo, ')
+          ..write('dateHired: $dateHired, ')
+          ..write('userCode: $userCode, ')
+          ..write('accessType: $accessType, ')
+          ..write('status: $status, ')
+          ..write('apk: $apk')
           ..write(')'))
         .toString();
   }
@@ -426,126 +960,121 @@ class EmployeesTableData extends DataClass
   int get hashCode => Object.hash(
     id,
     employeeId,
-    fullname,
-    contactNo,
-    email,
-    createdBy,
-    updatedBy,
-    createdAt,
-    updatedAt,
-    isActive,
+    fullName,
+    position,
+    contactInfo,
+    dateHired,
+    userCode,
+    accessType,
+    status,
+    apk,
   );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is EmployeesTableData &&
+      (other is UserDataTableData &&
           other.id == this.id &&
           other.employeeId == this.employeeId &&
-          other.fullname == this.fullname &&
-          other.contactNo == this.contactNo &&
-          other.email == this.email &&
-          other.createdBy == this.createdBy &&
-          other.updatedBy == this.updatedBy &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt &&
-          other.isActive == this.isActive);
+          other.fullName == this.fullName &&
+          other.position == this.position &&
+          other.contactInfo == this.contactInfo &&
+          other.dateHired == this.dateHired &&
+          other.userCode == this.userCode &&
+          other.accessType == this.accessType &&
+          other.status == this.status &&
+          other.apk == this.apk);
 }
 
-class EmployeesTableCompanion extends UpdateCompanion<EmployeesTableData> {
+class UserDataTableCompanion extends UpdateCompanion<UserDataTableData> {
   final Value<String> id;
   final Value<String> employeeId;
-  final Value<String> fullname;
-  final Value<String> contactNo;
-  final Value<String> email;
-  final Value<String> createdBy;
-  final Value<String> updatedBy;
-  final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
-  final Value<bool> isActive;
+  final Value<String> fullName;
+  final Value<int> position;
+  final Value<String> contactInfo;
+  final Value<String> dateHired;
+  final Value<int> userCode;
+  final Value<int> accessType;
+  final Value<String> status;
+  final Value<String> apk;
   final Value<int> rowid;
-  const EmployeesTableCompanion({
+  const UserDataTableCompanion({
     this.id = const Value.absent(),
     this.employeeId = const Value.absent(),
-    this.fullname = const Value.absent(),
-    this.contactNo = const Value.absent(),
-    this.email = const Value.absent(),
-    this.createdBy = const Value.absent(),
-    this.updatedBy = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.isActive = const Value.absent(),
+    this.fullName = const Value.absent(),
+    this.position = const Value.absent(),
+    this.contactInfo = const Value.absent(),
+    this.dateHired = const Value.absent(),
+    this.userCode = const Value.absent(),
+    this.accessType = const Value.absent(),
+    this.status = const Value.absent(),
+    this.apk = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  EmployeesTableCompanion.insert({
+  UserDataTableCompanion.insert({
     this.id = const Value.absent(),
-    required String employeeId,
-    required String fullname,
-    required String contactNo,
-    required String email,
-    required String createdBy,
-    required String updatedBy,
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.isActive = const Value.absent(),
+    this.employeeId = const Value.absent(),
+    this.fullName = const Value.absent(),
+    this.position = const Value.absent(),
+    this.contactInfo = const Value.absent(),
+    this.dateHired = const Value.absent(),
+    this.userCode = const Value.absent(),
+    this.accessType = const Value.absent(),
+    this.status = const Value.absent(),
+    this.apk = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : employeeId = Value(employeeId),
-       fullname = Value(fullname),
-       contactNo = Value(contactNo),
-       email = Value(email),
-       createdBy = Value(createdBy),
-       updatedBy = Value(updatedBy);
-  static Insertable<EmployeesTableData> custom({
+  });
+  static Insertable<UserDataTableData> custom({
     Expression<String>? id,
     Expression<String>? employeeId,
-    Expression<String>? fullname,
-    Expression<String>? contactNo,
-    Expression<String>? email,
-    Expression<String>? createdBy,
-    Expression<String>? updatedBy,
-    Expression<String>? createdAt,
-    Expression<String>? updatedAt,
-    Expression<bool>? isActive,
+    Expression<String>? fullName,
+    Expression<int>? position,
+    Expression<String>? contactInfo,
+    Expression<String>? dateHired,
+    Expression<int>? userCode,
+    Expression<int>? accessType,
+    Expression<String>? status,
+    Expression<String>? apk,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (employeeId != null) 'employee_id': employeeId,
-      if (fullname != null) 'fullname': fullname,
-      if (contactNo != null) 'contact_no': contactNo,
-      if (email != null) 'email': email,
-      if (createdBy != null) 'created_by': createdBy,
-      if (updatedBy != null) 'updated_by': updatedBy,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (isActive != null) 'is_active': isActive,
+      if (fullName != null) 'full_name': fullName,
+      if (position != null) 'position': position,
+      if (contactInfo != null) 'contact_info': contactInfo,
+      if (dateHired != null) 'date_hired': dateHired,
+      if (userCode != null) 'user_code': userCode,
+      if (accessType != null) 'access_type': accessType,
+      if (status != null) 'status': status,
+      if (apk != null) 'apk': apk,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
-  EmployeesTableCompanion copyWith({
+  UserDataTableCompanion copyWith({
     Value<String>? id,
     Value<String>? employeeId,
-    Value<String>? fullname,
-    Value<String>? contactNo,
-    Value<String>? email,
-    Value<String>? createdBy,
-    Value<String>? updatedBy,
-    Value<DateTime>? createdAt,
-    Value<DateTime>? updatedAt,
-    Value<bool>? isActive,
+    Value<String>? fullName,
+    Value<int>? position,
+    Value<String>? contactInfo,
+    Value<String>? dateHired,
+    Value<int>? userCode,
+    Value<int>? accessType,
+    Value<String>? status,
+    Value<String>? apk,
     Value<int>? rowid,
   }) {
-    return EmployeesTableCompanion(
+    return UserDataTableCompanion(
       id: id ?? this.id,
       employeeId: employeeId ?? this.employeeId,
-      fullname: fullname ?? this.fullname,
-      contactNo: contactNo ?? this.contactNo,
-      email: email ?? this.email,
-      createdBy: createdBy ?? this.createdBy,
-      updatedBy: updatedBy ?? this.updatedBy,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      isActive: isActive ?? this.isActive,
+      fullName: fullName ?? this.fullName,
+      position: position ?? this.position,
+      contactInfo: contactInfo ?? this.contactInfo,
+      dateHired: dateHired ?? this.dateHired,
+      userCode: userCode ?? this.userCode,
+      accessType: accessType ?? this.accessType,
+      status: status ?? this.status,
+      apk: apk ?? this.apk,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -559,33 +1088,29 @@ class EmployeesTableCompanion extends UpdateCompanion<EmployeesTableData> {
     if (employeeId.present) {
       map['employee_id'] = Variable<String>(employeeId.value);
     }
-    if (fullname.present) {
-      map['fullname'] = Variable<String>(fullname.value);
+    if (fullName.present) {
+      map['full_name'] = Variable<String>(fullName.value);
     }
-    if (contactNo.present) {
-      map['contact_no'] = Variable<String>(contactNo.value);
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
     }
-    if (email.present) {
-      map['email'] = Variable<String>(email.value);
+    if (contactInfo.present) {
+      map['contact_info'] = Variable<String>(contactInfo.value);
     }
-    if (createdBy.present) {
-      map['created_by'] = Variable<String>(createdBy.value);
+    if (dateHired.present) {
+      map['date_hired'] = Variable<String>(dateHired.value);
     }
-    if (updatedBy.present) {
-      map['updated_by'] = Variable<String>(updatedBy.value);
+    if (userCode.present) {
+      map['user_code'] = Variable<int>(userCode.value);
     }
-    if (createdAt.present) {
-      map['created_at'] = Variable<String>(
-        $EmployeesTableTable.$convertercreatedAt.toSql(createdAt.value),
-      );
+    if (accessType.present) {
+      map['access_type'] = Variable<int>(accessType.value);
     }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<String>(
-        $EmployeesTableTable.$converterupdatedAt.toSql(updatedAt.value),
-      );
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
     }
-    if (isActive.present) {
-      map['is_active'] = Variable<bool>(isActive.value);
+    if (apk.present) {
+      map['apk'] = Variable<String>(apk.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -595,29 +1120,29 @@ class EmployeesTableCompanion extends UpdateCompanion<EmployeesTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('EmployeesTableCompanion(')
+    return (StringBuffer('UserDataTableCompanion(')
           ..write('id: $id, ')
           ..write('employeeId: $employeeId, ')
-          ..write('fullname: $fullname, ')
-          ..write('contactNo: $contactNo, ')
-          ..write('email: $email, ')
-          ..write('createdBy: $createdBy, ')
-          ..write('updatedBy: $updatedBy, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('isActive: $isActive, ')
+          ..write('fullName: $fullName, ')
+          ..write('position: $position, ')
+          ..write('contactInfo: $contactInfo, ')
+          ..write('dateHired: $dateHired, ')
+          ..write('userCode: $userCode, ')
+          ..write('accessType: $accessType, ')
+          ..write('status: $status, ')
+          ..write('apk: $apk, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
 }
 
-class $UsersTableTable extends UsersTable
-    with TableInfo<$UsersTableTable, UsersTableData> {
+class $BranchConfigTableTable extends BranchConfigTable
+    with TableInfo<$BranchConfigTableTable, BranchConfigTableData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $UsersTableTable(this.attachedDatabase, [this._alias]);
+  $BranchConfigTableTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
@@ -626,38 +1151,73 @@ class $UsersTableTable extends UsersTable
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    clientDefault: () => const Uuid().v4(),
+    defaultValue: const Constant('branch_config'),
   );
-  static const VerificationMeta _empIdMeta = const VerificationMeta('empId');
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
   @override
-  late final GeneratedColumn<String> empId = GeneratedColumn<String>(
-    'emp_id',
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
   );
-  static const VerificationMeta _usernameMeta = const VerificationMeta(
-    'username',
+  static const VerificationMeta _branchNameMeta = const VerificationMeta(
+    'branchName',
   );
   @override
-  late final GeneratedColumn<String> username = GeneratedColumn<String>(
-    'username',
+  late final GeneratedColumn<String> branchName = GeneratedColumn<String>(
+    'branch_name',
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
   );
-  static const VerificationMeta _passwordMeta = const VerificationMeta(
-    'password',
-  );
+  static const VerificationMeta _tinMeta = const VerificationMeta('tin');
   @override
-  late final GeneratedColumn<String> password = GeneratedColumn<String>(
-    'password',
+  late final GeneratedColumn<String> tin = GeneratedColumn<String>(
+    'tin',
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _addressMeta = const VerificationMeta(
+    'address',
+  );
+  @override
+  late final GeneratedColumn<String> address = GeneratedColumn<String>(
+    'address',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _logoMeta = const VerificationMeta('logo');
+  @override
+  late final GeneratedColumn<String> logo = GeneratedColumn<String>(
+    'logo',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
   );
   static const VerificationMeta _createdByMeta = const VerificationMeta(
     'createdBy',
@@ -668,74 +1228,41 @@ class $UsersTableTable extends UsersTable
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
   );
-  static const VerificationMeta _updatedByMeta = const VerificationMeta(
-    'updatedBy',
+  static const VerificationMeta _createdDateMeta = const VerificationMeta(
+    'createdDate',
   );
   @override
-  late final GeneratedColumn<String> updatedBy = GeneratedColumn<String>(
-    'updated_by',
+  late final GeneratedColumn<String> createdDate = GeneratedColumn<String>(
+    'created_date',
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  @override
-  late final GeneratedColumnWithTypeConverter<DateTime, String> createdAt =
-      GeneratedColumn<String>(
-        'created_at',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        clientDefault: () => DateTime.now().toUtc().toIso8601String(),
-      ).withConverter<DateTime>($UsersTableTable.$convertercreatedAt);
-  @override
-  late final GeneratedColumnWithTypeConverter<DateTime, String> updatedAt =
-      GeneratedColumn<String>(
-        'updated_at',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        clientDefault: () => DateTime.now().toUtc().toIso8601String(),
-      ).withConverter<DateTime>($UsersTableTable.$converterupdatedAt);
-  static const VerificationMeta _isActiveMeta = const VerificationMeta(
-    'isActive',
-  );
-  @override
-  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
-    'is_active',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_active" IN (0, 1))',
-    ),
-    defaultValue: const Constant(true),
+    defaultValue: const Constant('UNREGISTERED'),
   );
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    empId,
-    username,
-    password,
+    branchId,
+    branchName,
+    tin,
+    address,
+    logo,
+    status,
     createdBy,
-    updatedBy,
-    createdAt,
-    updatedAt,
-    isActive,
+    createdDate,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'users_table';
+  static const String $name = 'branch_config_table';
   @override
   VerificationContext validateIntegrity(
-    Insertable<UsersTableData> instance, {
+    Insertable<BranchConfigTableData> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -743,50 +1270,55 @@ class $UsersTableTable extends UsersTable
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('emp_id')) {
+    if (data.containsKey('branch_id')) {
       context.handle(
-        _empIdMeta,
-        empId.isAcceptableOrUnknown(data['emp_id']!, _empIdMeta),
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
       );
-    } else if (isInserting) {
-      context.missing(_empIdMeta);
     }
-    if (data.containsKey('username')) {
+    if (data.containsKey('branch_name')) {
       context.handle(
-        _usernameMeta,
-        username.isAcceptableOrUnknown(data['username']!, _usernameMeta),
+        _branchNameMeta,
+        branchName.isAcceptableOrUnknown(data['branch_name']!, _branchNameMeta),
       );
-    } else if (isInserting) {
-      context.missing(_usernameMeta);
     }
-    if (data.containsKey('password')) {
+    if (data.containsKey('tin')) {
       context.handle(
-        _passwordMeta,
-        password.isAcceptableOrUnknown(data['password']!, _passwordMeta),
+        _tinMeta,
+        tin.isAcceptableOrUnknown(data['tin']!, _tinMeta),
       );
-    } else if (isInserting) {
-      context.missing(_passwordMeta);
+    }
+    if (data.containsKey('address')) {
+      context.handle(
+        _addressMeta,
+        address.isAcceptableOrUnknown(data['address']!, _addressMeta),
+      );
+    }
+    if (data.containsKey('logo')) {
+      context.handle(
+        _logoMeta,
+        logo.isAcceptableOrUnknown(data['logo']!, _logoMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
     }
     if (data.containsKey('created_by')) {
       context.handle(
         _createdByMeta,
         createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
       );
-    } else if (isInserting) {
-      context.missing(_createdByMeta);
     }
-    if (data.containsKey('updated_by')) {
+    if (data.containsKey('created_date')) {
       context.handle(
-        _updatedByMeta,
-        updatedBy.isAcceptableOrUnknown(data['updated_by']!, _updatedByMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_updatedByMeta);
-    }
-    if (data.containsKey('is_active')) {
-      context.handle(
-        _isActiveMeta,
-        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+        _createdDateMeta,
+        createdDate.isAcceptableOrUnknown(
+          data['created_date']!,
+          _createdDateMeta,
+        ),
       );
     }
     return context;
@@ -795,136 +1327,120 @@ class $UsersTableTable extends UsersTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  UsersTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  BranchConfigTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return UsersTableData(
+    return BranchConfigTableData(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
-      empId: attachedDatabase.typeMapping.read(
+      branchId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}emp_id'],
+        data['${effectivePrefix}branch_id'],
       )!,
-      username: attachedDatabase.typeMapping.read(
+      branchName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}username'],
+        data['${effectivePrefix}branch_name'],
       )!,
-      password: attachedDatabase.typeMapping.read(
+      tin: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}password'],
+        data['${effectivePrefix}tin'],
+      )!,
+      address: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}address'],
+      )!,
+      logo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}logo'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
       )!,
       createdBy: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}created_by'],
       )!,
-      updatedBy: attachedDatabase.typeMapping.read(
+      createdDate: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}updated_by'],
-      )!,
-      createdAt: $UsersTableTable.$convertercreatedAt.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}created_at'],
-        )!,
-      ),
-      updatedAt: $UsersTableTable.$converterupdatedAt.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}updated_at'],
-        )!,
-      ),
-      isActive: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}is_active'],
+        data['${effectivePrefix}created_date'],
       )!,
     );
   }
 
   @override
-  $UsersTableTable createAlias(String alias) {
-    return $UsersTableTable(attachedDatabase, alias);
+  $BranchConfigTableTable createAlias(String alias) {
+    return $BranchConfigTableTable(attachedDatabase, alias);
   }
-
-  static TypeConverter<DateTime, String> $convertercreatedAt =
-      const IsoDateTimeConverter();
-  static TypeConverter<DateTime, String> $converterupdatedAt =
-      const IsoDateTimeConverter();
 }
 
-class UsersTableData extends DataClass implements Insertable<UsersTableData> {
+class BranchConfigTableData extends DataClass
+    implements Insertable<BranchConfigTableData> {
   final String id;
-  final String empId;
-  final String username;
-  final String password;
+  final String branchId;
+  final String branchName;
+  final String tin;
+  final String address;
+  final String logo;
+  final String status;
   final String createdBy;
-  final String updatedBy;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final bool isActive;
-  const UsersTableData({
+  final String createdDate;
+  const BranchConfigTableData({
     required this.id,
-    required this.empId,
-    required this.username,
-    required this.password,
+    required this.branchId,
+    required this.branchName,
+    required this.tin,
+    required this.address,
+    required this.logo,
+    required this.status,
     required this.createdBy,
-    required this.updatedBy,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.isActive,
+    required this.createdDate,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    map['emp_id'] = Variable<String>(empId);
-    map['username'] = Variable<String>(username);
-    map['password'] = Variable<String>(password);
+    map['branch_id'] = Variable<String>(branchId);
+    map['branch_name'] = Variable<String>(branchName);
+    map['tin'] = Variable<String>(tin);
+    map['address'] = Variable<String>(address);
+    map['logo'] = Variable<String>(logo);
+    map['status'] = Variable<String>(status);
     map['created_by'] = Variable<String>(createdBy);
-    map['updated_by'] = Variable<String>(updatedBy);
-    {
-      map['created_at'] = Variable<String>(
-        $UsersTableTable.$convertercreatedAt.toSql(createdAt),
-      );
-    }
-    {
-      map['updated_at'] = Variable<String>(
-        $UsersTableTable.$converterupdatedAt.toSql(updatedAt),
-      );
-    }
-    map['is_active'] = Variable<bool>(isActive);
+    map['created_date'] = Variable<String>(createdDate);
     return map;
   }
 
-  UsersTableCompanion toCompanion(bool nullToAbsent) {
-    return UsersTableCompanion(
+  BranchConfigTableCompanion toCompanion(bool nullToAbsent) {
+    return BranchConfigTableCompanion(
       id: Value(id),
-      empId: Value(empId),
-      username: Value(username),
-      password: Value(password),
+      branchId: Value(branchId),
+      branchName: Value(branchName),
+      tin: Value(tin),
+      address: Value(address),
+      logo: Value(logo),
+      status: Value(status),
       createdBy: Value(createdBy),
-      updatedBy: Value(updatedBy),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
-      isActive: Value(isActive),
+      createdDate: Value(createdDate),
     );
   }
 
-  factory UsersTableData.fromJson(
+  factory BranchConfigTableData.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return UsersTableData(
+    return BranchConfigTableData(
       id: serializer.fromJson<String>(json['id']),
-      empId: serializer.fromJson<String>(json['empId']),
-      username: serializer.fromJson<String>(json['username']),
-      password: serializer.fromJson<String>(json['password']),
+      branchId: serializer.fromJson<String>(json['branchId']),
+      branchName: serializer.fromJson<String>(json['branchName']),
+      tin: serializer.fromJson<String>(json['tin']),
+      address: serializer.fromJson<String>(json['address']),
+      logo: serializer.fromJson<String>(json['logo']),
+      status: serializer.fromJson<String>(json['status']),
       createdBy: serializer.fromJson<String>(json['createdBy']),
-      updatedBy: serializer.fromJson<String>(json['updatedBy']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdDate: serializer.fromJson<String>(json['createdDate']),
     );
   }
   @override
@@ -932,64 +1448,68 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'empId': serializer.toJson<String>(empId),
-      'username': serializer.toJson<String>(username),
-      'password': serializer.toJson<String>(password),
+      'branchId': serializer.toJson<String>(branchId),
+      'branchName': serializer.toJson<String>(branchName),
+      'tin': serializer.toJson<String>(tin),
+      'address': serializer.toJson<String>(address),
+      'logo': serializer.toJson<String>(logo),
+      'status': serializer.toJson<String>(status),
       'createdBy': serializer.toJson<String>(createdBy),
-      'updatedBy': serializer.toJson<String>(updatedBy),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'isActive': serializer.toJson<bool>(isActive),
+      'createdDate': serializer.toJson<String>(createdDate),
     };
   }
 
-  UsersTableData copyWith({
+  BranchConfigTableData copyWith({
     String? id,
-    String? empId,
-    String? username,
-    String? password,
+    String? branchId,
+    String? branchName,
+    String? tin,
+    String? address,
+    String? logo,
+    String? status,
     String? createdBy,
-    String? updatedBy,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    bool? isActive,
-  }) => UsersTableData(
+    String? createdDate,
+  }) => BranchConfigTableData(
     id: id ?? this.id,
-    empId: empId ?? this.empId,
-    username: username ?? this.username,
-    password: password ?? this.password,
+    branchId: branchId ?? this.branchId,
+    branchName: branchName ?? this.branchName,
+    tin: tin ?? this.tin,
+    address: address ?? this.address,
+    logo: logo ?? this.logo,
+    status: status ?? this.status,
     createdBy: createdBy ?? this.createdBy,
-    updatedBy: updatedBy ?? this.updatedBy,
-    createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
-    isActive: isActive ?? this.isActive,
+    createdDate: createdDate ?? this.createdDate,
   );
-  UsersTableData copyWithCompanion(UsersTableCompanion data) {
-    return UsersTableData(
+  BranchConfigTableData copyWithCompanion(BranchConfigTableCompanion data) {
+    return BranchConfigTableData(
       id: data.id.present ? data.id.value : this.id,
-      empId: data.empId.present ? data.empId.value : this.empId,
-      username: data.username.present ? data.username.value : this.username,
-      password: data.password.present ? data.password.value : this.password,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      branchName: data.branchName.present
+          ? data.branchName.value
+          : this.branchName,
+      tin: data.tin.present ? data.tin.value : this.tin,
+      address: data.address.present ? data.address.value : this.address,
+      logo: data.logo.present ? data.logo.value : this.logo,
+      status: data.status.present ? data.status.value : this.status,
       createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
-      updatedBy: data.updatedBy.present ? data.updatedBy.value : this.updatedBy,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdDate: data.createdDate.present
+          ? data.createdDate.value
+          : this.createdDate,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('UsersTableData(')
+    return (StringBuffer('BranchConfigTableData(')
           ..write('id: $id, ')
-          ..write('empId: $empId, ')
-          ..write('username: $username, ')
-          ..write('password: $password, ')
+          ..write('branchId: $branchId, ')
+          ..write('branchName: $branchName, ')
+          ..write('tin: $tin, ')
+          ..write('address: $address, ')
+          ..write('logo: $logo, ')
+          ..write('status: $status, ')
           ..write('createdBy: $createdBy, ')
-          ..write('updatedBy: $updatedBy, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('isActive: $isActive')
+          ..write('createdDate: $createdDate')
           ..write(')'))
         .toString();
   }
@@ -997,117 +1517,114 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
   @override
   int get hashCode => Object.hash(
     id,
-    empId,
-    username,
-    password,
+    branchId,
+    branchName,
+    tin,
+    address,
+    logo,
+    status,
     createdBy,
-    updatedBy,
-    createdAt,
-    updatedAt,
-    isActive,
+    createdDate,
   );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is UsersTableData &&
+      (other is BranchConfigTableData &&
           other.id == this.id &&
-          other.empId == this.empId &&
-          other.username == this.username &&
-          other.password == this.password &&
+          other.branchId == this.branchId &&
+          other.branchName == this.branchName &&
+          other.tin == this.tin &&
+          other.address == this.address &&
+          other.logo == this.logo &&
+          other.status == this.status &&
           other.createdBy == this.createdBy &&
-          other.updatedBy == this.updatedBy &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt &&
-          other.isActive == this.isActive);
+          other.createdDate == this.createdDate);
 }
 
-class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
+class BranchConfigTableCompanion
+    extends UpdateCompanion<BranchConfigTableData> {
   final Value<String> id;
-  final Value<String> empId;
-  final Value<String> username;
-  final Value<String> password;
+  final Value<String> branchId;
+  final Value<String> branchName;
+  final Value<String> tin;
+  final Value<String> address;
+  final Value<String> logo;
+  final Value<String> status;
   final Value<String> createdBy;
-  final Value<String> updatedBy;
-  final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
-  final Value<bool> isActive;
+  final Value<String> createdDate;
   final Value<int> rowid;
-  const UsersTableCompanion({
+  const BranchConfigTableCompanion({
     this.id = const Value.absent(),
-    this.empId = const Value.absent(),
-    this.username = const Value.absent(),
-    this.password = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.branchName = const Value.absent(),
+    this.tin = const Value.absent(),
+    this.address = const Value.absent(),
+    this.logo = const Value.absent(),
+    this.status = const Value.absent(),
     this.createdBy = const Value.absent(),
-    this.updatedBy = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.isActive = const Value.absent(),
+    this.createdDate = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  UsersTableCompanion.insert({
+  BranchConfigTableCompanion.insert({
     this.id = const Value.absent(),
-    required String empId,
-    required String username,
-    required String password,
-    required String createdBy,
-    required String updatedBy,
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.isActive = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.branchName = const Value.absent(),
+    this.tin = const Value.absent(),
+    this.address = const Value.absent(),
+    this.logo = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdDate = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : empId = Value(empId),
-       username = Value(username),
-       password = Value(password),
-       createdBy = Value(createdBy),
-       updatedBy = Value(updatedBy);
-  static Insertable<UsersTableData> custom({
+  });
+  static Insertable<BranchConfigTableData> custom({
     Expression<String>? id,
-    Expression<String>? empId,
-    Expression<String>? username,
-    Expression<String>? password,
+    Expression<String>? branchId,
+    Expression<String>? branchName,
+    Expression<String>? tin,
+    Expression<String>? address,
+    Expression<String>? logo,
+    Expression<String>? status,
     Expression<String>? createdBy,
-    Expression<String>? updatedBy,
-    Expression<String>? createdAt,
-    Expression<String>? updatedAt,
-    Expression<bool>? isActive,
+    Expression<String>? createdDate,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (empId != null) 'emp_id': empId,
-      if (username != null) 'username': username,
-      if (password != null) 'password': password,
+      if (branchId != null) 'branch_id': branchId,
+      if (branchName != null) 'branch_name': branchName,
+      if (tin != null) 'tin': tin,
+      if (address != null) 'address': address,
+      if (logo != null) 'logo': logo,
+      if (status != null) 'status': status,
       if (createdBy != null) 'created_by': createdBy,
-      if (updatedBy != null) 'updated_by': updatedBy,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (isActive != null) 'is_active': isActive,
+      if (createdDate != null) 'created_date': createdDate,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
-  UsersTableCompanion copyWith({
+  BranchConfigTableCompanion copyWith({
     Value<String>? id,
-    Value<String>? empId,
-    Value<String>? username,
-    Value<String>? password,
+    Value<String>? branchId,
+    Value<String>? branchName,
+    Value<String>? tin,
+    Value<String>? address,
+    Value<String>? logo,
+    Value<String>? status,
     Value<String>? createdBy,
-    Value<String>? updatedBy,
-    Value<DateTime>? createdAt,
-    Value<DateTime>? updatedAt,
-    Value<bool>? isActive,
+    Value<String>? createdDate,
     Value<int>? rowid,
   }) {
-    return UsersTableCompanion(
+    return BranchConfigTableCompanion(
       id: id ?? this.id,
-      empId: empId ?? this.empId,
-      username: username ?? this.username,
-      password: password ?? this.password,
+      branchId: branchId ?? this.branchId,
+      branchName: branchName ?? this.branchName,
+      tin: tin ?? this.tin,
+      address: address ?? this.address,
+      logo: logo ?? this.logo,
+      status: status ?? this.status,
       createdBy: createdBy ?? this.createdBy,
-      updatedBy: updatedBy ?? this.updatedBy,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      isActive: isActive ?? this.isActive,
+      createdDate: createdDate ?? this.createdDate,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1118,33 +1635,29 @@ class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
-    if (empId.present) {
-      map['emp_id'] = Variable<String>(empId.value);
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
     }
-    if (username.present) {
-      map['username'] = Variable<String>(username.value);
+    if (branchName.present) {
+      map['branch_name'] = Variable<String>(branchName.value);
     }
-    if (password.present) {
-      map['password'] = Variable<String>(password.value);
+    if (tin.present) {
+      map['tin'] = Variable<String>(tin.value);
+    }
+    if (address.present) {
+      map['address'] = Variable<String>(address.value);
+    }
+    if (logo.present) {
+      map['logo'] = Variable<String>(logo.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
     }
     if (createdBy.present) {
       map['created_by'] = Variable<String>(createdBy.value);
     }
-    if (updatedBy.present) {
-      map['updated_by'] = Variable<String>(updatedBy.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<String>(
-        $UsersTableTable.$convertercreatedAt.toSql(createdAt.value),
-      );
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<String>(
-        $UsersTableTable.$converterupdatedAt.toSql(updatedAt.value),
-      );
-    }
-    if (isActive.present) {
-      map['is_active'] = Variable<bool>(isActive.value);
+    if (createdDate.present) {
+      map['created_date'] = Variable<String>(createdDate.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -1154,16 +1667,220 @@ class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('UsersTableCompanion(')
+    return (StringBuffer('BranchConfigTableCompanion(')
           ..write('id: $id, ')
-          ..write('empId: $empId, ')
-          ..write('username: $username, ')
-          ..write('password: $password, ')
+          ..write('branchId: $branchId, ')
+          ..write('branchName: $branchName, ')
+          ..write('tin: $tin, ')
+          ..write('address: $address, ')
+          ..write('logo: $logo, ')
+          ..write('status: $status, ')
           ..write('createdBy: $createdBy, ')
-          ..write('updatedBy: $updatedBy, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('isActive: $isActive, ')
+          ..write('createdDate: $createdDate, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DomainConfigTableTable extends DomainConfigTable
+    with TableInfo<$DomainConfigTableTable, DomainConfigTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DomainConfigTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('domain_config'),
+  );
+  static const VerificationMeta _domainMeta = const VerificationMeta('domain');
+  @override
+  late final GeneratedColumn<String> domain = GeneratedColumn<String>(
+    'domain',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('http://please.setup.domain.com/'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, domain];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'domain_config_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DomainConfigTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('domain')) {
+      context.handle(
+        _domainMeta,
+        domain.isAcceptableOrUnknown(data['domain']!, _domainMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DomainConfigTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DomainConfigTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      domain: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}domain'],
+      )!,
+    );
+  }
+
+  @override
+  $DomainConfigTableTable createAlias(String alias) {
+    return $DomainConfigTableTable(attachedDatabase, alias);
+  }
+}
+
+class DomainConfigTableData extends DataClass
+    implements Insertable<DomainConfigTableData> {
+  final String id;
+  final String domain;
+  const DomainConfigTableData({required this.id, required this.domain});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['domain'] = Variable<String>(domain);
+    return map;
+  }
+
+  DomainConfigTableCompanion toCompanion(bool nullToAbsent) {
+    return DomainConfigTableCompanion(id: Value(id), domain: Value(domain));
+  }
+
+  factory DomainConfigTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DomainConfigTableData(
+      id: serializer.fromJson<String>(json['id']),
+      domain: serializer.fromJson<String>(json['domain']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'domain': serializer.toJson<String>(domain),
+    };
+  }
+
+  DomainConfigTableData copyWith({String? id, String? domain}) =>
+      DomainConfigTableData(id: id ?? this.id, domain: domain ?? this.domain);
+  DomainConfigTableData copyWithCompanion(DomainConfigTableCompanion data) {
+    return DomainConfigTableData(
+      id: data.id.present ? data.id.value : this.id,
+      domain: data.domain.present ? data.domain.value : this.domain,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DomainConfigTableData(')
+          ..write('id: $id, ')
+          ..write('domain: $domain')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, domain);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DomainConfigTableData &&
+          other.id == this.id &&
+          other.domain == this.domain);
+}
+
+class DomainConfigTableCompanion
+    extends UpdateCompanion<DomainConfigTableData> {
+  final Value<String> id;
+  final Value<String> domain;
+  final Value<int> rowid;
+  const DomainConfigTableCompanion({
+    this.id = const Value.absent(),
+    this.domain = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DomainConfigTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.domain = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  static Insertable<DomainConfigTableData> custom({
+    Expression<String>? id,
+    Expression<String>? domain,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (domain != null) 'domain': domain,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DomainConfigTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? domain,
+    Value<int>? rowid,
+  }) {
+    return DomainConfigTableCompanion(
+      id: id ?? this.id,
+      domain: domain ?? this.domain,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (domain.present) {
+      map['domain'] = Variable<String>(domain.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DomainConfigTableCompanion(')
+          ..write('id: $id, ')
+          ..write('domain: $domain, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1173,50 +1890,347 @@ class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
-  late final $EmployeesTableTable employeesTable = $EmployeesTableTable(this);
-  late final $UsersTableTable usersTable = $UsersTableTable(this);
+  late final $POSConfigTableTable pOSConfigTable = $POSConfigTableTable(this);
+  late final $UserDataTableTable userDataTable = $UserDataTableTable(this);
+  late final $BranchConfigTableTable branchConfigTable =
+      $BranchConfigTableTable(this);
+  late final $DomainConfigTableTable domainConfigTable =
+      $DomainConfigTableTable(this);
+  late final DomainConfigDao domainConfigDao = DomainConfigDao(
+    this as AppDatabase,
+  );
+  late final BranchConfigDao branchConfigDao = BranchConfigDao(
+    this as AppDatabase,
+  );
+  late final PosConfigDao posConfigDao = PosConfigDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
-    employeesTable,
-    usersTable,
+    pOSConfigTable,
+    userDataTable,
+    branchConfigTable,
+    domainConfigTable,
   ];
 }
 
-typedef $$EmployeesTableTableCreateCompanionBuilder =
-    EmployeesTableCompanion Function({
+typedef $$POSConfigTableTableCreateCompanionBuilder =
+    POSConfigTableCompanion Function({
       Value<String> id,
-      required String employeeId,
-      required String fullname,
-      required String contactNo,
-      required String email,
-      required String createdBy,
-      required String updatedBy,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<bool> isActive,
+      Value<int> posId,
+      Value<String> posName,
+      Value<String> serial,
+      Value<String> min,
+      Value<String> ptu,
+      Value<String> status,
+      Value<String> createdBy,
+      Value<DateTime> createdDate,
       Value<int> rowid,
     });
-typedef $$EmployeesTableTableUpdateCompanionBuilder =
-    EmployeesTableCompanion Function({
+typedef $$POSConfigTableTableUpdateCompanionBuilder =
+    POSConfigTableCompanion Function({
       Value<String> id,
-      Value<String> employeeId,
-      Value<String> fullname,
-      Value<String> contactNo,
-      Value<String> email,
+      Value<int> posId,
+      Value<String> posName,
+      Value<String> serial,
+      Value<String> min,
+      Value<String> ptu,
+      Value<String> status,
       Value<String> createdBy,
-      Value<String> updatedBy,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<bool> isActive,
+      Value<DateTime> createdDate,
       Value<int> rowid,
     });
 
-class $$EmployeesTableTableFilterComposer
-    extends Composer<_$AppDatabase, $EmployeesTableTable> {
-  $$EmployeesTableTableFilterComposer({
+class $$POSConfigTableTableFilterComposer
+    extends Composer<_$AppDatabase, $POSConfigTableTable> {
+  $$POSConfigTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get posId => $composableBuilder(
+    column: $table.posId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get posName => $composableBuilder(
+    column: $table.posName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serial => $composableBuilder(
+    column: $table.serial,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get min => $composableBuilder(
+    column: $table.min,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ptu => $composableBuilder(
+    column: $table.ptu,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdDate => $composableBuilder(
+    column: $table.createdDate,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$POSConfigTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $POSConfigTableTable> {
+  $$POSConfigTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get posId => $composableBuilder(
+    column: $table.posId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get posName => $composableBuilder(
+    column: $table.posName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serial => $composableBuilder(
+    column: $table.serial,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get min => $composableBuilder(
+    column: $table.min,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ptu => $composableBuilder(
+    column: $table.ptu,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdDate => $composableBuilder(
+    column: $table.createdDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$POSConfigTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $POSConfigTableTable> {
+  $$POSConfigTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get posId =>
+      $composableBuilder(column: $table.posId, builder: (column) => column);
+
+  GeneratedColumn<String> get posName =>
+      $composableBuilder(column: $table.posName, builder: (column) => column);
+
+  GeneratedColumn<String> get serial =>
+      $composableBuilder(column: $table.serial, builder: (column) => column);
+
+  GeneratedColumn<String> get min =>
+      $composableBuilder(column: $table.min, builder: (column) => column);
+
+  GeneratedColumn<String> get ptu =>
+      $composableBuilder(column: $table.ptu, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdDate => $composableBuilder(
+    column: $table.createdDate,
+    builder: (column) => column,
+  );
+}
+
+class $$POSConfigTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $POSConfigTableTable,
+          POSConfigTableData,
+          $$POSConfigTableTableFilterComposer,
+          $$POSConfigTableTableOrderingComposer,
+          $$POSConfigTableTableAnnotationComposer,
+          $$POSConfigTableTableCreateCompanionBuilder,
+          $$POSConfigTableTableUpdateCompanionBuilder,
+          (
+            POSConfigTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $POSConfigTableTable,
+              POSConfigTableData
+            >,
+          ),
+          POSConfigTableData,
+          PrefetchHooks Function()
+        > {
+  $$POSConfigTableTableTableManager(
+    _$AppDatabase db,
+    $POSConfigTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$POSConfigTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$POSConfigTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$POSConfigTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> posId = const Value.absent(),
+                Value<String> posName = const Value.absent(),
+                Value<String> serial = const Value.absent(),
+                Value<String> min = const Value.absent(),
+                Value<String> ptu = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> createdBy = const Value.absent(),
+                Value<DateTime> createdDate = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => POSConfigTableCompanion(
+                id: id,
+                posId: posId,
+                posName: posName,
+                serial: serial,
+                min: min,
+                ptu: ptu,
+                status: status,
+                createdBy: createdBy,
+                createdDate: createdDate,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> posId = const Value.absent(),
+                Value<String> posName = const Value.absent(),
+                Value<String> serial = const Value.absent(),
+                Value<String> min = const Value.absent(),
+                Value<String> ptu = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> createdBy = const Value.absent(),
+                Value<DateTime> createdDate = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => POSConfigTableCompanion.insert(
+                id: id,
+                posId: posId,
+                posName: posName,
+                serial: serial,
+                min: min,
+                ptu: ptu,
+                status: status,
+                createdBy: createdBy,
+                createdDate: createdDate,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$POSConfigTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $POSConfigTableTable,
+      POSConfigTableData,
+      $$POSConfigTableTableFilterComposer,
+      $$POSConfigTableTableOrderingComposer,
+      $$POSConfigTableTableAnnotationComposer,
+      $$POSConfigTableTableCreateCompanionBuilder,
+      $$POSConfigTableTableUpdateCompanionBuilder,
+      (
+        POSConfigTableData,
+        BaseReferences<_$AppDatabase, $POSConfigTableTable, POSConfigTableData>,
+      ),
+      POSConfigTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$UserDataTableTableCreateCompanionBuilder =
+    UserDataTableCompanion Function({
+      Value<String> id,
+      Value<String> employeeId,
+      Value<String> fullName,
+      Value<int> position,
+      Value<String> contactInfo,
+      Value<String> dateHired,
+      Value<int> userCode,
+      Value<int> accessType,
+      Value<String> status,
+      Value<String> apk,
+      Value<int> rowid,
+    });
+typedef $$UserDataTableTableUpdateCompanionBuilder =
+    UserDataTableCompanion Function({
+      Value<String> id,
+      Value<String> employeeId,
+      Value<String> fullName,
+      Value<int> position,
+      Value<String> contactInfo,
+      Value<String> dateHired,
+      Value<int> userCode,
+      Value<int> accessType,
+      Value<String> status,
+      Value<String> apk,
+      Value<int> rowid,
+    });
+
+class $$UserDataTableTableFilterComposer
+    extends Composer<_$AppDatabase, $UserDataTableTable> {
+  $$UserDataTableTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1233,52 +2247,50 @@ class $$EmployeesTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get fullname => $composableBuilder(
-    column: $table.fullname,
+  ColumnFilters<String> get fullName => $composableBuilder(
+    column: $table.fullName,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get contactNo => $composableBuilder(
-    column: $table.contactNo,
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get email => $composableBuilder(
-    column: $table.email,
+  ColumnFilters<String> get contactInfo => $composableBuilder(
+    column: $table.contactInfo,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get createdBy => $composableBuilder(
-    column: $table.createdBy,
+  ColumnFilters<String> get dateHired => $composableBuilder(
+    column: $table.dateHired,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get updatedBy => $composableBuilder(
-    column: $table.updatedBy,
+  ColumnFilters<int> get userCode => $composableBuilder(
+    column: $table.userCode,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get createdAt =>
-      $composableBuilder(
-        column: $table.createdAt,
-        builder: (column) => ColumnWithTypeConverterFilters(column),
-      );
+  ColumnFilters<int> get accessType => $composableBuilder(
+    column: $table.accessType,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get updatedAt =>
-      $composableBuilder(
-        column: $table.updatedAt,
-        builder: (column) => ColumnWithTypeConverterFilters(column),
-      );
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<bool> get isActive => $composableBuilder(
-    column: $table.isActive,
+  ColumnFilters<String> get apk => $composableBuilder(
+    column: $table.apk,
     builder: (column) => ColumnFilters(column),
   );
 }
 
-class $$EmployeesTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $EmployeesTableTable> {
-  $$EmployeesTableTableOrderingComposer({
+class $$UserDataTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserDataTableTable> {
+  $$UserDataTableTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1295,50 +2307,50 @@ class $$EmployeesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get fullname => $composableBuilder(
-    column: $table.fullname,
+  ColumnOrderings<String> get fullName => $composableBuilder(
+    column: $table.fullName,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get contactNo => $composableBuilder(
-    column: $table.contactNo,
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get email => $composableBuilder(
-    column: $table.email,
+  ColumnOrderings<String> get contactInfo => $composableBuilder(
+    column: $table.contactInfo,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get createdBy => $composableBuilder(
-    column: $table.createdBy,
+  ColumnOrderings<String> get dateHired => $composableBuilder(
+    column: $table.dateHired,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get updatedBy => $composableBuilder(
-    column: $table.updatedBy,
+  ColumnOrderings<int> get userCode => $composableBuilder(
+    column: $table.userCode,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get createdAt => $composableBuilder(
-    column: $table.createdAt,
+  ColumnOrderings<int> get accessType => $composableBuilder(
+    column: $table.accessType,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get isActive => $composableBuilder(
-    column: $table.isActive,
+  ColumnOrderings<String> get apk => $composableBuilder(
+    column: $table.apk,
     builder: (column) => ColumnOrderings(column),
   );
 }
 
-class $$EmployeesTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $EmployeesTableTable> {
-  $$EmployeesTableTableAnnotationComposer({
+class $$UserDataTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserDataTableTable> {
+  $$UserDataTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1353,116 +2365,118 @@ class $$EmployeesTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<String> get fullname =>
-      $composableBuilder(column: $table.fullname, builder: (column) => column);
+  GeneratedColumn<String> get fullName =>
+      $composableBuilder(column: $table.fullName, builder: (column) => column);
 
-  GeneratedColumn<String> get contactNo =>
-      $composableBuilder(column: $table.contactNo, builder: (column) => column);
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
 
-  GeneratedColumn<String> get email =>
-      $composableBuilder(column: $table.email, builder: (column) => column);
+  GeneratedColumn<String> get contactInfo => $composableBuilder(
+    column: $table.contactInfo,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<String> get createdBy =>
-      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+  GeneratedColumn<String> get dateHired =>
+      $composableBuilder(column: $table.dateHired, builder: (column) => column);
 
-  GeneratedColumn<String> get updatedBy =>
-      $composableBuilder(column: $table.updatedBy, builder: (column) => column);
+  GeneratedColumn<int> get userCode =>
+      $composableBuilder(column: $table.userCode, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<DateTime, String> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+  GeneratedColumn<int> get accessType => $composableBuilder(
+    column: $table.accessType,
+    builder: (column) => column,
+  );
 
-  GeneratedColumnWithTypeConverter<DateTime, String> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
 
-  GeneratedColumn<bool> get isActive =>
-      $composableBuilder(column: $table.isActive, builder: (column) => column);
+  GeneratedColumn<String> get apk =>
+      $composableBuilder(column: $table.apk, builder: (column) => column);
 }
 
-class $$EmployeesTableTableTableManager
+class $$UserDataTableTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $EmployeesTableTable,
-          EmployeesTableData,
-          $$EmployeesTableTableFilterComposer,
-          $$EmployeesTableTableOrderingComposer,
-          $$EmployeesTableTableAnnotationComposer,
-          $$EmployeesTableTableCreateCompanionBuilder,
-          $$EmployeesTableTableUpdateCompanionBuilder,
+          $UserDataTableTable,
+          UserDataTableData,
+          $$UserDataTableTableFilterComposer,
+          $$UserDataTableTableOrderingComposer,
+          $$UserDataTableTableAnnotationComposer,
+          $$UserDataTableTableCreateCompanionBuilder,
+          $$UserDataTableTableUpdateCompanionBuilder,
           (
-            EmployeesTableData,
+            UserDataTableData,
             BaseReferences<
               _$AppDatabase,
-              $EmployeesTableTable,
-              EmployeesTableData
+              $UserDataTableTable,
+              UserDataTableData
             >,
           ),
-          EmployeesTableData,
+          UserDataTableData,
           PrefetchHooks Function()
         > {
-  $$EmployeesTableTableTableManager(
-    _$AppDatabase db,
-    $EmployeesTableTable table,
-  ) : super(
+  $$UserDataTableTableTableManager(_$AppDatabase db, $UserDataTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$EmployeesTableTableFilterComposer($db: db, $table: table),
+              $$UserDataTableTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$EmployeesTableTableOrderingComposer($db: db, $table: table),
+              $$UserDataTableTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$EmployeesTableTableAnnotationComposer($db: db, $table: table),
+              $$UserDataTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
                 Value<String> employeeId = const Value.absent(),
-                Value<String> fullname = const Value.absent(),
-                Value<String> contactNo = const Value.absent(),
-                Value<String> email = const Value.absent(),
-                Value<String> createdBy = const Value.absent(),
-                Value<String> updatedBy = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
-                Value<bool> isActive = const Value.absent(),
+                Value<String> fullName = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<String> contactInfo = const Value.absent(),
+                Value<String> dateHired = const Value.absent(),
+                Value<int> userCode = const Value.absent(),
+                Value<int> accessType = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> apk = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => EmployeesTableCompanion(
+              }) => UserDataTableCompanion(
                 id: id,
                 employeeId: employeeId,
-                fullname: fullname,
-                contactNo: contactNo,
-                email: email,
-                createdBy: createdBy,
-                updatedBy: updatedBy,
-                createdAt: createdAt,
-                updatedAt: updatedAt,
-                isActive: isActive,
+                fullName: fullName,
+                position: position,
+                contactInfo: contactInfo,
+                dateHired: dateHired,
+                userCode: userCode,
+                accessType: accessType,
+                status: status,
+                apk: apk,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                required String employeeId,
-                required String fullname,
-                required String contactNo,
-                required String email,
-                required String createdBy,
-                required String updatedBy,
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
-                Value<bool> isActive = const Value.absent(),
+                Value<String> employeeId = const Value.absent(),
+                Value<String> fullName = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<String> contactInfo = const Value.absent(),
+                Value<String> dateHired = const Value.absent(),
+                Value<int> userCode = const Value.absent(),
+                Value<int> accessType = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> apk = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => EmployeesTableCompanion.insert(
+              }) => UserDataTableCompanion.insert(
                 id: id,
                 employeeId: employeeId,
-                fullname: fullname,
-                contactNo: contactNo,
-                email: email,
-                createdBy: createdBy,
-                updatedBy: updatedBy,
-                createdAt: createdAt,
-                updatedAt: updatedAt,
-                isActive: isActive,
+                fullName: fullName,
+                position: position,
+                contactInfo: contactInfo,
+                dateHired: dateHired,
+                userCode: userCode,
+                accessType: accessType,
+                status: status,
+                apk: apk,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -1473,53 +2487,53 @@ class $$EmployeesTableTableTableManager
       );
 }
 
-typedef $$EmployeesTableTableProcessedTableManager =
+typedef $$UserDataTableTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $EmployeesTableTable,
-      EmployeesTableData,
-      $$EmployeesTableTableFilterComposer,
-      $$EmployeesTableTableOrderingComposer,
-      $$EmployeesTableTableAnnotationComposer,
-      $$EmployeesTableTableCreateCompanionBuilder,
-      $$EmployeesTableTableUpdateCompanionBuilder,
+      $UserDataTableTable,
+      UserDataTableData,
+      $$UserDataTableTableFilterComposer,
+      $$UserDataTableTableOrderingComposer,
+      $$UserDataTableTableAnnotationComposer,
+      $$UserDataTableTableCreateCompanionBuilder,
+      $$UserDataTableTableUpdateCompanionBuilder,
       (
-        EmployeesTableData,
-        BaseReferences<_$AppDatabase, $EmployeesTableTable, EmployeesTableData>,
+        UserDataTableData,
+        BaseReferences<_$AppDatabase, $UserDataTableTable, UserDataTableData>,
       ),
-      EmployeesTableData,
+      UserDataTableData,
       PrefetchHooks Function()
     >;
-typedef $$UsersTableTableCreateCompanionBuilder =
-    UsersTableCompanion Function({
+typedef $$BranchConfigTableTableCreateCompanionBuilder =
+    BranchConfigTableCompanion Function({
       Value<String> id,
-      required String empId,
-      required String username,
-      required String password,
-      required String createdBy,
-      required String updatedBy,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<bool> isActive,
+      Value<String> branchId,
+      Value<String> branchName,
+      Value<String> tin,
+      Value<String> address,
+      Value<String> logo,
+      Value<String> status,
+      Value<String> createdBy,
+      Value<String> createdDate,
       Value<int> rowid,
     });
-typedef $$UsersTableTableUpdateCompanionBuilder =
-    UsersTableCompanion Function({
+typedef $$BranchConfigTableTableUpdateCompanionBuilder =
+    BranchConfigTableCompanion Function({
       Value<String> id,
-      Value<String> empId,
-      Value<String> username,
-      Value<String> password,
+      Value<String> branchId,
+      Value<String> branchName,
+      Value<String> tin,
+      Value<String> address,
+      Value<String> logo,
+      Value<String> status,
       Value<String> createdBy,
-      Value<String> updatedBy,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<bool> isActive,
+      Value<String> createdDate,
       Value<int> rowid,
     });
 
-class $$UsersTableTableFilterComposer
-    extends Composer<_$AppDatabase, $UsersTableTable> {
-  $$UsersTableTableFilterComposer({
+class $$BranchConfigTableTableFilterComposer
+    extends Composer<_$AppDatabase, $BranchConfigTableTable> {
+  $$BranchConfigTableTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1531,18 +2545,33 @@ class $$UsersTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get empId => $composableBuilder(
-    column: $table.empId,
+  ColumnFilters<String> get branchId => $composableBuilder(
+    column: $table.branchId,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get username => $composableBuilder(
-    column: $table.username,
+  ColumnFilters<String> get branchName => $composableBuilder(
+    column: $table.branchName,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get password => $composableBuilder(
-    column: $table.password,
+  ColumnFilters<String> get tin => $composableBuilder(
+    column: $table.tin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get address => $composableBuilder(
+    column: $table.address,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get logo => $composableBuilder(
+    column: $table.logo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1551,32 +2580,15 @@ class $$UsersTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get updatedBy => $composableBuilder(
-    column: $table.updatedBy,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get createdAt =>
-      $composableBuilder(
-        column: $table.createdAt,
-        builder: (column) => ColumnWithTypeConverterFilters(column),
-      );
-
-  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get updatedAt =>
-      $composableBuilder(
-        column: $table.updatedAt,
-        builder: (column) => ColumnWithTypeConverterFilters(column),
-      );
-
-  ColumnFilters<bool> get isActive => $composableBuilder(
-    column: $table.isActive,
+  ColumnFilters<String> get createdDate => $composableBuilder(
+    column: $table.createdDate,
     builder: (column) => ColumnFilters(column),
   );
 }
 
-class $$UsersTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $UsersTableTable> {
-  $$UsersTableTableOrderingComposer({
+class $$BranchConfigTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $BranchConfigTableTable> {
+  $$BranchConfigTableTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1588,18 +2600,33 @@ class $$UsersTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get empId => $composableBuilder(
-    column: $table.empId,
+  ColumnOrderings<String> get branchId => $composableBuilder(
+    column: $table.branchId,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get username => $composableBuilder(
-    column: $table.username,
+  ColumnOrderings<String> get branchName => $composableBuilder(
+    column: $table.branchName,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get password => $composableBuilder(
-    column: $table.password,
+  ColumnOrderings<String> get tin => $composableBuilder(
+    column: $table.tin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get address => $composableBuilder(
+    column: $table.address,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get logo => $composableBuilder(
+    column: $table.logo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -1608,30 +2635,15 @@ class $$UsersTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get updatedBy => $composableBuilder(
-    column: $table.updatedBy,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get isActive => $composableBuilder(
-    column: $table.isActive,
+  ColumnOrderings<String> get createdDate => $composableBuilder(
+    column: $table.createdDate,
     builder: (column) => ColumnOrderings(column),
   );
 }
 
-class $$UsersTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $UsersTableTable> {
-  $$UsersTableTableAnnotationComposer({
+class $$BranchConfigTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BranchConfigTableTable> {
+  $$BranchConfigTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1641,106 +2653,119 @@ class $$UsersTableTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get empId =>
-      $composableBuilder(column: $table.empId, builder: (column) => column);
+  GeneratedColumn<String> get branchId =>
+      $composableBuilder(column: $table.branchId, builder: (column) => column);
 
-  GeneratedColumn<String> get username =>
-      $composableBuilder(column: $table.username, builder: (column) => column);
+  GeneratedColumn<String> get branchName => $composableBuilder(
+    column: $table.branchName,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<String> get password =>
-      $composableBuilder(column: $table.password, builder: (column) => column);
+  GeneratedColumn<String> get tin =>
+      $composableBuilder(column: $table.tin, builder: (column) => column);
+
+  GeneratedColumn<String> get address =>
+      $composableBuilder(column: $table.address, builder: (column) => column);
+
+  GeneratedColumn<String> get logo =>
+      $composableBuilder(column: $table.logo, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
 
   GeneratedColumn<String> get createdBy =>
       $composableBuilder(column: $table.createdBy, builder: (column) => column);
 
-  GeneratedColumn<String> get updatedBy =>
-      $composableBuilder(column: $table.updatedBy, builder: (column) => column);
-
-  GeneratedColumnWithTypeConverter<DateTime, String> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumnWithTypeConverter<DateTime, String> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get isActive =>
-      $composableBuilder(column: $table.isActive, builder: (column) => column);
+  GeneratedColumn<String> get createdDate => $composableBuilder(
+    column: $table.createdDate,
+    builder: (column) => column,
+  );
 }
 
-class $$UsersTableTableTableManager
+class $$BranchConfigTableTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $UsersTableTable,
-          UsersTableData,
-          $$UsersTableTableFilterComposer,
-          $$UsersTableTableOrderingComposer,
-          $$UsersTableTableAnnotationComposer,
-          $$UsersTableTableCreateCompanionBuilder,
-          $$UsersTableTableUpdateCompanionBuilder,
+          $BranchConfigTableTable,
+          BranchConfigTableData,
+          $$BranchConfigTableTableFilterComposer,
+          $$BranchConfigTableTableOrderingComposer,
+          $$BranchConfigTableTableAnnotationComposer,
+          $$BranchConfigTableTableCreateCompanionBuilder,
+          $$BranchConfigTableTableUpdateCompanionBuilder,
           (
-            UsersTableData,
-            BaseReferences<_$AppDatabase, $UsersTableTable, UsersTableData>,
+            BranchConfigTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $BranchConfigTableTable,
+              BranchConfigTableData
+            >,
           ),
-          UsersTableData,
+          BranchConfigTableData,
           PrefetchHooks Function()
         > {
-  $$UsersTableTableTableManager(_$AppDatabase db, $UsersTableTable table)
-    : super(
+  $$BranchConfigTableTableTableManager(
+    _$AppDatabase db,
+    $BranchConfigTableTable table,
+  ) : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$UsersTableTableFilterComposer($db: db, $table: table),
+              $$BranchConfigTableTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$UsersTableTableOrderingComposer($db: db, $table: table),
+              $$BranchConfigTableTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$UsersTableTableAnnotationComposer($db: db, $table: table),
+              $$BranchConfigTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                Value<String> empId = const Value.absent(),
-                Value<String> username = const Value.absent(),
-                Value<String> password = const Value.absent(),
+                Value<String> branchId = const Value.absent(),
+                Value<String> branchName = const Value.absent(),
+                Value<String> tin = const Value.absent(),
+                Value<String> address = const Value.absent(),
+                Value<String> logo = const Value.absent(),
+                Value<String> status = const Value.absent(),
                 Value<String> createdBy = const Value.absent(),
-                Value<String> updatedBy = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
-                Value<bool> isActive = const Value.absent(),
+                Value<String> createdDate = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => UsersTableCompanion(
+              }) => BranchConfigTableCompanion(
                 id: id,
-                empId: empId,
-                username: username,
-                password: password,
+                branchId: branchId,
+                branchName: branchName,
+                tin: tin,
+                address: address,
+                logo: logo,
+                status: status,
                 createdBy: createdBy,
-                updatedBy: updatedBy,
-                createdAt: createdAt,
-                updatedAt: updatedAt,
-                isActive: isActive,
+                createdDate: createdDate,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                required String empId,
-                required String username,
-                required String password,
-                required String createdBy,
-                required String updatedBy,
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
-                Value<bool> isActive = const Value.absent(),
+                Value<String> branchId = const Value.absent(),
+                Value<String> branchName = const Value.absent(),
+                Value<String> tin = const Value.absent(),
+                Value<String> address = const Value.absent(),
+                Value<String> logo = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> createdBy = const Value.absent(),
+                Value<String> createdDate = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => UsersTableCompanion.insert(
+              }) => BranchConfigTableCompanion.insert(
                 id: id,
-                empId: empId,
-                username: username,
-                password: password,
+                branchId: branchId,
+                branchName: branchName,
+                tin: tin,
+                address: address,
+                logo: logo,
+                status: status,
                 createdBy: createdBy,
-                updatedBy: updatedBy,
-                createdAt: createdAt,
-                updatedAt: updatedAt,
-                isActive: isActive,
+                createdDate: createdDate,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -1751,31 +2776,195 @@ class $$UsersTableTableTableManager
       );
 }
 
-typedef $$UsersTableTableProcessedTableManager =
+typedef $$BranchConfigTableTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $UsersTableTable,
-      UsersTableData,
-      $$UsersTableTableFilterComposer,
-      $$UsersTableTableOrderingComposer,
-      $$UsersTableTableAnnotationComposer,
-      $$UsersTableTableCreateCompanionBuilder,
-      $$UsersTableTableUpdateCompanionBuilder,
+      $BranchConfigTableTable,
+      BranchConfigTableData,
+      $$BranchConfigTableTableFilterComposer,
+      $$BranchConfigTableTableOrderingComposer,
+      $$BranchConfigTableTableAnnotationComposer,
+      $$BranchConfigTableTableCreateCompanionBuilder,
+      $$BranchConfigTableTableUpdateCompanionBuilder,
       (
-        UsersTableData,
-        BaseReferences<_$AppDatabase, $UsersTableTable, UsersTableData>,
+        BranchConfigTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $BranchConfigTableTable,
+          BranchConfigTableData
+        >,
       ),
-      UsersTableData,
+      BranchConfigTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$DomainConfigTableTableCreateCompanionBuilder =
+    DomainConfigTableCompanion Function({
+      Value<String> id,
+      Value<String> domain,
+      Value<int> rowid,
+    });
+typedef $$DomainConfigTableTableUpdateCompanionBuilder =
+    DomainConfigTableCompanion Function({
+      Value<String> id,
+      Value<String> domain,
+      Value<int> rowid,
+    });
+
+class $$DomainConfigTableTableFilterComposer
+    extends Composer<_$AppDatabase, $DomainConfigTableTable> {
+  $$DomainConfigTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get domain => $composableBuilder(
+    column: $table.domain,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DomainConfigTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $DomainConfigTableTable> {
+  $$DomainConfigTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get domain => $composableBuilder(
+    column: $table.domain,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DomainConfigTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DomainConfigTableTable> {
+  $$DomainConfigTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get domain =>
+      $composableBuilder(column: $table.domain, builder: (column) => column);
+}
+
+class $$DomainConfigTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DomainConfigTableTable,
+          DomainConfigTableData,
+          $$DomainConfigTableTableFilterComposer,
+          $$DomainConfigTableTableOrderingComposer,
+          $$DomainConfigTableTableAnnotationComposer,
+          $$DomainConfigTableTableCreateCompanionBuilder,
+          $$DomainConfigTableTableUpdateCompanionBuilder,
+          (
+            DomainConfigTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $DomainConfigTableTable,
+              DomainConfigTableData
+            >,
+          ),
+          DomainConfigTableData,
+          PrefetchHooks Function()
+        > {
+  $$DomainConfigTableTableTableManager(
+    _$AppDatabase db,
+    $DomainConfigTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DomainConfigTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DomainConfigTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DomainConfigTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> domain = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DomainConfigTableCompanion(
+                id: id,
+                domain: domain,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> domain = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DomainConfigTableCompanion.insert(
+                id: id,
+                domain: domain,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DomainConfigTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DomainConfigTableTable,
+      DomainConfigTableData,
+      $$DomainConfigTableTableFilterComposer,
+      $$DomainConfigTableTableOrderingComposer,
+      $$DomainConfigTableTableAnnotationComposer,
+      $$DomainConfigTableTableCreateCompanionBuilder,
+      $$DomainConfigTableTableUpdateCompanionBuilder,
+      (
+        DomainConfigTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $DomainConfigTableTable,
+          DomainConfigTableData
+        >,
+      ),
+      DomainConfigTableData,
       PrefetchHooks Function()
     >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
-  $$EmployeesTableTableTableManager get employeesTable =>
-      $$EmployeesTableTableTableManager(_db, _db.employeesTable);
-  $$UsersTableTableTableManager get usersTable =>
-      $$UsersTableTableTableManager(_db, _db.usersTable);
+  $$POSConfigTableTableTableManager get pOSConfigTable =>
+      $$POSConfigTableTableTableManager(_db, _db.pOSConfigTable);
+  $$UserDataTableTableTableManager get userDataTable =>
+      $$UserDataTableTableTableManager(_db, _db.userDataTable);
+  $$BranchConfigTableTableTableManager get branchConfigTable =>
+      $$BranchConfigTableTableTableManager(_db, _db.branchConfigTable);
+  $$DomainConfigTableTableTableManager get domainConfigTable =>
+      $$DomainConfigTableTableTableManager(_db, _db.domainConfigTable);
 }
 
 // **************************************************************************

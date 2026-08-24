@@ -9,9 +9,6 @@ import 'package:gpos_provantis/src/features/setup/presentation/screens/setup_scr
 
 import 'package:gpos_provantis/src/features/login/presentation/screens/login_screen.dart';
 
-
-import 'package:gpos_provantis/src/features/employees/presentation/screens/employees_screen.dart';
-
 // TODO: Import your actual screens from the features folder
 // import '../features/authentication/presentation/startup_screen.dart';
 
@@ -20,7 +17,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   // final authState = ref.watch(authStateProvider);
 
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/setup',
     debugLogDiagnostics: true, // Great for seeing route changes in the console
     // The redirect callback is your global route guard.
     // redirect: (context, state) {
@@ -30,11 +27,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     //   return null;
     // },
     routes: [
-      GoRoute(
-        path: '/employees',
-        name: AppRoute.employees.name,
-        builder: (context, state) => const EmployeesScreen(),
-      ),
       // GoRoute(
       //   path: '/startup',
       //   name: AppRoute.startup.name,
@@ -46,22 +38,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       //   name: AppRoute.home.name,
       //   builder: (context, state) => const HomeScreen(),
       // ),
-          GoRoute(
+      GoRoute(
         path: '/login',
         name: AppRoute.login.name,
         builder: (context, state) => const LoginScreen(),
       ),
-          GoRoute(
+      GoRoute(
         path: '/setup',
         name: AppRoute.setup.name,
         builder: (context, state) => const SetupScreen(),
       ),
-          GoRoute(
+      GoRoute(
         path: '/dashboard',
         name: AppRoute.dashboard.name,
         builder: (context, state) => const DashboardScreen(),
       ),
-          GoRoute(
+      GoRoute(
         path: '/settings',
         name: AppRoute.settings.name,
         builder: (context, state) => const SettingsScreen(),

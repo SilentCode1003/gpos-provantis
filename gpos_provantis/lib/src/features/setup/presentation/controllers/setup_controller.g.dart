@@ -13,7 +13,7 @@ part of 'setup_controller.dart';
 final setupControllerProvider = SetupControllerProvider._();
 
 final class SetupControllerProvider
-    extends $NotifierProvider<SetupController, void> {
+    extends $NotifierProvider<SetupController, SetupState> {
   SetupControllerProvider._()
     : super(
         from: null,
@@ -33,27 +33,27 @@ final class SetupControllerProvider
   SetupController create() => SetupController();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(void value) {
+  Override overrideWithValue(SetupState value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
+      providerOverride: $SyncValueProvider<SetupState>(value),
     );
   }
 }
 
-String _$setupControllerHash() => r'ec003de33952edce3cf8408f5f1c63706c258088';
+String _$setupControllerHash() => r'b02888873f2431bdb5e4a670e3750b6e79c2acfb';
 
-abstract class _$SetupController extends $Notifier<void> {
-  void build();
+abstract class _$SetupController extends $Notifier<SetupState> {
+  SetupState build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<void, void>;
+    final ref = this.ref as $Ref<SetupState, SetupState>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<void, void>,
-              void,
+              AnyNotifier<SetupState, SetupState>,
+              SetupState,
               Object?,
               Object?
             >;

@@ -15,6 +15,13 @@ part 'dashboard_controller.g.dart';
 /// Cart lives here (not in the widget tree) since it needs to persist
 /// across category switches — switching categories only changes which
 /// products are visible in the grid, it must never touch the cart.
+///
+/// CATALOG SHEET: tapping a category no longer swaps a grid in place —
+/// it opens `catalogSheetCategoryId` (the right-side sheet's "which
+/// category" state, separate from nothing else since there's no more
+/// always-visible grid) and the screen slides in an overlay. Search text
+/// (`catalogSearchQuery`) filters within whichever category is open.
+/// Both reset to closed/empty together via `closeCatalogSheet()`.
 /// =========================================================================
 
 /// One purchasable item. Placeholder data — see class doc comment above.
@@ -94,10 +101,26 @@ class DashboardState {
     required this.cartLines,
     this.isSaleHeld = false,
     this.shiftStatus = ShiftStatus.closed,
+    this.catalogSheetCategoryId,
+    this.catalogSearchQuery = '',
   });
 
   final String selectedCategoryId;
   final List<CartLine> cartLines;
+
+  /// Non-null while the right-side catalog sheet is open, holding the id
+  /// of whichever category it's currently showing. Null = sheet closed.
+  /// Kept separate from `selectedCategoryId` (which is really "last
+  /// category tapped on the rail") so closing the sheet doesn't need to
+  /// touch the rail's own selection highlight.
+  final String? catalogSheetCategoryId;
+
+  /// Live search text typed into the sheet's search field. Filters the
+  /// sheet's product grid by name (case-insensitive substring match).
+  /// Cleared whenever the sheet closes.
+  final String catalogSearchQuery;
+
+  bool get isCatalogSheetOpen => catalogSheetCategoryId != null;
 
   /// True once "Hold sale" has been tapped — placeholder flag only; a
   /// real implementation would move the sale into a held-sales list.
@@ -122,15 +145,29 @@ class DashboardState {
     List<CartLine>? cartLines,
     bool? isSaleHeld,
     ShiftStatus? shiftStatus,
+    // Sentinel-based so we can distinguish "leave unchanged" (default,
+    // not passed) from "explicitly set to null" (closing the sheet) —
+    // a plain `catalogSheetCategoryId ?? this.catalogSheetCategoryId`
+    // could never null the field back out once set.
+    Object? catalogSheetCategoryId = _unset,
+    String? catalogSearchQuery,
   }) {
     return DashboardState(
       selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
       cartLines: cartLines ?? this.cartLines,
       isSaleHeld: isSaleHeld ?? this.isSaleHeld,
       shiftStatus: shiftStatus ?? this.shiftStatus,
+      catalogSheetCategoryId: identical(catalogSheetCategoryId, _unset)
+          ? this.catalogSheetCategoryId
+          : catalogSheetCategoryId as String?,
+      catalogSearchQuery: catalogSearchQuery ?? this.catalogSearchQuery,
     );
   }
 }
+
+/// Sentinel for the `copyWith` nullable-field trick above — a private
+/// unique value that can never collide with a real argument.
+const Object _unset = Object();
 
 // ---------------------------------------------------------------------
 // PLACEHOLDER CATALOG — fake categories/products for an outdoor stone +
@@ -381,14 +418,44 @@ class DashboardController extends _$DashboardController {
 
   List<OtherAction> get otherActions => _placeholderOtherActions;
 
-  List<Product> productsForSelectedCategory() {
-    return _placeholderProducts
-        .where((p) => p.categoryId == state.selectedCategoryId)
-        .toList();
+  /// Products for whichever category the catalog sheet currently has
+  /// open, filtered by `catalogSearchQuery` (case-insensitive substring
+  /// match on name). Returns an empty list if the sheet is closed —
+  /// callers should be gated on `isCatalogSheetOpen` anyway.
+  List<Product> productsForCatalogSheet() {
+    final categoryId = state.catalogSheetCategoryId;
+    if (categoryId == null) return const [];
+
+    final query = state.catalogSearchQuery.trim().toLowerCase();
+    return _placeholderProducts.where((p) {
+      final inCategory = p.categoryId == categoryId;
+      final matchesQuery =
+          query.isEmpty || p.name.toLowerCase().contains(query);
+      return inCategory && matchesQuery;
+    }).toList();
   }
 
+  /// Tapping a category tile: opens the sheet on that category (or, if
+  /// the sheet is already open, just swaps which category it's showing
+  /// — no close/reopen transition for the rapid tap-tap-tap flow).
   void selectCategory(String categoryId) {
-    state = state.copyWith(selectedCategoryId: categoryId);
+    state = state.copyWith(
+      selectedCategoryId: categoryId,
+      catalogSheetCategoryId: categoryId,
+    );
+  }
+
+  /// Closes the sheet and clears search — used by the scrim tap, the
+  /// drag-to-dismiss gesture, and the sheet's own close affordance.
+  void closeCatalogSheet() {
+    state = state.copyWith(
+      catalogSheetCategoryId: null,
+      catalogSearchQuery: '',
+    );
+  }
+
+  void setCatalogSearchQuery(String query) {
+    state = state.copyWith(catalogSearchQuery: query);
   }
 
   void toggleShift() {
