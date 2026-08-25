@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gpos_provantis/src/shared/widgets/app_toast.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/core/theme/organic_pattern_background.dart';
 import '../controllers/setup_controller.dart';
@@ -55,18 +57,18 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           .read(setupControllerProvider.notifier)
           .saveSetup();
       if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor:
-                ref.read(setupControllerProvider).errorMessage != null
-                ? context.colors.danger
-                : context.colors.primary,
-            content: Text(
-              'Terminal setup saved successfully.',
-              style: AppTypography.ui(color: context.colors.onPrimary),
-            ),
-          ),
+        AppToast.show(
+          context,
+          message: 'Terminal setup saved successfully.',
+          type: AppToastType.success,
         );
+        
+        // Hand off back to /startup so StartupController re-runs its
+        // domain check and routes on to /login. StartupController stays
+        // the single source of truth for "where do we go next" (see
+        // app_router.dart) instead of Setup deciding to go to /login
+        // itself.
+        context.go('/startup?fromSetup=true');
       }
     }
   }

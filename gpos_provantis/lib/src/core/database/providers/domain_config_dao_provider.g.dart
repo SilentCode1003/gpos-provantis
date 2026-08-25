@@ -58,32 +58,12 @@ final class DomainConfigDaoProvider
 
 String _$domainConfigDaoHash() => r'515dc34eff124926f3e0e26e3a69744efcb65500';
 
-/// Streams the currently configured domain (e.g. 'https://mystore.com')
-/// from the local database. `apiClient` watches this to build its baseUrl,
-/// so as soon as setup saves a new domain, any Dio calls made afterward
-/// automatically pick it up — no manual provider invalidation needed.
-///
-/// Value is null before setup has ever run.
-
 @ProviderFor(activeDomain)
 final activeDomainProvider = ActiveDomainProvider._();
-
-/// Streams the currently configured domain (e.g. 'https://mystore.com')
-/// from the local database. `apiClient` watches this to build its baseUrl,
-/// so as soon as setup saves a new domain, any Dio calls made afterward
-/// automatically pick it up — no manual provider invalidation needed.
-///
-/// Value is null before setup has ever run.
 
 final class ActiveDomainProvider
     extends $FunctionalProvider<AsyncValue<String?>, String?, Stream<String?>>
     with $FutureModifier<String?>, $StreamProvider<String?> {
-  /// Streams the currently configured domain (e.g. 'https://mystore.com')
-  /// from the local database. `apiClient` watches this to build its baseUrl,
-  /// so as soon as setup saves a new domain, any Dio calls made afterward
-  /// automatically pick it up — no manual provider invalidation needed.
-  ///
-  /// Value is null before setup has ever run.
   ActiveDomainProvider._()
     : super(
         from: null,

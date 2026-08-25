@@ -1,17 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:gpos_provantis/src/features/setup/domain/setup_model.dart';
 import 'package:gpos_provantis/src/core/network/domain_provider.dart';
+import 'package:gpos_provantis/src/core/network/api_client.dart';
 import 'package:gpos_provantis/src/services/sync/initial_sync.dart';
 
 part 'setup_controller.g.dart';
 
-/// Port must be digits only (1-5 of them, covers 0-65535 with a final
-/// range check below). This is the actual injection protection: even
-/// though the port field accepts free text, only strings matching this
-/// get treated as a valid port. Anything else (letters, '/', '?', '#',
-/// whitespace, other URL-special characters) is rejected before it ever
-/// reaches the composed URL, so it can't be used to smuggle a different
-/// host, path, or query into the request.
 final RegExp _portPattern = RegExp(r'^[0-9]{1,5}$');
 
 @riverpod
@@ -35,20 +30,11 @@ class SetupController extends _$SetupController {
     _recomposeDomain();
   }
 
-  /// Updates the raw port input and recomposes [SetupState.domain].
-  /// Port is optional — an empty string is valid and simply omits the
-  /// port segment from the composed URL.
   void setPort(String value) {
     state = state.copyWith(port: value, errorMessage: null);
     _recomposeDomain();
   }
 
-  /// Builds the final domain URL from protocol + address + optional port,
-  /// always ending in exactly one trailing slash. Reads protocol from
-  /// state (set via [setProtocol]) rather than taking it as a parameter —
-  /// previously this defaulted to 'https://' whenever address/port changed
-  /// without explicitly re-passing the protocol, silently overwriting the
-  /// user's http:// selection on the very next keystroke.
   void _recomposeDomain() {
     final protocol = state.protocol;
     final address = state.address.trim();
@@ -70,8 +56,6 @@ class SetupController extends _$SetupController {
     _recomposeDomain();
   }
 
-  /// Validates the port field. Returns null if valid (including empty —
-  /// port is optional), or an error string for the form field to display.
   String? validatePort(String? value) {
     final port = (value ?? '').trim();
     if (port.isEmpty) return null; // optional
@@ -86,10 +70,6 @@ class SetupController extends _$SetupController {
     return null;
   }
 
-  /// Saves the domain, then fetches + saves branch and pos config.
-  /// Returns true only if every step succeeds — the screen should stay on
-  /// setup and show [SetupState.errorMessage] otherwise, so the user can
-  /// fix input or retry rather than proceeding with incomplete config.
   Future<bool> saveSetup() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
@@ -112,17 +92,34 @@ class SetupController extends _$SetupController {
     }
 
     try {
-      // 1. Save the domain FIRST and await it. apiClient reads the domain
-      //    from the DB via activeDomainProvider, so the branch/pos calls
-      //    right after this must see the new value already committed.
+      // 1. Save the domain and await the write completing.
+      debugPrint('🔧 saveSetup: saving domain="$domain"');
       await ref.read(domainConfigDaoProvider).saveDomain(domain);
+      debugPrint('🔧 saveSetup: domain write committed');
 
-      // 2. Fetch + save branch and pos config from the server.
+      ref.invalidate(activeDomainProvider);
+      ref.invalidate(apiClientProvider);
+      final confirmedDomain = await ref
+          .read(domainConfigDaoProvider)
+          .getDomain();
+      debugPrint(
+        '🔧 saveSetup: confirmedDomain (direct read) = "$confirmedDomain"',
+      );
+
+      if (confirmedDomain != domain) {
+        throw Exception('Domain did not save correctly. Please try again.');
+      }
+      debugPrint('🔧 saveSetup: domain confirmed, starting sync');
+
+      // 3. Fetch + save branch and pos config from the server.
       final syncResult = await ref
           .read(initialSyncServiceProvider)
           .run(branchId: branchId, posId: posId);
 
       if (!syncResult.success) {
+        debugPrint(
+          '🔥 saveSetup: syncResult failed: ${syncResult.errorMessage}',
+        );
         state = state.copyWith(
           isLoading: false,
           errorMessage:
@@ -132,9 +129,12 @@ class SetupController extends _$SetupController {
         return false;
       }
 
+      debugPrint('🔧 saveSetup: sync succeeded');
       state = state.copyWith(isLoading: false);
       return true;
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('🔥 saveSetup: caught in outer try/catch: $e');
+      debugPrint('$st');
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Failed to save configuration. Please try again.',

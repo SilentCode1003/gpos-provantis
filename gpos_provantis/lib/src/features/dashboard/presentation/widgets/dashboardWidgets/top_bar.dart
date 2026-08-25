@@ -2,8 +2,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
+import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
 
 /// --- Top bar: status only (branch, time, shift, OR number) + profile ------
 ///
@@ -222,8 +224,9 @@ const double _topBarTapTarget = 72;
 /// Logout. Settings reuses the same handler as the top bar's own
 /// Settings button rather than duplicating a second, separately-wired
 /// no-op — the two entry points should always do the same thing. Logout
-/// always confirms first via `_LogoutConfirmationDialog` before this
-/// widget calls through to the actual sign-out hook.
+/// always confirms first via the shared `showConfirmDialog` (see
+/// `confirm_dialog.dart`) before this widget calls through to the actual
+/// sign-out hook.
 class _ProfileMenu extends StatelessWidget {
   const _ProfileMenu();
 
@@ -233,17 +236,16 @@ class _ProfileMenu extends StatelessWidget {
   ) async {
     switch (action) {
       case _ProfileMenuAction.settings:
-        // Same hook as the top bar's own "Settings" button — wire both
-        // to the real settings route/sheet together.
         break;
       case _ProfileMenuAction.logout:
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (context) => const _LogoutConfirmationDialog(),
+        final confirmed = await showConfirmDialog(
+          context,
+          title: 'Logout?',
+          body: 'You\u2019ll need to sign back in to continue using the till.',
+          confirmLabel: 'LOGOUT',
         );
-        if (confirmed == true) {
-          // TODO: hook up to the real sign-out flow (clear session,
-          // navigate to the login screen, etc).
+        if (confirmed == true && context.mounted) {
+          context.go('/login');
         }
     }
   }
@@ -396,108 +398,6 @@ class _ProfileMenuRow extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Confirmation dialog shown before logout actually happens — a signed-in
-/// cashier tapping the wrong dropdown item shouldn't get kicked out of an
-/// active sale with no way back. Returns `true` via `Navigator.pop` if
-/// the person confirms, `false`/`null` otherwise (including dismissing
-/// by tapping outside).
-class _LogoutConfirmationDialog extends StatelessWidget {
-  const _LogoutConfirmationDialog();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return AlertDialog(
-      // Same bug class as PopupMenuButton above: no explicit
-      // backgroundColor means Flutter falls back to Material 3's own
-      // default dialog surface tint, which reads dark/near-black
-      // regardless of app theme — not a light/dark mode issue, just a
-      // missing color. `colors.surfaceRaised` matches the token this
-      // theme uses for every other floating surface (cards, sheets,
-      // the profile dropdown above).
-      backgroundColor: colors.surfaceRaised,
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      // Left-aligned, compact title/body instead of a centered icon +
-      // headline stack. A big icon-in-circle above a title reads as the
-      // template confirm-dialog now — the same shape is on every
-      // "delete this?" prompt from a few years back. Skipping it and
-      // tightening the type keeps the color (danger red, on the action
-      // below) carrying the "this is destructive" signal instead of an
-      // icon doing it redundantly.
-      titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-      title: Text(
-        'Log out?',
-        style: AppTypography.display(
-          color: colors.textPrimary,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      contentPadding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-      content: Text(
-        'You’ll need to sign back in to continue using the till.',
-        style: AppTypography.ui(color: colors.textSecondary, fontSize: 15),
-      ),
-      // Stacked full-width actions (destructive on top, plain-text
-      // cancel below) rather than two equal-weight side-by-side pills.
-      // Two same-size buttons is what makes a dialog read as a
-      // generic template; a single confident primary action with a
-      // lighter-weight way out underneath is the current native
-      // pattern (iOS action sheets, refreshed Material dialogs) and
-      // also states a clearer default for a touchscreen till.
-      actionsPadding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-      actions: [
-        SizedBox(
-          width: double.infinity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colors.danger,
-                    foregroundColor: colors.onDanger,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: Text(
-                    'Log out',
-                    style: AppTypography.ui(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                height: 48,
-                child: TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text(
-                    'Cancel',
-                    style: AppTypography.ui(
-                      color: colors.textSecondary,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

@@ -6,29 +6,29 @@ import 'package:gpos_provantis/src/core/models/api_response_model.dart';
 import 'package:gpos_provantis/src/core/network/api_client.dart';
 import 'package:gpos_provantis/src/core/network/domain_provider.dart';
 import 'package:gpos_provantis/src/core/database/app_database.dart';
-import 'package:gpos_provantis/src/core/database/daos/branch_config_dao.dart';
-import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/daos/user_data_dao.dart';
+import 'package:gpos_provantis/src/core/database/providers/user_data_dao_provider.dart';
 
-import '../domain/branch_config_dto.dart';
+import '../domain/user_data_dto.dart';
 
-part 'branch_config_repository.g.dart';
+part 'login_repository.g.dart';
 
 @Riverpod(keepAlive: true)
-BranchRepository branchRepository(Ref ref) {
-  final dao = ref.watch(branchConfigDaoProvider);
-  return BranchRepository(ref, dao);
+UserDataRepository userDataRepository(Ref ref) {
+  final dao = ref.watch(userDataDaoProvider);
+  return UserDataRepository(ref, dao);
 }
 
-class BranchRepository {
+class UserDataRepository {
   final Ref _ref;
-  final BranchConfigDao _dao;
+  final UserDataDao _dao;
 
-  BranchRepository(this._ref, this._dao);
+  UserDataRepository(this._ref, this._dao);
 
   /// Calls POST /branch/getbranch with the given branchId, and saves the
   /// first matching record to BranchConfigTable. Throws on network/parse
   /// failure — callers (InitialSyncService) decide how to surface that.
-  Future<void> fetchAndSaveBranch(String branchId) async {
+  Future<void> fetchAndSaveUser(String username, String password) async {
     // Wait for DomainConfigDao's startup cache warm-up to finish before
     // touching apiClient. This matters specifically right after an app
     // restart: the in-memory domain cache starts empty and is repopulated
@@ -40,33 +40,34 @@ class BranchRepository {
 
     final dio = _ref.read(apiClientProvider);
     final response = await dio.post(
-      '/branch/getbranch',
-      data: {'branchid': branchId},
+      '/poslogin',
+      data: {'username': username, 'password': password},
     );
 
-    final apiResponse = ApiResponseModel<List<BranchConfigDto>>.fromDioResponse(
+    final apiResponse = ApiResponseModel<List<UserDataDto>>.fromDioResponse(
       response,
       fromJson: (data) => (data as List)
-          .map((x) => BranchConfigDto.fromJson(x as Map<String, dynamic>))
+          .map((x) => UserDataDto.fromJson(x as Map<String, dynamic>))
           .toList(),
     );
 
     final records = apiResponse.responseData;
     if (records == null || records.isEmpty) {
-      throw Exception('No branch config returned for branchId "$branchId".');
+      throw Exception('No user data returned for user "$username".');
     }
 
-    final branch = records.first;
-    await _dao.saveBranch(
-      BranchConfigTableCompanion.insert(
-        branchId: Value(branch.branchId),
-        branchName: Value(branch.branchName),
-        tin: Value(branch.tin),
-        address: Value(branch.address),
-        logo: Value(branch.logo),
-        status: Value(branch.status),
-        createdBy: Value(branch.createdBy),
-        createdDate: Value(branch.createdDate),
+    final user = records.first;
+    await _dao.saveUser(
+      UserDataTableCompanion.insert(
+        employeeId: Value(user.employeeId),
+        fullName: Value(user.fullName),
+        position: Value(user.position),
+        contactInfo: Value(user.contactInfo),
+        dateHired: Value(user.dateHired),
+        userCode: Value(user.userCode),
+        accessType: Value(user.accessType),
+        status: Value(user.status),
+        apk: Value(user.apk),
       ),
     );
   }

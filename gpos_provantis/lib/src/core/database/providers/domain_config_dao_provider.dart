@@ -12,12 +12,6 @@ DomainConfigDao domainConfigDao(Ref ref) {
   return DomainConfigDao(db);
 }
 
-/// Streams the currently configured domain (e.g. 'https://mystore.com')
-/// from the local database. `apiClient` watches this to build its baseUrl,
-/// so as soon as setup saves a new domain, any Dio calls made afterward
-/// automatically pick it up — no manual provider invalidation needed.
-///
-/// Value is null before setup has ever run.
 @Riverpod(keepAlive: true)
 Stream<String?> activeDomain(Ref ref) {
   final dao = ref.watch(domainConfigDaoProvider);

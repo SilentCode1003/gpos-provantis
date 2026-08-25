@@ -10,6 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/core/theme/organic_pattern_background.dart';
+import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
+import 'package:gpos_provantis/src/shared/widgets/app_toast.dart';
 import '../controllers/login_controller.dart';
 
 /// =========================================================================
@@ -249,8 +251,10 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
     final ok = await ref.read(loginControllerProvider.notifier).submit();
     if (ok && mounted) {
       context.go('/dashboard');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login successful!')),
+      AppToast.show(
+        context,
+        message: 'Login successful!',
+        type: AppToastType.success,
       );
     }
   }
@@ -509,14 +513,29 @@ class _SetupButton extends StatelessWidget {
     return _FlatIconButton(
       icon: Icons.dns_outlined,
       tooltip: 'Setup',
-      onPressed: () {
-        // TODO(routing): navigate to the domain/setup screen once it
-        // exists — e.g. context.push('/setup') via go_router.
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Setup screen not wired yet')),
-        );
-      },
+      onPressed: () => _confirmReturnToSetup(context),
     );
+  }
+}
+
+/// Leaving login for /setup mid-session is disruptive — it interrupts
+/// whoever's signing in and re-opens the domain/branch/POS config. A
+/// stray tap on a touchscreen POS shouldn't be able to trigger that, so
+/// this requires a deliberate second confirmation before navigating.
+Future<void> _confirmReturnToSetup(BuildContext context) async {
+  final confirmed = await showConfirmDialog(
+    context,
+    eyebrow: 'RETURN TO SETUP',
+    title: 'Leave login for domain setup?',
+    body:
+        'This reopens domain, branch, and POS configuration. Anyone '
+        'signing in on this device will need to wait until setup is '
+        'finished again.',
+    confirmLabel: 'PROCEED',
+  );
+
+  if (confirmed == true && context.mounted) {
+    context.go('/setup');
   }
 }
 
@@ -530,9 +549,7 @@ class _SyncButton extends StatelessWidget {
       tooltip: 'Sync',
       onPressed: () {
         // TODO(logic): trigger a real sync job once sync logic exists.
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Sync not wired yet')));
+        AppToast.show(context, message: 'Sync not wired yet', type: AppToastType.neutral);
       },
     );
   }

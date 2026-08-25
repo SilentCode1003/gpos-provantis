@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:device_preview_plus/device_preview_plus.dart';
+import 'core/theme/theme.dart';
 import 'routing/app_router.dart';
 
 class GposProvantisApp extends ConsumerWidget {
@@ -10,6 +11,7 @@ class GposProvantisApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final goRouter = ref.watch(goRouterProvider);
+    final themeMode = ref.watch(themeModeControllerProvider);
 
     // 1. Initialize ScreenUtil for the 2015-2026 Android range
     return ScreenUtilInit(
@@ -28,9 +30,18 @@ class GposProvantisApp extends ConsumerWidget {
 
           routerConfig: goRouter,
 
-          // Add your theme here later
-          theme: ThemeData.light(),
-          darkTheme: ThemeData.dark(),
+          // Real theme system (see src/core/theme/) — AppTheme builds
+          // each ThemeData with its AppColors attached as a
+          // ThemeExtension, which is what context.colors reads from
+          // (see app_colors_extension.dart). themeMode is the user's
+          // saved light/dark/system preference from
+          // themeModeControllerProvider (theme_mode_provider.dart);
+          // watching it here is what makes MaterialApp actually rebuild
+          // when the user changes it.
+          theme: AppTheme.light,
+          // Reminder to uncomment this later
+          darkTheme: AppTheme.dark,
+          themeMode: themeMode,
         );
       },
     );

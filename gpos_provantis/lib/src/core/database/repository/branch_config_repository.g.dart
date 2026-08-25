@@ -53,4 +53,4 @@ final class BranchRepositoryProvider
   }
 }
 
-String _$branchRepositoryHash() => r'b5276e6ce9adf8a8e51d6d2a668496f4f723b44a';
+String _$branchRepositoryHash() => r'44f505671bf2ec4b0303cfc3994d144acbf94353';

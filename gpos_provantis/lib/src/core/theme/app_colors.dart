@@ -46,10 +46,16 @@ abstract class AppPalette {
   static const neutral500 = Color(0xFF708080);
   static const neutral600 = Color(0xFF546261);
   static const neutral700 = Color(0xFF404C4B);
+  static const neutral750 = Color(0xFF333D3C); // lifted dark-mode background
   static const neutral800 = Color(0xFF2A3332);
+  static const neutral850 = Color(0xFF232B2A); // lifted dark-mode surface
   static const neutral900 = Color(0xFF1C2322);
   static const neutral950 = Color(0xFF0F1414);
-  static const neutral1000 = Color(0xFF0A0D0D); // dark mode base, not pure black
+  static const neutral1000 = Color(
+    0xFF0A0D0D,
+  ); // unused by AppColors.dark now —
+  // kept only in case something elsewhere in the app reaches for true
+  // near-black directly; the semantic dark theme below no longer uses it.
 
   // ---- Semantic hues (status colors, tuned to sit well next to teal) -----
   static const green500 = Color(0xFF2E9E5B); // success
@@ -264,11 +270,17 @@ class AppColors extends ThemeExtension<AppColors> {
   // ---------------------------------------------------------------------
   // DARK
   // ---------------------------------------------------------------------
-  // Base is a near-black teal-tinted charcoal (neutral1000), not pure
-  // #000000 — pure black causes halation/smearing on OLED under bright
-  // retail lighting and makes the teal brand color look washed out next
-  // to it. Containers get darker, desaturated status hues rather than
-  // just dimming the light-mode ones, per Material 3 guidance.
+  // Base is a LIFTED teal-tinted charcoal (neutral750), not a near-black
+  // (previously neutral1000, ~5% luminance). Near-black backgrounds next
+  // to near-white text create the exact AMOLED-style contrast spike
+  // that's hard on the eyes over a long POS shift — pure black also
+  // causes halation/smearing on OLED under bright retail lighting and
+  // makes the teal brand color look washed out next to it. Lifting the
+  // background AND softening textPrimary (neutral100 -> neutral200) pulls
+  // both ends of the scale in toward each other instead of camping at
+  // opposite extremes — same legible-in-the-dark result, gentler get-there.
+  // Containers get darker, desaturated status hues rather than just
+  // dimming the light-mode ones, per Material 3 guidance.
   static const dark = AppColors(
     brightness: Brightness.dark,
 
@@ -277,17 +289,17 @@ class AppColors extends ThemeExtension<AppColors> {
     primaryContainer: AppPalette.teal700,
     onPrimaryContainer: AppPalette.teal100,
 
-    background: AppPalette.neutral1000,
-    onBackground: AppPalette.neutral100,
-    surface: AppPalette.neutral950,
-    onSurface: AppPalette.neutral100,
-    surfaceVariant: AppPalette.neutral900,
+    background: AppPalette.neutral750,
+    onBackground: AppPalette.neutral200,
+    surface: AppPalette.neutral800,
+    onSurface: AppPalette.neutral200,
+    surfaceVariant: AppPalette.neutral850,
     onSurfaceVariant: AppPalette.neutral300,
-    surfaceRaised: AppPalette.neutral900,
-    border: AppPalette.neutral800,
-    borderSubtle: AppPalette.neutral900,
+    surfaceRaised: AppPalette.neutral850,
+    border: AppPalette.neutral700,
+    borderSubtle: AppPalette.neutral800,
 
-    textPrimary: AppPalette.neutral100,
+    textPrimary: AppPalette.neutral200,
     textSecondary: AppPalette.neutral400,
     textDisabled: AppPalette.neutral600,
     onColor: AppPalette.neutral950,
@@ -317,10 +329,15 @@ class AppColors extends ThemeExtension<AppColors> {
     refund: AppPalette.orange500,
     onRefund: AppPalette.neutral950,
 
+    // Shadow/overlay kept as near-black washes rather than lifted —
+    // these are transparency-based (not a fill), so they still need to
+    // read as "recede/dim" against the new lighter surfaces, and a
+    // lifted shadow color would just look gray and washed out instead
+    // of receding.
     shadow: Color(0x66000000), // 40% black — needs to read on dark surfaces
     overlay: Color(0x99000000), // 60% black
-    divider: AppPalette.neutral800,
-    disabledFill: AppPalette.neutral900,
+    divider: AppPalette.neutral700,
+    disabledFill: AppPalette.neutral850,
   );
 
   @override
@@ -421,14 +438,26 @@ class AppColors extends ThemeExtension<AppColors> {
       brightness: t < 0.5 ? brightness : other.brightness,
       primary: Color.lerp(primary, other.primary, t)!,
       onPrimary: Color.lerp(onPrimary, other.onPrimary, t)!,
-      primaryContainer: Color.lerp(primaryContainer, other.primaryContainer, t)!,
-      onPrimaryContainer: Color.lerp(onPrimaryContainer, other.onPrimaryContainer, t)!,
+      primaryContainer: Color.lerp(
+        primaryContainer,
+        other.primaryContainer,
+        t,
+      )!,
+      onPrimaryContainer: Color.lerp(
+        onPrimaryContainer,
+        other.onPrimaryContainer,
+        t,
+      )!,
       background: Color.lerp(background, other.background, t)!,
       onBackground: Color.lerp(onBackground, other.onBackground, t)!,
       surface: Color.lerp(surface, other.surface, t)!,
       onSurface: Color.lerp(onSurface, other.onSurface, t)!,
       surfaceVariant: Color.lerp(surfaceVariant, other.surfaceVariant, t)!,
-      onSurfaceVariant: Color.lerp(onSurfaceVariant, other.onSurfaceVariant, t)!,
+      onSurfaceVariant: Color.lerp(
+        onSurfaceVariant,
+        other.onSurfaceVariant,
+        t,
+      )!,
       surfaceRaised: Color.lerp(surfaceRaised, other.surfaceRaised, t)!,
       border: Color.lerp(border, other.border, t)!,
       borderSubtle: Color.lerp(borderSubtle, other.borderSubtle, t)!,
@@ -438,16 +467,36 @@ class AppColors extends ThemeExtension<AppColors> {
       onColor: Color.lerp(onColor, other.onColor, t)!,
       success: Color.lerp(success, other.success, t)!,
       onSuccess: Color.lerp(onSuccess, other.onSuccess, t)!,
-      successContainer: Color.lerp(successContainer, other.successContainer, t)!,
-      onSuccessContainer: Color.lerp(onSuccessContainer, other.onSuccessContainer, t)!,
+      successContainer: Color.lerp(
+        successContainer,
+        other.successContainer,
+        t,
+      )!,
+      onSuccessContainer: Color.lerp(
+        onSuccessContainer,
+        other.onSuccessContainer,
+        t,
+      )!,
       warning: Color.lerp(warning, other.warning, t)!,
       onWarning: Color.lerp(onWarning, other.onWarning, t)!,
-      warningContainer: Color.lerp(warningContainer, other.warningContainer, t)!,
-      onWarningContainer: Color.lerp(onWarningContainer, other.onWarningContainer, t)!,
+      warningContainer: Color.lerp(
+        warningContainer,
+        other.warningContainer,
+        t,
+      )!,
+      onWarningContainer: Color.lerp(
+        onWarningContainer,
+        other.onWarningContainer,
+        t,
+      )!,
       danger: Color.lerp(danger, other.danger, t)!,
       onDanger: Color.lerp(onDanger, other.onDanger, t)!,
       dangerContainer: Color.lerp(dangerContainer, other.dangerContainer, t)!,
-      onDangerContainer: Color.lerp(onDangerContainer, other.onDangerContainer, t)!,
+      onDangerContainer: Color.lerp(
+        onDangerContainer,
+        other.onDangerContainer,
+        t,
+      )!,
       info: Color.lerp(info, other.info, t)!,
       onInfo: Color.lerp(onInfo, other.onInfo, t)!,
       infoContainer: Color.lerp(infoContainer, other.infoContainer, t)!,

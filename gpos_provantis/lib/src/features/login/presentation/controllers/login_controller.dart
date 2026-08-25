@@ -1,17 +1,8 @@
 // Location: src/features/auth/controllers/login_controller.dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:gpos_provantis/src/core/database/repository/login_repository.dart';
 
 part 'login_controller.g.dart';
-
-/// =========================================================================
-/// LOGIN CONTROLLER — design-first stub.
-///
-/// This intentionally does the bare minimum right now: hold form field
-/// values, a submitting flag, and an error message, with a hardcoded
-/// admin/admin check standing in for real auth. When real logic lands,
-/// only `submit()` needs to change — the screen already reads/writes
-/// through this controller, so the UI itself shouldn't need edits.
-/// =========================================================================
 
 class LoginState {
   const LoginState({
@@ -63,25 +54,31 @@ class LoginController extends _$LoginController {
     state = state.copyWith(obscurePassword: !state.obscurePassword);
   }
 
-  /// TODO(real-auth): replace the hardcoded check with an actual API/auth
-  /// call once backend/logic work starts. Returns true on success so the
-  /// screen knows whether to navigate.
   Future<bool> submit() async {
-    state = state.copyWith(isSubmitting: true, clearError: true);
+    final username = state.username.trim();
+    final password = state.password.trim();
 
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-
-    final ok = state.username == 'admin' && state.password == 'admin';
-
-    if (!ok) {
+    if (username.isEmpty || password.isEmpty) {
       state = state.copyWith(
-        isSubmitting: false,
-        errorMessage: 'Invalid username or password',
+        errorMessage: 'Username and password are required.',
       );
       return false;
     }
 
-    state = state.copyWith(isSubmitting: false);
-    return true;
+    state = state.copyWith(isSubmitting: true, clearError: true);
+
+    try {
+      await ref
+          .read(userDataRepositoryProvider)
+          .fetchAndSaveUser(username, password);
+      state = state.copyWith(isSubmitting: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isSubmitting: false,
+        errorMessage: 'Invalid username or password.',
+      );
+      return false;
+    }
   }
 }
