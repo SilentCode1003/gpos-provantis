@@ -14,6 +14,16 @@ import 'tables/pos_config_table.dart';
 import 'tables/branch_config_table.dart';
 import 'tables/domain_config_table.dart';
 import 'tables/user_data_table.dart';
+// New Tables
+import 'tables/categories_table.dart';
+import 'tables/denomination_table.dart';
+import 'tables/discount_table.dart';
+import 'tables/employees_table.dart';
+import 'tables/payments_table.dart';
+import 'tables/pos_detail_id_table.dart';
+import 'tables/pos_shift_table.dart';
+import 'tables/product_price_table.dart';
+import 'tables/promo_table.dart';
 
 import 'daos/domain_config_dao.dart';
 import 'daos/branch_config_dao.dart';
@@ -29,7 +39,21 @@ part 'app_database.g.dart';
 /// 3. Increment [schemaVersion]
 /// 4. Add migration logic in the [migration] getter below.
 @DriftDatabase(
-  tables: [POSConfigTable, UserDataTable, BranchConfigTable, DomainConfigTable],
+  tables: [
+    POSConfigTable,
+    UserDataTable,
+    BranchConfigTable,
+    DomainConfigTable,
+    CategoriesTable,
+    DenominationTable,
+    DiscountTable,
+    EmployeesTable,
+    PaymentsTable,
+    PosDetailIdTable,
+    PosShiftTable,
+    ProductPriceTable,
+    PromoTable,
+  ],
   daos: [DomainConfigDao, BranchConfigDao, PosConfigDao],
 )
 class AppDatabase extends _$AppDatabase {
