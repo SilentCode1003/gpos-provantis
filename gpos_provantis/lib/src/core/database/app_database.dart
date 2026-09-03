@@ -16,8 +16,8 @@ import 'tables/domain_config_table.dart';
 import 'tables/user_data_table.dart';
 // New Tables
 import 'tables/categories_table.dart';
-import 'tables/denomination_table.dart';
-import 'tables/discount_table.dart';
+import 'tables/denominations_table.dart';
+import 'tables/discounts_table.dart';
 import 'tables/employees_table.dart';
 import 'tables/payments_table.dart';
 import 'tables/pos_detail_id_table.dart';
@@ -45,8 +45,8 @@ part 'app_database.g.dart';
     BranchConfigTable,
     DomainConfigTable,
     CategoriesTable,
-    DenominationTable,
-    DiscountTable,
+    DenominationsTable,
+    DiscountsTable,
     EmployeesTable,
     PaymentsTable,
     PosDetailIdTable,

@@ -9,7 +9,7 @@ class PosDetailIdDao extends DatabaseAccessor<AppDatabase>
     with _$PosDetailIdDaoMixin {
   PosDetailIdDao(super.db);
 
-  Future<void> savePosDetailId(PosDetailIdTableData posDetailId) {
+  Future<void> savePosDetailId(Insertable<PosDetailIdTableData> posDetailId) {
     return into(posDetailIdTable).insertOnConflictUpdate(posDetailId);
   }
 

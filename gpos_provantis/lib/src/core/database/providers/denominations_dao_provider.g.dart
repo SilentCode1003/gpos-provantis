@@ -14,8 +14,12 @@ final denominationsDaoProvider = DenominationsDaoProvider._();
 
 final class DenominationsDaoProvider
     extends
-        $FunctionalProvider<DenominationDao, DenominationDao, DenominationDao>
-    with $Provider<DenominationDao> {
+        $FunctionalProvider<
+          DenominationsDao,
+          DenominationsDao,
+          DenominationsDao
+        >
+    with $Provider<DenominationsDao> {
   DenominationsDaoProvider._()
     : super(
         from: null,
@@ -32,21 +36,21 @@ final class DenominationsDaoProvider
 
   @$internal
   @override
-  $ProviderElement<DenominationDao> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<DenominationsDao> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  DenominationDao create(Ref ref) {
+  DenominationsDao create(Ref ref) {
     return denominationsDao(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(DenominationDao value) {
+  Override overrideWithValue(DenominationsDao value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<DenominationDao>(value),
+      providerOverride: $SyncValueProvider<DenominationsDao>(value),
     );
   }
 }
 
-String _$denominationsDaoHash() => r'a2366af74275ce3e1a6f2621a618acfd3056eb6f';
+String _$denominationsDaoHash() => r'ee0b74980e86c2e5f6026b343cd2633111279068';

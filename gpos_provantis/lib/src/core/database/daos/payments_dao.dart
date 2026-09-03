@@ -13,6 +13,15 @@ class PaymentsDao extends DatabaseAccessor<AppDatabase>
     return into(paymentsTable).insert(payment);
   }
 
+  Future<void> replacePayments(List<PaymentsTableCompanion> payments) {
+    return transaction(() async {
+      await delete(paymentsTable).go();
+      await batch((batch) {
+        batch.insertAll(paymentsTable, payments);
+      });
+    });
+  }
+
   Future<List<PaymentsTableData>> getAllPayments() {
     return select(paymentsTable).get();
   }

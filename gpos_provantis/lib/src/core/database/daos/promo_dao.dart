@@ -12,6 +12,15 @@ class PromoDao extends DatabaseAccessor<AppDatabase> with _$PromoDaoMixin {
     return into(promoTable).insert(data);
   }
 
+  Future<void> replacePromos(List<PromoTableCompanion> data) {
+    return transaction(() async {
+      await delete(promoTable).go();
+      await batch((batch) {
+        batch.insertAll(promoTable, data);
+      });
+    });
+  }
+
   Future<List<PromoTableData>> getAllPromos() {
     return select(promoTable).get();
   }

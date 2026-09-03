@@ -13,6 +13,15 @@ class PosShiftDao extends DatabaseAccessor<AppDatabase>
     return into(posShiftTable).insert(data);
   }
 
+  Future<void> replacePosShifts(List<PosShiftTableCompanion> data) {
+    return transaction(() async {
+      await delete(posShiftTable).go();
+      await batch((batch) {
+        batch.insertAll(posShiftTable, data);
+      });
+    });
+  }
+
   Future<List<PosShiftTableData>> getAllPosShifts() {
     return select(posShiftTable).get();
   }

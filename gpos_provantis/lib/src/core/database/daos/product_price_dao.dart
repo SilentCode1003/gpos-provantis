@@ -13,6 +13,15 @@ class ProductPriceDao extends DatabaseAccessor<AppDatabase>
     return into(productPriceTable).insert(data);
   }
 
+  Future<void> replaceProductPrices(List<ProductPriceTableCompanion> data) {
+    return transaction(() async {
+      await delete(productPriceTable).go();
+      await batch((batch) {
+        batch.insertAll(productPriceTable, data);
+      });
+    });
+  }
+
   Future<List<ProductPriceTableData>> getAllProductPrices() {
     return select(productPriceTable).get();
   }

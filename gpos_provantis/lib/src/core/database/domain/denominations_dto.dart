@@ -1,4 +1,4 @@
-class DenominationDto {
+class DenominationsDto {
   final int id;
   final String code;
   final String description;
@@ -7,7 +7,7 @@ class DenominationDto {
   final String createdBy;
   final String createdDate;
 
-  DenominationDto({
+  DenominationsDto({
     required this.id,
     required this.code,
     required this.description,
@@ -17,8 +17,8 @@ class DenominationDto {
     required this.createdDate,
   });
 
-  factory DenominationDto.fromJson(Map<String, dynamic> json) {
-    return DenominationDto(
+  factory DenominationsDto.fromJson(Map<String, dynamic> json) {
+    return DenominationsDto(
       id: (json['id'] ?? 0),
       code: (json['code'] ?? '').toString(),
       description: (json['description'] ?? '').toString(),

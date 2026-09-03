@@ -13,6 +13,15 @@ class EmployeesDao extends DatabaseAccessor<AppDatabase>
     return into(employeesTable).insert(employee);
   }
 
+  Future<void> replaceEmployees(List<EmployeesTableCompanion> employees) {
+    return transaction(() async {
+      await delete(employeesTable).go();
+      await batch((batch) {
+        batch.insertAll(employeesTable, employees);
+      });
+    });
+  }
+
   Future<List<EmployeesTableData>> getAllEmployees() {
     return select(employeesTable).get();
   }

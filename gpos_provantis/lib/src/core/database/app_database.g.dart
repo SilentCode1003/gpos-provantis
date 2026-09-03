@@ -2300,12 +2300,12 @@ class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
   }
 }
 
-class $DenominationTableTable extends DenominationTable
-    with TableInfo<$DenominationTableTable, DenominationTableData> {
+class $DenominationsTableTable extends DenominationsTable
+    with TableInfo<$DenominationsTableTable, DenominationsTableData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $DenominationTableTable(this.attachedDatabase, [this._alias]);
+  $DenominationsTableTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -2396,10 +2396,10 @@ class $DenominationTableTable extends DenominationTable
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'denomination_table';
+  static const String $name = 'denominations_table';
   @override
   VerificationContext validateIntegrity(
-    Insertable<DenominationTableData> instance, {
+    Insertable<DenominationsTableData> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -2455,9 +2455,9 @@ class $DenominationTableTable extends DenominationTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  DenominationTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  DenominationsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return DenominationTableData(
+    return DenominationsTableData(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -2490,13 +2490,13 @@ class $DenominationTableTable extends DenominationTable
   }
 
   @override
-  $DenominationTableTable createAlias(String alias) {
-    return $DenominationTableTable(attachedDatabase, alias);
+  $DenominationsTableTable createAlias(String alias) {
+    return $DenominationsTableTable(attachedDatabase, alias);
   }
 }
 
-class DenominationTableData extends DataClass
-    implements Insertable<DenominationTableData> {
+class DenominationsTableData extends DataClass
+    implements Insertable<DenominationsTableData> {
   final int id;
   final String code;
   final String description;
@@ -2504,7 +2504,7 @@ class DenominationTableData extends DataClass
   final String status;
   final String createdBy;
   final String createdDate;
-  const DenominationTableData({
+  const DenominationsTableData({
     required this.id,
     required this.code,
     required this.description,
@@ -2526,8 +2526,8 @@ class DenominationTableData extends DataClass
     return map;
   }
 
-  DenominationTableCompanion toCompanion(bool nullToAbsent) {
-    return DenominationTableCompanion(
+  DenominationsTableCompanion toCompanion(bool nullToAbsent) {
+    return DenominationsTableCompanion(
       id: Value(id),
       code: Value(code),
       description: Value(description),
@@ -2538,12 +2538,12 @@ class DenominationTableData extends DataClass
     );
   }
 
-  factory DenominationTableData.fromJson(
+  factory DenominationsTableData.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return DenominationTableData(
+    return DenominationsTableData(
       id: serializer.fromJson<int>(json['id']),
       code: serializer.fromJson<String>(json['code']),
       description: serializer.fromJson<String>(json['description']),
@@ -2567,7 +2567,7 @@ class DenominationTableData extends DataClass
     };
   }
 
-  DenominationTableData copyWith({
+  DenominationsTableData copyWith({
     int? id,
     String? code,
     String? description,
@@ -2575,7 +2575,7 @@ class DenominationTableData extends DataClass
     String? status,
     String? createdBy,
     String? createdDate,
-  }) => DenominationTableData(
+  }) => DenominationsTableData(
     id: id ?? this.id,
     code: code ?? this.code,
     description: description ?? this.description,
@@ -2584,8 +2584,8 @@ class DenominationTableData extends DataClass
     createdBy: createdBy ?? this.createdBy,
     createdDate: createdDate ?? this.createdDate,
   );
-  DenominationTableData copyWithCompanion(DenominationTableCompanion data) {
-    return DenominationTableData(
+  DenominationsTableData copyWithCompanion(DenominationsTableCompanion data) {
+    return DenominationsTableData(
       id: data.id.present ? data.id.value : this.id,
       code: data.code.present ? data.code.value : this.code,
       description: data.description.present
@@ -2602,7 +2602,7 @@ class DenominationTableData extends DataClass
 
   @override
   String toString() {
-    return (StringBuffer('DenominationTableData(')
+    return (StringBuffer('DenominationsTableData(')
           ..write('id: $id, ')
           ..write('code: $code, ')
           ..write('description: $description, ')
@@ -2620,7 +2620,7 @@ class DenominationTableData extends DataClass
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is DenominationTableData &&
+      (other is DenominationsTableData &&
           other.id == this.id &&
           other.code == this.code &&
           other.description == this.description &&
@@ -2630,8 +2630,8 @@ class DenominationTableData extends DataClass
           other.createdDate == this.createdDate);
 }
 
-class DenominationTableCompanion
-    extends UpdateCompanion<DenominationTableData> {
+class DenominationsTableCompanion
+    extends UpdateCompanion<DenominationsTableData> {
   final Value<int> id;
   final Value<String> code;
   final Value<String> description;
@@ -2639,7 +2639,7 @@ class DenominationTableCompanion
   final Value<String> status;
   final Value<String> createdBy;
   final Value<String> createdDate;
-  const DenominationTableCompanion({
+  const DenominationsTableCompanion({
     this.id = const Value.absent(),
     this.code = const Value.absent(),
     this.description = const Value.absent(),
@@ -2648,7 +2648,7 @@ class DenominationTableCompanion
     this.createdBy = const Value.absent(),
     this.createdDate = const Value.absent(),
   });
-  DenominationTableCompanion.insert({
+  DenominationsTableCompanion.insert({
     this.id = const Value.absent(),
     this.code = const Value.absent(),
     this.description = const Value.absent(),
@@ -2657,7 +2657,7 @@ class DenominationTableCompanion
     this.createdBy = const Value.absent(),
     this.createdDate = const Value.absent(),
   });
-  static Insertable<DenominationTableData> custom({
+  static Insertable<DenominationsTableData> custom({
     Expression<int>? id,
     Expression<String>? code,
     Expression<String>? description,
@@ -2677,7 +2677,7 @@ class DenominationTableCompanion
     });
   }
 
-  DenominationTableCompanion copyWith({
+  DenominationsTableCompanion copyWith({
     Value<int>? id,
     Value<String>? code,
     Value<String>? description,
@@ -2686,7 +2686,7 @@ class DenominationTableCompanion
     Value<String>? createdBy,
     Value<String>? createdDate,
   }) {
-    return DenominationTableCompanion(
+    return DenominationsTableCompanion(
       id: id ?? this.id,
       code: code ?? this.code,
       description: description ?? this.description,
@@ -2726,7 +2726,7 @@ class DenominationTableCompanion
 
   @override
   String toString() {
-    return (StringBuffer('DenominationTableCompanion(')
+    return (StringBuffer('DenominationsTableCompanion(')
           ..write('id: $id, ')
           ..write('code: $code, ')
           ..write('description: $description, ')
@@ -2739,12 +2739,12 @@ class DenominationTableCompanion
   }
 }
 
-class $DiscountTableTable extends DiscountTable
-    with TableInfo<$DiscountTableTable, DiscountTableData> {
+class $DiscountsTableTable extends DiscountsTable
+    with TableInfo<$DiscountsTableTable, DiscountsTableData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $DiscountTableTable(this.attachedDatabase, [this._alias]);
+  $DiscountsTableTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _discountIdMeta = const VerificationMeta(
     'discountId',
   );
@@ -2837,10 +2837,10 @@ class $DiscountTableTable extends DiscountTable
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'discount_table';
+  static const String $name = 'discounts_table';
   @override
   VerificationContext validateIntegrity(
-    Insertable<DiscountTableData> instance, {
+    Insertable<DiscountsTableData> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -2899,9 +2899,9 @@ class $DiscountTableTable extends DiscountTable
   @override
   Set<GeneratedColumn> get $primaryKey => {discountId};
   @override
-  DiscountTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  DiscountsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return DiscountTableData(
+    return DiscountsTableData(
       discountId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}discount_id'],
@@ -2934,13 +2934,13 @@ class $DiscountTableTable extends DiscountTable
   }
 
   @override
-  $DiscountTableTable createAlias(String alias) {
-    return $DiscountTableTable(attachedDatabase, alias);
+  $DiscountsTableTable createAlias(String alias) {
+    return $DiscountsTableTable(attachedDatabase, alias);
   }
 }
 
-class DiscountTableData extends DataClass
-    implements Insertable<DiscountTableData> {
+class DiscountsTableData extends DataClass
+    implements Insertable<DiscountsTableData> {
   final int discountId;
   final String name;
   final String description;
@@ -2948,7 +2948,7 @@ class DiscountTableData extends DataClass
   final String status;
   final String createdBy;
   final String createdDate;
-  const DiscountTableData({
+  const DiscountsTableData({
     required this.discountId,
     required this.name,
     required this.description,
@@ -2970,8 +2970,8 @@ class DiscountTableData extends DataClass
     return map;
   }
 
-  DiscountTableCompanion toCompanion(bool nullToAbsent) {
-    return DiscountTableCompanion(
+  DiscountsTableCompanion toCompanion(bool nullToAbsent) {
+    return DiscountsTableCompanion(
       discountId: Value(discountId),
       name: Value(name),
       description: Value(description),
@@ -2982,12 +2982,12 @@ class DiscountTableData extends DataClass
     );
   }
 
-  factory DiscountTableData.fromJson(
+  factory DiscountsTableData.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return DiscountTableData(
+    return DiscountsTableData(
       discountId: serializer.fromJson<int>(json['discountId']),
       name: serializer.fromJson<String>(json['name']),
       description: serializer.fromJson<String>(json['description']),
@@ -3011,7 +3011,7 @@ class DiscountTableData extends DataClass
     };
   }
 
-  DiscountTableData copyWith({
+  DiscountsTableData copyWith({
     int? discountId,
     String? name,
     String? description,
@@ -3019,7 +3019,7 @@ class DiscountTableData extends DataClass
     String? status,
     String? createdBy,
     String? createdDate,
-  }) => DiscountTableData(
+  }) => DiscountsTableData(
     discountId: discountId ?? this.discountId,
     name: name ?? this.name,
     description: description ?? this.description,
@@ -3028,8 +3028,8 @@ class DiscountTableData extends DataClass
     createdBy: createdBy ?? this.createdBy,
     createdDate: createdDate ?? this.createdDate,
   );
-  DiscountTableData copyWithCompanion(DiscountTableCompanion data) {
-    return DiscountTableData(
+  DiscountsTableData copyWithCompanion(DiscountsTableCompanion data) {
+    return DiscountsTableData(
       discountId: data.discountId.present
           ? data.discountId.value
           : this.discountId,
@@ -3048,7 +3048,7 @@ class DiscountTableData extends DataClass
 
   @override
   String toString() {
-    return (StringBuffer('DiscountTableData(')
+    return (StringBuffer('DiscountsTableData(')
           ..write('discountId: $discountId, ')
           ..write('name: $name, ')
           ..write('description: $description, ')
@@ -3073,7 +3073,7 @@ class DiscountTableData extends DataClass
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is DiscountTableData &&
+      (other is DiscountsTableData &&
           other.discountId == this.discountId &&
           other.name == this.name &&
           other.description == this.description &&
@@ -3083,7 +3083,7 @@ class DiscountTableData extends DataClass
           other.createdDate == this.createdDate);
 }
 
-class DiscountTableCompanion extends UpdateCompanion<DiscountTableData> {
+class DiscountsTableCompanion extends UpdateCompanion<DiscountsTableData> {
   final Value<int> discountId;
   final Value<String> name;
   final Value<String> description;
@@ -3091,7 +3091,7 @@ class DiscountTableCompanion extends UpdateCompanion<DiscountTableData> {
   final Value<String> status;
   final Value<String> createdBy;
   final Value<String> createdDate;
-  const DiscountTableCompanion({
+  const DiscountsTableCompanion({
     this.discountId = const Value.absent(),
     this.name = const Value.absent(),
     this.description = const Value.absent(),
@@ -3100,7 +3100,7 @@ class DiscountTableCompanion extends UpdateCompanion<DiscountTableData> {
     this.createdBy = const Value.absent(),
     this.createdDate = const Value.absent(),
   });
-  DiscountTableCompanion.insert({
+  DiscountsTableCompanion.insert({
     this.discountId = const Value.absent(),
     this.name = const Value.absent(),
     this.description = const Value.absent(),
@@ -3109,7 +3109,7 @@ class DiscountTableCompanion extends UpdateCompanion<DiscountTableData> {
     this.createdBy = const Value.absent(),
     this.createdDate = const Value.absent(),
   });
-  static Insertable<DiscountTableData> custom({
+  static Insertable<DiscountsTableData> custom({
     Expression<int>? discountId,
     Expression<String>? name,
     Expression<String>? description,
@@ -3129,7 +3129,7 @@ class DiscountTableCompanion extends UpdateCompanion<DiscountTableData> {
     });
   }
 
-  DiscountTableCompanion copyWith({
+  DiscountsTableCompanion copyWith({
     Value<int>? discountId,
     Value<String>? name,
     Value<String>? description,
@@ -3138,7 +3138,7 @@ class DiscountTableCompanion extends UpdateCompanion<DiscountTableData> {
     Value<String>? createdBy,
     Value<String>? createdDate,
   }) {
-    return DiscountTableCompanion(
+    return DiscountsTableCompanion(
       discountId: discountId ?? this.discountId,
       name: name ?? this.name,
       description: description ?? this.description,
@@ -3178,7 +3178,7 @@ class DiscountTableCompanion extends UpdateCompanion<DiscountTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('DiscountTableCompanion(')
+    return (StringBuffer('DiscountsTableCompanion(')
           ..write('discountId: $discountId, ')
           ..write('name: $name, ')
           ..write('description: $description, ')
@@ -5066,9 +5066,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CategoriesTableTable categoriesTable = $CategoriesTableTable(
     this,
   );
-  late final $DenominationTableTable denominationTable =
-      $DenominationTableTable(this);
-  late final $DiscountTableTable discountTable = $DiscountTableTable(this);
+  late final $DenominationsTableTable denominationsTable =
+      $DenominationsTableTable(this);
+  late final $DiscountsTableTable discountsTable = $DiscountsTableTable(this);
   late final $EmployeesTableTable employeesTable = $EmployeesTableTable(this);
   late final $PaymentsTableTable paymentsTable = $PaymentsTableTable(this);
   late final $PosDetailIdTableTable posDetailIdTable = $PosDetailIdTableTable(
@@ -5095,8 +5095,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     branchConfigTable,
     domainConfigTable,
     categoriesTable,
-    denominationTable,
-    discountTable,
+    denominationsTable,
+    discountsTable,
     employeesTable,
     paymentsTable,
     posDetailIdTable,
@@ -6373,8 +6373,8 @@ typedef $$CategoriesTableTableProcessedTableManager =
       CategoriesTableData,
       PrefetchHooks Function()
     >;
-typedef $$DenominationTableTableCreateCompanionBuilder =
-    DenominationTableCompanion Function({
+typedef $$DenominationsTableTableCreateCompanionBuilder =
+    DenominationsTableCompanion Function({
       Value<int> id,
       Value<String> code,
       Value<String> description,
@@ -6383,8 +6383,8 @@ typedef $$DenominationTableTableCreateCompanionBuilder =
       Value<String> createdBy,
       Value<String> createdDate,
     });
-typedef $$DenominationTableTableUpdateCompanionBuilder =
-    DenominationTableCompanion Function({
+typedef $$DenominationsTableTableUpdateCompanionBuilder =
+    DenominationsTableCompanion Function({
       Value<int> id,
       Value<String> code,
       Value<String> description,
@@ -6394,9 +6394,9 @@ typedef $$DenominationTableTableUpdateCompanionBuilder =
       Value<String> createdDate,
     });
 
-class $$DenominationTableTableFilterComposer
-    extends Composer<_$AppDatabase, $DenominationTableTable> {
-  $$DenominationTableTableFilterComposer({
+class $$DenominationsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $DenominationsTableTable> {
+  $$DenominationsTableTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6439,9 +6439,9 @@ class $$DenominationTableTableFilterComposer
   );
 }
 
-class $$DenominationTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $DenominationTableTable> {
-  $$DenominationTableTableOrderingComposer({
+class $$DenominationsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $DenominationsTableTable> {
+  $$DenominationsTableTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6484,9 +6484,9 @@ class $$DenominationTableTableOrderingComposer
   );
 }
 
-class $$DenominationTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $DenominationTableTable> {
-  $$DenominationTableTableAnnotationComposer({
+class $$DenominationsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DenominationsTableTable> {
+  $$DenominationsTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6519,41 +6519,41 @@ class $$DenominationTableTableAnnotationComposer
   );
 }
 
-class $$DenominationTableTableTableManager
+class $$DenominationsTableTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $DenominationTableTable,
-          DenominationTableData,
-          $$DenominationTableTableFilterComposer,
-          $$DenominationTableTableOrderingComposer,
-          $$DenominationTableTableAnnotationComposer,
-          $$DenominationTableTableCreateCompanionBuilder,
-          $$DenominationTableTableUpdateCompanionBuilder,
+          $DenominationsTableTable,
+          DenominationsTableData,
+          $$DenominationsTableTableFilterComposer,
+          $$DenominationsTableTableOrderingComposer,
+          $$DenominationsTableTableAnnotationComposer,
+          $$DenominationsTableTableCreateCompanionBuilder,
+          $$DenominationsTableTableUpdateCompanionBuilder,
           (
-            DenominationTableData,
+            DenominationsTableData,
             BaseReferences<
               _$AppDatabase,
-              $DenominationTableTable,
-              DenominationTableData
+              $DenominationsTableTable,
+              DenominationsTableData
             >,
           ),
-          DenominationTableData,
+          DenominationsTableData,
           PrefetchHooks Function()
         > {
-  $$DenominationTableTableTableManager(
+  $$DenominationsTableTableTableManager(
     _$AppDatabase db,
-    $DenominationTableTable table,
+    $DenominationsTableTable table,
   ) : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$DenominationTableTableFilterComposer($db: db, $table: table),
+              $$DenominationsTableTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$DenominationTableTableOrderingComposer($db: db, $table: table),
+              $$DenominationsTableTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$DenominationTableTableAnnotationComposer(
+              $$DenominationsTableTableAnnotationComposer(
                 $db: db,
                 $table: table,
               ),
@@ -6566,7 +6566,7 @@ class $$DenominationTableTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<String> createdBy = const Value.absent(),
                 Value<String> createdDate = const Value.absent(),
-              }) => DenominationTableCompanion(
+              }) => DenominationsTableCompanion(
                 id: id,
                 code: code,
                 description: description,
@@ -6584,7 +6584,7 @@ class $$DenominationTableTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<String> createdBy = const Value.absent(),
                 Value<String> createdDate = const Value.absent(),
-              }) => DenominationTableCompanion.insert(
+              }) => DenominationsTableCompanion.insert(
                 id: id,
                 code: code,
                 description: description,
@@ -6601,29 +6601,29 @@ class $$DenominationTableTableTableManager
       );
 }
 
-typedef $$DenominationTableTableProcessedTableManager =
+typedef $$DenominationsTableTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $DenominationTableTable,
-      DenominationTableData,
-      $$DenominationTableTableFilterComposer,
-      $$DenominationTableTableOrderingComposer,
-      $$DenominationTableTableAnnotationComposer,
-      $$DenominationTableTableCreateCompanionBuilder,
-      $$DenominationTableTableUpdateCompanionBuilder,
+      $DenominationsTableTable,
+      DenominationsTableData,
+      $$DenominationsTableTableFilterComposer,
+      $$DenominationsTableTableOrderingComposer,
+      $$DenominationsTableTableAnnotationComposer,
+      $$DenominationsTableTableCreateCompanionBuilder,
+      $$DenominationsTableTableUpdateCompanionBuilder,
       (
-        DenominationTableData,
+        DenominationsTableData,
         BaseReferences<
           _$AppDatabase,
-          $DenominationTableTable,
-          DenominationTableData
+          $DenominationsTableTable,
+          DenominationsTableData
         >,
       ),
-      DenominationTableData,
+      DenominationsTableData,
       PrefetchHooks Function()
     >;
-typedef $$DiscountTableTableCreateCompanionBuilder =
-    DiscountTableCompanion Function({
+typedef $$DiscountsTableTableCreateCompanionBuilder =
+    DiscountsTableCompanion Function({
       Value<int> discountId,
       Value<String> name,
       Value<String> description,
@@ -6632,8 +6632,8 @@ typedef $$DiscountTableTableCreateCompanionBuilder =
       Value<String> createdBy,
       Value<String> createdDate,
     });
-typedef $$DiscountTableTableUpdateCompanionBuilder =
-    DiscountTableCompanion Function({
+typedef $$DiscountsTableTableUpdateCompanionBuilder =
+    DiscountsTableCompanion Function({
       Value<int> discountId,
       Value<String> name,
       Value<String> description,
@@ -6643,9 +6643,9 @@ typedef $$DiscountTableTableUpdateCompanionBuilder =
       Value<String> createdDate,
     });
 
-class $$DiscountTableTableFilterComposer
-    extends Composer<_$AppDatabase, $DiscountTableTable> {
-  $$DiscountTableTableFilterComposer({
+class $$DiscountsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $DiscountsTableTable> {
+  $$DiscountsTableTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6688,9 +6688,9 @@ class $$DiscountTableTableFilterComposer
   );
 }
 
-class $$DiscountTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $DiscountTableTable> {
-  $$DiscountTableTableOrderingComposer({
+class $$DiscountsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $DiscountsTableTable> {
+  $$DiscountsTableTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6733,9 +6733,9 @@ class $$DiscountTableTableOrderingComposer
   );
 }
 
-class $$DiscountTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $DiscountTableTable> {
-  $$DiscountTableTableAnnotationComposer({
+class $$DiscountsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DiscountsTableTable> {
+  $$DiscountsTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6770,39 +6770,41 @@ class $$DiscountTableTableAnnotationComposer
   );
 }
 
-class $$DiscountTableTableTableManager
+class $$DiscountsTableTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $DiscountTableTable,
-          DiscountTableData,
-          $$DiscountTableTableFilterComposer,
-          $$DiscountTableTableOrderingComposer,
-          $$DiscountTableTableAnnotationComposer,
-          $$DiscountTableTableCreateCompanionBuilder,
-          $$DiscountTableTableUpdateCompanionBuilder,
+          $DiscountsTableTable,
+          DiscountsTableData,
+          $$DiscountsTableTableFilterComposer,
+          $$DiscountsTableTableOrderingComposer,
+          $$DiscountsTableTableAnnotationComposer,
+          $$DiscountsTableTableCreateCompanionBuilder,
+          $$DiscountsTableTableUpdateCompanionBuilder,
           (
-            DiscountTableData,
+            DiscountsTableData,
             BaseReferences<
               _$AppDatabase,
-              $DiscountTableTable,
-              DiscountTableData
+              $DiscountsTableTable,
+              DiscountsTableData
             >,
           ),
-          DiscountTableData,
+          DiscountsTableData,
           PrefetchHooks Function()
         > {
-  $$DiscountTableTableTableManager(_$AppDatabase db, $DiscountTableTable table)
-    : super(
+  $$DiscountsTableTableTableManager(
+    _$AppDatabase db,
+    $DiscountsTableTable table,
+  ) : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$DiscountTableTableFilterComposer($db: db, $table: table),
+              $$DiscountsTableTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$DiscountTableTableOrderingComposer($db: db, $table: table),
+              $$DiscountsTableTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$DiscountTableTableAnnotationComposer($db: db, $table: table),
+              $$DiscountsTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> discountId = const Value.absent(),
@@ -6812,7 +6814,7 @@ class $$DiscountTableTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<String> createdBy = const Value.absent(),
                 Value<String> createdDate = const Value.absent(),
-              }) => DiscountTableCompanion(
+              }) => DiscountsTableCompanion(
                 discountId: discountId,
                 name: name,
                 description: description,
@@ -6830,7 +6832,7 @@ class $$DiscountTableTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<String> createdBy = const Value.absent(),
                 Value<String> createdDate = const Value.absent(),
-              }) => DiscountTableCompanion.insert(
+              }) => DiscountsTableCompanion.insert(
                 discountId: discountId,
                 name: name,
                 description: description,
@@ -6847,21 +6849,21 @@ class $$DiscountTableTableTableManager
       );
 }
 
-typedef $$DiscountTableTableProcessedTableManager =
+typedef $$DiscountsTableTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $DiscountTableTable,
-      DiscountTableData,
-      $$DiscountTableTableFilterComposer,
-      $$DiscountTableTableOrderingComposer,
-      $$DiscountTableTableAnnotationComposer,
-      $$DiscountTableTableCreateCompanionBuilder,
-      $$DiscountTableTableUpdateCompanionBuilder,
+      $DiscountsTableTable,
+      DiscountsTableData,
+      $$DiscountsTableTableFilterComposer,
+      $$DiscountsTableTableOrderingComposer,
+      $$DiscountsTableTableAnnotationComposer,
+      $$DiscountsTableTableCreateCompanionBuilder,
+      $$DiscountsTableTableUpdateCompanionBuilder,
       (
-        DiscountTableData,
-        BaseReferences<_$AppDatabase, $DiscountTableTable, DiscountTableData>,
+        DiscountsTableData,
+        BaseReferences<_$AppDatabase, $DiscountsTableTable, DiscountsTableData>,
       ),
-      DiscountTableData,
+      DiscountsTableData,
       PrefetchHooks Function()
     >;
 typedef $$EmployeesTableTableCreateCompanionBuilder =
@@ -7985,10 +7987,10 @@ class $AppDatabaseManager {
       $$DomainConfigTableTableTableManager(_db, _db.domainConfigTable);
   $$CategoriesTableTableTableManager get categoriesTable =>
       $$CategoriesTableTableTableManager(_db, _db.categoriesTable);
-  $$DenominationTableTableTableManager get denominationTable =>
-      $$DenominationTableTableTableManager(_db, _db.denominationTable);
-  $$DiscountTableTableTableManager get discountTable =>
-      $$DiscountTableTableTableManager(_db, _db.discountTable);
+  $$DenominationsTableTableTableManager get denominationsTable =>
+      $$DenominationsTableTableTableManager(_db, _db.denominationsTable);
+  $$DiscountsTableTableTableManager get discountsTable =>
+      $$DiscountsTableTableTableManager(_db, _db.discountsTable);
   $$EmployeesTableTableTableManager get employeesTable =>
       $$EmployeesTableTableTableManager(_db, _db.employeesTable);
   $$PaymentsTableTableTableManager get paymentsTable =>

@@ -1,4 +1,4 @@
-class DiscountDto {
+class DiscountsDto {
   final int discountId;
   final String name;
   final String description;
@@ -7,7 +7,7 @@ class DiscountDto {
   final String createdBy;
   final String createdDate;
 
-  DiscountDto({
+  DiscountsDto({
     required this.discountId,
     required this.name,
     required this.description,
@@ -17,8 +17,8 @@ class DiscountDto {
     required this.createdDate,
   });
 
-  factory DiscountDto.fromJson(Map<String, dynamic> json) {
-    return DiscountDto(
+  factory DiscountsDto.fromJson(Map<String, dynamic> json) {
+    return DiscountsDto(
       discountId: (json['discountid'] ?? 0).toInt(),
       name: (json['name'] ?? '').toString(),
       description: (json['description'] ?? '').toString(),
