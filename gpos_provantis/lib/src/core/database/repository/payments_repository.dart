@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-
+import 'package:flutter/material.dart';
 import 'package:gpos_provantis/src/core/models/api_response_model.dart';
 import 'package:gpos_provantis/src/core/network/api_client.dart';
 import 'package:gpos_provantis/src/core/network/domain_provider.dart';
@@ -30,9 +30,9 @@ class PaymentsRepository {
     await _ref.read(domainConfigDaoProvider).cacheReady;
 
     final dio = _ref.read(apiClientProvider);
-    final response = await dio.post(
-      '/payment/getactive',
-    );
+    final response = await dio.post('/payment/getactive');
+    
+    debugPrint('Payments: $response}');
 
     final apiResponse = ApiResponseModel<List<PaymentsDto>>.fromDioResponse(
       response,
@@ -48,11 +48,14 @@ class PaymentsRepository {
       );
     }
 
-    // TODO: confirm PaymentsTableCompanion field names match PaymentsDto fields
     final companions = records
         .map(
           (payment) => PaymentsTableCompanion.insert(
+            paymentId: Value(payment.paymentId),
             paymentName: Value(payment.paymentName),
+            status: Value(payment.status),
+            createdby: Value(payment.createdby),
+            createddate: Value(payment.createddate),
           ),
         )
         .toList();

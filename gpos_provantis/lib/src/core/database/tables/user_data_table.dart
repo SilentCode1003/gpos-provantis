@@ -2,7 +2,7 @@
 import 'package:drift/drift.dart';
 
 class UserDataTable extends Table {
-  TextColumn get id => text().withDefault(const Constant('INVALID USER'))();
+  TextColumn get id => text().withDefault(const Constant('user_data'))();
   TextColumn get employeeId =>
       text().withDefault(const Constant('INVALID USER'))();
   TextColumn get fullName =>

@@ -7,13 +7,16 @@ part 'user_data_dao.g.dart';
 @DriftAccessor(tables: [UserDataTable])
 class UserDataDao extends DatabaseAccessor<AppDatabase>
     with _$UserDataDaoMixin {
-      UserDataDao(super.db);
+  UserDataDao(super.db);
 
   /// Saves (inserts or overwrites) the single user data row.
   /// `id` uses the table's fixed default ('user_data'), so this is
   /// always an upsert against that one row.
   Future<void> saveUser(UserDataTableCompanion user) {
-    return into(userDataTable).insertOnConflictUpdate(user);
+    return transaction(() async {
+      await delete(userDataTable).go();
+      await into(userDataTable).insert(user);
+    });
   }
 
   Future<UserDataTableData?> getUser() {

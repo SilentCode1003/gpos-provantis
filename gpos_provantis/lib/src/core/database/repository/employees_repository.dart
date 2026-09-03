@@ -46,11 +46,17 @@ class EmployeesRepository {
       );
     }
 
-    // TODO: confirm EmployeesTableCompanion field names match EmployeesDto fields
     final companions = records
         .map(
           (employee) => EmployeesTableCompanion.insert(
+            employeeId: Value(employee.employeeId),
             fullName: Value(employee.fullName),
+            position: Value(employee.position),
+            contactInfo: Value(employee.contactInfo),
+            dateHired: Value(employee.dateHired),
+            status: Value(employee.status),
+            createdBy: Value(employee.createdBy),
+            createdDate: Value(employee.createdDate),
           ),
         )
         .toList();

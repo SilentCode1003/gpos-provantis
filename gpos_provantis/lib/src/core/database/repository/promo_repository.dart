@@ -30,10 +30,7 @@ class PromoRepository {
     await _ref.read(domainConfigDaoProvider).cacheReady;
 
     final dio = _ref.read(apiClientProvider);
-    final response = await dio.post(
-      '/promo/getactive',
-    ); // TODO: confirm endpoint
-
+    final response = await dio.post('/promo/getactive');
     final apiResponse = ApiResponseModel<List<PromoDto>>.fromDioResponse(
       response,
       fromJson: (data) => (data as List)
@@ -48,7 +45,6 @@ class PromoRepository {
       );
     }
 
-    // TODO: confirm PromoTableCompanion field names match PromoDto fields
     final companions = records
         .map(
           (promo) => PromoTableCompanion.insert(

@@ -556,7 +556,7 @@ class $UserDataTableTable extends UserDataTable
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultValue: const Constant('INVALID USER'),
+    defaultValue: const Constant('user_data'),
   );
   static const VerificationMeta _employeeIdMeta = const VerificationMeta(
     'employeeId',
@@ -3197,18 +3197,17 @@ class $EmployeesTableTable extends EmployeesTable
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $EmployeesTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  static const VerificationMeta _employeeIdMeta = const VerificationMeta(
+    'employeeId',
+  );
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
+  late final GeneratedColumn<int> employeeId = GeneratedColumn<int>(
+    'employee_id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    defaultValue: const Constant(0),
   );
   static const VerificationMeta _fullNameMeta = const VerificationMeta(
     'fullName',
@@ -3222,8 +3221,87 @@ class $EmployeesTableTable extends EmployeesTable
     requiredDuringInsert: false,
     defaultValue: const Constant('UNREGISTERED'),
   );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, fullName];
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _contactInfoMeta = const VerificationMeta(
+    'contactInfo',
+  );
+  @override
+  late final GeneratedColumn<String> contactInfo = GeneratedColumn<String>(
+    'contact_info',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _dateHiredMeta = const VerificationMeta(
+    'dateHired',
+  );
+  @override
+  late final GeneratedColumn<String> dateHired = GeneratedColumn<String>(
+    'date_hired',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _createdDateMeta = const VerificationMeta(
+    'createdDate',
+  );
+  @override
+  late final GeneratedColumn<String> createdDate = GeneratedColumn<String>(
+    'created_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    employeeId,
+    fullName,
+    position,
+    contactInfo,
+    dateHired,
+    status,
+    createdBy,
+    createdDate,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3236,8 +3314,11 @@ class $EmployeesTableTable extends EmployeesTable
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    if (data.containsKey('employee_id')) {
+      context.handle(
+        _employeeIdMeta,
+        employeeId.isAcceptableOrUnknown(data['employee_id']!, _employeeIdMeta),
+      );
     }
     if (data.containsKey('full_name')) {
       context.handle(
@@ -3245,22 +3326,88 @@ class $EmployeesTableTable extends EmployeesTable
         fullName.isAcceptableOrUnknown(data['full_name']!, _fullNameMeta),
       );
     }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    }
+    if (data.containsKey('contact_info')) {
+      context.handle(
+        _contactInfoMeta,
+        contactInfo.isAcceptableOrUnknown(
+          data['contact_info']!,
+          _contactInfoMeta,
+        ),
+      );
+    }
+    if (data.containsKey('date_hired')) {
+      context.handle(
+        _dateHiredMeta,
+        dateHired.isAcceptableOrUnknown(data['date_hired']!, _dateHiredMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    }
+    if (data.containsKey('created_date')) {
+      context.handle(
+        _createdDateMeta,
+        createdDate.isAcceptableOrUnknown(
+          data['created_date']!,
+          _createdDateMeta,
+        ),
+      );
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {employeeId};
   @override
   EmployeesTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return EmployeesTableData(
-      id: attachedDatabase.typeMapping.read(
+      employeeId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}id'],
+        data['${effectivePrefix}employee_id'],
       )!,
       fullName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}full_name'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+      contactInfo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}contact_info'],
+      )!,
+      dateHired: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date_hired'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      )!,
+      createdDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_date'],
       )!,
     );
   }
@@ -3273,19 +3420,49 @@ class $EmployeesTableTable extends EmployeesTable
 
 class EmployeesTableData extends DataClass
     implements Insertable<EmployeesTableData> {
-  final int id;
+  final int employeeId;
   final String fullName;
-  const EmployeesTableData({required this.id, required this.fullName});
+  final int position;
+  final String contactInfo;
+  final String dateHired;
+  final String status;
+  final String createdBy;
+  final String createdDate;
+  const EmployeesTableData({
+    required this.employeeId,
+    required this.fullName,
+    required this.position,
+    required this.contactInfo,
+    required this.dateHired,
+    required this.status,
+    required this.createdBy,
+    required this.createdDate,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['employee_id'] = Variable<int>(employeeId);
     map['full_name'] = Variable<String>(fullName);
+    map['position'] = Variable<int>(position);
+    map['contact_info'] = Variable<String>(contactInfo);
+    map['date_hired'] = Variable<String>(dateHired);
+    map['status'] = Variable<String>(status);
+    map['created_by'] = Variable<String>(createdBy);
+    map['created_date'] = Variable<String>(createdDate);
     return map;
   }
 
   EmployeesTableCompanion toCompanion(bool nullToAbsent) {
-    return EmployeesTableCompanion(id: Value(id), fullName: Value(fullName));
+    return EmployeesTableCompanion(
+      employeeId: Value(employeeId),
+      fullName: Value(fullName),
+      position: Value(position),
+      contactInfo: Value(contactInfo),
+      dateHired: Value(dateHired),
+      status: Value(status),
+      createdBy: Value(createdBy),
+      createdDate: Value(createdDate),
+    );
   }
 
   factory EmployeesTableData.fromJson(
@@ -3294,86 +3471,208 @@ class EmployeesTableData extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return EmployeesTableData(
-      id: serializer.fromJson<int>(json['id']),
+      employeeId: serializer.fromJson<int>(json['employeeId']),
       fullName: serializer.fromJson<String>(json['fullName']),
+      position: serializer.fromJson<int>(json['position']),
+      contactInfo: serializer.fromJson<String>(json['contactInfo']),
+      dateHired: serializer.fromJson<String>(json['dateHired']),
+      status: serializer.fromJson<String>(json['status']),
+      createdBy: serializer.fromJson<String>(json['createdBy']),
+      createdDate: serializer.fromJson<String>(json['createdDate']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'employeeId': serializer.toJson<int>(employeeId),
       'fullName': serializer.toJson<String>(fullName),
+      'position': serializer.toJson<int>(position),
+      'contactInfo': serializer.toJson<String>(contactInfo),
+      'dateHired': serializer.toJson<String>(dateHired),
+      'status': serializer.toJson<String>(status),
+      'createdBy': serializer.toJson<String>(createdBy),
+      'createdDate': serializer.toJson<String>(createdDate),
     };
   }
 
-  EmployeesTableData copyWith({int? id, String? fullName}) =>
-      EmployeesTableData(
-        id: id ?? this.id,
-        fullName: fullName ?? this.fullName,
-      );
+  EmployeesTableData copyWith({
+    int? employeeId,
+    String? fullName,
+    int? position,
+    String? contactInfo,
+    String? dateHired,
+    String? status,
+    String? createdBy,
+    String? createdDate,
+  }) => EmployeesTableData(
+    employeeId: employeeId ?? this.employeeId,
+    fullName: fullName ?? this.fullName,
+    position: position ?? this.position,
+    contactInfo: contactInfo ?? this.contactInfo,
+    dateHired: dateHired ?? this.dateHired,
+    status: status ?? this.status,
+    createdBy: createdBy ?? this.createdBy,
+    createdDate: createdDate ?? this.createdDate,
+  );
   EmployeesTableData copyWithCompanion(EmployeesTableCompanion data) {
     return EmployeesTableData(
-      id: data.id.present ? data.id.value : this.id,
+      employeeId: data.employeeId.present
+          ? data.employeeId.value
+          : this.employeeId,
       fullName: data.fullName.present ? data.fullName.value : this.fullName,
+      position: data.position.present ? data.position.value : this.position,
+      contactInfo: data.contactInfo.present
+          ? data.contactInfo.value
+          : this.contactInfo,
+      dateHired: data.dateHired.present ? data.dateHired.value : this.dateHired,
+      status: data.status.present ? data.status.value : this.status,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      createdDate: data.createdDate.present
+          ? data.createdDate.value
+          : this.createdDate,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('EmployeesTableData(')
-          ..write('id: $id, ')
-          ..write('fullName: $fullName')
+          ..write('employeeId: $employeeId, ')
+          ..write('fullName: $fullName, ')
+          ..write('position: $position, ')
+          ..write('contactInfo: $contactInfo, ')
+          ..write('dateHired: $dateHired, ')
+          ..write('status: $status, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdDate: $createdDate')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, fullName);
+  int get hashCode => Object.hash(
+    employeeId,
+    fullName,
+    position,
+    contactInfo,
+    dateHired,
+    status,
+    createdBy,
+    createdDate,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is EmployeesTableData &&
-          other.id == this.id &&
-          other.fullName == this.fullName);
+          other.employeeId == this.employeeId &&
+          other.fullName == this.fullName &&
+          other.position == this.position &&
+          other.contactInfo == this.contactInfo &&
+          other.dateHired == this.dateHired &&
+          other.status == this.status &&
+          other.createdBy == this.createdBy &&
+          other.createdDate == this.createdDate);
 }
 
 class EmployeesTableCompanion extends UpdateCompanion<EmployeesTableData> {
-  final Value<int> id;
+  final Value<int> employeeId;
   final Value<String> fullName;
+  final Value<int> position;
+  final Value<String> contactInfo;
+  final Value<String> dateHired;
+  final Value<String> status;
+  final Value<String> createdBy;
+  final Value<String> createdDate;
   const EmployeesTableCompanion({
-    this.id = const Value.absent(),
+    this.employeeId = const Value.absent(),
     this.fullName = const Value.absent(),
+    this.position = const Value.absent(),
+    this.contactInfo = const Value.absent(),
+    this.dateHired = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdDate = const Value.absent(),
   });
   EmployeesTableCompanion.insert({
-    this.id = const Value.absent(),
+    this.employeeId = const Value.absent(),
     this.fullName = const Value.absent(),
+    this.position = const Value.absent(),
+    this.contactInfo = const Value.absent(),
+    this.dateHired = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdDate = const Value.absent(),
   });
   static Insertable<EmployeesTableData> custom({
-    Expression<int>? id,
+    Expression<int>? employeeId,
     Expression<String>? fullName,
+    Expression<int>? position,
+    Expression<String>? contactInfo,
+    Expression<String>? dateHired,
+    Expression<String>? status,
+    Expression<String>? createdBy,
+    Expression<String>? createdDate,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
+      if (employeeId != null) 'employee_id': employeeId,
       if (fullName != null) 'full_name': fullName,
+      if (position != null) 'position': position,
+      if (contactInfo != null) 'contact_info': contactInfo,
+      if (dateHired != null) 'date_hired': dateHired,
+      if (status != null) 'status': status,
+      if (createdBy != null) 'created_by': createdBy,
+      if (createdDate != null) 'created_date': createdDate,
     });
   }
 
-  EmployeesTableCompanion copyWith({Value<int>? id, Value<String>? fullName}) {
+  EmployeesTableCompanion copyWith({
+    Value<int>? employeeId,
+    Value<String>? fullName,
+    Value<int>? position,
+    Value<String>? contactInfo,
+    Value<String>? dateHired,
+    Value<String>? status,
+    Value<String>? createdBy,
+    Value<String>? createdDate,
+  }) {
     return EmployeesTableCompanion(
-      id: id ?? this.id,
+      employeeId: employeeId ?? this.employeeId,
       fullName: fullName ?? this.fullName,
+      position: position ?? this.position,
+      contactInfo: contactInfo ?? this.contactInfo,
+      dateHired: dateHired ?? this.dateHired,
+      status: status ?? this.status,
+      createdBy: createdBy ?? this.createdBy,
+      createdDate: createdDate ?? this.createdDate,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
+    if (employeeId.present) {
+      map['employee_id'] = Variable<int>(employeeId.value);
     }
     if (fullName.present) {
       map['full_name'] = Variable<String>(fullName.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (contactInfo.present) {
+      map['contact_info'] = Variable<String>(contactInfo.value);
+    }
+    if (dateHired.present) {
+      map['date_hired'] = Variable<String>(dateHired.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (createdDate.present) {
+      map['created_date'] = Variable<String>(createdDate.value);
     }
     return map;
   }
@@ -3381,8 +3680,14 @@ class EmployeesTableCompanion extends UpdateCompanion<EmployeesTableData> {
   @override
   String toString() {
     return (StringBuffer('EmployeesTableCompanion(')
-          ..write('id: $id, ')
-          ..write('fullName: $fullName')
+          ..write('employeeId: $employeeId, ')
+          ..write('fullName: $fullName, ')
+          ..write('position: $position, ')
+          ..write('contactInfo: $contactInfo, ')
+          ..write('dateHired: $dateHired, ')
+          ..write('status: $status, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdDate: $createdDate')
           ..write(')'))
         .toString();
   }
@@ -3394,18 +3699,17 @@ class $PaymentsTableTable extends PaymentsTable
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $PaymentsTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  static const VerificationMeta _paymentIdMeta = const VerificationMeta(
+    'paymentId',
+  );
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
+  late final GeneratedColumn<int> paymentId = GeneratedColumn<int>(
+    'payment_id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    defaultValue: const Constant(0),
   );
   static const VerificationMeta _paymentNameMeta = const VerificationMeta(
     'paymentName',
@@ -3419,8 +3723,48 @@ class $PaymentsTableTable extends PaymentsTable
     requiredDuringInsert: false,
     defaultValue: const Constant('UNREGISTERED'),
   );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
-  List<GeneratedColumn> get $columns => [id, paymentName];
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _createdbyMeta = const VerificationMeta(
+    'createdby',
+  );
+  @override
+  late final GeneratedColumn<String> createdby = GeneratedColumn<String>(
+    'createdby',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _createddateMeta = const VerificationMeta(
+    'createddate',
+  );
+  @override
+  late final GeneratedColumn<String> createddate = GeneratedColumn<String>(
+    'createddate',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    paymentId,
+    paymentName,
+    status,
+    createdby,
+    createddate,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3433,8 +3777,11 @@ class $PaymentsTableTable extends PaymentsTable
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    if (data.containsKey('payment_id')) {
+      context.handle(
+        _paymentIdMeta,
+        paymentId.isAcceptableOrUnknown(data['payment_id']!, _paymentIdMeta),
+      );
     }
     if (data.containsKey('payment_name')) {
       context.handle(
@@ -3445,22 +3792,55 @@ class $PaymentsTableTable extends PaymentsTable
         ),
       );
     }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('createdby')) {
+      context.handle(
+        _createdbyMeta,
+        createdby.isAcceptableOrUnknown(data['createdby']!, _createdbyMeta),
+      );
+    }
+    if (data.containsKey('createddate')) {
+      context.handle(
+        _createddateMeta,
+        createddate.isAcceptableOrUnknown(
+          data['createddate']!,
+          _createddateMeta,
+        ),
+      );
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {paymentId};
   @override
   PaymentsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return PaymentsTableData(
-      id: attachedDatabase.typeMapping.read(
+      paymentId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}id'],
+        data['${effectivePrefix}payment_id'],
       )!,
       paymentName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}payment_name'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdby: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}createdby'],
+      )!,
+      createddate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}createddate'],
       )!,
     );
   }
@@ -3473,21 +3853,36 @@ class $PaymentsTableTable extends PaymentsTable
 
 class PaymentsTableData extends DataClass
     implements Insertable<PaymentsTableData> {
-  final int id;
+  final int paymentId;
   final String paymentName;
-  const PaymentsTableData({required this.id, required this.paymentName});
+  final String status;
+  final String createdby;
+  final String createddate;
+  const PaymentsTableData({
+    required this.paymentId,
+    required this.paymentName,
+    required this.status,
+    required this.createdby,
+    required this.createddate,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['payment_id'] = Variable<int>(paymentId);
     map['payment_name'] = Variable<String>(paymentName);
+    map['status'] = Variable<String>(status);
+    map['createdby'] = Variable<String>(createdby);
+    map['createddate'] = Variable<String>(createddate);
     return map;
   }
 
   PaymentsTableCompanion toCompanion(bool nullToAbsent) {
     return PaymentsTableCompanion(
-      id: Value(id),
+      paymentId: Value(paymentId),
       paymentName: Value(paymentName),
+      status: Value(status),
+      createdby: Value(createdby),
+      createddate: Value(createddate),
     );
   }
 
@@ -3497,91 +3892,147 @@ class PaymentsTableData extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PaymentsTableData(
-      id: serializer.fromJson<int>(json['id']),
+      paymentId: serializer.fromJson<int>(json['paymentId']),
       paymentName: serializer.fromJson<String>(json['paymentName']),
+      status: serializer.fromJson<String>(json['status']),
+      createdby: serializer.fromJson<String>(json['createdby']),
+      createddate: serializer.fromJson<String>(json['createddate']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'paymentId': serializer.toJson<int>(paymentId),
       'paymentName': serializer.toJson<String>(paymentName),
+      'status': serializer.toJson<String>(status),
+      'createdby': serializer.toJson<String>(createdby),
+      'createddate': serializer.toJson<String>(createddate),
     };
   }
 
-  PaymentsTableData copyWith({int? id, String? paymentName}) =>
-      PaymentsTableData(
-        id: id ?? this.id,
-        paymentName: paymentName ?? this.paymentName,
-      );
+  PaymentsTableData copyWith({
+    int? paymentId,
+    String? paymentName,
+    String? status,
+    String? createdby,
+    String? createddate,
+  }) => PaymentsTableData(
+    paymentId: paymentId ?? this.paymentId,
+    paymentName: paymentName ?? this.paymentName,
+    status: status ?? this.status,
+    createdby: createdby ?? this.createdby,
+    createddate: createddate ?? this.createddate,
+  );
   PaymentsTableData copyWithCompanion(PaymentsTableCompanion data) {
     return PaymentsTableData(
-      id: data.id.present ? data.id.value : this.id,
+      paymentId: data.paymentId.present ? data.paymentId.value : this.paymentId,
       paymentName: data.paymentName.present
           ? data.paymentName.value
           : this.paymentName,
+      status: data.status.present ? data.status.value : this.status,
+      createdby: data.createdby.present ? data.createdby.value : this.createdby,
+      createddate: data.createddate.present
+          ? data.createddate.value
+          : this.createddate,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('PaymentsTableData(')
-          ..write('id: $id, ')
-          ..write('paymentName: $paymentName')
+          ..write('paymentId: $paymentId, ')
+          ..write('paymentName: $paymentName, ')
+          ..write('status: $status, ')
+          ..write('createdby: $createdby, ')
+          ..write('createddate: $createddate')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, paymentName);
+  int get hashCode =>
+      Object.hash(paymentId, paymentName, status, createdby, createddate);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is PaymentsTableData &&
-          other.id == this.id &&
-          other.paymentName == this.paymentName);
+          other.paymentId == this.paymentId &&
+          other.paymentName == this.paymentName &&
+          other.status == this.status &&
+          other.createdby == this.createdby &&
+          other.createddate == this.createddate);
 }
 
 class PaymentsTableCompanion extends UpdateCompanion<PaymentsTableData> {
-  final Value<int> id;
+  final Value<int> paymentId;
   final Value<String> paymentName;
+  final Value<String> status;
+  final Value<String> createdby;
+  final Value<String> createddate;
   const PaymentsTableCompanion({
-    this.id = const Value.absent(),
+    this.paymentId = const Value.absent(),
     this.paymentName = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdby = const Value.absent(),
+    this.createddate = const Value.absent(),
   });
   PaymentsTableCompanion.insert({
-    this.id = const Value.absent(),
+    this.paymentId = const Value.absent(),
     this.paymentName = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdby = const Value.absent(),
+    this.createddate = const Value.absent(),
   });
   static Insertable<PaymentsTableData> custom({
-    Expression<int>? id,
+    Expression<int>? paymentId,
     Expression<String>? paymentName,
+    Expression<String>? status,
+    Expression<String>? createdby,
+    Expression<String>? createddate,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
+      if (paymentId != null) 'payment_id': paymentId,
       if (paymentName != null) 'payment_name': paymentName,
+      if (status != null) 'status': status,
+      if (createdby != null) 'createdby': createdby,
+      if (createddate != null) 'createddate': createddate,
     });
   }
 
   PaymentsTableCompanion copyWith({
-    Value<int>? id,
+    Value<int>? paymentId,
     Value<String>? paymentName,
+    Value<String>? status,
+    Value<String>? createdby,
+    Value<String>? createddate,
   }) {
     return PaymentsTableCompanion(
-      id: id ?? this.id,
+      paymentId: paymentId ?? this.paymentId,
       paymentName: paymentName ?? this.paymentName,
+      status: status ?? this.status,
+      createdby: createdby ?? this.createdby,
+      createddate: createddate ?? this.createddate,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
+    if (paymentId.present) {
+      map['payment_id'] = Variable<int>(paymentId.value);
     }
     if (paymentName.present) {
       map['payment_name'] = Variable<String>(paymentName.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdby.present) {
+      map['createdby'] = Variable<String>(createdby.value);
+    }
+    if (createddate.present) {
+      map['createddate'] = Variable<String>(createddate.value);
     }
     return map;
   }
@@ -3589,8 +4040,11 @@ class PaymentsTableCompanion extends UpdateCompanion<PaymentsTableData> {
   @override
   String toString() {
     return (StringBuffer('PaymentsTableCompanion(')
-          ..write('id: $id, ')
-          ..write('paymentName: $paymentName')
+          ..write('paymentId: $paymentId, ')
+          ..write('paymentName: $paymentName, ')
+          ..write('status: $status, ')
+          ..write('createdby: $createdby, ')
+          ..write('createddate: $createddate')
           ..write(')'))
         .toString();
   }
@@ -6867,9 +7321,27 @@ typedef $$DiscountsTableTableProcessedTableManager =
       PrefetchHooks Function()
     >;
 typedef $$EmployeesTableTableCreateCompanionBuilder =
-    EmployeesTableCompanion Function({Value<int> id, Value<String> fullName});
+    EmployeesTableCompanion Function({
+      Value<int> employeeId,
+      Value<String> fullName,
+      Value<int> position,
+      Value<String> contactInfo,
+      Value<String> dateHired,
+      Value<String> status,
+      Value<String> createdBy,
+      Value<String> createdDate,
+    });
 typedef $$EmployeesTableTableUpdateCompanionBuilder =
-    EmployeesTableCompanion Function({Value<int> id, Value<String> fullName});
+    EmployeesTableCompanion Function({
+      Value<int> employeeId,
+      Value<String> fullName,
+      Value<int> position,
+      Value<String> contactInfo,
+      Value<String> dateHired,
+      Value<String> status,
+      Value<String> createdBy,
+      Value<String> createdDate,
+    });
 
 class $$EmployeesTableTableFilterComposer
     extends Composer<_$AppDatabase, $EmployeesTableTable> {
@@ -6880,13 +7352,43 @@ class $$EmployeesTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
+  ColumnFilters<int> get employeeId => $composableBuilder(
+    column: $table.employeeId,
     builder: (column) => ColumnFilters(column),
   );
 
   ColumnFilters<String> get fullName => $composableBuilder(
     column: $table.fullName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get contactInfo => $composableBuilder(
+    column: $table.contactInfo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dateHired => $composableBuilder(
+    column: $table.dateHired,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdDate => $composableBuilder(
+    column: $table.createdDate,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6900,13 +7402,43 @@ class $$EmployeesTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
+  ColumnOrderings<int> get employeeId => $composableBuilder(
+    column: $table.employeeId,
     builder: (column) => ColumnOrderings(column),
   );
 
   ColumnOrderings<String> get fullName => $composableBuilder(
     column: $table.fullName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get contactInfo => $composableBuilder(
+    column: $table.contactInfo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dateHired => $composableBuilder(
+    column: $table.dateHired,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdDate => $composableBuilder(
+    column: $table.createdDate,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -6920,11 +7452,35 @@ class $$EmployeesTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get employeeId => $composableBuilder(
+    column: $table.employeeId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get fullName =>
       $composableBuilder(column: $table.fullName, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<String> get contactInfo => $composableBuilder(
+    column: $table.contactInfo,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get dateHired =>
+      $composableBuilder(column: $table.dateHired, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<String> get createdDate => $composableBuilder(
+    column: $table.createdDate,
+    builder: (column) => column,
+  );
 }
 
 class $$EmployeesTableTableTableManager
@@ -6964,14 +7520,44 @@ class $$EmployeesTableTableTableManager
               $$EmployeesTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<int> employeeId = const Value.absent(),
                 Value<String> fullName = const Value.absent(),
-              }) => EmployeesTableCompanion(id: id, fullName: fullName),
+                Value<int> position = const Value.absent(),
+                Value<String> contactInfo = const Value.absent(),
+                Value<String> dateHired = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> createdBy = const Value.absent(),
+                Value<String> createdDate = const Value.absent(),
+              }) => EmployeesTableCompanion(
+                employeeId: employeeId,
+                fullName: fullName,
+                position: position,
+                contactInfo: contactInfo,
+                dateHired: dateHired,
+                status: status,
+                createdBy: createdBy,
+                createdDate: createdDate,
+              ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<int> employeeId = const Value.absent(),
                 Value<String> fullName = const Value.absent(),
-              }) => EmployeesTableCompanion.insert(id: id, fullName: fullName),
+                Value<int> position = const Value.absent(),
+                Value<String> contactInfo = const Value.absent(),
+                Value<String> dateHired = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> createdBy = const Value.absent(),
+                Value<String> createdDate = const Value.absent(),
+              }) => EmployeesTableCompanion.insert(
+                employeeId: employeeId,
+                fullName: fullName,
+                position: position,
+                contactInfo: contactInfo,
+                dateHired: dateHired,
+                status: status,
+                createdBy: createdBy,
+                createdDate: createdDate,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
@@ -6998,9 +7584,21 @@ typedef $$EmployeesTableTableProcessedTableManager =
       PrefetchHooks Function()
     >;
 typedef $$PaymentsTableTableCreateCompanionBuilder =
-    PaymentsTableCompanion Function({Value<int> id, Value<String> paymentName});
+    PaymentsTableCompanion Function({
+      Value<int> paymentId,
+      Value<String> paymentName,
+      Value<String> status,
+      Value<String> createdby,
+      Value<String> createddate,
+    });
 typedef $$PaymentsTableTableUpdateCompanionBuilder =
-    PaymentsTableCompanion Function({Value<int> id, Value<String> paymentName});
+    PaymentsTableCompanion Function({
+      Value<int> paymentId,
+      Value<String> paymentName,
+      Value<String> status,
+      Value<String> createdby,
+      Value<String> createddate,
+    });
 
 class $$PaymentsTableTableFilterComposer
     extends Composer<_$AppDatabase, $PaymentsTableTable> {
@@ -7011,13 +7609,28 @@ class $$PaymentsTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
+  ColumnFilters<int> get paymentId => $composableBuilder(
+    column: $table.paymentId,
     builder: (column) => ColumnFilters(column),
   );
 
   ColumnFilters<String> get paymentName => $composableBuilder(
     column: $table.paymentName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdby => $composableBuilder(
+    column: $table.createdby,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createddate => $composableBuilder(
+    column: $table.createddate,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7031,13 +7644,28 @@ class $$PaymentsTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
+  ColumnOrderings<int> get paymentId => $composableBuilder(
+    column: $table.paymentId,
     builder: (column) => ColumnOrderings(column),
   );
 
   ColumnOrderings<String> get paymentName => $composableBuilder(
     column: $table.paymentName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdby => $composableBuilder(
+    column: $table.createdby,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createddate => $composableBuilder(
+    column: $table.createddate,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -7051,11 +7679,22 @@ class $$PaymentsTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get paymentId =>
+      $composableBuilder(column: $table.paymentId, builder: (column) => column);
 
   GeneratedColumn<String> get paymentName => $composableBuilder(
     column: $table.paymentName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get createdby =>
+      $composableBuilder(column: $table.createdby, builder: (column) => column);
+
+  GeneratedColumn<String> get createddate => $composableBuilder(
+    column: $table.createddate,
     builder: (column) => column,
   );
 }
@@ -7095,16 +7734,31 @@ class $$PaymentsTableTableTableManager
               $$PaymentsTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<int> paymentId = const Value.absent(),
                 Value<String> paymentName = const Value.absent(),
-              }) => PaymentsTableCompanion(id: id, paymentName: paymentName),
+                Value<String> status = const Value.absent(),
+                Value<String> createdby = const Value.absent(),
+                Value<String> createddate = const Value.absent(),
+              }) => PaymentsTableCompanion(
+                paymentId: paymentId,
+                paymentName: paymentName,
+                status: status,
+                createdby: createdby,
+                createddate: createddate,
+              ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<int> paymentId = const Value.absent(),
                 Value<String> paymentName = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> createdby = const Value.absent(),
+                Value<String> createddate = const Value.absent(),
               }) => PaymentsTableCompanion.insert(
-                id: id,
+                paymentId: paymentId,
                 paymentName: paymentName,
+                status: status,
+                createdby: createdby,
+                createddate: createddate,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

@@ -4,6 +4,6 @@ class PosDetailDto {
   PosDetailDto({required this.posDetailId});
 
   factory PosDetailDto.fromJson(Map<String, dynamic> json) {
-    return PosDetailDto(posDetailId: (json['posDetailId'] ?? '').toString());
+    return PosDetailDto(posDetailId: (json['posdetailid'] ?? '').toString());
   }
 }

@@ -55,4 +55,4 @@ final class ProductPriceRepositoryProvider
 }
 
 String _$productPriceRepositoryHash() =>
-    r'8a7638e7486060cb3c1a57788c73c95e6844051b';
+    r'9bd13914f6e5360673b455d6925f9f6a406f0640';

@@ -17,12 +17,12 @@ class ProductPriceDto {
 
   factory ProductPriceDto.fromJson(Map<String, dynamic> json) {
     return ProductPriceDto(
-      productId: (json['productid'] ?? 0).toInt(),
+      productId: int.tryParse(json['productid']?.toString() ?? '') ?? 0,
       description: (json['description'] ?? '').toString(),
       barcode: (json['barcode'] ?? '').toString(),
       price: (json['price'] ?? '').toString(),
-      category: (json['category'] ?? 0).toInt(),
-      quantity: (json['quantity'] ?? 0).toInt(),
+      category: int.tryParse(json['category']?.toString() ?? '') ?? 0,
+      quantity: int.tryParse(json['quantity']?.toString() ?? '') ?? 0,
     );
   }
 }
