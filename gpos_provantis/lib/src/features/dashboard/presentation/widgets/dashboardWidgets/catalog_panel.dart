@@ -1,19 +1,20 @@
 // Location: src/features/dashboard/presentation/widgets/dashboardWidgets/catalog_panel.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'others_sheet.dart';
 import 'top_bar.dart';
 
-/// --- Catalog panel (right): top bar + actions row + category rail ---------
+/// --- Catalog panel (right): top bar + actions row + category grid ---------
 ///
 /// No product grid here anymore — tapping a category opens `CatalogSheet`
 /// instead, which is stacked on top of this panel by
-/// `CatalogPanelWithSheet`. This panel just needs something to fill the
-/// space below the rail so the background doesn't look empty/unfinished
-/// when the sheet is closed.
+/// `CatalogPanelWithSheet`. The category rail was removed in favor of a
+/// single full grid of categories (`_CategoryGrid`) filling the space
+/// below the actions row — no need for two presentations of the same
+/// list once the grid covers every category without scrolling.
 ///
 /// The actions row (Start/End shift, Cash drop, Reprint, Settings,
 /// Others) used to live inside `TopBar` itself. It's a second row here
@@ -36,8 +37,7 @@ class CatalogPanel extends ConsumerWidget {
         children: [
           TopBar(),
           _ActionsRail(),
-          _CategoryRail(),
-          Expanded(child: _CatalogPlaceholder()),
+          Expanded(child: _CategoryGrid()),
         ],
       ),
     );
@@ -75,35 +75,35 @@ class _ActionsRail extends ConsumerWidget {
           children: [
             _ActionButton(
               icon: isShiftOpen
-                  ? Icons.stop_circle_outlined
-                  : Icons.play_circle_outline_rounded,
+                  ? PhosphorIcons.stop
+                  : PhosphorIcons.play,
               label: isShiftOpen ? 'End shift' : 'Start shift',
               emphasized: !isShiftOpen,
               onTap: notifier.toggleShift,
             ),
             const SizedBox(width: 10),
             _ActionButton(
-              icon: Icons.payments_outlined,
+              icon: PhosphorIcons.cashRegister,
               label: 'Cash drop',
               enabled: isShiftOpen,
               onTap: () {},
             ),
             const SizedBox(width: 10),
             _ActionButton(
-              icon: Icons.print_outlined,
+              icon: PhosphorIcons.printer,
               label: 'Reprint',
               enabled: isShiftOpen,
               onTap: () {},
             ),
             const SizedBox(width: 10),
             _ActionButton(
-              icon: Icons.settings_outlined,
+              icon: PhosphorIcons.gear,
               label: 'Settings',
               onTap: () {},
             ),
             const SizedBox(width: 10),
             _ActionButton(
-              icon: Icons.apps_rounded,
+              icon: PhosphorIcons.gridNine,
               label: 'Others',
               enabled: isShiftOpen,
               onTap: () => OthersSheet.show(context),
@@ -180,29 +180,180 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-/// Shown below the category rail when the sheet is closed — a quiet
-/// prompt rather than dead empty space.
-class _CatalogPlaceholder extends StatelessWidget {
-  const _CatalogPlaceholder();
+/// Fills the space below the actions row with every category, split into
+/// two labeled groups: "Paint" (any category whose name contains "Paint")
+/// and "Products" (everything else). This is a purely presentational
+/// grouping — `Category` has no group/type field of its own, so the split
+/// is done here by inspecting `category.name`, not by anything stored in
+/// the controller/model. If a real category-group concept is ever added
+/// server-side, this is the place to swap the name-sniffing below for a
+/// real field.
+///
+/// Tiles are flat/uniform (see `_CategoryTile`), not highlighted-on-
+/// selection like the old rail: tapping one always opens `CatalogSheet`,
+/// it's an action rather than a togglable filter, so there's no
+/// "currently active" state worth drawing attention to here.
+///
+/// LOADING: gated on `controller.categoriesStatus`, not on
+/// `categories.isEmpty` — right after login the Drift stream hasn't
+/// emitted yet, which used to read (incorrectly) as "no categories" and
+/// fall back to placeholder data. Now that gap shows `_CatalogLoadingState`
+/// instead, and `_CatalogEmptyState` only appears once the stream has
+/// actually confirmed there's nothing there.
+class _CategoryGrid extends ConsumerWidget {
+  const _CategoryGrid();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    // Watching state so this rebuilds as the categories stream moves
+    // from loading -> data (or -> error) after login/sync.
+    ref.watch(dashboardControllerProvider);
+    final controller = ref.watch(dashboardControllerProvider.notifier);
+    final status = controller.categoriesStatus;
+    final categories = controller.categories;
+
+    // Still syncing from the API into Drift — show a spinner rather than
+    // "No categories yet", which previously got shown (briefly, or not
+    // so briefly on a slow connection) right after login before the
+    // first batch of categories had synced.
+    if (status == CatalogLoadStatus.loading) {
+      return _CatalogLoadingState(colors: colors);
+    }
+
+    if (status == CatalogLoadStatus.error) {
+      return _CatalogErrorState(colors: colors);
+    }
+
+    if (categories.isEmpty) {
+      return _CatalogEmptyState(colors: colors);
+    }
+
+    // Artificial grouping: anything with "Paint" in its name goes in the
+    // Paint group; everything else falls into Products. Case-insensitive
+    // so 'paint', 'Paint', 'PAINT' all match the same way.
+    final paintCategories = <Category>[];
+    final productCategories = <Category>[];
+    for (final category in categories) {
+      if (category.name.toLowerCase().contains('paint')) {
+        paintCategories.add(category);
+      } else {
+        productCategories.add(category);
+      }
+    }
+
+    return CustomScrollView(
+      slivers: [
+        if (paintCategories.isNotEmpty) ...[
+          _GroupHeader(label: 'Paint'),
+          _CategorySliverGrid(
+            categories: paintCategories,
+            onTap: controller.selectCategory,
+          ),
+        ],
+        if (productCategories.isNotEmpty) ...[
+          _GroupHeader(label: 'Products'),
+          _CategorySliverGrid(
+            categories: productCategories,
+            onTap: controller.selectCategory,
+          ),
+        ],
+        // Trailing breathing room so the last row isn't flush with the
+        // bottom edge of the panel.
+        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+      ],
+    );
+  }
+}
+
+/// Section label above each group ("Paint" / "Products") — plain text,
+/// no card/background, just enough to separate the two groups visually.
+class _GroupHeader extends StatelessWidget {
+  const _GroupHeader({required this.label});
+
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
 
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+        child: Text(
+          label,
+          style: AppTypography.ui(
+            color: colors.textSecondary,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.4,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The grid of tiles for one group — same sizing/spacing as the old
+/// single grid, just scoped to whichever subset of categories belongs to
+/// this group.
+class _CategorySliverGrid extends StatelessWidget {
+  const _CategorySliverGrid({required this.categories, required this.onTap});
+
+  final List<Category> categories;
+  final ValueChanged<String> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 160,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
+          childAspectRatio: 1.1,
+        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final category = categories[index];
+          return _CategoryTile(
+            category: category,
+            onTap: () => onTap(category.id),
+          );
+        }, childCount: categories.length),
+      ),
+    );
+  }
+}
+
+/// Shown while the categories stream hasn't emitted its first value yet —
+/// the gap right after login before the initial API-to-Drift sync has
+/// written anything. This is what used to be masked by falling back to
+/// placeholder categories; now it's an honest loading state instead.
+class _CatalogLoadingState extends StatelessWidget {
+  const _CatalogLoadingState({required this.colors});
+
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.touch_app_outlined,
-              size: 40,
-              color: colors.textDisabled,
+            SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: colors.textSecondary,
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
-              'Tap a category to browse products',
+              'Loading categories…',
               textAlign: TextAlign.center,
               style: AppTypography.ui(color: colors.textDisabled, fontSize: 14),
             ),
@@ -213,45 +364,64 @@ class _CatalogPlaceholder extends StatelessWidget {
   }
 }
 
-/// --- Category rail ----------------------------------------------------------
+/// Shown if the categories stream itself errors (e.g. the local Drift
+/// query fails) — distinct from `_CatalogEmptyState` so a real failure
+/// doesn't silently read as "there just aren't any categories".
+class _CatalogErrorState extends StatelessWidget {
+  const _CatalogErrorState({required this.colors});
 
-class _CategoryRail extends ConsumerWidget {
-  const _CategoryRail();
+  final AppColors colors;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
-    final controller = ref.watch(dashboardControllerProvider.notifier);
-    final state = ref.watch(dashboardControllerProvider);
-    // Highlight follows whichever category the sheet is showing while
-    // it's open (kept in sync with `selectedCategoryId` by
-    // `selectCategory`, but reading the sheet field directly is the
-    // more honest source of truth for "what's on screen right now").
-    final highlightedId =
-        state.catalogSheetCategoryId ?? state.selectedCategoryId;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border(bottom: BorderSide(color: colors.borderSubtle)),
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              PhosphorIcons.exclamationMark,
+              size: 40,
+              color: colors.textDisabled,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Couldn\'t load categories.',
+              textAlign: TextAlign.center,
+              style: AppTypography.ui(color: colors.textDisabled, fontSize: 14),
+            ),
+          ],
+        ),
       ),
-      child: SizedBox(
-        height: 96,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: controller.categories.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 12),
-          itemBuilder: (context, index) {
-            final category = controller.categories[index];
-            final isSelected = category.id == highlightedId;
-            return _CategoryTile(
-              category: category,
-              isSelected: isSelected,
-              onTap: () => controller.selectCategory(category.id),
-            );
-          },
+    );
+  }
+}
+
+/// Shown only if the category list itself is empty — an edge case the old
+/// placeholder never had to distinguish from "sheet just isn't open yet",
+/// since that's now the grid's default (non-empty) state.
+class _CatalogEmptyState extends StatelessWidget {
+  const _CatalogEmptyState({required this.colors});
+
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(PhosphorIcons.shapes, size: 40, color: colors.textDisabled),
+            const SizedBox(height: 12),
+            Text(
+              'No categories yet',
+              textAlign: TextAlign.center,
+              style: AppTypography.ui(color: colors.textDisabled, fontSize: 14),
+            ),
+          ],
         ),
       ),
     );
@@ -259,33 +429,32 @@ class _CategoryRail extends ConsumerWidget {
 }
 
 class _CategoryTile extends StatelessWidget {
-  const _CategoryTile({
-    required this.category,
-    required this.isSelected,
-    required this.onTap,
-  });
+  const _CategoryTile({required this.category, required this.onTap});
 
   final Category category;
-  final bool isSelected;
   final VoidCallback onTap;
 
   static const _iconMap = {
-    'water_drop_rounded': Icons.water_drop_rounded,
-    'account_balance_rounded': Icons.account_balance_rounded,
-    'landscape_rounded': Icons.landscape_rounded,
-    'chair_rounded': Icons.chair_rounded,
-    'yard_rounded': Icons.yard_rounded,
-    'park_rounded': Icons.park_rounded,
-    'format_paint_rounded': Icons.format_paint_rounded,
+    'water_drop_rounded': PhosphorIcons.chatTeardrop,
+    'account_balance_rounded': PhosphorIcons.money,
+    'landscape_rounded': PhosphorIcons.island,
+    'chair_rounded': PhosphorIcons.chair,
+    'yard_rounded': PhosphorIcons.park,
+    'park_rounded': PhosphorIcons.park,
+    'format_paint_rounded': PhosphorIcons.paintBrush,
   };
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final icon = _iconMap[category.icon] ?? Icons.category_rounded;
+    final icon = _iconMap[category.icon] ?? PhosphorIcons.shapes;
 
+    // Flat, uniform styling — no "selected" state. Every tile does the
+    // same thing (opens the catalog sheet for that category), so there's
+    // nothing here that should read as toggled on/off the way a product
+    // card or a filter chip would.
     return Material(
-      color: isSelected ? AppPalette.teal500 : colors.surfaceVariant,
+      color: colors.surfaceVariant,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -296,11 +465,7 @@ class _CategoryTile extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                size: 26,
-                color: isSelected ? colors.onPrimary : colors.textSecondary,
-              ),
+              Icon(icon, size: 26, color: colors.textSecondary),
               const SizedBox(height: 8),
               Text(
                 category.name,
@@ -308,7 +473,7 @@ class _CategoryTile extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.ui(
-                  color: isSelected ? colors.onPrimary : colors.textSecondary,
+                  color: colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   height: 1.2,

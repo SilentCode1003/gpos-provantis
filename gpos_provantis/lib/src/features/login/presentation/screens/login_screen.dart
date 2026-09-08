@@ -7,10 +7,14 @@
 //     google_fonts: ^<latest>
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/core/theme/organic_pattern_background.dart';
 import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
+import 'package:gpos_provantis/src/services/sync/initial_sync.dart';
+import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/providers/pos_config_dao_provider.dart';
 import 'package:gpos_provantis/src/shared/widgets/app_toast.dart';
 import '../controllers/login_controller.dart';
 
@@ -539,18 +543,77 @@ Future<void> _confirmReturnToSetup(BuildContext context) async {
   }
 }
 
-class _SyncButton extends StatelessWidget {
+/// Re-runs [InitialSyncService] using the branchId/posId already saved
+/// locally during setup (there's no form on this screen to type them in —
+/// they come from BranchConfigDao/PosConfigDao). Guards against double-taps
+/// with [_isSyncing] since a stray tap on a touchscreen POS could otherwise
+/// fire two syncs; the second would just hit InitialSyncService's own
+/// duplicate-request no-op, but disabling here avoids the wasted request.
+class _SyncButton extends ConsumerStatefulWidget {
   const _SyncButton();
+
+  @override
+  ConsumerState<_SyncButton> createState() => _SyncButtonState();
+}
+
+class _SyncButtonState extends ConsumerState<_SyncButton> {
+  bool _isSyncing = false;
+
+  Future<void> _handleSync() async {
+    if (_isSyncing) return;
+    setState(() => _isSyncing = true);
+
+    try {
+      final branch = await ref.read(branchConfigDaoProvider).getBranch();
+      final pos = await ref.read(posConfigDaoProvider).getPos();
+
+      if (branch == null || pos == null) {
+        if (mounted) {
+          AppToast.show(
+            context,
+            message:
+                'No branch/POS config found on this device. Run setup first.',
+            type: AppToastType.error,
+          );
+        }
+        return;
+      }
+
+      final result = await ref
+          .read(initialSyncServiceProvider)
+          .run(branchId: branch.branchId, posId: pos.posId.toString());
+
+      if (!mounted) return;
+
+      if (result.success) {
+        AppToast.show(
+          context,
+          message: 'Sync completed successfully.',
+          type: AppToastType.success,
+        );
+      } else if (result.errorMessage != null) {
+        // A real failure (network, missing/empty server response, etc).
+        AppToast.show(
+          context,
+          message: 'Failed to sync: ${result.errorMessage}',
+          type: AppToastType.error,
+        );
+      }
+      // errorMessage == null with success == false means a duplicate
+      // request was blocked — the original sync is still in flight, so
+      // stay silent rather than showing a misleading error or success toast.
+    } finally {
+      if (mounted) setState(() => _isSyncing = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return _FlatIconButton(
       icon: Icons.sync_rounded,
       tooltip: 'Sync',
-      onPressed: () {
-        // TODO(logic): trigger a real sync job once sync logic exists.
-        AppToast.show(context, message: 'Sync not wired yet', type: AppToastType.neutral);
-      },
+      isLoading: _isSyncing,
+      onPressed: _handleSync,
     );
   }
 }
@@ -562,11 +625,13 @@ class _FlatIconButton extends StatelessWidget {
     required this.icon,
     required this.tooltip,
     required this.onPressed,
+    this.isLoading = false,
   });
 
   final IconData icon;
   final String tooltip;
   final VoidCallback onPressed;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -579,11 +644,22 @@ class _FlatIconButton extends StatelessWidget {
         shape: const CircleBorder(),
         child: InkWell(
           customBorder: const CircleBorder(),
-          onTap: onPressed,
+          onTap: isLoading ? null : onPressed,
           child: SizedBox(
             width: 40,
             height: 40,
-            child: Icon(icon, size: 18, color: colors.textSecondary),
+            child: isLoading
+                ? Center(
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  )
+                : Icon(icon, size: 18, color: colors.textSecondary),
           ),
         ),
       ),

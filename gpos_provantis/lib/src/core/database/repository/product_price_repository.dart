@@ -81,15 +81,15 @@ class ProductPriceRepository {
         'category': category.categoryCode.toString(),
         'branchid': branchId.branchId,
       };
-      debugPrint('Request body: $requestBody');
-      debugPrint('Request body length: ${requestBody.toString().length}');
+      // debugPrint('Request body: $requestBody');
+      // debugPrint('Request body length: ${requestBody.toString().length}');
 
       final response = await dio.post(
         '/productprice/getcategory',
         data: requestBody,
       );
 
-      debugPrint('ProductPrice (${category.categoryCode}): $response');
+      // debugPrint('ProductPrice (${category.categoryCode}): $response');
 
       final apiResponse =
           ApiResponseModel<List<ProductPriceDto>>.fromDioResponse(

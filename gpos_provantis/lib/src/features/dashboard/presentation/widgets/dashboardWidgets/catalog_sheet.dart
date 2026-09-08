@@ -10,29 +10,73 @@ import 'product_grid.dart';
 /// --- Catalog sheet: right-side overlay, opens on category tap -------------
 ///
 /// Slides in from the right edge, clipped to the bounds of whichever
-/// ancestor Stack it's placed in (see `CatalogPanelWithSheet` — that's
-/// the whole right panel on wide layouts, the lower portion of the
-/// column on narrow ones). Dismiss via:
+/// ancestor Stack it's placed in (see `_CatalogPanelWithSheet` in
+/// `dashboard_layout.dart` — that's the whole right panel on wide
+/// layouts, the lower portion of the column on narrow ones). Dismiss via:
 ///   - tapping the scrim (dims BOTH the catalog panel behind the sheet
 ///     and the cart panel on the other side — see `_ScrimOverlay`, which
 ///     `CartPanel` also mounts so the darkening isn't limited to the
 ///     sheet's own panel)
 ///   - dragging the left-edge grip handle back toward the right
-///   - the close button in the sheet's header
+///   - the close button in the sheet's header, or the close bar in its
+///     footer
 ///   - tapping a category in the compact strip does NOT dismiss — it
 ///     swaps content in place, which is the whole point of keeping the
 ///     strip inside the sheet.
 ///
-/// ANIMATION: driven by a single `AnimationController` with a
-/// `CurvedAnimation` wrapper (`easeOutCubic` opening, `easeInCubic`
-/// closing — a sheet should arrive briskly and leave briskly, not ease
-/// symmetrically like a bouncing ball) and painted via `SlideTransition`,
-/// which is a compositor-level transform rather than re-laying-out a
-/// `Positioned` offset every frame — that layout thrash was the source
-/// of the earlier jank. Dragging writes straight into
-/// `_controller.value` so there's exactly one source of truth for the
-/// sheet's position at all times, whether driven by gesture or by
-/// animation — no separate drag-progress field to fall out of sync.
+/// ============================================================================
+/// REWRITE NOTE — why this file changed, and what the old bug was
+/// ============================================================================
+/// The previous version drove `_controller.forward()`/`.reverse()` from a
+/// helper (`_syncWithState`) called directly inside `build()`, keyed off
+/// `ref.watch(...isCatalogSheetOpen)`. That's the actual bug behind "first
+/// tap does nothing, second tap opens it": starting an `AnimationController`
+/// is a side effect, and side effects triggered from inside `build()` run
+/// too late to affect the frame currently being built — the
+/// `AnimatedBuilder` further down in that same `build()` call had already
+/// read `_controller.value` (still `0`) before `forward()`'s first tick
+/// could land, so that first frame painted closed. The *second* tap worked
+/// because by then the controller had residual state from the first,
+/// half-started animation.
+///
+/// The fix: **open/close is now triggered from `ref.listen`**, which is
+/// Riverpod's dedicated hook for exactly this — reacting to a provider
+/// change with a side effect, guaranteed to run outside of (and before)
+/// the widget's own `build()`, so `forward()`/`reverse()` are already
+/// in flight by the time this frame's `AnimatedBuilder` reads
+/// `_controller.value`. No more one-tap-late animation start.
+///
+/// Everything else was also simplified while rebuilding:
+///   - One `CurvedAnimation` (not two) with `Curves.easeOutCubic` for
+///     both directions — a single curve that looks good moving either
+///     way reads as more "physical" than swapping curves by direction,
+///     and removes a branch that had to track `AnimationStatus` just to
+///     pick which curve was "current."
+///   - One `AnimatedBuilder` (not two) driving both the scrim opacity and
+///     the sheet's slide offset off the same `_curve.value` read in a
+///     single `builder` callback — the old version split these across a
+///     nested pair of `AnimatedBuilder`s listening to the same animation,
+///     which was extra rebuild plumbing for no behavioral difference.
+///   - `Transform.translate` (a compositor-level paint transform, same
+///     performance characteristics as the old `SlideTransition`) instead
+///     of `SlideTransition` itself, since `Transform.translate` takes a
+///     plain `Offset` computed straight from `_curve.value` and
+///     `sheetWidth` — no separate `Tween<Offset>.animate(...)` object to
+///     rebuild every time direction changes.
+///   - The old "fully closed → return SizedBox.shrink()" early-out has
+///     been removed. Collapsing the subtree to zero size is what forced
+///     `LayoutBuilder` to (re)measure `sheetWidth` from scratch the next
+///     time the sheet opened, adding a layout pass on the critical path
+///     of the open animation. The sheet is now always laid out (so its
+///     width is always known and stable), just visually and hit-test
+///     hidden while closed via `Offstage` + `IgnorePointer` — cheap to
+///     keep mounted, and removes a source of first-frame jank.
+///   - Drag handling is unchanged in spirit (same physical flick/settle
+///     rule) but now clamps against the controller's *current* animated
+///     value rather than assuming it starts a drag from a fully
+///     open/closed rest state, so grabbing the handle mid-animation
+///     doesn't jump.
+/// ============================================================================
 class CatalogSheet extends ConsumerStatefulWidget {
   const CatalogSheet({super.key});
 
@@ -46,10 +90,8 @@ class _CatalogSheetState extends ConsumerState<CatalogSheet>
   /// sheet's position — gestures and the open/close animation both just
   /// write into this same controller.
   late final AnimationController _controller;
-  late final CurvedAnimation _openCurve;
-  late final CurvedAnimation _closeCurve;
+  late final CurvedAnimation _curve;
 
-  bool _wasOpen = false;
   bool _isDragging = false;
 
   @override
@@ -59,33 +101,28 @@ class _CatalogSheetState extends ConsumerState<CatalogSheet>
       vsync: this,
       duration: catalogSheetOpenDuration,
       reverseDuration: catalogSheetCloseDuration,
+      value: ref.read(dashboardControllerProvider).isCatalogSheetOpen
+          ? 1.0
+          : 0.0,
     );
-    _openCurve = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
-    );
-    _closeCurve = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInCubic,
-    );
+    _curve = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
   }
 
   @override
   void dispose() {
-    _openCurve.dispose();
-    _closeCurve.dispose();
+    _curve.dispose();
     _controller.dispose();
     super.dispose();
   }
 
-  void _syncWithState(bool isOpen) {
-    if (isOpen == _wasOpen) return;
-    _wasOpen = isOpen;
-    if (isOpen) {
-      _controller.forward();
-    } else if (!_isDragging) {
-      _controller.reverse();
-    }
+  void _openSheet() {
+    if (_isDragging) return;
+    _controller.forward();
+  }
+
+  void _closeSheet() {
+    if (_isDragging) return;
+    _controller.reverse();
   }
 
   void _onDragStart(DragStartDetails details) {
@@ -93,7 +130,7 @@ class _CatalogSheetState extends ConsumerState<CatalogSheet>
     // Dragging interrupts any in-flight open/close animation at its
     // current value rather than jumping — continuity is most of what
     // makes a drag feel physical instead of janky.
-    _controller.stop();
+    _controller.stop(canceled: true);
   }
 
   void _onDragUpdate(DragUpdateDetails details, double sheetWidth) {
@@ -126,9 +163,9 @@ class _CatalogSheetState extends ConsumerState<CatalogSheet>
     // fling's velocity is "fraction of range per second", the same
     // units _controller.value already uses, so the drag's own
     // normalized velocity plugs straight in — a fast flick keeps the
-    // finger's momentum instead of snapping into a fixed-duration tween,
-    // which was part of what read as janky before. Slow releases (no
-    // real velocity) fall back to a calm default fling speed.
+    // finger's momentum instead of snapping into a fixed-duration tween.
+    // Slow releases (no real velocity) fall back to a calm default fling
+    // speed rather than a sluggish near-zero one.
     final flingSpeed = normalizedVelocity.abs() > 0.1
         ? normalizedVelocity.abs().clamp(1.0, 8.0)
         : 4.0;
@@ -143,56 +180,68 @@ class _CatalogSheetState extends ConsumerState<CatalogSheet>
 
   @override
   Widget build(BuildContext context) {
-    final isOpen = ref.watch(
+    // Side effect (starting the animation) lives here, in `ref.listen`,
+    // NOT in the body of `build()` below — see the REWRITE NOTE above for
+    // why that distinction is exactly what fixes the "first tap does
+    // nothing" bug. `ref.listen` fires after `build()` computes but
+    // before the frame is handed to the renderer, so by the time
+    // `AnimatedBuilder` reads `_controller.value` on the *next* frame
+    // (which the animation's own `forward()`/`reverse()` call schedules),
+    // the controller is already mid-flight.
+    ref.listen(
       dashboardControllerProvider.select((s) => s.isCatalogSheetOpen),
+      (previous, isOpen) {
+        if (isOpen) {
+          _openSheet();
+        } else {
+          _closeSheet();
+        }
+      },
     );
-    _syncWithState(isOpen);
-    final notifier = ref.read(dashboardControllerProvider.notifier);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final sheetWidth = constraints.maxWidth;
 
         return AnimatedBuilder(
-          animation: _controller,
-          builder: (context, _) {
-            // Fully closed and settled (not mid-drag/mid-animation) —
-            // skip painting and hit-testing entirely so nothing here
-            // steals taps meant for the category rail underneath.
-            if (_controller.value <= 0 &&
-                !_controller.isAnimating &&
-                !_isDragging) {
-              return const SizedBox.shrink();
-            }
+          animation: _curve,
+          builder: (context, child) {
+            // Settled fully closed (not mid-drag/mid-animation) — hide
+            // from hit-testing so nothing here steals taps meant for the
+            // category rail underneath. Offstage (not a collapsed-size
+            // widget) keeps the subtree laid out and its width known, so
+            // reopening never needs a fresh measure pass — see REWRITE
+            // NOTE.
+            final isSettledClosed =
+                _curve.value <= 0 && !_controller.isAnimating && !_isDragging;
 
-            return Stack(
-              fit: StackFit.expand,
-              children: [
-                _ScrimOverlay(
-                  opacity: _controller.value * 0.32,
-                  onTap: notifier.closeCatalogSheet,
+            return Offstage(
+              offstage: isSettledClosed,
+              child: IgnorePointer(
+                ignoring: isSettledClosed,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _ScrimOverlay(
+                      opacity: _curve.value * 0.32,
+                      onTap: () => ref
+                          .read(dashboardControllerProvider.notifier)
+                          .closeCatalogSheet(),
+                    ),
+                    Transform.translate(
+                      offset: Offset(sheetWidth * (1 - _curve.value), 0),
+                      child: child,
+                    ),
+                  ],
                 ),
-                SlideTransition(
-                  // Curve depends on direction so open/close each get
-                  // their own feel rather than one curve doing both.
-                  position:
-                      Tween<Offset>(
-                        begin: const Offset(1, 0),
-                        end: Offset.zero,
-                      ).animate(
-                        _controller.status == AnimationStatus.reverse
-                            ? _closeCurve
-                            : _openCurve,
-                      ),
-                  child: _CatalogSheetChrome(
-                    onDragStart: _onDragStart,
-                    onDragUpdate: (d) => _onDragUpdate(d, sheetWidth),
-                    onDragEnd: (d) => _onDragEnd(d, sheetWidth),
-                  ),
-                ),
-              ],
+              ),
             );
           },
+          child: _CatalogSheetChrome(
+            onDragStart: _onDragStart,
+            onDragUpdate: (d) => _onDragUpdate(d, sheetWidth),
+            onDragEnd: (d) => _onDragEnd(d, sheetWidth),
+          ),
         );
       },
     );

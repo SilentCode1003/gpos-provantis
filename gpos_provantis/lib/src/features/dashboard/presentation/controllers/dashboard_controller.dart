@@ -1,16 +1,25 @@
 // Location: src/features/dashboard/controllers/dashboard_controller.dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'package:gpos_provantis/src/core/database/app_database.dart';
+import 'package:gpos_provantis/src/core/database/providers/categories_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/providers/product_price_dao_provider.dart';
+
 part 'dashboard_controller.g.dart';
 
 /// =========================================================================
 /// DASHBOARD CONTROLLER — POS main screen state.
 ///
-/// PLACEHOLDER DATA: `_placeholderCatalog` below is hardcoded sample
-/// inventory (fake names/prices/stock) so the screen has something real
-/// to render. Swap `_placeholderCatalog` for an actual inventory
-/// repository call once product data exists — the shape (`Category` +
-/// `Product`) is meant to survive that swap; only the source changes.
+/// DATA SOURCE: categories and products are streamed live from the local
+/// Drift database via `categoriesProvider`/`productPriceProvider`, which
+/// in turn are kept in sync by `CategoriesRepository`/
+/// `ProductPriceRepository` fetching from the API on login/sync. Both
+/// streams go through an explicit `loading` / `error` / `data` state
+/// (`CatalogLoadStatus`) rather than being collapsed into an empty list —
+/// see `categoriesStatus`/`productsStatus` below. This matters because
+/// "no rows yet" (still syncing, right after login) and "synced, and
+/// there really are zero categories/products" need different UI: the
+/// former should show a loading state, not an empty one.
 ///
 /// Cart lives here (not in the widget tree) since it needs to persist
 /// across category switches — switching categories only changes which
@@ -24,7 +33,8 @@ part 'dashboard_controller.g.dart';
 /// Both reset to closed/empty together via `closeCatalogSheet()`.
 /// =========================================================================
 
-/// One purchasable item. Placeholder data — see class doc comment above.
+/// One purchasable item, mapped from a synced `ProductPriceTableData` row
+/// — see `DashboardController.productsForCatalogSheet()`.
 class Product {
   const Product({
     required this.id,
@@ -39,8 +49,8 @@ class Product {
   final String categoryId;
   final double price;
 
-  /// Units currently in stock. Placeholder — a real inventory feed would
-  /// drive this instead of a fixed number.
+  /// Units currently in stock, from the synced product-price row's
+  /// `quantity` field.
   final int stock;
 }
 
@@ -75,9 +85,19 @@ class CartLine {
 /// here now; that gating rule is left for whoever builds checkout.
 enum ShiftStatus { closed, open }
 
+/// Status of a synced catalog stream (categories, or products), separate
+/// from "the list happens to be empty" — `loading` covers both the very
+/// first emission after login (before the initial sync has written
+/// anything to Drift yet) and any later re-sync; `error` covers the
+/// stream throwing; `data` means the stream has emitted at least once
+/// and didn't error, regardless of how many rows came back. UI should
+/// gate its loading spinner / empty state off this, not off `isEmpty`.
+enum CatalogLoadStatus { loading, error, data }
+
 /// One tile inside the "Others" panel — secondary/less-frequent actions
-/// that don't need to live in the always-visible top bar. Placeholder
-/// action set — see `_placeholderOtherActions` below.
+/// that don't need to live in the always-visible top bar. Still a
+/// hardcoded action set (`_placeholderOtherActions` below) — unlike
+/// categories/products, these aren't backed by a repository yet.
 class OtherAction {
   const OtherAction({
     required this.id,
@@ -169,193 +189,6 @@ class DashboardState {
 /// unique value that can never collide with a real argument.
 const Object _unset = Object();
 
-// ---------------------------------------------------------------------
-// PLACEHOLDER CATALOG — fake categories/products for an outdoor stone +
-// water-feature store (fountains, statuary, boulders, stone furniture,
-// garden decor, paint/sealants). Replace with a real repository later.
-// ---------------------------------------------------------------------
-
-const _placeholderCategories = [
-  Category(id: 'fountains', name: 'Fountains', icon: 'water_drop_rounded'),
-  Category(id: 'statuary', name: 'Statuary', icon: 'account_balance_rounded'),
-  Category(id: 'rocks', name: 'Rocks & Boulders', icon: 'landscape_rounded'),
-  Category(id: 'furniture', name: 'Stone Furniture', icon: 'chair_rounded'),
-  Category(id: 'planters', name: 'Planters & Urns', icon: 'yard_rounded'),
-  Category(id: 'decor', name: 'Garden Decor', icon: 'park_rounded'),
-  Category(id: 'paint', name: 'Paint & Sealants', icon: 'format_paint_rounded'),
-];
-
-const _placeholderProducts = [
-  // Fountains
-  Product(
-    id: 'p1',
-    name: 'Cascading Tier Fountain',
-    categoryId: 'fountains',
-    price: 649.00,
-    stock: 4,
-  ),
-  Product(
-    id: 'p2',
-    name: 'Wall-Mount Lion Fountain',
-    categoryId: 'fountains',
-    price: 389.00,
-    stock: 7,
-  ),
-  Product(
-    id: 'p3',
-    name: 'Millstone Bubbler',
-    categoryId: 'fountains',
-    price: 275.00,
-    stock: 12,
-  ),
-  Product(
-    id: 'p4',
-    name: 'Ceramic Urn Fountain',
-    categoryId: 'fountains',
-    price: 420.00,
-    stock: 3,
-  ),
-  // Statuary
-  Product(
-    id: 'p5',
-    name: 'Classical Garden Angel',
-    categoryId: 'statuary',
-    price: 310.00,
-    stock: 6,
-  ),
-  Product(
-    id: 'p6',
-    name: 'Sitting Fox Statue',
-    categoryId: 'statuary',
-    price: 145.00,
-    stock: 15,
-  ),
-  Product(
-    id: 'p7',
-    name: 'Large Buddha Statue',
-    categoryId: 'statuary',
-    price: 520.00,
-    stock: 2,
-  ),
-  // Rocks & Boulders
-  Product(
-    id: 'p8',
-    name: 'Decorative River Rock (per bag)',
-    categoryId: 'rocks',
-    price: 18.50,
-    stock: 80,
-  ),
-  Product(
-    id: 'p9',
-    name: 'Landscape Boulder — Medium',
-    categoryId: 'rocks',
-    price: 95.00,
-    stock: 20,
-  ),
-  Product(
-    id: 'p10',
-    name: 'Landscape Boulder — Large',
-    categoryId: 'rocks',
-    price: 210.00,
-    stock: 9,
-  ),
-  Product(
-    id: 'p11',
-    name: 'Flagstone Paver (each)',
-    categoryId: 'rocks',
-    price: 12.00,
-    stock: 150,
-  ),
-  // Stone Furniture
-  Product(
-    id: 'p12',
-    name: 'Granite Bistro Table',
-    categoryId: 'furniture',
-    price: 780.00,
-    stock: 3,
-  ),
-  Product(
-    id: 'p13',
-    name: 'Stone Garden Bench',
-    categoryId: 'furniture',
-    price: 340.00,
-    stock: 8,
-  ),
-  Product(
-    id: 'p14',
-    name: 'Carved Stone Stool (pair)',
-    categoryId: 'furniture',
-    price: 190.00,
-    stock: 11,
-  ),
-  // Planters & Urns
-  Product(
-    id: 'p15',
-    name: 'Weathered Stone Planter',
-    categoryId: 'planters',
-    price: 88.00,
-    stock: 25,
-  ),
-  Product(
-    id: 'p16',
-    name: 'Tall Garden Urn',
-    categoryId: 'planters',
-    price: 132.00,
-    stock: 14,
-  ),
-  // Garden Decor
-  Product(
-    id: 'p17',
-    name: 'Solar Pathway Lights (set of 4)',
-    categoryId: 'decor',
-    price: 42.00,
-    stock: 40,
-  ),
-  Product(
-    id: 'p18',
-    name: 'Artificial Prop Tree — 6ft',
-    categoryId: 'decor',
-    price: 165.00,
-    stock: 10,
-  ),
-  Product(
-    id: 'p19',
-    name: 'Faux Grass Turf Panel',
-    categoryId: 'decor',
-    price: 54.00,
-    stock: 30,
-  ),
-  Product(
-    id: 'p20',
-    name: 'Wind Chime — Copper',
-    categoryId: 'decor',
-    price: 36.00,
-    stock: 22,
-  ),
-  // Paint & Sealants
-  Product(
-    id: 'p21',
-    name: 'Stone Sealant — 1 Gallon',
-    categoryId: 'paint',
-    price: 29.99,
-    stock: 45,
-  ),
-  Product(
-    id: 'p22',
-    name: 'Concrete Statue Paint',
-    categoryId: 'paint',
-    price: 16.50,
-    stock: 60,
-  ),
-  Product(
-    id: 'p23',
-    name: 'Waterproof Fountain Coating',
-    categoryId: 'paint',
-    price: 34.00,
-    stock: 18,
-  ),
-];
-
 const _placeholderOtherActions = [
   OtherAction(id: 'discounts', label: 'Discounts', icon: 'percent_rounded'),
   OtherAction(
@@ -404,17 +237,106 @@ const _placeholderOtherActions = [
   OtherAction(id: 'loyalty', label: 'Loyalty', icon: 'loyalty_rounded'),
 ];
 
+String _categoryIconForName(String categoryName) {
+  final normalized = categoryName.toLowerCase();
+
+  if (normalized.contains('drink') || normalized.contains('beverage')) {
+    return 'local_drink_rounded';
+  }
+  if (normalized.contains('food') || normalized.contains('snack')) {
+    return 'restaurant_rounded';
+  }
+  if (normalized.contains('paper') || normalized.contains('clean')) {
+    return 'cleaning_services_rounded';
+  }
+  if (normalized.contains('promo') || normalized.contains('offer')) {
+    return 'local_offer_rounded';
+  }
+  if (normalized.contains('fruit') || normalized.contains('veg')) {
+    return 'eco_rounded';
+  }
+  if (normalized.contains('material')) {
+    return 'construction_rounded';
+  }
+  return 'category_rounded';
+}
+
+double _parseMoney(String value) {
+  final sanitized = value.replaceAll(RegExp(r'[^0-9.-]'), '');
+  if (sanitized.isEmpty) return 0;
+  return double.tryParse(sanitized) ?? 0;
+}
+
 @riverpod
 class DashboardController extends _$DashboardController {
+  AsyncValue<List<CategoriesTableData>> _categoriesAsync() =>
+      ref.watch(categoriesProvider);
+
+  AsyncValue<List<ProductPriceTableData>> _productsAsync() =>
+      ref.watch(productPriceProvider);
+
+  // maybeWhen (not the newer `.valueOrNull` getter) so this keeps
+  // compiling against older riverpod versions too — functionally the
+  // same thing: fall through to the last-known data on loading/error,
+  // or an empty list if there's no data yet at all.
+  List<CategoriesTableData> _watchCategories() => _categoriesAsync().maybeWhen(
+    data: (items) => items,
+    orElse: () => const <CategoriesTableData>[],
+  );
+
+  List<ProductPriceTableData> _watchProducts() => _productsAsync().maybeWhen(
+    data: (items) => items,
+    orElse: () => const <ProductPriceTableData>[],
+  );
+
   @override
   DashboardState build() {
+    final syncedCategories = _watchCategories();
+    final firstCategoryId = syncedCategories.isNotEmpty
+        ? syncedCategories.first.categoryCode.toString()
+        : '';
+
     return DashboardState(
-      selectedCategoryId: _placeholderCategories.first.id,
+      selectedCategoryId: firstCategoryId,
       cartLines: const [],
     );
   }
 
-  List<Category> get categories => _placeholderCategories;
+  /// Status of the categories stream — see `CatalogLoadStatus` doc
+  /// comment. `loading` here is what should keep the category grid
+  /// showing a spinner instead of "No categories yet" right after
+  /// login, before the first sync has written anything to Drift.
+  CatalogLoadStatus get categoriesStatus => _categoriesAsync().when(
+    data: (_) => CatalogLoadStatus.data,
+    error: (_, __) => CatalogLoadStatus.error,
+    loading: () => CatalogLoadStatus.loading,
+  );
+
+  /// Status of the products stream — same idea as `categoriesStatus`,
+  /// but for whatever's synced into `ProductPriceTableData`.
+  CatalogLoadStatus get productsStatus => _productsAsync().when(
+    data: (_) => CatalogLoadStatus.data,
+    error: (_, __) => CatalogLoadStatus.error,
+    loading: () => CatalogLoadStatus.loading,
+  );
+
+  List<Category> get categories {
+    final rows = _watchCategories();
+    return rows
+        .where(
+          (row) =>
+              row.categoryName.trim().isNotEmpty &&
+              row.categoryName.toLowerCase() != 'material',
+        )
+        .map(
+          (row) => Category(
+            id: row.categoryCode.toString(),
+            name: row.categoryName,
+            icon: _categoryIconForName(row.categoryName),
+          ),
+        )
+        .toList();
+  }
 
   List<OtherAction> get otherActions => _placeholderOtherActions;
 
@@ -427,12 +349,24 @@ class DashboardController extends _$DashboardController {
     if (categoryId == null) return const [];
 
     final query = state.catalogSearchQuery.trim().toLowerCase();
-    return _placeholderProducts.where((p) {
-      final inCategory = p.categoryId == categoryId;
-      final matchesQuery =
-          query.isEmpty || p.name.toLowerCase().contains(query);
-      return inCategory && matchesQuery;
-    }).toList();
+    final rows = _watchProducts();
+    return rows
+        .where(
+          (row) =>
+              row.category.toString() == categoryId &&
+              row.description.trim().isNotEmpty &&
+              (query.isEmpty || row.description.toLowerCase().contains(query)),
+        )
+        .map(
+          (row) => Product(
+            id: row.productId.toString(),
+            name: row.description,
+            categoryId: row.category.toString(),
+            price: _parseMoney(row.price),
+            stock: row.quantity,
+          ),
+        )
+        .toList();
   }
 
   /// Tapping a category tile: opens the sheet on that category (or, if
@@ -464,6 +398,10 @@ class DashboardController extends _$DashboardController {
           ? ShiftStatus.closed
           : ShiftStatus.open,
     );
+  }
+
+  void toggleHold() {
+    state = state.copyWith(isSaleHeld: !state.isSaleHeld);
   }
 
   void addToCart(Product product) {
@@ -519,11 +457,12 @@ class DashboardController extends _$DashboardController {
     );
   }
 
+  /// Empties the entire cart in one call — backs a "Remove all" action
+  /// in the cart UI so the cashier isn't stuck removing lines one at a
+  /// time to start a sale over. A plain `cartLines: const []` rather
+  /// than looping `removeLine` for each line: same end state, without
+  /// rebuilding the list once per line for no reason.
   void clearCart() {
     state = state.copyWith(cartLines: const []);
-  }
-
-  void toggleHold() {
-    state = state.copyWith(isSaleHeld: !state.isSaleHeld);
   }
 }
