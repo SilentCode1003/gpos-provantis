@@ -71,18 +71,74 @@ class CatalogSyncService {
     this._promoRepository,
   );
 
-  Future<CatalogSyncResult> syncCatalog() async {
+  /// [onStep], if provided, is called with a short human-readable label
+  /// right before each repository fetch starts — e.g. "Categories",
+  /// "Promos" — so a caller (the sync overlay) can show live progress
+  /// text instead of a static "please wait" message.
+  ///
+  /// The 8 calls after categories run concurrently via [Future.wait].
+  /// Building that list literal fires every step's `notify(...)` back
+  /// to back, synchronously, before any of the underlying futures start
+  /// doing real async work — so all 8 labels arrive in the same tick.
+  /// That's intentional: `notify` is not a per-step completion signal,
+  /// it's "these are now in flight." No artificial delay is introduced
+  /// here to spread them out for the UI's sake — that's the overlay's
+  /// job (e.g. rendering them as a log it reveals progressively), not
+  /// something this service should slow itself down for.
+  ///
+  /// Callers should treat each invocation as "now working on this," not
+  /// as a checklist of guaranteed completion order — the underlying
+  /// fetches can still finish in any order.
+  Future<CatalogSyncResult> syncCatalog({
+    void Function(String label)? onStep,
+  }) async {
+    final notify = onStep ?? (_) {};
+
+    Future<T> announced<T>(String label, Future<T> Function() task) async {
+      notify(label);
+      return task();
+    }
+
     try {
+      // fetchAndSaveProductPrices() reads categories back out of the local
+      // DB (via CategoriesDao) to loop over them — see the comment in
+      // product_price_repository.dart. Running everything through a single
+      // Future.wait() races that read against fetchAndSaveCategories()
+      // still writing, and product prices loses that race intermittently
+      // ("No categories found locally..."). Categories has to be fully
+      // saved before product prices starts, so it's pulled out and
+      // awaited on its own first; everything else that doesn't have this
+      // dependency still runs concurrently afterward.
+      notify('Categories');
+      await _categoriesRepository.fetchAndSaveCategories();
+
       await Future.wait([
-        _categoriesRepository.fetchAndSaveCategories(),
-        _denominationsRepository.fetchAndSaveDenominations(),
-        _discountsRepository.fetchAndSaveDiscounts(),
-        _employeesRepository.fetchAndSaveEmployees(),
-        _paymentsRepository.fetchAndSavePayments(),
-        _posDetailIdRepository.fetchAndSavePosDetailId(),
-        _posShiftRepository.fetchAndSavePosShifts(),
-        _productPriceRepository.fetchAndSaveProductPrices(),
-        _promoRepository.fetchAndSavePromos(),
+        announced(
+          'Denominations',
+          () => _denominationsRepository.fetchAndSaveDenominations(),
+        ),
+        announced(
+          'Discounts',
+          () => _discountsRepository.fetchAndSaveDiscounts(),
+        ),
+        announced(
+          'Employees',
+          () => _employeesRepository.fetchAndSaveEmployees(),
+        ),
+        announced(
+          'Payment methods',
+          () => _paymentsRepository.fetchAndSavePayments(),
+        ),
+        announced(
+          'Store details',
+          () => _posDetailIdRepository.fetchAndSavePosDetailId(),
+        ),
+        announced('Shifts', () => _posShiftRepository.fetchAndSavePosShifts()),
+        announced(
+          'Product prices',
+          () => _productPriceRepository.fetchAndSaveProductPrices(),
+        ),
+        announced('Promos', () => _promoRepository.fetchAndSavePromos()),
       ]);
       return const CatalogSyncResult.ok();
     } catch (e) {

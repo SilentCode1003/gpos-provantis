@@ -15,9 +15,9 @@ Dio apiClient(Ref ref) {
   final dao = ref.watch(domainConfigDaoProvider);
   final baseUrl = domainAsync.value ?? dao.cachedDomain;
 
-  debugPrint('🌐 apiClient baseUrl resolved: $baseUrl');
-  debugPrint('🌐 activeDomainProvider raw AsyncValue: $domainAsync');
-  debugPrint('🌐 DomainConfigDao.cachedDomain: ${dao.cachedDomain}');
+  // debugPrint('🌐 apiClient baseUrl resolved: $baseUrl');
+  // debugPrint('🌐 activeDomainProvider raw AsyncValue: $domainAsync');
+  // debugPrint('🌐 DomainConfigDao.cachedDomain: ${dao.cachedDomain}');
 
   if (baseUrl == null || baseUrl.isEmpty) {
     throw StateError(
@@ -77,11 +77,11 @@ Dio apiClient(Ref ref) {
           options.headers['Authorization'] = 'Bearer missing_local_apk';
         }
 
-        debugPrint('>>> ${options.method} ${options.uri}');
-        debugPrint('>>> baseUrl: ${options.baseUrl}');
-        debugPrint('>>> path: ${options.path}');
-        debugPrint('>>> headers: ${options.headers}');
-        debugPrint('>>> data: ${options.data}');
+        // debugPrint('>>> ${options.method} ${options.uri}');
+        // debugPrint('>>> baseUrl: ${options.baseUrl}');
+        // debugPrint('>>> path: ${options.path}');
+        // debugPrint('>>> headers: ${options.headers}');
+        // debugPrint('>>> data: ${options.data}');
         return handler.next(options);
       },
       onError: (error, handler) {

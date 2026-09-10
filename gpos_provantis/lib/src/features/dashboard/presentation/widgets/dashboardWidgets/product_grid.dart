@@ -173,11 +173,7 @@ class _ProductCard extends ConsumerWidget {
     // OUT OF STOCK: `addToCart` itself has no stock check (it'll happily
     // add a 0-stock product if called), so the guard has to live here —
     // this is the only path a cashier has to add a product to the cart.
-    // isLowStock only applies to positive-but-scarce counts; 0 gets its
-    // own distinct "Out of stock" treatment below rather than reading as
-    // "0 left" in the same warning color a low-stock item would use.
     final isOutOfStock = product.stock <= 0;
-    final isLowStock = !isOutOfStock && product.stock <= 5;
 
     // Card-to-card separation used to rely entirely on `borderSubtle`, but
     // in dark mode `borderSubtle` (neutral800) is the exact same color as
@@ -254,15 +250,6 @@ class _ProductCard extends ConsumerWidget {
                       'Out of stock',
                       style: AppTypography.ui(
                         color: colors.textDisabled,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    )
-                  else if (isLowStock)
-                    Text(
-                      '${product.stock} left',
-                      style: AppTypography.ui(
-                        color: colors.warning,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),

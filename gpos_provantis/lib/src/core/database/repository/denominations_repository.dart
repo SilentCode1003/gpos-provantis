@@ -28,10 +28,32 @@ class DenominationsRepository {
   Future<void> fetchAndSaveDenominations() async {
     await _ref.read(domainConfigDaoProvider).cacheReady;
 
-    final dio = _ref.read(apiClientProvider);
-    final response = await dio.post('/denomination/active');
+    final callId = DateTime.now().microsecondsSinceEpoch;
+    debugPrint('[Denominations][$callId] fetchAndSaveDenominations() started');
 
-    // debugPrint('Response: ${response.data}');
+    final dio = _ref.read(apiClientProvider);
+
+    late final Response response;
+    try {
+      response = await dio.post('/denomination/active');
+    } on DioException catch (e) {
+      debugPrint(
+        '[Denominations][$callId] POST /denomination/active failed: '
+        '${e.type} — ${e.message}',
+      );
+      if (e.response != null) {
+        debugPrint(
+          '[Denominations][$callId] Server responded with status '
+          '${e.response?.statusCode}: ${e.response?.data}',
+        );
+      }
+      rethrow;
+    }
+
+    debugPrint(
+      '[Denominations][$callId] Raw response (status '
+      '${response.statusCode}): ${response.data}',
+    );
 
     final apiResponse =
         ApiResponseModel<List<DenominationsDto>>.fromDioResponse(
@@ -43,8 +65,31 @@ class DenominationsRepository {
 
     final records = apiResponse.responseData;
     if (records == null || records.isEmpty) {
+      debugPrint('[Denominations][$callId] Empty result from server.');
       throw Exception(
         'No denominations returned from server: ${apiResponse.responseMessage}',
+      );
+    }
+
+    // Log every id the server sent, plus any duplicates within THIS
+    // response — if a UNIQUE constraint failure follows, this tells you
+    // whether the server itself sent the same id twice (a payload bug)
+    // as opposed to two separate calls racing each other (a concurrency
+    // bug). A non-empty duplicates set here means it's the former.
+    final ids = records.map((d) => d.id).toList();
+    final seen = <int>{};
+    final duplicateIds = <int>{};
+    for (final id in ids) {
+      if (!seen.add(id)) duplicateIds.add(id);
+    }
+    debugPrint(
+      '[Denominations][$callId] Parsed ${records.length} records. '
+      'ids: $ids',
+    );
+    if (duplicateIds.isNotEmpty) {
+      debugPrint(
+        '[Denominations][$callId] *** DUPLICATE ids WITHIN this response: '
+        '$duplicateIds — server payload contains the same id more than once.',
       );
     }
 
@@ -62,6 +107,22 @@ class DenominationsRepository {
         )
         .toList();
 
-    await _dao.replaceDenominations(denominations);
+    debugPrint(
+      '[Denominations][$callId] Calling replaceDenominations() with '
+      '${denominations.length} rows now.',
+    );
+    try {
+      await _dao.replaceDenominations(denominations);
+    } catch (e) {
+      // If this throws a UNIQUE constraint failure and duplicateIds above
+      // was EMPTY, that rules out a duplicated server payload — it means
+      // another fetchAndSaveDenominations() call (different callId) is
+      // running concurrently and its delete()/insert() interleaved with
+      // this one's. Check for a second [Denominations][otherCallId] block
+      // overlapping with this one in the log.
+      debugPrint('[Denominations][$callId] replaceDenominations() failed: $e');
+      rethrow;
+    }
+    debugPrint('[Denominations][$callId] replaceDenominations() succeeded.');
   }
 }

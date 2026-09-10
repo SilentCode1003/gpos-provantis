@@ -32,7 +32,7 @@ class PaymentsRepository {
     final dio = _ref.read(apiClientProvider);
     final response = await dio.post('/payment/getactive');
     
-    debugPrint('Payments: $response}');
+    // debugPrint('Payments: $response}');
 
     final apiResponse = ApiResponseModel<List<PaymentsDto>>.fromDioResponse(
       response,

@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-
+import 'package:flutter/material.dart';
 import 'package:gpos_provantis/src/core/models/api_response_model.dart';
 import 'package:gpos_provantis/src/core/network/api_client.dart';
 import 'package:gpos_provantis/src/core/network/domain_provider.dart';
@@ -30,17 +30,64 @@ class CategoriesRepository {
     await _ref.read(domainConfigDaoProvider).cacheReady;
 
     final dio = _ref.read(apiClientProvider);
-    final response = await dio.get('/category/active');
 
-    final apiResponse = ApiResponseModel<List<CategoriesDto>>.fromDioResponse(
-      response,
-      fromJson: (data) => (data as List)
-          .map((x) => CategoriesDto.fromJson(x as Map<String, dynamic>))
-          .toList(),
+    late final Response response;
+    try {
+      response = await dio.get('/category/active');
+    } on DioException catch (e) {
+      // Network/transport-level failure: no connection, timeout, or the
+      // server responded with an error status Dio treats as an
+      // exception. e.response is populated when the server DID respond
+      // (e.g. 4xx/5xx) — logging both cases separately tells you whether
+      // the request even reached the server.
+      debugPrint(
+        '[CategoriesRepository] GET /category/active failed: '
+        '${e.type} — ${e.message}',
+      );
+      if (e.response != null) {
+        debugPrint(
+          '[CategoriesRepository] Server responded with status '
+          '${e.response?.statusCode}: ${e.response?.data}',
+        );
+      }
+      rethrow;
+    }
+
+    debugPrint(
+      '[CategoriesRepository] Raw response (status '
+      '${response.statusCode}): ${response.data}',
+    );
+
+    late final ApiResponseModel<List<CategoriesDto>> apiResponse;
+    try {
+      apiResponse = ApiResponseModel<List<CategoriesDto>>.fromDioResponse(
+        response,
+        fromJson: (data) => (data as List)
+            .map((x) => CategoriesDto.fromJson(x as Map<String, dynamic>))
+            .toList(),
+      );
+    } catch (e, st) {
+      // The request succeeded but parsing the body into CategoriesDto
+      // failed — e.g. the server changed a field name/type, or the
+      // top-level shape isn't a List where expected. Logging the raw
+      // body above plus this error is what actually tells you whether
+      // this is a parsing bug vs a genuinely empty/malformed response.
+      debugPrint('[CategoriesRepository] Failed to parse response: $e');
+      debugPrint('[CategoriesRepository] $st');
+      rethrow;
+    }
+
+    debugPrint(
+      '[CategoriesRepository] Parsed ${apiResponse.responseData?.length ?? 0} '
+      'categories. responseMessage: ${apiResponse.responseMessage}',
     );
 
     final records = apiResponse.responseData;
     if (records == null || records.isEmpty) {
+      debugPrint(
+        '[CategoriesRepository] Empty result. Full raw body was: '
+        '${response.data}',
+      );
       throw Exception(
         'No categories returned from server: ${apiResponse.responseMessage}',
       );

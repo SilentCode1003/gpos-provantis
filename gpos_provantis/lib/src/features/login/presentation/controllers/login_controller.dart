@@ -2,6 +2,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:gpos_provantis/src/core/database/repository/login_repository.dart';
 import 'package:gpos_provantis/src/services/sync/catalog_sync.dart';
+import 'package:gpos_provantis/src/services/sync/controller/catalog_sync_controller.dart';
 import 'package:gpos_provantis/src/core/database/providers/user_data_dao_provider.dart';
 
 part 'login_controller.g.dart';
@@ -76,7 +77,9 @@ class LoginController extends _$LoginController {
       state = state.copyWith(isSubmitting: false);
 
       try {
-        await ref.read(catalogSyncServiceProvider).syncCatalog();
+        await ref
+            .read(catalogSyncControllerProvider.notifier)
+            .runSync(ref.read(catalogSyncServiceProvider));
       } catch (e) {
         state = state.copyWith(isSubmitting: false);
         throw ('Failed to sync catalog: $e');

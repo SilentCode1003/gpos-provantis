@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:gpos_provantis/src/core/database/app_database.dart';
 import 'package:gpos_provantis/src/core/database/providers/categories_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/product_price_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/providers/discounts_dao_provider.dart';
 
 part 'dashboard_controller.g.dart';
 
@@ -119,7 +120,7 @@ class DashboardState {
   const DashboardState({
     required this.selectedCategoryId,
     required this.cartLines,
-    this.isSaleHeld = false,
+    this.selectedDiscount,
     this.shiftStatus = ShiftStatus.closed,
     this.catalogSheetCategoryId,
     this.catalogSearchQuery = '',
@@ -142,9 +143,12 @@ class DashboardState {
 
   bool get isCatalogSheetOpen => catalogSheetCategoryId != null;
 
-  /// True once "Hold sale" has been tapped — placeholder flag only; a
-  /// real implementation would move the sale into a held-sales list.
-  final bool isSaleHeld;
+  /// Whichever discount the cashier picked from the discount sheet, or
+  /// null if none is applied. Kept as the full row (not just a rate)
+  /// so the footer can show the discount's name alongside its amount.
+  final DiscountsTableData? selectedDiscount;
+
+  bool get hasDiscount => selectedDiscount != null;
 
   /// Whether the cashier has clocked in ("Start shift"). Toggled from
   /// the top bar — see `_TopBar` in the screen file.
@@ -156,26 +160,53 @@ class DashboardState {
   /// the cart footer look like a real receipt breakdown.
   double get tax => subtotal * 0.0825;
 
-  double get total => subtotal + tax;
+  /// Subtotal + tax, *before* any discount is applied. This is the
+  /// figure the discount rate multiplies against.
+  double get preDiscountTotal => subtotal + tax;
+
+  /// Discount rate as a fraction (e.g. a stored `rate` of 20 -> 0.20).
+  /// Discounts are stored as whole-number percentages in the DB, so the
+  /// conversion happens here, in one place, rather than at every call
+  /// site that needs the fraction.
+  double get discountRate =>
+      selectedDiscount == null ? 0 : selectedDiscount!.rate / 100;
+
+  /// Peso amount knocked off by the discount — always computed off
+  /// [preDiscountTotal], never off the subtotal alone and never
+  /// accumulated line-by-line. Because it's derived fresh from the
+  /// total every time, it doesn't matter whether the discount was
+  /// picked before or after products were added, or in what order
+  /// lines/quantities changed afterward — the result is identical
+  /// either way.
+  double get discountAmount => preDiscountTotal * discountRate;
+
+  /// Grand total after the discount is applied. `Total * discount` is
+  /// intentionally the *only* place the discount rate is used — nothing
+  /// upstream (subtotal, tax) ever sees it, so re-ordering "add
+  /// product" vs "apply discount" actions can never change the result.
+  double get total => preDiscountTotal - discountAmount;
 
   int get itemCount => cartLines.fold(0, (sum, line) => sum + line.quantity);
 
   DashboardState copyWith({
     String? selectedCategoryId,
     List<CartLine>? cartLines,
-    bool? isSaleHeld,
-    ShiftStatus? shiftStatus,
     // Sentinel-based so we can distinguish "leave unchanged" (default,
-    // not passed) from "explicitly set to null" (closing the sheet) —
-    // a plain `catalogSheetCategoryId ?? this.catalogSheetCategoryId`
+    // not passed) from "explicitly set to null" (clearing the
+    // discount) — a plain `selectedDiscount ?? this.selectedDiscount`
     // could never null the field back out once set.
+    Object? selectedDiscount = _unset,
+    ShiftStatus? shiftStatus,
+    // Same sentinel trick as above, for closing the catalog sheet.
     Object? catalogSheetCategoryId = _unset,
     String? catalogSearchQuery,
   }) {
     return DashboardState(
       selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
       cartLines: cartLines ?? this.cartLines,
-      isSaleHeld: isSaleHeld ?? this.isSaleHeld,
+      selectedDiscount: identical(selectedDiscount, _unset)
+          ? this.selectedDiscount
+          : selectedDiscount as DiscountsTableData?,
       shiftStatus: shiftStatus ?? this.shiftStatus,
       catalogSheetCategoryId: identical(catalogSheetCategoryId, _unset)
           ? this.catalogSheetCategoryId
@@ -400,8 +431,18 @@ class DashboardController extends _$DashboardController {
     );
   }
 
-  void toggleHold() {
-    state = state.copyWith(isSaleHeld: !state.isSaleHeld);
+  /// Applies (or switches to) a discount picked from the discount
+  /// sheet. Only the row itself is stored — [DashboardState.total]
+  /// derives the peso amount off the *current* total on every read, so
+  /// this can be called before or after products are added/removed
+  /// with no difference in the end result.
+  void applyDiscount(DiscountsTableData discount) {
+    state = state.copyWith(selectedDiscount: discount);
+  }
+
+  /// Removes whichever discount is currently applied.
+  void clearDiscount() {
+    state = state.copyWith(selectedDiscount: null);
   }
 
   void addToCart(Product product) {

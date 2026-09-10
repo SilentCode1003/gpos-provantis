@@ -8,6 +8,7 @@ import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
 import 'dashboard_constants.dart';
+import 'discount_picker_sheet.dart';
 
 /// --- Cart panel (left) -----------------------------------------------------
 
@@ -938,6 +939,20 @@ class _CartFooter extends ConsumerWidget {
           _TotalsRow(label: 'Subtotal', value: state.subtotal, colors: colors),
           const SizedBox(height: 4),
           _TotalsRow(label: 'Tax', value: state.tax, colors: colors),
+          // Only shown once a discount is actually applied — mirrors
+          // "Remove all"/"Remove discount" only appearing once there's
+          // something to act on, rather than a permanent zero-value row.
+          if (state.hasDiscount) ...[
+            const SizedBox(height: 4),
+            _TotalsRow(
+              label:
+                  'Discount (${state.selectedDiscount!.name} '
+                  '\u2013 ${state.selectedDiscount!.rate}%)',
+              value: -state.discountAmount,
+              colors: colors,
+              valueColor: colors.primary,
+            ),
+          ],
           const SizedBox(height: 10),
           Divider(height: 1, color: colors.borderSubtle),
           const SizedBox(height: 10),
@@ -968,19 +983,34 @@ class _CartFooter extends ConsumerWidget {
               Expanded(
                 child: SizedBox(
                   height: primaryTapTarget,
-                  child: OutlinedButton(
-                    onPressed: hasItems ? notifier.toggleHold : null,
+                  child: OutlinedButton.icon(
+                    onPressed: hasItems
+                        ? () => showDiscountPickerSheet(context)
+                        : null,
+                    icon: Icon(
+                      PhosphorIcons.percent,
+                      size: 18,
+                      color: hasItems ? colors.primary : colors.textDisabled,
+                    ),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: colors.held,
+                      foregroundColor: colors.primary,
                       side: BorderSide(
-                        color: hasItems ? colors.held : colors.border,
+                        color: hasItems ? colors.primary : colors.border,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text(
-                      state.isSaleHeld ? 'Held' : 'Hold sale',
+                    // Label reflects whichever discount (if any) is
+                    // currently applied, same "button doubles as status"
+                    // pattern the old hold button used ('Hold sale' ->
+                    // 'Held') — tapping again re-opens the sheet to
+                    // switch or clear it, rather than needing a separate
+                    // control just to change discounts.
+                    label: Text(
+                      state.hasDiscount
+                          ? '${state.selectedDiscount!.rate}% off'
+                          : 'Discount',
                       style: AppTypography.ui(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -1029,14 +1059,24 @@ class _TotalsRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.colors,
+    this.valueColor,
   });
 
   final String label;
   final double value;
   final AppColors colors;
 
+  /// Overrides the value text's color — used for the discount row so it
+  /// reads as a distinct, non-neutral line in the breakdown rather than
+  /// blending into the plain subtotal/tax rows above it.
+  final Color? valueColor;
+
   @override
   Widget build(BuildContext context) {
+    final isNegative = value < 0;
+    final formatted =
+        '${isNegative ? '\u2212' : ''}\u20b1${value.abs().toStringAsFixed(2)}';
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -1045,8 +1085,11 @@ class _TotalsRow extends StatelessWidget {
           style: AppTypography.ui(color: colors.textSecondary, fontSize: 14),
         ),
         Text(
-          '₱${value.toStringAsFixed(2)}',
-          style: AppTypography.ui(color: colors.textSecondary, fontSize: 14),
+          formatted,
+          style: AppTypography.ui(
+            color: valueColor ?? colors.textSecondary,
+            fontSize: 14,
+          ),
         ),
       ],
     );

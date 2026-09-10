@@ -39,10 +39,17 @@ class PromoRepository {
     );
 
     final records = apiResponse.responseData;
-    if (records == null || records.isEmpty) {
+    if (records == null) {
+      // Missing/malformed responseData is a real problem (bad response
+      // shape, parsing didn't produce a list at all) — still an error.
       throw Exception(
         'No promos returned from server: ${apiResponse.responseMessage}',
       );
+    }
+
+    if (records.isEmpty) {
+      await _dao.replacePromos(const []);
+      return;
     }
 
     final companions = records

@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-
+import 'package:flutter/material.dart';
 import 'package:gpos_provantis/src/core/models/api_response_model.dart';
 import 'package:gpos_provantis/src/core/network/api_client.dart';
 import 'package:gpos_provantis/src/core/network/domain_provider.dart';
@@ -43,6 +43,8 @@ class UserDataRepository {
       '/poslogin',
       data: {'username': username, 'password': password},
     );
+
+    debugPrint('API Response: ${response.data}');
 
     final apiResponse = ApiResponseModel<List<UserDataDto>>.fromDioResponse(
       response,

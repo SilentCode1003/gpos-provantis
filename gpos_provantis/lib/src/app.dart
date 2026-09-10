@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:device_preview_plus/device_preview_plus.dart';
 import 'core/theme/theme.dart';
 import 'routing/app_router.dart';
+import 'services/sync/overlay/catalog_sync_overlay.dart';
 
 class GposProvantisApp extends ConsumerWidget {
   const GposProvantisApp({super.key});
@@ -24,9 +25,18 @@ class GposProvantisApp extends ConsumerWidget {
           title: 'Gpos Provantis',
           debugShowCheckedModeBanner: false,
 
-          // These two lines connect Device Preview's state to your app
+          // These two lines connect Device Preview's state to your app.
+          // CatalogSyncOverlay wraps AFTER DevicePreview.appBuilder so it
+          // renders above the device-preview frame too — i.e. above
+          // every screen, no matter what route is active. It watches
+          // CatalogSyncController globally, so any call to
+          // CatalogSyncController.runSync(...) — from login, a manual
+          // sync button, anywhere — surfaces this same overlay on top of
+          // whatever the user is currently looking at.
           locale: DevicePreview.locale(context),
-          builder: DevicePreview.appBuilder,
+          builder: (context, child) => CatalogSyncOverlay(
+            child: DevicePreview.appBuilder(context, child),
+          ),
 
           routerConfig: goRouter,
 
