@@ -354,7 +354,8 @@ class _ProfileMenuState extends ConsumerState<_ProfileMenu>
     if (!mounted) return;
     switch (action) {
       case _ProfileMenuAction.settings:
-        break;
+        context.push('/settings');
+      // break;
       case _ProfileMenuAction.logout:
         final confirmed = await showConfirmDialog(
           context,

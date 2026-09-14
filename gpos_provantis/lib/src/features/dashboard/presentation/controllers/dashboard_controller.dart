@@ -96,9 +96,10 @@ enum ShiftStatus { closed, open }
 enum CatalogLoadStatus { loading, error, data }
 
 /// One tile inside the "Others" panel — secondary/less-frequent actions
-/// that don't need to live in the always-visible top bar. Still a
-/// hardcoded action set (`_placeholderOtherActions` below) — unlike
-/// categories/products, these aren't backed by a repository yet.
+/// (receipts, reports, cash management, sync, etc) that don't need to
+/// live in the always-visible top bar. Still a hardcoded action set
+/// (`_placeholderOtherActions` below) — unlike categories/products,
+/// these aren't backed by a repository yet.
 class OtherAction {
   const OtherAction({
     required this.id,
@@ -221,51 +222,37 @@ class DashboardState {
 const Object _unset = Object();
 
 const _placeholderOtherActions = [
-  OtherAction(id: 'discounts', label: 'Discounts', icon: 'percent_rounded'),
+  OtherAction(id: 'receipt', label: 'RECEIPT', icon: 'receipt_long_rounded'),
+  OtherAction(id: 'reports', label: 'REPORTS', icon: 'summarize_rounded'),
   OtherAction(
-    id: 'payment_methods',
-    label: 'Payment Methods',
-    icon: 'credit_card_rounded',
-  ),
-  OtherAction(id: 'void_sale', label: 'Void Sale', icon: 'block_rounded'),
-  OtherAction(id: 'price_check', label: 'Price Check', icon: 'search_rounded'),
-  OtherAction(id: 'open_drawer', label: 'Open Drawer', icon: 'inbox_rounded'),
-  OtherAction(
-    id: 'customer_lookup',
-    label: 'Customer Lookup',
-    icon: 'person_search_rounded',
+    id: 'cash_report',
+    label: 'CASH REPORT',
+    icon: 'account_balance_wallet_rounded',
   ),
   OtherAction(
-    id: 'order_notes',
-    label: 'Order Notes',
-    icon: 'sticky_note_2_rounded',
+    id: 'sold_items',
+    label: 'SOLD ITEMS',
+    icon: 'shopping_bag_rounded',
   ),
+  OtherAction(id: 're_print', label: 'RE-PRINT', icon: 'print_rounded'),
+  OtherAction(id: 'refund', label: 'REFUND', icon: 'assignment_return_rounded'),
   OtherAction(
-    id: 'returns',
-    label: 'Returns',
-    icon: 'assignment_return_rounded',
+    id: 'send_e-receipt',
+    label: 'SEND E-RECEIPT',
+    icon: 'forward_to_inbox_rounded',
   ),
+  OtherAction(id: 'cash_drop', label: 'CASH DROP', icon: 'payments_rounded'),
   OtherAction(
-    id: 'gift_cards',
-    label: 'Gift Cards',
-    icon: 'card_giftcard_rounded',
+    id: 'open_cashdrawer',
+    label: 'OPEN CASHDRAWER',
+    icon: 'inbox_rounded',
   ),
+  OtherAction(id: 'sync_data', label: 'SYNC DATA', icon: 'sync_rounded'),
   OtherAction(
-    id: 'tax_exempt',
-    label: 'Tax Exempt',
-    icon: 'receipt_long_rounded',
+    id: 'restart_pos',
+    label: 'RESTART POS',
+    icon: 'restart_alt_rounded',
   ),
-  OtherAction(
-    id: 'print_last_receipt',
-    label: 'Print Last Receipt',
-    icon: 'print_rounded',
-  ),
-  OtherAction(
-    id: 'end_of_day_report',
-    label: 'End of Day Report',
-    icon: 'summarize_rounded',
-  ),
-  OtherAction(id: 'loyalty', label: 'Loyalty', icon: 'loyalty_rounded'),
 ];
 
 String _categoryIconForName(String categoryName) {
