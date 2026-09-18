@@ -13,7 +13,7 @@ part of 'settings_controller.dart';
 final settingsControllerProvider = SettingsControllerProvider._();
 
 final class SettingsControllerProvider
-    extends $NotifierProvider<SettingsController, void> {
+    extends $AsyncNotifierProvider<SettingsController, List<PrinterDto>> {
   SettingsControllerProvider._()
     : super(
         from: null,
@@ -31,30 +31,23 @@ final class SettingsControllerProvider
   @$internal
   @override
   SettingsController create() => SettingsController();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
-  }
 }
 
 String _$settingsControllerHash() =>
-    r'9f32665f2d31c82092894dcdcce97f46c673ea40';
+    r'ce9219b329b0577880dc99a5c8487ccdc309f5e6';
 
-abstract class _$SettingsController extends $Notifier<void> {
-  void build();
+abstract class _$SettingsController extends $AsyncNotifier<List<PrinterDto>> {
+  FutureOr<List<PrinterDto>> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<void, void>;
+    final ref =
+        this.ref as $Ref<AsyncValue<List<PrinterDto>>, List<PrinterDto>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<void, void>,
-              void,
+              AnyNotifier<AsyncValue<List<PrinterDto>>, List<PrinterDto>>,
+              AsyncValue<List<PrinterDto>>,
               Object?,
               Object?
             >;

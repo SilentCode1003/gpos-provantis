@@ -9,6 +9,7 @@ import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/d
 import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
 import 'dashboard_constants.dart';
 import 'discount_picker_sheet.dart';
+import 'payments_modal.dart';
 
 /// --- Cart panel (left) -----------------------------------------------------
 
@@ -1025,7 +1026,11 @@ class _CartFooter extends ConsumerWidget {
                 child: SizedBox(
                   height: primaryTapTarget,
                   child: ElevatedButton(
-                    onPressed: hasItems ? () {} : null,
+                    // Modal, not a full-screen route — see the doc
+                    // comment atop payment_modal.dart for why.
+                    onPressed: hasItems
+                        ? () => showPaymentModal(context)
+                        : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppPalette.teal500,
                       foregroundColor: colors.onPrimary,

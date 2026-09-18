@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 class PrintersTable extends Table {
-  TextColumn get id => text().clientDefault(() => const Uuid().v4())();
+  TextColumn get id => text().clientDefault(() => Uuid().v4())();
   TextColumn get name => text().withDefault(const Constant('DEFAULT'))();
   TextColumn get connectionType => text().withDefault(const Constant('WIFI'))();
   TextColumn get address => text().withDefault(const Constant(''))();

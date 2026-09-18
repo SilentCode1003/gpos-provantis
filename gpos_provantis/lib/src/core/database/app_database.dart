@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:uuid/uuid.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -24,6 +25,7 @@ import 'tables/pos_detail_id_table.dart';
 import 'tables/pos_shift_table.dart';
 import 'tables/product_price_table.dart';
 import 'tables/promo_table.dart';
+import 'tables/printers_table.dart';
 
 import 'daos/domain_config_dao.dart';
 import 'daos/branch_config_dao.dart';
@@ -53,6 +55,7 @@ part 'app_database.g.dart';
     PosShiftTable,
     ProductPriceTable,
     PromoTable,
+    PrintersTable,
   ],
   daos: [DomainConfigDao, BranchConfigDao, PosConfigDao],
 )

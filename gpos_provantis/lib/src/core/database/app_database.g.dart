@@ -5508,6 +5508,363 @@ class PromoTableCompanion extends UpdateCompanion<PromoTableData> {
   }
 }
 
+class $PrintersTableTable extends PrintersTable
+    with TableInfo<$PrintersTableTable, PrintersTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PrintersTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => Uuid().v4(),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('DEFAULT'),
+  );
+  static const VerificationMeta _connectionTypeMeta = const VerificationMeta(
+    'connectionType',
+  );
+  @override
+  late final GeneratedColumn<String> connectionType = GeneratedColumn<String>(
+    'connection_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('WIFI'),
+  );
+  static const VerificationMeta _addressMeta = const VerificationMeta(
+    'address',
+  );
+  @override
+  late final GeneratedColumn<String> address = GeneratedColumn<String>(
+    'address',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _paperSizeMeta = const VerificationMeta(
+    'paperSize',
+  );
+  @override
+  late final GeneratedColumn<String> paperSize = GeneratedColumn<String>(
+    'paper_size',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('mm80'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    connectionType,
+    address,
+    paperSize,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'printers_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PrintersTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('connection_type')) {
+      context.handle(
+        _connectionTypeMeta,
+        connectionType.isAcceptableOrUnknown(
+          data['connection_type']!,
+          _connectionTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('address')) {
+      context.handle(
+        _addressMeta,
+        address.isAcceptableOrUnknown(data['address']!, _addressMeta),
+      );
+    }
+    if (data.containsKey('paper_size')) {
+      context.handle(
+        _paperSizeMeta,
+        paperSize.isAcceptableOrUnknown(data['paper_size']!, _paperSizeMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PrintersTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PrintersTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      connectionType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}connection_type'],
+      )!,
+      address: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}address'],
+      )!,
+      paperSize: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}paper_size'],
+      )!,
+    );
+  }
+
+  @override
+  $PrintersTableTable createAlias(String alias) {
+    return $PrintersTableTable(attachedDatabase, alias);
+  }
+}
+
+class PrintersTableData extends DataClass
+    implements Insertable<PrintersTableData> {
+  final String id;
+  final String name;
+  final String connectionType;
+  final String address;
+  final String paperSize;
+  const PrintersTableData({
+    required this.id,
+    required this.name,
+    required this.connectionType,
+    required this.address,
+    required this.paperSize,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['connection_type'] = Variable<String>(connectionType);
+    map['address'] = Variable<String>(address);
+    map['paper_size'] = Variable<String>(paperSize);
+    return map;
+  }
+
+  PrintersTableCompanion toCompanion(bool nullToAbsent) {
+    return PrintersTableCompanion(
+      id: Value(id),
+      name: Value(name),
+      connectionType: Value(connectionType),
+      address: Value(address),
+      paperSize: Value(paperSize),
+    );
+  }
+
+  factory PrintersTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PrintersTableData(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      connectionType: serializer.fromJson<String>(json['connectionType']),
+      address: serializer.fromJson<String>(json['address']),
+      paperSize: serializer.fromJson<String>(json['paperSize']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'connectionType': serializer.toJson<String>(connectionType),
+      'address': serializer.toJson<String>(address),
+      'paperSize': serializer.toJson<String>(paperSize),
+    };
+  }
+
+  PrintersTableData copyWith({
+    String? id,
+    String? name,
+    String? connectionType,
+    String? address,
+    String? paperSize,
+  }) => PrintersTableData(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    connectionType: connectionType ?? this.connectionType,
+    address: address ?? this.address,
+    paperSize: paperSize ?? this.paperSize,
+  );
+  PrintersTableData copyWithCompanion(PrintersTableCompanion data) {
+    return PrintersTableData(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      connectionType: data.connectionType.present
+          ? data.connectionType.value
+          : this.connectionType,
+      address: data.address.present ? data.address.value : this.address,
+      paperSize: data.paperSize.present ? data.paperSize.value : this.paperSize,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PrintersTableData(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('connectionType: $connectionType, ')
+          ..write('address: $address, ')
+          ..write('paperSize: $paperSize')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, connectionType, address, paperSize);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrintersTableData &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.connectionType == this.connectionType &&
+          other.address == this.address &&
+          other.paperSize == this.paperSize);
+}
+
+class PrintersTableCompanion extends UpdateCompanion<PrintersTableData> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> connectionType;
+  final Value<String> address;
+  final Value<String> paperSize;
+  final Value<int> rowid;
+  const PrintersTableCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.connectionType = const Value.absent(),
+    this.address = const Value.absent(),
+    this.paperSize = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PrintersTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.connectionType = const Value.absent(),
+    this.address = const Value.absent(),
+    this.paperSize = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  static Insertable<PrintersTableData> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? connectionType,
+    Expression<String>? address,
+    Expression<String>? paperSize,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (connectionType != null) 'connection_type': connectionType,
+      if (address != null) 'address': address,
+      if (paperSize != null) 'paper_size': paperSize,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PrintersTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<String>? connectionType,
+    Value<String>? address,
+    Value<String>? paperSize,
+    Value<int>? rowid,
+  }) {
+    return PrintersTableCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      connectionType: connectionType ?? this.connectionType,
+      address: address ?? this.address,
+      paperSize: paperSize ?? this.paperSize,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (connectionType.present) {
+      map['connection_type'] = Variable<String>(connectionType.value);
+    }
+    if (address.present) {
+      map['address'] = Variable<String>(address.value);
+    }
+    if (paperSize.present) {
+      map['paper_size'] = Variable<String>(paperSize.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PrintersTableCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('connectionType: $connectionType, ')
+          ..write('address: $address, ')
+          ..write('paperSize: $paperSize, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5532,6 +5889,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ProductPriceTableTable productPriceTable =
       $ProductPriceTableTable(this);
   late final $PromoTableTable promoTable = $PromoTableTable(this);
+  late final $PrintersTableTable printersTable = $PrintersTableTable(this);
   late final DomainConfigDao domainConfigDao = DomainConfigDao(
     this as AppDatabase,
   );
@@ -5557,6 +5915,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     posShiftTable,
     productPriceTable,
     promoTable,
+    printersTable,
   ];
 }
 
@@ -8627,6 +8986,212 @@ typedef $$PromoTableTableProcessedTableManager =
       PromoTableData,
       PrefetchHooks Function()
     >;
+typedef $$PrintersTableTableCreateCompanionBuilder =
+    PrintersTableCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<String> connectionType,
+      Value<String> address,
+      Value<String> paperSize,
+      Value<int> rowid,
+    });
+typedef $$PrintersTableTableUpdateCompanionBuilder =
+    PrintersTableCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<String> connectionType,
+      Value<String> address,
+      Value<String> paperSize,
+      Value<int> rowid,
+    });
+
+class $$PrintersTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PrintersTableTable> {
+  $$PrintersTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get connectionType => $composableBuilder(
+    column: $table.connectionType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get address => $composableBuilder(
+    column: $table.address,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paperSize => $composableBuilder(
+    column: $table.paperSize,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PrintersTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PrintersTableTable> {
+  $$PrintersTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get connectionType => $composableBuilder(
+    column: $table.connectionType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get address => $composableBuilder(
+    column: $table.address,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paperSize => $composableBuilder(
+    column: $table.paperSize,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PrintersTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PrintersTableTable> {
+  $$PrintersTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get connectionType => $composableBuilder(
+    column: $table.connectionType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get address =>
+      $composableBuilder(column: $table.address, builder: (column) => column);
+
+  GeneratedColumn<String> get paperSize =>
+      $composableBuilder(column: $table.paperSize, builder: (column) => column);
+}
+
+class $$PrintersTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PrintersTableTable,
+          PrintersTableData,
+          $$PrintersTableTableFilterComposer,
+          $$PrintersTableTableOrderingComposer,
+          $$PrintersTableTableAnnotationComposer,
+          $$PrintersTableTableCreateCompanionBuilder,
+          $$PrintersTableTableUpdateCompanionBuilder,
+          (
+            PrintersTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $PrintersTableTable,
+              PrintersTableData
+            >,
+          ),
+          PrintersTableData,
+          PrefetchHooks Function()
+        > {
+  $$PrintersTableTableTableManager(_$AppDatabase db, $PrintersTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PrintersTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PrintersTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PrintersTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> connectionType = const Value.absent(),
+                Value<String> address = const Value.absent(),
+                Value<String> paperSize = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PrintersTableCompanion(
+                id: id,
+                name: name,
+                connectionType: connectionType,
+                address: address,
+                paperSize: paperSize,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> connectionType = const Value.absent(),
+                Value<String> address = const Value.absent(),
+                Value<String> paperSize = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PrintersTableCompanion.insert(
+                id: id,
+                name: name,
+                connectionType: connectionType,
+                address: address,
+                paperSize: paperSize,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PrintersTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PrintersTableTable,
+      PrintersTableData,
+      $$PrintersTableTableFilterComposer,
+      $$PrintersTableTableOrderingComposer,
+      $$PrintersTableTableAnnotationComposer,
+      $$PrintersTableTableCreateCompanionBuilder,
+      $$PrintersTableTableUpdateCompanionBuilder,
+      (
+        PrintersTableData,
+        BaseReferences<_$AppDatabase, $PrintersTableTable, PrintersTableData>,
+      ),
+      PrintersTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -8657,6 +9222,8 @@ class $AppDatabaseManager {
       $$ProductPriceTableTableTableManager(_db, _db.productPriceTable);
   $$PromoTableTableTableManager get promoTable =>
       $$PromoTableTableTableManager(_db, _db.promoTable);
+  $$PrintersTableTableTableManager get printersTable =>
+      $$PrintersTableTableTableManager(_db, _db.printersTable);
 }
 
 // **************************************************************************

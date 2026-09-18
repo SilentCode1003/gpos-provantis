@@ -1,0 +1,931 @@
+// Location: src/features/settings/panels/printers_panel.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../controllers/settings_controller.dart';
+import 'package:gpos_provantis/src/core/database/domain/printer_dto.dart';
+import 'package:gpos_provantis/src/core/theme/theme.dart';
+import '../screens/settings_shared.dart';
+
+/// =========================================================================
+/// PRINTERS PANEL — list/add/edit/test printers backed by `PrinterDto` and
+/// `settingsControllerProvider`.
+///
+/// Split out of the old monolithic `settings_screen.dart` so this panel's
+/// own future changes (new printer fields, real device status polling,
+/// etc.) don't require touching or re-reading the rest of the settings
+/// screen. Everything below is private to this file except `PrintersPanel`
+/// itself, which the settings shell references from its section list.
+/// =========================================================================
+
+/// -----------------------------------------------------------------------
+
+/// Connection-type icon lookup, shared by the printer row and the add/edit
+/// sheet — one source of truth instead of duplicating the switch twice.
+IconData _connectionTypeIcon(String type) => switch (type) {
+  'BLUETOOTH' => Icons.bluetooth_rounded,
+  'WIFI' => Icons.wifi_rounded,
+  'USB' => Icons.usb_rounded,
+  _ => Icons.print_outlined,
+};
+
+/// Connection status shown as a colored dot + label on each row.
+///
+/// This is UI-only for now — there's no live device polling wired up yet,
+/// so every printer renders as `online` until real status data exists.
+/// Kept as its own enum (rather than a bool) so a future `connecting` or
+/// `error` state slots in without reshaping the row widget.
+enum _PrinterStatus { online, offline }
+
+class PrintersPanel extends ConsumerStatefulWidget {
+  const PrintersPanel();
+
+  @override
+  ConsumerState<PrintersPanel> createState() => _PrintersPanelState();
+}
+
+class _PrintersPanelState extends ConsumerState<PrintersPanel> {
+  Future<void> _openAddPrinterSheet() async {
+    final result = await showModalBottomSheet<PrinterDto>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (_) => const _PrinterFormSheet(),
+    );
+
+    if (result != null) {
+      await ref.read(settingsControllerProvider.notifier).addPrinter(result);
+    }
+  }
+
+  Future<void> _openEditPrinterSheet(PrinterDto printer) async {
+    final result = await showModalBottomSheet<PrinterDto>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (_) => _PrinterFormSheet(existing: printer),
+    );
+
+    if (result != null) {
+      await ref.read(settingsControllerProvider.notifier).updatePrinter(result);
+    }
+  }
+
+  void _removePrinter(PrinterDto printer) {
+    ref.read(settingsControllerProvider.notifier).removePrinter(printer.id);
+  }
+
+  /// Placeholder test action — sends nothing yet, just gives the cashier
+  /// feedback that the tap registered. Wire up to a real test-print job
+  /// once the printing service is in place.
+  void _testPrinter(BuildContext context, PrinterDto printer) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Sending test print to ${printer.name}…')),
+    );
+  }
+
+  Future<void> _openActionsSheet(PrinterDto printer) async {
+    final colors = context.colors;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => Container(
+        padding: const EdgeInsets.fromLTRB(
+          Space.lg,
+          Space.md,
+          Space.lg,
+          Space.xxl,
+        ),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: Space.lg),
+                  decoration: BoxDecoration(
+                    color: colors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: Space.sm),
+                child: Text(
+                  printer.name,
+                  style: AppTypography.ui(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: Space.md),
+              ActionSheetTile(
+                icon: Icons.edit_outlined,
+                label: 'Edit printer',
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  _openEditPrinterSheet(printer);
+                },
+              ),
+              ActionSheetTile(
+                icon: Icons.print_outlined,
+                label: 'Test print',
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  _testPrinter(context, printer);
+                },
+              ),
+              ActionSheetTile(
+                icon: Icons.delete_outline_rounded,
+                label: 'Remove printer',
+                destructive: true,
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  _removePrinter(printer);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final printersAsync = ref.watch(settingsControllerProvider);
+
+    return Scaffold(
+      backgroundColor: colors.background,
+      body: printersAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => Center(
+          child: Text(
+            'Failed to load printers: $error',
+            style: AppTypography.ui(fontSize: 14, color: colors.danger),
+          ),
+        ),
+        data: (printers) => ListView(
+          padding: const EdgeInsets.fromLTRB(
+            Space.xxxl,
+            Space.xxl,
+            Space.xxxl,
+            Space.xxxl,
+          ),
+          children: [
+            PanelHeader(
+              title: 'Printers',
+              subtitle: printers.isEmpty
+                  ? 'No printers connected to this device yet'
+                  : '${printers.length} '
+                        '${printers.length == 1 ? 'printer' : 'printers'} connected',
+            ),
+            const SizedBox(height: Space.lg),
+            // One continuous bordered group — rows separated by hairlines,
+            // not floating cards — with the add-printer slot as the final
+            // row rather than a separate button living above the list.
+            //
+            // Rounding lives on an explicit `ClipRRect` wrapping the whole
+            // group, not on `Container.clipBehavior`. Any child that paints
+            // its own full-perimeter border (as `_AddPrinterSlot` used to)
+            // draws square corners that get sliced off right where the
+            // parent's curve starts, which is what read as "cut off" on the
+            // top/bottom edges. `_AddPrinterSlot` no longer paints a boxed
+            // border at all — just a tinted fill and a top hairline — so
+            // there's nothing left to visibly collide with the outer curve.
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: colors.borderSubtle),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(17),
+                child: Column(
+                  children: [
+                    for (final printer in printers) ...[
+                      _PrinterRow(
+                        printer: printer,
+                        status: _PrinterStatus.online,
+                        onTap: () => _openActionsSheet(printer),
+                      ),
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: colors.borderSubtle,
+                      ),
+                    ],
+                    _AddPrinterSlot(onTap: _openAddPrinterSheet),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A single printer row — status dot, connection icon, name + metadata.
+/// Tapping anywhere on the row opens the actions sheet (Edit / Test /
+/// Remove); there are no inline icon buttons cluttering the row itself.
+class _PrinterRow extends StatelessWidget {
+  const _PrinterRow({
+    required this.printer,
+    required this.status,
+    required this.onTap,
+  });
+
+  final PrinterDto printer;
+  final _PrinterStatus status;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final isOnline = status == _PrinterStatus.online;
+    final statusColor = isOnline ? colors.success : colors.danger;
+
+    return Material(
+      color: colors.surface,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 76),
+          padding: const EdgeInsets.symmetric(
+            horizontal: Space.lg,
+            vertical: Space.md,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 9,
+                height: 9,
+                decoration: BoxDecoration(
+                  color: statusColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: Space.lg),
+              Icon(
+                _connectionTypeIcon(printer.connectionType),
+                size: 22,
+                color: colors.textSecondary,
+              ),
+              const SizedBox(width: Space.lg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      printer.name,
+                      style: AppTypography.ui(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${_connectionLabel(printer.connectionType)} · '
+                      '${printer.address} · ${printer.paperSize}mm',
+                      style: AppTypography.ui(
+                        fontSize: 13,
+                        color: colors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: Space.md),
+              Text(
+                isOnline ? 'ONLINE' : 'OFFLINE',
+                style: AppTypography.ui(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: statusColor,
+                  letterSpacing: 0.4,
+                ),
+              ),
+              const SizedBox(width: Space.sm),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: colors.textDisabled,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _connectionLabel(String type) => switch (type) {
+  'BLUETOOTH' => 'Bluetooth',
+  'WIFI' => 'Wi-Fi',
+  'USB' => 'USB',
+  _ => type,
+};
+
+/// The redesigned "add printer" entry point: a dashed, tinted slot at the
+/// end of the printer list, styled like the next open bay in a row of
+/// hardware rather than a standalone button bolted above it. When the
+/// list is empty, this is the only thing shown — the empty state and the
+/// add action are now the same element instead of two separate pieces of
+/// UI saying the same thing.
+class _AddPrinterSlot extends StatelessWidget {
+  const _AddPrinterSlot({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    // No boxed border here — a full `Border.all` on a row that sits flush
+    // against the group's rounded outer corners paints square edges that
+    // visibly collide with the curve above/below it. A top hairline (the
+    // same treatment as the dividers between printer rows) plus a tinted
+    // fill reads as "this row is different" without fighting the parent's
+    // rounding anywhere.
+    return Material(
+      color: colors.primaryContainer.withValues(alpha: 0.35),
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 72),
+          padding: const EdgeInsets.symmetric(
+            horizontal: Space.lg,
+            vertical: Space.md,
+          ),
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(color: colors.primary.withValues(alpha: 0.35)),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: colors.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.add_rounded,
+                  size: 18,
+                  color: colors.onPrimary,
+                ),
+              ),
+              const SizedBox(width: Space.md),
+              Text(
+                'Add another printer',
+                style: AppTypography.ui(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: colors.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// -----------------------------------------------------------------------
+/// PRINTER FORM SHEET — shared by both Add and Edit. Passing `existing`
+/// pre-fills every field and switches the sheet into edit mode (title and
+/// submit label change accordingly); omitting it is the add flow.
+/// -----------------------------------------------------------------------
+
+const _connectionTypes = ['BLUETOOTH', 'WIFI', 'USB'];
+const _paperSizes = ['58', '72', '80'];
+
+class _PrinterFormSheet extends StatefulWidget {
+  const _PrinterFormSheet({this.existing});
+
+  /// When set, the sheet opens pre-filled for editing this printer rather
+  /// than creating a new one.
+  final PrinterDto? existing;
+
+  bool get isEditing => existing != null;
+
+  @override
+  State<_PrinterFormSheet> createState() => _PrinterFormSheetState();
+}
+
+class _PrinterFormSheetState extends State<_PrinterFormSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final _nameController = TextEditingController(
+    text: widget.existing?.name ?? '',
+  );
+  late final _addressController = TextEditingController(
+    text: widget.existing?.address ?? '',
+  );
+
+  String? _connectionType;
+  String? _paperSize;
+  bool _showConnectionError = false;
+  bool _showPaperSizeError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _connectionType = widget.existing?.connectionType;
+    _paperSize = widget.existing?.paperSize;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _addressController.dispose();
+    super.dispose();
+  }
+
+  String get _addressLabel => switch (_connectionType) {
+    'BLUETOOTH' => 'Device MAC address',
+    'WIFI' => 'IP address',
+    'USB' => 'Device path / port',
+    _ => 'Address',
+  };
+
+  String get _addressHint => switch (_connectionType) {
+    'BLUETOOTH' => '00:11:22:33:44:55',
+    'WIFI' => '192.168.1.50',
+    'USB' => '/dev/usb/lp0',
+    _ => 'Select a connection type first',
+  };
+
+  /// Whether the form differs from its starting point — an empty form on
+  /// add, or the original values on edit. Either way, this is what gates
+  /// the discard-confirmation dialog: don't ask if there's nothing to lose.
+  bool get _hasUnsavedChanges {
+    final existing = widget.existing;
+    if (existing == null) {
+      return _nameController.text.trim().isNotEmpty ||
+          _addressController.text.trim().isNotEmpty ||
+          _connectionType != null ||
+          _paperSize != null;
+    }
+    return _nameController.text.trim() != existing.name ||
+        _addressController.text.trim() != existing.address ||
+        _connectionType != existing.connectionType ||
+        _paperSize != existing.paperSize;
+  }
+
+  Future<void> _confirmDiscardIfNeeded() async {
+    if (!_hasUnsavedChanges) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    final shouldDiscard = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          widget.isEditing ? 'Discard these changes?' : 'Discard this printer?',
+        ),
+        content: const Text("What you've entered so far will be lost."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Keep editing'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDiscard == true && context.mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  void _submit() {
+    final formValid = _formKey.currentState!.validate();
+    setState(() {
+      _showConnectionError = _connectionType == null;
+      _showPaperSizeError = _paperSize == null;
+    });
+    if (!formValid || _connectionType == null || _paperSize == null) return;
+
+    final printer = PrinterDto(
+      id:
+          widget.existing?.id ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
+      name: _nameController.text.trim(),
+      connectionType: _connectionType!,
+      address: _addressController.text.trim(),
+      paperSize: _paperSize!,
+    );
+
+    Navigator.of(context).pop(printer);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _confirmDiscardIfNeeded();
+      },
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottomInset),
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.92,
+          ),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                Space.xxxl,
+                Space.lg,
+                Space.xxxl,
+                Space.xxxl,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: Space.lg),
+                        decoration: BoxDecoration(
+                          color: colors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.isEditing ? 'Edit printer' : 'Add printer',
+                            style: AppTypography.display(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w600,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        _TouchIconButton(
+                          icon: Icons.close_rounded,
+                          tooltip: 'Close',
+                          onPressed: _confirmDiscardIfNeeded,
+                          size: 52,
+                          iconSize: 22,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: Space.xxl),
+
+                    const _FieldLabel('Printer name'),
+                    const SizedBox(height: Space.sm),
+                    _TouchTextField(
+                      controller: _nameController,
+                      hintText: 'Front Counter Receipt',
+                      textInputAction: TextInputAction.next,
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
+                          ? 'Enter a name for this printer'
+                          : null,
+                    ),
+                    const SizedBox(height: Space.xxl),
+
+                    const _FieldLabel('Connection type'),
+                    const SizedBox(height: Space.sm),
+                    SegmentedTouchControl(
+                      options: _connectionTypes,
+                      selected: _connectionType,
+                      iconFor: _connectionTypeIcon,
+                      onSelected: (value) => setState(() {
+                        _connectionType = value;
+                        _showConnectionError = false;
+                      }),
+                    ),
+                    if (_showConnectionError) ...[
+                      const SizedBox(height: Space.sm),
+                      const _ErrorText('Select a connection type'),
+                    ],
+                    const SizedBox(height: Space.xxl),
+
+                    _FieldLabel(_addressLabel),
+                    const SizedBox(height: Space.sm),
+                    _TouchTextField(
+                      controller: _addressController,
+                      hintText: _addressHint,
+                      textInputAction: TextInputAction.next,
+                      enabled: _connectionType != null,
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
+                          ? "Enter the printer's address"
+                          : null,
+                    ),
+                    const SizedBox(height: Space.xxl),
+
+                    const _FieldLabel('Paper size'),
+                    const SizedBox(height: Space.sm),
+                    SegmentedTouchControl(
+                      options: _paperSizes,
+                      selected: _paperSize,
+                      labelFor: (size) => '${size}mm',
+                      onSelected: (value) => setState(() {
+                        _paperSize = value;
+                        _showPaperSizeError = false;
+                      }),
+                    ),
+                    if (_showPaperSizeError) ...[
+                      const SizedBox(height: Space.sm),
+                      const _ErrorText('Select a paper size'),
+                    ],
+                    const SizedBox(height: Space.xxxl),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _SecondaryTouchButton(
+                            label: 'Cancel',
+                            onPressed: _confirmDiscardIfNeeded,
+                          ),
+                        ),
+                        const SizedBox(width: Space.md),
+                        Expanded(
+                          flex: 2,
+                          child: _PrimaryTouchButton(
+                            icon: Icons.check_rounded,
+                            label: widget.isEditing
+                                ? 'Save changes'
+                                : 'Save printer',
+                            onPressed: _submit,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Text(
+      text,
+      style: AppTypography.ui(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        color: colors.textSecondary,
+      ),
+    );
+  }
+}
+
+class _ErrorText extends StatelessWidget {
+  const _ErrorText(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.error_outline_rounded, size: 16, color: colors.danger),
+        const SizedBox(width: Space.xs),
+        Text(text, style: AppTypography.ui(fontSize: 14, color: colors.danger)),
+      ],
+    );
+  }
+}
+
+class _TouchTextField extends StatelessWidget {
+  const _TouchTextField({
+    required this.controller,
+    required this.hintText,
+    this.textInputAction,
+    this.validator,
+    this.enabled = true,
+  });
+
+  final TextEditingController controller;
+  final String hintText;
+  final TextInputAction? textInputAction;
+  final String? Function(String?)? validator;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return TextFormField(
+      controller: controller,
+      textInputAction: textInputAction,
+      validator: validator,
+      enabled: enabled,
+      style: AppTypography.ui(fontSize: 18, color: colors.textPrimary),
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: AppTypography.ui(fontSize: 18, color: colors.textDisabled),
+        filled: true,
+        fillColor: enabled ? colors.surfaceVariant : colors.disabledFill,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: Space.xl,
+          vertical: Space.xl,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: colors.primary, width: 2.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: colors.danger, width: 2),
+        ),
+      ),
+    );
+  }
+}
+
+class _PrimaryTouchButton extends StatelessWidget {
+  const _PrimaryTouchButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Material(
+      color: colors.primary,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          height: 72,
+          padding: const EdgeInsets.symmetric(horizontal: Space.xxl),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 24, color: colors.onPrimary),
+              const SizedBox(width: Space.md),
+              Text(
+                label,
+                style: AppTypography.ui(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: colors.onPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SecondaryTouchButton extends StatelessWidget {
+  const _SecondaryTouchButton({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          height: 72,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.border, width: 2),
+          ),
+          child: Text(
+            label,
+            style: AppTypography.ui(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TouchIconButton extends StatelessWidget {
+  const _TouchIconButton({
+    required this.icon,
+    required this.onPressed,
+    this.tooltip,
+    this.color,
+    this.size = 56,
+    this.iconSize = 24,
+  });
+
+  final IconData icon;
+  final VoidCallback onPressed;
+  final String? tooltip;
+  final Color? color;
+  final double size;
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    final button = Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onPressed,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: Icon(icon, size: iconSize, color: color ?? colors.textPrimary),
+        ),
+      ),
+    );
+
+    if (tooltip == null) return button;
+    return Tooltip(message: tooltip!, child: button);
+  }
+}
