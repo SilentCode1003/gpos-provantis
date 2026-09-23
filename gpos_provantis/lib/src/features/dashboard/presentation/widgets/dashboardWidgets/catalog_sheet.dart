@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'category_visibility.dart';
 import 'dashboard_constants.dart';
 import 'product_grid.dart';
 
@@ -599,6 +600,10 @@ class _CompactCategoryStrip extends ConsumerWidget {
     final categoryId = ref.watch(
       dashboardControllerProvider.select((s) => s.catalogSheetCategoryId),
     );
+    // Categories the user switched off in Settings > Counter Display
+    // don't get a chip here either.
+    final hidden = ref.watch(hiddenCategoryCodesProvider);
+    final categories = filterVisibleCategories(controller.categories, hidden);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -609,10 +614,10 @@ class _CompactCategoryStrip extends ConsumerWidget {
         height: 40,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
-          itemCount: controller.categories.length,
+          itemCount: categories.length,
           separatorBuilder: (_, __) => const SizedBox(width: 8),
           itemBuilder: (context, index) {
-            final category = controller.categories[index];
+            final category = categories[index];
             final isSelected = category.id == categoryId;
             return _CompactCategoryChip(
               category: category,

@@ -5865,6 +5865,1972 @@ class PrintersTableCompanion extends UpdateCompanion<PrintersTableData> {
   }
 }
 
+class $SettingsTableTable extends SettingsTable
+    with TableInfo<$SettingsTableTable, SettingsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SettingsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('settings_config'),
+  );
+  static const VerificationMeta _mainPrinterMeta = const VerificationMeta(
+    'mainPrinter',
+  );
+  @override
+  late final GeneratedColumn<String> mainPrinter = GeneratedColumn<String>(
+    'main_printer',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _subPrinterMeta = const VerificationMeta(
+    'subPrinter',
+  );
+  @override
+  late final GeneratedColumn<String> subPrinter = GeneratedColumn<String>(
+    'sub_printer',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _showVatOnReceiptMeta = const VerificationMeta(
+    'showVatOnReceipt',
+  );
+  @override
+  late final GeneratedColumn<bool> showVatOnReceipt = GeneratedColumn<bool>(
+    'show_vat_on_receipt',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_vat_on_receipt" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _showOfficialReceiptMessageAtTheBottomMeta =
+      const VerificationMeta('showOfficialReceiptMessageAtTheBottom');
+  @override
+  late final GeneratedColumn<bool> showOfficialReceiptMessageAtTheBottom =
+      GeneratedColumn<bool>(
+        'show_official_receipt_message_at_the_bottom',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("show_official_receipt_message_at_the_bottom" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _birAccreditedMeta = const VerificationMeta(
+    'birAccredited',
+  );
+  @override
+  late final GeneratedColumn<bool> birAccredited = GeneratedColumn<bool>(
+    'bir_accredited',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("bir_accredited" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _showReceiptPreviewMeta =
+      const VerificationMeta('showReceiptPreview');
+  @override
+  late final GeneratedColumn<bool> showReceiptPreview = GeneratedColumn<bool>(
+    'show_receipt_preview',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_receipt_preview" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _addCustomerToTransactionMeta =
+      const VerificationMeta('addCustomerToTransaction');
+  @override
+  late final GeneratedColumn<bool> addCustomerToTransaction =
+      GeneratedColumn<bool>(
+        'add_customer_to_transaction',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("add_customer_to_transaction" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _addPurchaseOrderToTransactionMeta =
+      const VerificationMeta('addPurchaseOrderToTransaction');
+  @override
+  late final GeneratedColumn<bool> addPurchaseOrderToTransaction =
+      GeneratedColumn<bool>(
+        'add_purchase_order_to_transaction',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("add_purchase_order_to_transaction" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _counterDisplayMeta = const VerificationMeta(
+    'counterDisplay',
+  );
+  @override
+  late final GeneratedColumn<String> counterDisplay = GeneratedColumn<String>(
+    'counter_display',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _companyNameMeta = const VerificationMeta(
+    'companyName',
+  );
+  @override
+  late final GeneratedColumn<String> companyName = GeneratedColumn<String>(
+    'company_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _addressMeta = const VerificationMeta(
+    'address',
+  );
+  @override
+  late final GeneratedColumn<String> address = GeneratedColumn<String>(
+    'address',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _accreditationNoMeta = const VerificationMeta(
+    'accreditationNo',
+  );
+  @override
+  late final GeneratedColumn<String> accreditationNo = GeneratedColumn<String>(
+    'accreditation_no',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _validUntilMeta = const VerificationMeta(
+    'validUntil',
+  );
+  @override
+  late final GeneratedColumn<String> validUntil = GeneratedColumn<String>(
+    'valid_until',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _vatRegMeta = const VerificationMeta('vatReg');
+  @override
+  late final GeneratedColumn<String> vatReg = GeneratedColumn<String>(
+    'vat_reg',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _permitToUseMeta = const VerificationMeta(
+    'permitToUse',
+  );
+  @override
+  late final GeneratedColumn<String> permitToUse = GeneratedColumn<String>(
+    'permit_to_use',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _machineIdentificationNumberMeta =
+      const VerificationMeta('machineIdentificationNumber');
+  @override
+  late final GeneratedColumn<String> machineIdentificationNumber =
+      GeneratedColumn<String>(
+        'machine_identification_number',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('UNREGISTERED'),
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    mainPrinter,
+    subPrinter,
+    showVatOnReceipt,
+    showOfficialReceiptMessageAtTheBottom,
+    birAccredited,
+    showReceiptPreview,
+    addCustomerToTransaction,
+    addPurchaseOrderToTransaction,
+    counterDisplay,
+    companyName,
+    address,
+    accreditationNo,
+    validUntil,
+    vatReg,
+    permitToUse,
+    machineIdentificationNumber,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'settings_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SettingsTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('main_printer')) {
+      context.handle(
+        _mainPrinterMeta,
+        mainPrinter.isAcceptableOrUnknown(
+          data['main_printer']!,
+          _mainPrinterMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sub_printer')) {
+      context.handle(
+        _subPrinterMeta,
+        subPrinter.isAcceptableOrUnknown(data['sub_printer']!, _subPrinterMeta),
+      );
+    }
+    if (data.containsKey('show_vat_on_receipt')) {
+      context.handle(
+        _showVatOnReceiptMeta,
+        showVatOnReceipt.isAcceptableOrUnknown(
+          data['show_vat_on_receipt']!,
+          _showVatOnReceiptMeta,
+        ),
+      );
+    }
+    if (data.containsKey('show_official_receipt_message_at_the_bottom')) {
+      context.handle(
+        _showOfficialReceiptMessageAtTheBottomMeta,
+        showOfficialReceiptMessageAtTheBottom.isAcceptableOrUnknown(
+          data['show_official_receipt_message_at_the_bottom']!,
+          _showOfficialReceiptMessageAtTheBottomMeta,
+        ),
+      );
+    }
+    if (data.containsKey('bir_accredited')) {
+      context.handle(
+        _birAccreditedMeta,
+        birAccredited.isAcceptableOrUnknown(
+          data['bir_accredited']!,
+          _birAccreditedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('show_receipt_preview')) {
+      context.handle(
+        _showReceiptPreviewMeta,
+        showReceiptPreview.isAcceptableOrUnknown(
+          data['show_receipt_preview']!,
+          _showReceiptPreviewMeta,
+        ),
+      );
+    }
+    if (data.containsKey('add_customer_to_transaction')) {
+      context.handle(
+        _addCustomerToTransactionMeta,
+        addCustomerToTransaction.isAcceptableOrUnknown(
+          data['add_customer_to_transaction']!,
+          _addCustomerToTransactionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('add_purchase_order_to_transaction')) {
+      context.handle(
+        _addPurchaseOrderToTransactionMeta,
+        addPurchaseOrderToTransaction.isAcceptableOrUnknown(
+          data['add_purchase_order_to_transaction']!,
+          _addPurchaseOrderToTransactionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('counter_display')) {
+      context.handle(
+        _counterDisplayMeta,
+        counterDisplay.isAcceptableOrUnknown(
+          data['counter_display']!,
+          _counterDisplayMeta,
+        ),
+      );
+    }
+    if (data.containsKey('company_name')) {
+      context.handle(
+        _companyNameMeta,
+        companyName.isAcceptableOrUnknown(
+          data['company_name']!,
+          _companyNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('address')) {
+      context.handle(
+        _addressMeta,
+        address.isAcceptableOrUnknown(data['address']!, _addressMeta),
+      );
+    }
+    if (data.containsKey('accreditation_no')) {
+      context.handle(
+        _accreditationNoMeta,
+        accreditationNo.isAcceptableOrUnknown(
+          data['accreditation_no']!,
+          _accreditationNoMeta,
+        ),
+      );
+    }
+    if (data.containsKey('valid_until')) {
+      context.handle(
+        _validUntilMeta,
+        validUntil.isAcceptableOrUnknown(data['valid_until']!, _validUntilMeta),
+      );
+    }
+    if (data.containsKey('vat_reg')) {
+      context.handle(
+        _vatRegMeta,
+        vatReg.isAcceptableOrUnknown(data['vat_reg']!, _vatRegMeta),
+      );
+    }
+    if (data.containsKey('permit_to_use')) {
+      context.handle(
+        _permitToUseMeta,
+        permitToUse.isAcceptableOrUnknown(
+          data['permit_to_use']!,
+          _permitToUseMeta,
+        ),
+      );
+    }
+    if (data.containsKey('machine_identification_number')) {
+      context.handle(
+        _machineIdentificationNumberMeta,
+        machineIdentificationNumber.isAcceptableOrUnknown(
+          data['machine_identification_number']!,
+          _machineIdentificationNumberMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SettingsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SettingsTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      mainPrinter: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}main_printer'],
+      )!,
+      subPrinter: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sub_printer'],
+      )!,
+      showVatOnReceipt: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_vat_on_receipt'],
+      )!,
+      showOfficialReceiptMessageAtTheBottom: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_official_receipt_message_at_the_bottom'],
+      )!,
+      birAccredited: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}bir_accredited'],
+      )!,
+      showReceiptPreview: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_receipt_preview'],
+      )!,
+      addCustomerToTransaction: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}add_customer_to_transaction'],
+      )!,
+      addPurchaseOrderToTransaction: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}add_purchase_order_to_transaction'],
+      )!,
+      counterDisplay: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}counter_display'],
+      )!,
+      companyName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_name'],
+      )!,
+      address: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}address'],
+      )!,
+      accreditationNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}accreditation_no'],
+      )!,
+      validUntil: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}valid_until'],
+      )!,
+      vatReg: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vat_reg'],
+      )!,
+      permitToUse: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}permit_to_use'],
+      )!,
+      machineIdentificationNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}machine_identification_number'],
+      )!,
+    );
+  }
+
+  @override
+  $SettingsTableTable createAlias(String alias) {
+    return $SettingsTableTable(attachedDatabase, alias);
+  }
+}
+
+class SettingsTableData extends DataClass
+    implements Insertable<SettingsTableData> {
+  final String id;
+  final String mainPrinter;
+  final String subPrinter;
+  final bool showVatOnReceipt;
+  final bool showOfficialReceiptMessageAtTheBottom;
+  final bool birAccredited;
+  final bool showReceiptPreview;
+  final bool addCustomerToTransaction;
+  final bool addPurchaseOrderToTransaction;
+  final String counterDisplay;
+  final String companyName;
+  final String address;
+  final String accreditationNo;
+  final String validUntil;
+  final String vatReg;
+  final String permitToUse;
+  final String machineIdentificationNumber;
+  const SettingsTableData({
+    required this.id,
+    required this.mainPrinter,
+    required this.subPrinter,
+    required this.showVatOnReceipt,
+    required this.showOfficialReceiptMessageAtTheBottom,
+    required this.birAccredited,
+    required this.showReceiptPreview,
+    required this.addCustomerToTransaction,
+    required this.addPurchaseOrderToTransaction,
+    required this.counterDisplay,
+    required this.companyName,
+    required this.address,
+    required this.accreditationNo,
+    required this.validUntil,
+    required this.vatReg,
+    required this.permitToUse,
+    required this.machineIdentificationNumber,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['main_printer'] = Variable<String>(mainPrinter);
+    map['sub_printer'] = Variable<String>(subPrinter);
+    map['show_vat_on_receipt'] = Variable<bool>(showVatOnReceipt);
+    map['show_official_receipt_message_at_the_bottom'] = Variable<bool>(
+      showOfficialReceiptMessageAtTheBottom,
+    );
+    map['bir_accredited'] = Variable<bool>(birAccredited);
+    map['show_receipt_preview'] = Variable<bool>(showReceiptPreview);
+    map['add_customer_to_transaction'] = Variable<bool>(
+      addCustomerToTransaction,
+    );
+    map['add_purchase_order_to_transaction'] = Variable<bool>(
+      addPurchaseOrderToTransaction,
+    );
+    map['counter_display'] = Variable<String>(counterDisplay);
+    map['company_name'] = Variable<String>(companyName);
+    map['address'] = Variable<String>(address);
+    map['accreditation_no'] = Variable<String>(accreditationNo);
+    map['valid_until'] = Variable<String>(validUntil);
+    map['vat_reg'] = Variable<String>(vatReg);
+    map['permit_to_use'] = Variable<String>(permitToUse);
+    map['machine_identification_number'] = Variable<String>(
+      machineIdentificationNumber,
+    );
+    return map;
+  }
+
+  SettingsTableCompanion toCompanion(bool nullToAbsent) {
+    return SettingsTableCompanion(
+      id: Value(id),
+      mainPrinter: Value(mainPrinter),
+      subPrinter: Value(subPrinter),
+      showVatOnReceipt: Value(showVatOnReceipt),
+      showOfficialReceiptMessageAtTheBottom: Value(
+        showOfficialReceiptMessageAtTheBottom,
+      ),
+      birAccredited: Value(birAccredited),
+      showReceiptPreview: Value(showReceiptPreview),
+      addCustomerToTransaction: Value(addCustomerToTransaction),
+      addPurchaseOrderToTransaction: Value(addPurchaseOrderToTransaction),
+      counterDisplay: Value(counterDisplay),
+      companyName: Value(companyName),
+      address: Value(address),
+      accreditationNo: Value(accreditationNo),
+      validUntil: Value(validUntil),
+      vatReg: Value(vatReg),
+      permitToUse: Value(permitToUse),
+      machineIdentificationNumber: Value(machineIdentificationNumber),
+    );
+  }
+
+  factory SettingsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SettingsTableData(
+      id: serializer.fromJson<String>(json['id']),
+      mainPrinter: serializer.fromJson<String>(json['mainPrinter']),
+      subPrinter: serializer.fromJson<String>(json['subPrinter']),
+      showVatOnReceipt: serializer.fromJson<bool>(json['showVatOnReceipt']),
+      showOfficialReceiptMessageAtTheBottom: serializer.fromJson<bool>(
+        json['showOfficialReceiptMessageAtTheBottom'],
+      ),
+      birAccredited: serializer.fromJson<bool>(json['birAccredited']),
+      showReceiptPreview: serializer.fromJson<bool>(json['showReceiptPreview']),
+      addCustomerToTransaction: serializer.fromJson<bool>(
+        json['addCustomerToTransaction'],
+      ),
+      addPurchaseOrderToTransaction: serializer.fromJson<bool>(
+        json['addPurchaseOrderToTransaction'],
+      ),
+      counterDisplay: serializer.fromJson<String>(json['counterDisplay']),
+      companyName: serializer.fromJson<String>(json['companyName']),
+      address: serializer.fromJson<String>(json['address']),
+      accreditationNo: serializer.fromJson<String>(json['accreditationNo']),
+      validUntil: serializer.fromJson<String>(json['validUntil']),
+      vatReg: serializer.fromJson<String>(json['vatReg']),
+      permitToUse: serializer.fromJson<String>(json['permitToUse']),
+      machineIdentificationNumber: serializer.fromJson<String>(
+        json['machineIdentificationNumber'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'mainPrinter': serializer.toJson<String>(mainPrinter),
+      'subPrinter': serializer.toJson<String>(subPrinter),
+      'showVatOnReceipt': serializer.toJson<bool>(showVatOnReceipt),
+      'showOfficialReceiptMessageAtTheBottom': serializer.toJson<bool>(
+        showOfficialReceiptMessageAtTheBottom,
+      ),
+      'birAccredited': serializer.toJson<bool>(birAccredited),
+      'showReceiptPreview': serializer.toJson<bool>(showReceiptPreview),
+      'addCustomerToTransaction': serializer.toJson<bool>(
+        addCustomerToTransaction,
+      ),
+      'addPurchaseOrderToTransaction': serializer.toJson<bool>(
+        addPurchaseOrderToTransaction,
+      ),
+      'counterDisplay': serializer.toJson<String>(counterDisplay),
+      'companyName': serializer.toJson<String>(companyName),
+      'address': serializer.toJson<String>(address),
+      'accreditationNo': serializer.toJson<String>(accreditationNo),
+      'validUntil': serializer.toJson<String>(validUntil),
+      'vatReg': serializer.toJson<String>(vatReg),
+      'permitToUse': serializer.toJson<String>(permitToUse),
+      'machineIdentificationNumber': serializer.toJson<String>(
+        machineIdentificationNumber,
+      ),
+    };
+  }
+
+  SettingsTableData copyWith({
+    String? id,
+    String? mainPrinter,
+    String? subPrinter,
+    bool? showVatOnReceipt,
+    bool? showOfficialReceiptMessageAtTheBottom,
+    bool? birAccredited,
+    bool? showReceiptPreview,
+    bool? addCustomerToTransaction,
+    bool? addPurchaseOrderToTransaction,
+    String? counterDisplay,
+    String? companyName,
+    String? address,
+    String? accreditationNo,
+    String? validUntil,
+    String? vatReg,
+    String? permitToUse,
+    String? machineIdentificationNumber,
+  }) => SettingsTableData(
+    id: id ?? this.id,
+    mainPrinter: mainPrinter ?? this.mainPrinter,
+    subPrinter: subPrinter ?? this.subPrinter,
+    showVatOnReceipt: showVatOnReceipt ?? this.showVatOnReceipt,
+    showOfficialReceiptMessageAtTheBottom:
+        showOfficialReceiptMessageAtTheBottom ??
+        this.showOfficialReceiptMessageAtTheBottom,
+    birAccredited: birAccredited ?? this.birAccredited,
+    showReceiptPreview: showReceiptPreview ?? this.showReceiptPreview,
+    addCustomerToTransaction:
+        addCustomerToTransaction ?? this.addCustomerToTransaction,
+    addPurchaseOrderToTransaction:
+        addPurchaseOrderToTransaction ?? this.addPurchaseOrderToTransaction,
+    counterDisplay: counterDisplay ?? this.counterDisplay,
+    companyName: companyName ?? this.companyName,
+    address: address ?? this.address,
+    accreditationNo: accreditationNo ?? this.accreditationNo,
+    validUntil: validUntil ?? this.validUntil,
+    vatReg: vatReg ?? this.vatReg,
+    permitToUse: permitToUse ?? this.permitToUse,
+    machineIdentificationNumber:
+        machineIdentificationNumber ?? this.machineIdentificationNumber,
+  );
+  SettingsTableData copyWithCompanion(SettingsTableCompanion data) {
+    return SettingsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      mainPrinter: data.mainPrinter.present
+          ? data.mainPrinter.value
+          : this.mainPrinter,
+      subPrinter: data.subPrinter.present
+          ? data.subPrinter.value
+          : this.subPrinter,
+      showVatOnReceipt: data.showVatOnReceipt.present
+          ? data.showVatOnReceipt.value
+          : this.showVatOnReceipt,
+      showOfficialReceiptMessageAtTheBottom:
+          data.showOfficialReceiptMessageAtTheBottom.present
+          ? data.showOfficialReceiptMessageAtTheBottom.value
+          : this.showOfficialReceiptMessageAtTheBottom,
+      birAccredited: data.birAccredited.present
+          ? data.birAccredited.value
+          : this.birAccredited,
+      showReceiptPreview: data.showReceiptPreview.present
+          ? data.showReceiptPreview.value
+          : this.showReceiptPreview,
+      addCustomerToTransaction: data.addCustomerToTransaction.present
+          ? data.addCustomerToTransaction.value
+          : this.addCustomerToTransaction,
+      addPurchaseOrderToTransaction: data.addPurchaseOrderToTransaction.present
+          ? data.addPurchaseOrderToTransaction.value
+          : this.addPurchaseOrderToTransaction,
+      counterDisplay: data.counterDisplay.present
+          ? data.counterDisplay.value
+          : this.counterDisplay,
+      companyName: data.companyName.present
+          ? data.companyName.value
+          : this.companyName,
+      address: data.address.present ? data.address.value : this.address,
+      accreditationNo: data.accreditationNo.present
+          ? data.accreditationNo.value
+          : this.accreditationNo,
+      validUntil: data.validUntil.present
+          ? data.validUntil.value
+          : this.validUntil,
+      vatReg: data.vatReg.present ? data.vatReg.value : this.vatReg,
+      permitToUse: data.permitToUse.present
+          ? data.permitToUse.value
+          : this.permitToUse,
+      machineIdentificationNumber: data.machineIdentificationNumber.present
+          ? data.machineIdentificationNumber.value
+          : this.machineIdentificationNumber,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SettingsTableData(')
+          ..write('id: $id, ')
+          ..write('mainPrinter: $mainPrinter, ')
+          ..write('subPrinter: $subPrinter, ')
+          ..write('showVatOnReceipt: $showVatOnReceipt, ')
+          ..write(
+            'showOfficialReceiptMessageAtTheBottom: $showOfficialReceiptMessageAtTheBottom, ',
+          )
+          ..write('birAccredited: $birAccredited, ')
+          ..write('showReceiptPreview: $showReceiptPreview, ')
+          ..write('addCustomerToTransaction: $addCustomerToTransaction, ')
+          ..write(
+            'addPurchaseOrderToTransaction: $addPurchaseOrderToTransaction, ',
+          )
+          ..write('counterDisplay: $counterDisplay, ')
+          ..write('companyName: $companyName, ')
+          ..write('address: $address, ')
+          ..write('accreditationNo: $accreditationNo, ')
+          ..write('validUntil: $validUntil, ')
+          ..write('vatReg: $vatReg, ')
+          ..write('permitToUse: $permitToUse, ')
+          ..write('machineIdentificationNumber: $machineIdentificationNumber')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    mainPrinter,
+    subPrinter,
+    showVatOnReceipt,
+    showOfficialReceiptMessageAtTheBottom,
+    birAccredited,
+    showReceiptPreview,
+    addCustomerToTransaction,
+    addPurchaseOrderToTransaction,
+    counterDisplay,
+    companyName,
+    address,
+    accreditationNo,
+    validUntil,
+    vatReg,
+    permitToUse,
+    machineIdentificationNumber,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SettingsTableData &&
+          other.id == this.id &&
+          other.mainPrinter == this.mainPrinter &&
+          other.subPrinter == this.subPrinter &&
+          other.showVatOnReceipt == this.showVatOnReceipt &&
+          other.showOfficialReceiptMessageAtTheBottom ==
+              this.showOfficialReceiptMessageAtTheBottom &&
+          other.birAccredited == this.birAccredited &&
+          other.showReceiptPreview == this.showReceiptPreview &&
+          other.addCustomerToTransaction == this.addCustomerToTransaction &&
+          other.addPurchaseOrderToTransaction ==
+              this.addPurchaseOrderToTransaction &&
+          other.counterDisplay == this.counterDisplay &&
+          other.companyName == this.companyName &&
+          other.address == this.address &&
+          other.accreditationNo == this.accreditationNo &&
+          other.validUntil == this.validUntil &&
+          other.vatReg == this.vatReg &&
+          other.permitToUse == this.permitToUse &&
+          other.machineIdentificationNumber ==
+              this.machineIdentificationNumber);
+}
+
+class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
+  final Value<String> id;
+  final Value<String> mainPrinter;
+  final Value<String> subPrinter;
+  final Value<bool> showVatOnReceipt;
+  final Value<bool> showOfficialReceiptMessageAtTheBottom;
+  final Value<bool> birAccredited;
+  final Value<bool> showReceiptPreview;
+  final Value<bool> addCustomerToTransaction;
+  final Value<bool> addPurchaseOrderToTransaction;
+  final Value<String> counterDisplay;
+  final Value<String> companyName;
+  final Value<String> address;
+  final Value<String> accreditationNo;
+  final Value<String> validUntil;
+  final Value<String> vatReg;
+  final Value<String> permitToUse;
+  final Value<String> machineIdentificationNumber;
+  final Value<int> rowid;
+  const SettingsTableCompanion({
+    this.id = const Value.absent(),
+    this.mainPrinter = const Value.absent(),
+    this.subPrinter = const Value.absent(),
+    this.showVatOnReceipt = const Value.absent(),
+    this.showOfficialReceiptMessageAtTheBottom = const Value.absent(),
+    this.birAccredited = const Value.absent(),
+    this.showReceiptPreview = const Value.absent(),
+    this.addCustomerToTransaction = const Value.absent(),
+    this.addPurchaseOrderToTransaction = const Value.absent(),
+    this.counterDisplay = const Value.absent(),
+    this.companyName = const Value.absent(),
+    this.address = const Value.absent(),
+    this.accreditationNo = const Value.absent(),
+    this.validUntil = const Value.absent(),
+    this.vatReg = const Value.absent(),
+    this.permitToUse = const Value.absent(),
+    this.machineIdentificationNumber = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SettingsTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.mainPrinter = const Value.absent(),
+    this.subPrinter = const Value.absent(),
+    this.showVatOnReceipt = const Value.absent(),
+    this.showOfficialReceiptMessageAtTheBottom = const Value.absent(),
+    this.birAccredited = const Value.absent(),
+    this.showReceiptPreview = const Value.absent(),
+    this.addCustomerToTransaction = const Value.absent(),
+    this.addPurchaseOrderToTransaction = const Value.absent(),
+    this.counterDisplay = const Value.absent(),
+    this.companyName = const Value.absent(),
+    this.address = const Value.absent(),
+    this.accreditationNo = const Value.absent(),
+    this.validUntil = const Value.absent(),
+    this.vatReg = const Value.absent(),
+    this.permitToUse = const Value.absent(),
+    this.machineIdentificationNumber = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  static Insertable<SettingsTableData> custom({
+    Expression<String>? id,
+    Expression<String>? mainPrinter,
+    Expression<String>? subPrinter,
+    Expression<bool>? showVatOnReceipt,
+    Expression<bool>? showOfficialReceiptMessageAtTheBottom,
+    Expression<bool>? birAccredited,
+    Expression<bool>? showReceiptPreview,
+    Expression<bool>? addCustomerToTransaction,
+    Expression<bool>? addPurchaseOrderToTransaction,
+    Expression<String>? counterDisplay,
+    Expression<String>? companyName,
+    Expression<String>? address,
+    Expression<String>? accreditationNo,
+    Expression<String>? validUntil,
+    Expression<String>? vatReg,
+    Expression<String>? permitToUse,
+    Expression<String>? machineIdentificationNumber,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (mainPrinter != null) 'main_printer': mainPrinter,
+      if (subPrinter != null) 'sub_printer': subPrinter,
+      if (showVatOnReceipt != null) 'show_vat_on_receipt': showVatOnReceipt,
+      if (showOfficialReceiptMessageAtTheBottom != null)
+        'show_official_receipt_message_at_the_bottom':
+            showOfficialReceiptMessageAtTheBottom,
+      if (birAccredited != null) 'bir_accredited': birAccredited,
+      if (showReceiptPreview != null)
+        'show_receipt_preview': showReceiptPreview,
+      if (addCustomerToTransaction != null)
+        'add_customer_to_transaction': addCustomerToTransaction,
+      if (addPurchaseOrderToTransaction != null)
+        'add_purchase_order_to_transaction': addPurchaseOrderToTransaction,
+      if (counterDisplay != null) 'counter_display': counterDisplay,
+      if (companyName != null) 'company_name': companyName,
+      if (address != null) 'address': address,
+      if (accreditationNo != null) 'accreditation_no': accreditationNo,
+      if (validUntil != null) 'valid_until': validUntil,
+      if (vatReg != null) 'vat_reg': vatReg,
+      if (permitToUse != null) 'permit_to_use': permitToUse,
+      if (machineIdentificationNumber != null)
+        'machine_identification_number': machineIdentificationNumber,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SettingsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? mainPrinter,
+    Value<String>? subPrinter,
+    Value<bool>? showVatOnReceipt,
+    Value<bool>? showOfficialReceiptMessageAtTheBottom,
+    Value<bool>? birAccredited,
+    Value<bool>? showReceiptPreview,
+    Value<bool>? addCustomerToTransaction,
+    Value<bool>? addPurchaseOrderToTransaction,
+    Value<String>? counterDisplay,
+    Value<String>? companyName,
+    Value<String>? address,
+    Value<String>? accreditationNo,
+    Value<String>? validUntil,
+    Value<String>? vatReg,
+    Value<String>? permitToUse,
+    Value<String>? machineIdentificationNumber,
+    Value<int>? rowid,
+  }) {
+    return SettingsTableCompanion(
+      id: id ?? this.id,
+      mainPrinter: mainPrinter ?? this.mainPrinter,
+      subPrinter: subPrinter ?? this.subPrinter,
+      showVatOnReceipt: showVatOnReceipt ?? this.showVatOnReceipt,
+      showOfficialReceiptMessageAtTheBottom:
+          showOfficialReceiptMessageAtTheBottom ??
+          this.showOfficialReceiptMessageAtTheBottom,
+      birAccredited: birAccredited ?? this.birAccredited,
+      showReceiptPreview: showReceiptPreview ?? this.showReceiptPreview,
+      addCustomerToTransaction:
+          addCustomerToTransaction ?? this.addCustomerToTransaction,
+      addPurchaseOrderToTransaction:
+          addPurchaseOrderToTransaction ?? this.addPurchaseOrderToTransaction,
+      counterDisplay: counterDisplay ?? this.counterDisplay,
+      companyName: companyName ?? this.companyName,
+      address: address ?? this.address,
+      accreditationNo: accreditationNo ?? this.accreditationNo,
+      validUntil: validUntil ?? this.validUntil,
+      vatReg: vatReg ?? this.vatReg,
+      permitToUse: permitToUse ?? this.permitToUse,
+      machineIdentificationNumber:
+          machineIdentificationNumber ?? this.machineIdentificationNumber,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (mainPrinter.present) {
+      map['main_printer'] = Variable<String>(mainPrinter.value);
+    }
+    if (subPrinter.present) {
+      map['sub_printer'] = Variable<String>(subPrinter.value);
+    }
+    if (showVatOnReceipt.present) {
+      map['show_vat_on_receipt'] = Variable<bool>(showVatOnReceipt.value);
+    }
+    if (showOfficialReceiptMessageAtTheBottom.present) {
+      map['show_official_receipt_message_at_the_bottom'] = Variable<bool>(
+        showOfficialReceiptMessageAtTheBottom.value,
+      );
+    }
+    if (birAccredited.present) {
+      map['bir_accredited'] = Variable<bool>(birAccredited.value);
+    }
+    if (showReceiptPreview.present) {
+      map['show_receipt_preview'] = Variable<bool>(showReceiptPreview.value);
+    }
+    if (addCustomerToTransaction.present) {
+      map['add_customer_to_transaction'] = Variable<bool>(
+        addCustomerToTransaction.value,
+      );
+    }
+    if (addPurchaseOrderToTransaction.present) {
+      map['add_purchase_order_to_transaction'] = Variable<bool>(
+        addPurchaseOrderToTransaction.value,
+      );
+    }
+    if (counterDisplay.present) {
+      map['counter_display'] = Variable<String>(counterDisplay.value);
+    }
+    if (companyName.present) {
+      map['company_name'] = Variable<String>(companyName.value);
+    }
+    if (address.present) {
+      map['address'] = Variable<String>(address.value);
+    }
+    if (accreditationNo.present) {
+      map['accreditation_no'] = Variable<String>(accreditationNo.value);
+    }
+    if (validUntil.present) {
+      map['valid_until'] = Variable<String>(validUntil.value);
+    }
+    if (vatReg.present) {
+      map['vat_reg'] = Variable<String>(vatReg.value);
+    }
+    if (permitToUse.present) {
+      map['permit_to_use'] = Variable<String>(permitToUse.value);
+    }
+    if (machineIdentificationNumber.present) {
+      map['machine_identification_number'] = Variable<String>(
+        machineIdentificationNumber.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SettingsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('mainPrinter: $mainPrinter, ')
+          ..write('subPrinter: $subPrinter, ')
+          ..write('showVatOnReceipt: $showVatOnReceipt, ')
+          ..write(
+            'showOfficialReceiptMessageAtTheBottom: $showOfficialReceiptMessageAtTheBottom, ',
+          )
+          ..write('birAccredited: $birAccredited, ')
+          ..write('showReceiptPreview: $showReceiptPreview, ')
+          ..write('addCustomerToTransaction: $addCustomerToTransaction, ')
+          ..write(
+            'addPurchaseOrderToTransaction: $addPurchaseOrderToTransaction, ',
+          )
+          ..write('counterDisplay: $counterDisplay, ')
+          ..write('companyName: $companyName, ')
+          ..write('address: $address, ')
+          ..write('accreditationNo: $accreditationNo, ')
+          ..write('validUntil: $validUntil, ')
+          ..write('vatReg: $vatReg, ')
+          ..write('permitToUse: $permitToUse, ')
+          ..write('machineIdentificationNumber: $machineIdentificationNumber, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SalesTableTable extends SalesTable
+    with TableInfo<$SalesTableTable, SalesTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SalesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => Uuid().v4(),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _detailIdMeta = const VerificationMeta(
+    'detailId',
+  );
+  @override
+  late final GeneratedColumn<String> detailId = GeneratedColumn<String>(
+    'detail_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _posidMeta = const VerificationMeta('posid');
+  @override
+  late final GeneratedColumn<String> posid = GeneratedColumn<String>(
+    'posid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _shiftMeta = const VerificationMeta('shift');
+  @override
+  late final GeneratedColumn<String> shift = GeneratedColumn<String>(
+    'shift',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _paymentTypeMeta = const VerificationMeta(
+    'paymentType',
+  );
+  @override
+  late final GeneratedColumn<String> paymentType = GeneratedColumn<String>(
+    'payment_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _referenceIdMeta = const VerificationMeta(
+    'referenceId',
+  );
+  @override
+  late final GeneratedColumn<String> referenceId = GeneratedColumn<String>(
+    'reference_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _paymentNameMeta = const VerificationMeta(
+    'paymentName',
+  );
+  @override
+  late final GeneratedColumn<String> paymentName = GeneratedColumn<String>(
+    'payment_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _itemsMeta = const VerificationMeta('items');
+  @override
+  late final GeneratedColumn<String> items = GeneratedColumn<String>(
+    'items',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _totalMeta = const VerificationMeta('total');
+  @override
+  late final GeneratedColumn<String> total = GeneratedColumn<String>(
+    'total',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _cashierMeta = const VerificationMeta(
+    'cashier',
+  );
+  @override
+  late final GeneratedColumn<String> cashier = GeneratedColumn<String>(
+    'cashier',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _cashMeta = const VerificationMeta('cash');
+  @override
+  late final GeneratedColumn<String> cash = GeneratedColumn<String>(
+    'cash',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _ecashMeta = const VerificationMeta('ecash');
+  @override
+  late final GeneratedColumn<String> ecash = GeneratedColumn<String>(
+    'ecash',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _branchMeta = const VerificationMeta('branch');
+  @override
+  late final GeneratedColumn<String> branch = GeneratedColumn<String>(
+    'branch',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _discountDetailMeta = const VerificationMeta(
+    'discountDetail',
+  );
+  @override
+  late final GeneratedColumn<String> discountDetail = GeneratedColumn<String>(
+    'discount_detail',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _isSyncMeta = const VerificationMeta('isSync');
+  @override
+  late final GeneratedColumn<String> isSync = GeneratedColumn<String>(
+    'is_sync',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    createdAt,
+    detailId,
+    date,
+    posid,
+    shift,
+    paymentType,
+    referenceId,
+    paymentName,
+    items,
+    total,
+    cashier,
+    cash,
+    ecash,
+    branch,
+    discountDetail,
+    isSync,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sales_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SalesTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('detail_id')) {
+      context.handle(
+        _detailIdMeta,
+        detailId.isAcceptableOrUnknown(data['detail_id']!, _detailIdMeta),
+      );
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    }
+    if (data.containsKey('posid')) {
+      context.handle(
+        _posidMeta,
+        posid.isAcceptableOrUnknown(data['posid']!, _posidMeta),
+      );
+    }
+    if (data.containsKey('shift')) {
+      context.handle(
+        _shiftMeta,
+        shift.isAcceptableOrUnknown(data['shift']!, _shiftMeta),
+      );
+    }
+    if (data.containsKey('payment_type')) {
+      context.handle(
+        _paymentTypeMeta,
+        paymentType.isAcceptableOrUnknown(
+          data['payment_type']!,
+          _paymentTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reference_id')) {
+      context.handle(
+        _referenceIdMeta,
+        referenceId.isAcceptableOrUnknown(
+          data['reference_id']!,
+          _referenceIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('payment_name')) {
+      context.handle(
+        _paymentNameMeta,
+        paymentName.isAcceptableOrUnknown(
+          data['payment_name']!,
+          _paymentNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('items')) {
+      context.handle(
+        _itemsMeta,
+        items.isAcceptableOrUnknown(data['items']!, _itemsMeta),
+      );
+    }
+    if (data.containsKey('total')) {
+      context.handle(
+        _totalMeta,
+        total.isAcceptableOrUnknown(data['total']!, _totalMeta),
+      );
+    }
+    if (data.containsKey('cashier')) {
+      context.handle(
+        _cashierMeta,
+        cashier.isAcceptableOrUnknown(data['cashier']!, _cashierMeta),
+      );
+    }
+    if (data.containsKey('cash')) {
+      context.handle(
+        _cashMeta,
+        cash.isAcceptableOrUnknown(data['cash']!, _cashMeta),
+      );
+    }
+    if (data.containsKey('ecash')) {
+      context.handle(
+        _ecashMeta,
+        ecash.isAcceptableOrUnknown(data['ecash']!, _ecashMeta),
+      );
+    }
+    if (data.containsKey('branch')) {
+      context.handle(
+        _branchMeta,
+        branch.isAcceptableOrUnknown(data['branch']!, _branchMeta),
+      );
+    }
+    if (data.containsKey('discount_detail')) {
+      context.handle(
+        _discountDetailMeta,
+        discountDetail.isAcceptableOrUnknown(
+          data['discount_detail']!,
+          _discountDetailMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_sync')) {
+      context.handle(
+        _isSyncMeta,
+        isSync.isAcceptableOrUnknown(data['is_sync']!, _isSyncMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SalesTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SalesTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      detailId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}detail_id'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date'],
+      )!,
+      posid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}posid'],
+      )!,
+      shift: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shift'],
+      )!,
+      paymentType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payment_type'],
+      )!,
+      referenceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference_id'],
+      )!,
+      paymentName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payment_name'],
+      )!,
+      items: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}items'],
+      )!,
+      total: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}total'],
+      )!,
+      cashier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cashier'],
+      )!,
+      cash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cash'],
+      )!,
+      ecash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ecash'],
+      )!,
+      branch: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch'],
+      )!,
+      discountDetail: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discount_detail'],
+      )!,
+      isSync: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}is_sync'],
+      )!,
+    );
+  }
+
+  @override
+  $SalesTableTable createAlias(String alias) {
+    return $SalesTableTable(attachedDatabase, alias);
+  }
+}
+
+class SalesTableData extends DataClass implements Insertable<SalesTableData> {
+  final String id;
+  final DateTime createdAt;
+  final String detailId;
+  final String date;
+  final String posid;
+  final String shift;
+  final String paymentType;
+  final String referenceId;
+  final String paymentName;
+  final String items;
+  final String total;
+  final String cashier;
+  final String cash;
+  final String ecash;
+  final String branch;
+  final String discountDetail;
+  final String isSync;
+  const SalesTableData({
+    required this.id,
+    required this.createdAt,
+    required this.detailId,
+    required this.date,
+    required this.posid,
+    required this.shift,
+    required this.paymentType,
+    required this.referenceId,
+    required this.paymentName,
+    required this.items,
+    required this.total,
+    required this.cashier,
+    required this.cash,
+    required this.ecash,
+    required this.branch,
+    required this.discountDetail,
+    required this.isSync,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['detail_id'] = Variable<String>(detailId);
+    map['date'] = Variable<String>(date);
+    map['posid'] = Variable<String>(posid);
+    map['shift'] = Variable<String>(shift);
+    map['payment_type'] = Variable<String>(paymentType);
+    map['reference_id'] = Variable<String>(referenceId);
+    map['payment_name'] = Variable<String>(paymentName);
+    map['items'] = Variable<String>(items);
+    map['total'] = Variable<String>(total);
+    map['cashier'] = Variable<String>(cashier);
+    map['cash'] = Variable<String>(cash);
+    map['ecash'] = Variable<String>(ecash);
+    map['branch'] = Variable<String>(branch);
+    map['discount_detail'] = Variable<String>(discountDetail);
+    map['is_sync'] = Variable<String>(isSync);
+    return map;
+  }
+
+  SalesTableCompanion toCompanion(bool nullToAbsent) {
+    return SalesTableCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      detailId: Value(detailId),
+      date: Value(date),
+      posid: Value(posid),
+      shift: Value(shift),
+      paymentType: Value(paymentType),
+      referenceId: Value(referenceId),
+      paymentName: Value(paymentName),
+      items: Value(items),
+      total: Value(total),
+      cashier: Value(cashier),
+      cash: Value(cash),
+      ecash: Value(ecash),
+      branch: Value(branch),
+      discountDetail: Value(discountDetail),
+      isSync: Value(isSync),
+    );
+  }
+
+  factory SalesTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SalesTableData(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      detailId: serializer.fromJson<String>(json['detailId']),
+      date: serializer.fromJson<String>(json['date']),
+      posid: serializer.fromJson<String>(json['posid']),
+      shift: serializer.fromJson<String>(json['shift']),
+      paymentType: serializer.fromJson<String>(json['paymentType']),
+      referenceId: serializer.fromJson<String>(json['referenceId']),
+      paymentName: serializer.fromJson<String>(json['paymentName']),
+      items: serializer.fromJson<String>(json['items']),
+      total: serializer.fromJson<String>(json['total']),
+      cashier: serializer.fromJson<String>(json['cashier']),
+      cash: serializer.fromJson<String>(json['cash']),
+      ecash: serializer.fromJson<String>(json['ecash']),
+      branch: serializer.fromJson<String>(json['branch']),
+      discountDetail: serializer.fromJson<String>(json['discountDetail']),
+      isSync: serializer.fromJson<String>(json['isSync']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'detailId': serializer.toJson<String>(detailId),
+      'date': serializer.toJson<String>(date),
+      'posid': serializer.toJson<String>(posid),
+      'shift': serializer.toJson<String>(shift),
+      'paymentType': serializer.toJson<String>(paymentType),
+      'referenceId': serializer.toJson<String>(referenceId),
+      'paymentName': serializer.toJson<String>(paymentName),
+      'items': serializer.toJson<String>(items),
+      'total': serializer.toJson<String>(total),
+      'cashier': serializer.toJson<String>(cashier),
+      'cash': serializer.toJson<String>(cash),
+      'ecash': serializer.toJson<String>(ecash),
+      'branch': serializer.toJson<String>(branch),
+      'discountDetail': serializer.toJson<String>(discountDetail),
+      'isSync': serializer.toJson<String>(isSync),
+    };
+  }
+
+  SalesTableData copyWith({
+    String? id,
+    DateTime? createdAt,
+    String? detailId,
+    String? date,
+    String? posid,
+    String? shift,
+    String? paymentType,
+    String? referenceId,
+    String? paymentName,
+    String? items,
+    String? total,
+    String? cashier,
+    String? cash,
+    String? ecash,
+    String? branch,
+    String? discountDetail,
+    String? isSync,
+  }) => SalesTableData(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    detailId: detailId ?? this.detailId,
+    date: date ?? this.date,
+    posid: posid ?? this.posid,
+    shift: shift ?? this.shift,
+    paymentType: paymentType ?? this.paymentType,
+    referenceId: referenceId ?? this.referenceId,
+    paymentName: paymentName ?? this.paymentName,
+    items: items ?? this.items,
+    total: total ?? this.total,
+    cashier: cashier ?? this.cashier,
+    cash: cash ?? this.cash,
+    ecash: ecash ?? this.ecash,
+    branch: branch ?? this.branch,
+    discountDetail: discountDetail ?? this.discountDetail,
+    isSync: isSync ?? this.isSync,
+  );
+  SalesTableData copyWithCompanion(SalesTableCompanion data) {
+    return SalesTableData(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      detailId: data.detailId.present ? data.detailId.value : this.detailId,
+      date: data.date.present ? data.date.value : this.date,
+      posid: data.posid.present ? data.posid.value : this.posid,
+      shift: data.shift.present ? data.shift.value : this.shift,
+      paymentType: data.paymentType.present
+          ? data.paymentType.value
+          : this.paymentType,
+      referenceId: data.referenceId.present
+          ? data.referenceId.value
+          : this.referenceId,
+      paymentName: data.paymentName.present
+          ? data.paymentName.value
+          : this.paymentName,
+      items: data.items.present ? data.items.value : this.items,
+      total: data.total.present ? data.total.value : this.total,
+      cashier: data.cashier.present ? data.cashier.value : this.cashier,
+      cash: data.cash.present ? data.cash.value : this.cash,
+      ecash: data.ecash.present ? data.ecash.value : this.ecash,
+      branch: data.branch.present ? data.branch.value : this.branch,
+      discountDetail: data.discountDetail.present
+          ? data.discountDetail.value
+          : this.discountDetail,
+      isSync: data.isSync.present ? data.isSync.value : this.isSync,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SalesTableData(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('detailId: $detailId, ')
+          ..write('date: $date, ')
+          ..write('posid: $posid, ')
+          ..write('shift: $shift, ')
+          ..write('paymentType: $paymentType, ')
+          ..write('referenceId: $referenceId, ')
+          ..write('paymentName: $paymentName, ')
+          ..write('items: $items, ')
+          ..write('total: $total, ')
+          ..write('cashier: $cashier, ')
+          ..write('cash: $cash, ')
+          ..write('ecash: $ecash, ')
+          ..write('branch: $branch, ')
+          ..write('discountDetail: $discountDetail, ')
+          ..write('isSync: $isSync')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    detailId,
+    date,
+    posid,
+    shift,
+    paymentType,
+    referenceId,
+    paymentName,
+    items,
+    total,
+    cashier,
+    cash,
+    ecash,
+    branch,
+    discountDetail,
+    isSync,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SalesTableData &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.detailId == this.detailId &&
+          other.date == this.date &&
+          other.posid == this.posid &&
+          other.shift == this.shift &&
+          other.paymentType == this.paymentType &&
+          other.referenceId == this.referenceId &&
+          other.paymentName == this.paymentName &&
+          other.items == this.items &&
+          other.total == this.total &&
+          other.cashier == this.cashier &&
+          other.cash == this.cash &&
+          other.ecash == this.ecash &&
+          other.branch == this.branch &&
+          other.discountDetail == this.discountDetail &&
+          other.isSync == this.isSync);
+}
+
+class SalesTableCompanion extends UpdateCompanion<SalesTableData> {
+  final Value<String> id;
+  final Value<DateTime> createdAt;
+  final Value<String> detailId;
+  final Value<String> date;
+  final Value<String> posid;
+  final Value<String> shift;
+  final Value<String> paymentType;
+  final Value<String> referenceId;
+  final Value<String> paymentName;
+  final Value<String> items;
+  final Value<String> total;
+  final Value<String> cashier;
+  final Value<String> cash;
+  final Value<String> ecash;
+  final Value<String> branch;
+  final Value<String> discountDetail;
+  final Value<String> isSync;
+  final Value<int> rowid;
+  const SalesTableCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.detailId = const Value.absent(),
+    this.date = const Value.absent(),
+    this.posid = const Value.absent(),
+    this.shift = const Value.absent(),
+    this.paymentType = const Value.absent(),
+    this.referenceId = const Value.absent(),
+    this.paymentName = const Value.absent(),
+    this.items = const Value.absent(),
+    this.total = const Value.absent(),
+    this.cashier = const Value.absent(),
+    this.cash = const Value.absent(),
+    this.ecash = const Value.absent(),
+    this.branch = const Value.absent(),
+    this.discountDetail = const Value.absent(),
+    this.isSync = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SalesTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.detailId = const Value.absent(),
+    this.date = const Value.absent(),
+    this.posid = const Value.absent(),
+    this.shift = const Value.absent(),
+    this.paymentType = const Value.absent(),
+    this.referenceId = const Value.absent(),
+    this.paymentName = const Value.absent(),
+    this.items = const Value.absent(),
+    this.total = const Value.absent(),
+    this.cashier = const Value.absent(),
+    this.cash = const Value.absent(),
+    this.ecash = const Value.absent(),
+    this.branch = const Value.absent(),
+    this.discountDetail = const Value.absent(),
+    this.isSync = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  static Insertable<SalesTableData> custom({
+    Expression<String>? id,
+    Expression<DateTime>? createdAt,
+    Expression<String>? detailId,
+    Expression<String>? date,
+    Expression<String>? posid,
+    Expression<String>? shift,
+    Expression<String>? paymentType,
+    Expression<String>? referenceId,
+    Expression<String>? paymentName,
+    Expression<String>? items,
+    Expression<String>? total,
+    Expression<String>? cashier,
+    Expression<String>? cash,
+    Expression<String>? ecash,
+    Expression<String>? branch,
+    Expression<String>? discountDetail,
+    Expression<String>? isSync,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (detailId != null) 'detail_id': detailId,
+      if (date != null) 'date': date,
+      if (posid != null) 'posid': posid,
+      if (shift != null) 'shift': shift,
+      if (paymentType != null) 'payment_type': paymentType,
+      if (referenceId != null) 'reference_id': referenceId,
+      if (paymentName != null) 'payment_name': paymentName,
+      if (items != null) 'items': items,
+      if (total != null) 'total': total,
+      if (cashier != null) 'cashier': cashier,
+      if (cash != null) 'cash': cash,
+      if (ecash != null) 'ecash': ecash,
+      if (branch != null) 'branch': branch,
+      if (discountDetail != null) 'discount_detail': discountDetail,
+      if (isSync != null) 'is_sync': isSync,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SalesTableCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? createdAt,
+    Value<String>? detailId,
+    Value<String>? date,
+    Value<String>? posid,
+    Value<String>? shift,
+    Value<String>? paymentType,
+    Value<String>? referenceId,
+    Value<String>? paymentName,
+    Value<String>? items,
+    Value<String>? total,
+    Value<String>? cashier,
+    Value<String>? cash,
+    Value<String>? ecash,
+    Value<String>? branch,
+    Value<String>? discountDetail,
+    Value<String>? isSync,
+    Value<int>? rowid,
+  }) {
+    return SalesTableCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      detailId: detailId ?? this.detailId,
+      date: date ?? this.date,
+      posid: posid ?? this.posid,
+      shift: shift ?? this.shift,
+      paymentType: paymentType ?? this.paymentType,
+      referenceId: referenceId ?? this.referenceId,
+      paymentName: paymentName ?? this.paymentName,
+      items: items ?? this.items,
+      total: total ?? this.total,
+      cashier: cashier ?? this.cashier,
+      cash: cash ?? this.cash,
+      ecash: ecash ?? this.ecash,
+      branch: branch ?? this.branch,
+      discountDetail: discountDetail ?? this.discountDetail,
+      isSync: isSync ?? this.isSync,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (detailId.present) {
+      map['detail_id'] = Variable<String>(detailId.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (posid.present) {
+      map['posid'] = Variable<String>(posid.value);
+    }
+    if (shift.present) {
+      map['shift'] = Variable<String>(shift.value);
+    }
+    if (paymentType.present) {
+      map['payment_type'] = Variable<String>(paymentType.value);
+    }
+    if (referenceId.present) {
+      map['reference_id'] = Variable<String>(referenceId.value);
+    }
+    if (paymentName.present) {
+      map['payment_name'] = Variable<String>(paymentName.value);
+    }
+    if (items.present) {
+      map['items'] = Variable<String>(items.value);
+    }
+    if (total.present) {
+      map['total'] = Variable<String>(total.value);
+    }
+    if (cashier.present) {
+      map['cashier'] = Variable<String>(cashier.value);
+    }
+    if (cash.present) {
+      map['cash'] = Variable<String>(cash.value);
+    }
+    if (ecash.present) {
+      map['ecash'] = Variable<String>(ecash.value);
+    }
+    if (branch.present) {
+      map['branch'] = Variable<String>(branch.value);
+    }
+    if (discountDetail.present) {
+      map['discount_detail'] = Variable<String>(discountDetail.value);
+    }
+    if (isSync.present) {
+      map['is_sync'] = Variable<String>(isSync.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SalesTableCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('detailId: $detailId, ')
+          ..write('date: $date, ')
+          ..write('posid: $posid, ')
+          ..write('shift: $shift, ')
+          ..write('paymentType: $paymentType, ')
+          ..write('referenceId: $referenceId, ')
+          ..write('paymentName: $paymentName, ')
+          ..write('items: $items, ')
+          ..write('total: $total, ')
+          ..write('cashier: $cashier, ')
+          ..write('cash: $cash, ')
+          ..write('ecash: $ecash, ')
+          ..write('branch: $branch, ')
+          ..write('discountDetail: $discountDetail, ')
+          ..write('isSync: $isSync, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5890,6 +7856,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ProductPriceTableTable(this);
   late final $PromoTableTable promoTable = $PromoTableTable(this);
   late final $PrintersTableTable printersTable = $PrintersTableTable(this);
+  late final $SettingsTableTable settingsTable = $SettingsTableTable(this);
+  late final $SalesTableTable salesTable = $SalesTableTable(this);
   late final DomainConfigDao domainConfigDao = DomainConfigDao(
     this as AppDatabase,
   );
@@ -5916,6 +7884,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     productPriceTable,
     promoTable,
     printersTable,
+    settingsTable,
+    salesTable,
   ];
 }
 
@@ -9192,6 +11162,913 @@ typedef $$PrintersTableTableProcessedTableManager =
       PrintersTableData,
       PrefetchHooks Function()
     >;
+typedef $$SettingsTableTableCreateCompanionBuilder =
+    SettingsTableCompanion Function({
+      Value<String> id,
+      Value<String> mainPrinter,
+      Value<String> subPrinter,
+      Value<bool> showVatOnReceipt,
+      Value<bool> showOfficialReceiptMessageAtTheBottom,
+      Value<bool> birAccredited,
+      Value<bool> showReceiptPreview,
+      Value<bool> addCustomerToTransaction,
+      Value<bool> addPurchaseOrderToTransaction,
+      Value<String> counterDisplay,
+      Value<String> companyName,
+      Value<String> address,
+      Value<String> accreditationNo,
+      Value<String> validUntil,
+      Value<String> vatReg,
+      Value<String> permitToUse,
+      Value<String> machineIdentificationNumber,
+      Value<int> rowid,
+    });
+typedef $$SettingsTableTableUpdateCompanionBuilder =
+    SettingsTableCompanion Function({
+      Value<String> id,
+      Value<String> mainPrinter,
+      Value<String> subPrinter,
+      Value<bool> showVatOnReceipt,
+      Value<bool> showOfficialReceiptMessageAtTheBottom,
+      Value<bool> birAccredited,
+      Value<bool> showReceiptPreview,
+      Value<bool> addCustomerToTransaction,
+      Value<bool> addPurchaseOrderToTransaction,
+      Value<String> counterDisplay,
+      Value<String> companyName,
+      Value<String> address,
+      Value<String> accreditationNo,
+      Value<String> validUntil,
+      Value<String> vatReg,
+      Value<String> permitToUse,
+      Value<String> machineIdentificationNumber,
+      Value<int> rowid,
+    });
+
+class $$SettingsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SettingsTableTable> {
+  $$SettingsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mainPrinter => $composableBuilder(
+    column: $table.mainPrinter,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subPrinter => $composableBuilder(
+    column: $table.subPrinter,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showVatOnReceipt => $composableBuilder(
+    column: $table.showVatOnReceipt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showOfficialReceiptMessageAtTheBottom =>
+      $composableBuilder(
+        column: $table.showOfficialReceiptMessageAtTheBottom,
+        builder: (column) => ColumnFilters(column),
+      );
+
+  ColumnFilters<bool> get birAccredited => $composableBuilder(
+    column: $table.birAccredited,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showReceiptPreview => $composableBuilder(
+    column: $table.showReceiptPreview,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get addCustomerToTransaction => $composableBuilder(
+    column: $table.addCustomerToTransaction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get addPurchaseOrderToTransaction => $composableBuilder(
+    column: $table.addPurchaseOrderToTransaction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get counterDisplay => $composableBuilder(
+    column: $table.counterDisplay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyName => $composableBuilder(
+    column: $table.companyName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get address => $composableBuilder(
+    column: $table.address,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accreditationNo => $composableBuilder(
+    column: $table.accreditationNo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get validUntil => $composableBuilder(
+    column: $table.validUntil,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vatReg => $composableBuilder(
+    column: $table.vatReg,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get permitToUse => $composableBuilder(
+    column: $table.permitToUse,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get machineIdentificationNumber => $composableBuilder(
+    column: $table.machineIdentificationNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SettingsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SettingsTableTable> {
+  $$SettingsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mainPrinter => $composableBuilder(
+    column: $table.mainPrinter,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subPrinter => $composableBuilder(
+    column: $table.subPrinter,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showVatOnReceipt => $composableBuilder(
+    column: $table.showVatOnReceipt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showOfficialReceiptMessageAtTheBottom =>
+      $composableBuilder(
+        column: $table.showOfficialReceiptMessageAtTheBottom,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  ColumnOrderings<bool> get birAccredited => $composableBuilder(
+    column: $table.birAccredited,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showReceiptPreview => $composableBuilder(
+    column: $table.showReceiptPreview,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get addCustomerToTransaction => $composableBuilder(
+    column: $table.addCustomerToTransaction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get addPurchaseOrderToTransaction => $composableBuilder(
+    column: $table.addPurchaseOrderToTransaction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get counterDisplay => $composableBuilder(
+    column: $table.counterDisplay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyName => $composableBuilder(
+    column: $table.companyName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get address => $composableBuilder(
+    column: $table.address,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accreditationNo => $composableBuilder(
+    column: $table.accreditationNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get validUntil => $composableBuilder(
+    column: $table.validUntil,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vatReg => $composableBuilder(
+    column: $table.vatReg,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get permitToUse => $composableBuilder(
+    column: $table.permitToUse,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get machineIdentificationNumber => $composableBuilder(
+    column: $table.machineIdentificationNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SettingsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SettingsTableTable> {
+  $$SettingsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get mainPrinter => $composableBuilder(
+    column: $table.mainPrinter,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get subPrinter => $composableBuilder(
+    column: $table.subPrinter,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showVatOnReceipt => $composableBuilder(
+    column: $table.showVatOnReceipt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showOfficialReceiptMessageAtTheBottom =>
+      $composableBuilder(
+        column: $table.showOfficialReceiptMessageAtTheBottom,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<bool> get birAccredited => $composableBuilder(
+    column: $table.birAccredited,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showReceiptPreview => $composableBuilder(
+    column: $table.showReceiptPreview,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get addCustomerToTransaction => $composableBuilder(
+    column: $table.addCustomerToTransaction,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get addPurchaseOrderToTransaction => $composableBuilder(
+    column: $table.addPurchaseOrderToTransaction,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get counterDisplay => $composableBuilder(
+    column: $table.counterDisplay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get companyName => $composableBuilder(
+    column: $table.companyName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get address =>
+      $composableBuilder(column: $table.address, builder: (column) => column);
+
+  GeneratedColumn<String> get accreditationNo => $composableBuilder(
+    column: $table.accreditationNo,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get validUntil => $composableBuilder(
+    column: $table.validUntil,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get vatReg =>
+      $composableBuilder(column: $table.vatReg, builder: (column) => column);
+
+  GeneratedColumn<String> get permitToUse => $composableBuilder(
+    column: $table.permitToUse,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get machineIdentificationNumber => $composableBuilder(
+    column: $table.machineIdentificationNumber,
+    builder: (column) => column,
+  );
+}
+
+class $$SettingsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SettingsTableTable,
+          SettingsTableData,
+          $$SettingsTableTableFilterComposer,
+          $$SettingsTableTableOrderingComposer,
+          $$SettingsTableTableAnnotationComposer,
+          $$SettingsTableTableCreateCompanionBuilder,
+          $$SettingsTableTableUpdateCompanionBuilder,
+          (
+            SettingsTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $SettingsTableTable,
+              SettingsTableData
+            >,
+          ),
+          SettingsTableData,
+          PrefetchHooks Function()
+        > {
+  $$SettingsTableTableTableManager(_$AppDatabase db, $SettingsTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SettingsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SettingsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SettingsTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> mainPrinter = const Value.absent(),
+                Value<String> subPrinter = const Value.absent(),
+                Value<bool> showVatOnReceipt = const Value.absent(),
+                Value<bool> showOfficialReceiptMessageAtTheBottom =
+                    const Value.absent(),
+                Value<bool> birAccredited = const Value.absent(),
+                Value<bool> showReceiptPreview = const Value.absent(),
+                Value<bool> addCustomerToTransaction = const Value.absent(),
+                Value<bool> addPurchaseOrderToTransaction =
+                    const Value.absent(),
+                Value<String> counterDisplay = const Value.absent(),
+                Value<String> companyName = const Value.absent(),
+                Value<String> address = const Value.absent(),
+                Value<String> accreditationNo = const Value.absent(),
+                Value<String> validUntil = const Value.absent(),
+                Value<String> vatReg = const Value.absent(),
+                Value<String> permitToUse = const Value.absent(),
+                Value<String> machineIdentificationNumber =
+                    const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SettingsTableCompanion(
+                id: id,
+                mainPrinter: mainPrinter,
+                subPrinter: subPrinter,
+                showVatOnReceipt: showVatOnReceipt,
+                showOfficialReceiptMessageAtTheBottom:
+                    showOfficialReceiptMessageAtTheBottom,
+                birAccredited: birAccredited,
+                showReceiptPreview: showReceiptPreview,
+                addCustomerToTransaction: addCustomerToTransaction,
+                addPurchaseOrderToTransaction: addPurchaseOrderToTransaction,
+                counterDisplay: counterDisplay,
+                companyName: companyName,
+                address: address,
+                accreditationNo: accreditationNo,
+                validUntil: validUntil,
+                vatReg: vatReg,
+                permitToUse: permitToUse,
+                machineIdentificationNumber: machineIdentificationNumber,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> mainPrinter = const Value.absent(),
+                Value<String> subPrinter = const Value.absent(),
+                Value<bool> showVatOnReceipt = const Value.absent(),
+                Value<bool> showOfficialReceiptMessageAtTheBottom =
+                    const Value.absent(),
+                Value<bool> birAccredited = const Value.absent(),
+                Value<bool> showReceiptPreview = const Value.absent(),
+                Value<bool> addCustomerToTransaction = const Value.absent(),
+                Value<bool> addPurchaseOrderToTransaction =
+                    const Value.absent(),
+                Value<String> counterDisplay = const Value.absent(),
+                Value<String> companyName = const Value.absent(),
+                Value<String> address = const Value.absent(),
+                Value<String> accreditationNo = const Value.absent(),
+                Value<String> validUntil = const Value.absent(),
+                Value<String> vatReg = const Value.absent(),
+                Value<String> permitToUse = const Value.absent(),
+                Value<String> machineIdentificationNumber =
+                    const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SettingsTableCompanion.insert(
+                id: id,
+                mainPrinter: mainPrinter,
+                subPrinter: subPrinter,
+                showVatOnReceipt: showVatOnReceipt,
+                showOfficialReceiptMessageAtTheBottom:
+                    showOfficialReceiptMessageAtTheBottom,
+                birAccredited: birAccredited,
+                showReceiptPreview: showReceiptPreview,
+                addCustomerToTransaction: addCustomerToTransaction,
+                addPurchaseOrderToTransaction: addPurchaseOrderToTransaction,
+                counterDisplay: counterDisplay,
+                companyName: companyName,
+                address: address,
+                accreditationNo: accreditationNo,
+                validUntil: validUntil,
+                vatReg: vatReg,
+                permitToUse: permitToUse,
+                machineIdentificationNumber: machineIdentificationNumber,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SettingsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SettingsTableTable,
+      SettingsTableData,
+      $$SettingsTableTableFilterComposer,
+      $$SettingsTableTableOrderingComposer,
+      $$SettingsTableTableAnnotationComposer,
+      $$SettingsTableTableCreateCompanionBuilder,
+      $$SettingsTableTableUpdateCompanionBuilder,
+      (
+        SettingsTableData,
+        BaseReferences<_$AppDatabase, $SettingsTableTable, SettingsTableData>,
+      ),
+      SettingsTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$SalesTableTableCreateCompanionBuilder =
+    SalesTableCompanion Function({
+      Value<String> id,
+      Value<DateTime> createdAt,
+      Value<String> detailId,
+      Value<String> date,
+      Value<String> posid,
+      Value<String> shift,
+      Value<String> paymentType,
+      Value<String> referenceId,
+      Value<String> paymentName,
+      Value<String> items,
+      Value<String> total,
+      Value<String> cashier,
+      Value<String> cash,
+      Value<String> ecash,
+      Value<String> branch,
+      Value<String> discountDetail,
+      Value<String> isSync,
+      Value<int> rowid,
+    });
+typedef $$SalesTableTableUpdateCompanionBuilder =
+    SalesTableCompanion Function({
+      Value<String> id,
+      Value<DateTime> createdAt,
+      Value<String> detailId,
+      Value<String> date,
+      Value<String> posid,
+      Value<String> shift,
+      Value<String> paymentType,
+      Value<String> referenceId,
+      Value<String> paymentName,
+      Value<String> items,
+      Value<String> total,
+      Value<String> cashier,
+      Value<String> cash,
+      Value<String> ecash,
+      Value<String> branch,
+      Value<String> discountDetail,
+      Value<String> isSync,
+      Value<int> rowid,
+    });
+
+class $$SalesTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SalesTableTable> {
+  $$SalesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get detailId => $composableBuilder(
+    column: $table.detailId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get posid => $composableBuilder(
+    column: $table.posid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paymentType => $composableBuilder(
+    column: $table.paymentType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referenceId => $composableBuilder(
+    column: $table.referenceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paymentName => $composableBuilder(
+    column: $table.paymentName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get items => $composableBuilder(
+    column: $table.items,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cashier => $composableBuilder(
+    column: $table.cashier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cash => $composableBuilder(
+    column: $table.cash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ecash => $composableBuilder(
+    column: $table.ecash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get branch => $composableBuilder(
+    column: $table.branch,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discountDetail => $composableBuilder(
+    column: $table.discountDetail,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get isSync => $composableBuilder(
+    column: $table.isSync,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SalesTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SalesTableTable> {
+  $$SalesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get detailId => $composableBuilder(
+    column: $table.detailId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get posid => $composableBuilder(
+    column: $table.posid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paymentType => $composableBuilder(
+    column: $table.paymentType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get referenceId => $composableBuilder(
+    column: $table.referenceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paymentName => $composableBuilder(
+    column: $table.paymentName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get items => $composableBuilder(
+    column: $table.items,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cashier => $composableBuilder(
+    column: $table.cashier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cash => $composableBuilder(
+    column: $table.cash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ecash => $composableBuilder(
+    column: $table.ecash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get branch => $composableBuilder(
+    column: $table.branch,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discountDetail => $composableBuilder(
+    column: $table.discountDetail,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get isSync => $composableBuilder(
+    column: $table.isSync,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SalesTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SalesTableTable> {
+  $$SalesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get detailId =>
+      $composableBuilder(column: $table.detailId, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get posid =>
+      $composableBuilder(column: $table.posid, builder: (column) => column);
+
+  GeneratedColumn<String> get shift =>
+      $composableBuilder(column: $table.shift, builder: (column) => column);
+
+  GeneratedColumn<String> get paymentType => $composableBuilder(
+    column: $table.paymentType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get referenceId => $composableBuilder(
+    column: $table.referenceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get paymentName => $composableBuilder(
+    column: $table.paymentName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get items =>
+      $composableBuilder(column: $table.items, builder: (column) => column);
+
+  GeneratedColumn<String> get total =>
+      $composableBuilder(column: $table.total, builder: (column) => column);
+
+  GeneratedColumn<String> get cashier =>
+      $composableBuilder(column: $table.cashier, builder: (column) => column);
+
+  GeneratedColumn<String> get cash =>
+      $composableBuilder(column: $table.cash, builder: (column) => column);
+
+  GeneratedColumn<String> get ecash =>
+      $composableBuilder(column: $table.ecash, builder: (column) => column);
+
+  GeneratedColumn<String> get branch =>
+      $composableBuilder(column: $table.branch, builder: (column) => column);
+
+  GeneratedColumn<String> get discountDetail => $composableBuilder(
+    column: $table.discountDetail,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get isSync =>
+      $composableBuilder(column: $table.isSync, builder: (column) => column);
+}
+
+class $$SalesTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SalesTableTable,
+          SalesTableData,
+          $$SalesTableTableFilterComposer,
+          $$SalesTableTableOrderingComposer,
+          $$SalesTableTableAnnotationComposer,
+          $$SalesTableTableCreateCompanionBuilder,
+          $$SalesTableTableUpdateCompanionBuilder,
+          (
+            SalesTableData,
+            BaseReferences<_$AppDatabase, $SalesTableTable, SalesTableData>,
+          ),
+          SalesTableData,
+          PrefetchHooks Function()
+        > {
+  $$SalesTableTableTableManager(_$AppDatabase db, $SalesTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SalesTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SalesTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SalesTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<String> detailId = const Value.absent(),
+                Value<String> date = const Value.absent(),
+                Value<String> posid = const Value.absent(),
+                Value<String> shift = const Value.absent(),
+                Value<String> paymentType = const Value.absent(),
+                Value<String> referenceId = const Value.absent(),
+                Value<String> paymentName = const Value.absent(),
+                Value<String> items = const Value.absent(),
+                Value<String> total = const Value.absent(),
+                Value<String> cashier = const Value.absent(),
+                Value<String> cash = const Value.absent(),
+                Value<String> ecash = const Value.absent(),
+                Value<String> branch = const Value.absent(),
+                Value<String> discountDetail = const Value.absent(),
+                Value<String> isSync = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SalesTableCompanion(
+                id: id,
+                createdAt: createdAt,
+                detailId: detailId,
+                date: date,
+                posid: posid,
+                shift: shift,
+                paymentType: paymentType,
+                referenceId: referenceId,
+                paymentName: paymentName,
+                items: items,
+                total: total,
+                cashier: cashier,
+                cash: cash,
+                ecash: ecash,
+                branch: branch,
+                discountDetail: discountDetail,
+                isSync: isSync,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<String> detailId = const Value.absent(),
+                Value<String> date = const Value.absent(),
+                Value<String> posid = const Value.absent(),
+                Value<String> shift = const Value.absent(),
+                Value<String> paymentType = const Value.absent(),
+                Value<String> referenceId = const Value.absent(),
+                Value<String> paymentName = const Value.absent(),
+                Value<String> items = const Value.absent(),
+                Value<String> total = const Value.absent(),
+                Value<String> cashier = const Value.absent(),
+                Value<String> cash = const Value.absent(),
+                Value<String> ecash = const Value.absent(),
+                Value<String> branch = const Value.absent(),
+                Value<String> discountDetail = const Value.absent(),
+                Value<String> isSync = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SalesTableCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                detailId: detailId,
+                date: date,
+                posid: posid,
+                shift: shift,
+                paymentType: paymentType,
+                referenceId: referenceId,
+                paymentName: paymentName,
+                items: items,
+                total: total,
+                cashier: cashier,
+                cash: cash,
+                ecash: ecash,
+                branch: branch,
+                discountDetail: discountDetail,
+                isSync: isSync,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SalesTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SalesTableTable,
+      SalesTableData,
+      $$SalesTableTableFilterComposer,
+      $$SalesTableTableOrderingComposer,
+      $$SalesTableTableAnnotationComposer,
+      $$SalesTableTableCreateCompanionBuilder,
+      $$SalesTableTableUpdateCompanionBuilder,
+      (
+        SalesTableData,
+        BaseReferences<_$AppDatabase, $SalesTableTable, SalesTableData>,
+      ),
+      SalesTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -9224,6 +12101,10 @@ class $AppDatabaseManager {
       $$PromoTableTableTableManager(_db, _db.promoTable);
   $$PrintersTableTableTableManager get printersTable =>
       $$PrintersTableTableTableManager(_db, _db.printersTable);
+  $$SettingsTableTableTableManager get settingsTable =>
+      $$SettingsTableTableTableManager(_db, _db.settingsTable);
+  $$SalesTableTableTableManager get salesTable =>
+      $$SalesTableTableTableManager(_db, _db.salesTable);
 }
 
 // **************************************************************************

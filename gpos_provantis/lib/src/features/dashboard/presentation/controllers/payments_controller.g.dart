@@ -152,7 +152,7 @@ final class PaymentControllerProvider
   }
 }
 
-String _$paymentControllerHash() => r'8eb72af3a223afdc945ee6690006ae499b5b5469';
+String _$paymentControllerHash() => r'9a10ebf317bb7d0e97f44887115d38525e52a8de';
 
 abstract class _$PaymentController extends $Notifier<PaymentState> {
   PaymentState build();

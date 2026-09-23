@@ -17,7 +17,8 @@ part 'payments_controller.g.dart';
 ///
 ///   root
 ///   ├─ ePayments            (tap E-PAYMENTS on root)
-///   ├─ cash                 (tap CASH on root — placeholder for now)
+///   │  └─ ePaymentConfirm      (tap a specific method's tile)
+///   ├─ cash                 (tap CASH on root)
 ///   └─ splitChoice          (tap SPLIT PAYMENT on root)
 ///      ├─ splitCashEPayment       (Cash + one E-payment)
 ///      └─ splitEPaymentEPayment   (two E-payments)
@@ -83,6 +84,7 @@ class PaymentMethod {
 enum PaymentStep {
   root,
   ePayments,
+  ePaymentConfirm,
   cash,
   splitChoice,
   splitCashEPayment,
@@ -145,15 +147,19 @@ class PaymentState {
     this.step = PaymentStep.root,
     this.selectedMethod,
     this.cashAmountTendered,
+    this.singleEPaymentReferenceId,
     this.splitKind,
     this.splitSlots = const [SplitSlot(), SplitSlot()],
   });
 
   final PaymentStep step;
 
-  /// The single tender chosen on the E-PAYMENTS list. Root-level Cash
-  /// confirms straight from `PaymentMethod.cash` without needing this
-  /// field, since there's nothing to pick from a list of one.
+  /// The single tender chosen on the E-PAYMENTS list. Also doubles as
+  /// which method is being confirmed on `PaymentStep.ePaymentConfirm` —
+  /// set the moment a tile is tapped, before that confirm screen opens.
+  /// Root-level Cash confirms straight from `PaymentMethod.cash` without
+  /// needing this field, since there's nothing to pick from a list of
+  /// one.
   final PaymentMethod? selectedMethod;
 
   /// How much cash the customer handed over, for the root-level Cash
@@ -161,6 +167,12 @@ class PaymentState {
   /// since a single cash tender can exceed the total (change is owed)
   /// while a split slot's amount is capped by what's left of the total.
   final double? cashAmountTendered;
+
+  /// Reference/transaction id typed on `PaymentStep.ePaymentConfirm` —
+  /// the single-tender E-payment path. Kept separate from `SplitSlot`'s
+  /// own `referenceId`, since a single E-payment tender isn't a slot at
+  /// all — there's no amount to assign, it's always the full total.
+  final String? singleEPaymentReferenceId;
 
   /// Which split shape is active, once the cashier has picked one on
   /// `splitChoice`. Null before that pick is made.
@@ -191,6 +203,15 @@ class PaymentState {
     return tendered - chargeTotal >= -0.01;
   }
 
+  /// Ready to confirm once a method is selected and a non-blank
+  /// reference id has been entered — same "must be non-blank" rule as
+  /// a split E-payment slot's `isComplete`. There's no amount to check:
+  /// a single E-payment tender is always the full charge total.
+  bool get singleEPaymentIsReadyToConfirm {
+    if (selectedMethod == null) return false;
+    return (singleEPaymentReferenceId ?? '').trim().isNotEmpty;
+  }
+
   double get splitAssignedTotal =>
       splitSlots.fold(0, (sum, slot) => sum + (slot.amount ?? 0));
 
@@ -210,6 +231,7 @@ class PaymentState {
     PaymentStep? step,
     Object? selectedMethod = _unset,
     Object? cashAmountTendered = _unset,
+    Object? singleEPaymentReferenceId = _unset,
     Object? splitKind = _unset,
     List<SplitSlot>? splitSlots,
   }) {
@@ -221,6 +243,9 @@ class PaymentState {
       cashAmountTendered: identical(cashAmountTendered, _unset)
           ? this.cashAmountTendered
           : cashAmountTendered as double?,
+      singleEPaymentReferenceId: identical(singleEPaymentReferenceId, _unset)
+          ? this.singleEPaymentReferenceId
+          : singleEPaymentReferenceId as String?,
       splitKind: identical(splitKind, _unset)
           ? this.splitKind
           : splitKind as SplitKind?,
@@ -310,6 +335,12 @@ class PaymentController extends _$PaymentController {
           selectedMethod: null,
           cashAmountTendered: null,
         );
+      case PaymentStep.ePaymentConfirm:
+        state = state.copyWith(
+          step: PaymentStep.ePayments,
+          selectedMethod: null,
+          singleEPaymentReferenceId: null,
+        );
       case PaymentStep.splitCashEPayment:
       case PaymentStep.splitEPaymentEPayment:
         state = state.copyWith(
@@ -322,8 +353,20 @@ class PaymentController extends _$PaymentController {
 
   // --- Single-method selection ---------------------------------------
 
+  /// Picks a method on the E-PAYMENTS list and opens the confirm screen
+  /// for it (`PaymentStep.ePaymentConfirm`) — tapping a tile no longer
+  /// confirms the sale immediately; it just selects which method is
+  /// being paid with, same as picking a split slot's method.
   void selectEPaymentMethod(PaymentMethod method) {
-    state = state.copyWith(selectedMethod: method);
+    state = state.copyWith(
+      step: PaymentStep.ePaymentConfirm,
+      selectedMethod: method,
+      singleEPaymentReferenceId: null,
+    );
+  }
+
+  void setSingleEPaymentReferenceId(String referenceId) {
+    state = state.copyWith(singleEPaymentReferenceId: referenceId);
   }
 
   void setCashAmountTendered(double? amount) {

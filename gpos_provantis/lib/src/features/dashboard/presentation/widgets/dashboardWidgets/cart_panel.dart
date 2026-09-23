@@ -938,8 +938,6 @@ class _CartFooter extends ConsumerWidget {
       child: Column(
         children: [
           _TotalsRow(label: 'Subtotal', value: state.subtotal, colors: colors),
-          const SizedBox(height: 4),
-          _TotalsRow(label: 'Tax', value: state.tax, colors: colors),
           // Only shown once a discount is actually applied — mirrors
           // "Remove all"/"Remove discount" only appearing once there's
           // something to act on, rather than a permanent zero-value row.

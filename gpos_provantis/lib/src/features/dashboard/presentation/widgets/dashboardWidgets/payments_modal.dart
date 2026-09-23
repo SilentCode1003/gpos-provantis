@@ -5,9 +5,14 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/core/database/providers/payments_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/daos/pos_detail_id_dao.dart'
+    show PosDetailIdUnavailableException;
 import '../../controllers/dashboard_controller.dart';
 import '../../controllers/payments_controller.dart';
+import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
+    show ReceiptGenerator, ReceiptPrintException;
 import 'amount_input_formatter.dart';
+import 'amount_numpad.dart';
 import 'dashboard_constants.dart';
 
 /// =========================================================================
@@ -76,12 +81,17 @@ class _PaymentModal extends ConsumerWidget {
           // Sized for a 14" POS terminal in landscape, not a phone
           // dialog — wide enough that the root/split-choice cubes sit
           // at a real touch-friendly size side-by-side instead of
-          // being squeezed into a narrow column. maxHeight is clamped
-          // against whatever room is left once the keyboard (if any)
-          // and the dialog's own inset padding are accounted for, so
-          // it shrinks to fit rather than overflowing off-screen.
+          // being squeezed into a narrow column. Widened from the
+          // original 860 once the amount-entry steps gained a fixed
+          // numpad rail (see _NumpadRail, now 380px) — without the
+          // extra width, the two side-by-side blocks on the split
+          // screens would be left with too little room once the rail
+          // and its own padding come out of the total. maxHeight is
+          // clamped against whatever room is left once the keyboard
+          // (if any) and the dialog's own inset padding are accounted
+          // for, so it shrinks to fit rather than overflowing off-screen.
           constraints: BoxConstraints(
-            maxWidth: 860,
+            maxWidth: 1160,
             maxHeight: (MediaQuery.sizeOf(context).height - keyboardInset - 64)
                 .clamp(320, 720),
           ),
@@ -180,6 +190,8 @@ class _ModalHeader extends ConsumerWidget {
         return 'Payment';
       case PaymentStep.ePayments:
         return 'E-Payments';
+      case PaymentStep.ePaymentConfirm:
+        return 'Confirm payment';
       case PaymentStep.cash:
         return 'Cash';
       case PaymentStep.splitChoice:
@@ -226,6 +238,8 @@ class _ModalBody extends StatelessWidget {
         return const _RootOptions();
       case PaymentStep.ePayments:
         return const _EPaymentsList();
+      case PaymentStep.ePaymentConfirm:
+        return const _EPaymentConfirmScreen();
       case PaymentStep.cash:
         return const _CashScreen();
       case PaymentStep.splitChoice:
@@ -434,20 +448,176 @@ class _EPaymentsList extends ConsumerWidget {
             return _CubeButton(
               label: method.label,
               icon: PhosphorIcons.deviceMobile,
-              onTap: () {
-                notifier.selectEPaymentMethod(method);
-                _confirmSingle(context, ref);
-              },
+              onTap: () => notifier.selectEPaymentMethod(method),
             );
           },
         );
       },
     );
   }
+}
 
-  void _confirmSingle(BuildContext context, WidgetRef ref) {
-    ref.read(paymentControllerProvider.notifier).reset();
-    Navigator.of(context).pop();
+/// --- E-PAYMENT CONFIRM: single method, reference id, full total ---------
+///
+/// Reached by tapping a tile on `_EPaymentsList` — `selectedMethod` is
+/// already set by that tap (see `PaymentController.selectEPaymentMethod`)
+/// before this screen ever builds. No amount field: a single E-payment
+/// tender is always the full charge total, there's no tendered/change
+/// concept the way Cash has. Styling (field decoration, button) mirrors
+/// `_CashScreen` and `_EPaymentBlock`'s Reference ID field for visual
+/// consistency across the modal's screens.
+class _EPaymentConfirmScreen extends ConsumerStatefulWidget {
+  const _EPaymentConfirmScreen();
+
+  @override
+  ConsumerState<_EPaymentConfirmScreen> createState() =>
+      _EPaymentConfirmScreenState();
+}
+
+class _EPaymentConfirmScreenState
+    extends ConsumerState<_EPaymentConfirmScreen> {
+  late final TextEditingController _referenceController;
+
+  @override
+  void initState() {
+    super.initState();
+    final existing = ref
+        .read(paymentControllerProvider)
+        .singleEPaymentReferenceId;
+    _referenceController = TextEditingController(text: existing ?? '');
+  }
+
+  @override
+  void dispose() {
+    _referenceController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final total = ref.watch(dashboardControllerProvider).total;
+    final paymentState = ref.watch(paymentControllerProvider);
+    final notifier = ref.read(paymentControllerProvider.notifier);
+    final method = paymentState.selectedMethod;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: colors.primaryContainer,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Text(
+              '${method?.label ?? ''} — ₱${formatAmountForField(total)}',
+              textAlign: TextAlign.center,
+              style: AppTypography.ui(
+                color: colors.primary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Reference ID',
+            style: AppTypography.ui(
+              color: colors.textSecondary,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: primaryTapTarget,
+            child: TextField(
+              controller: _referenceController,
+              style: AppTypography.ui(color: colors.textPrimary, fontSize: 16),
+              decoration: InputDecoration(
+                labelText: 'Reference ID',
+                filled: true,
+                fillColor: colors.surfaceVariant,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onChanged: notifier.setSingleEPaymentReferenceId,
+            ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: primaryTapTarget,
+            child: ElevatedButton(
+              onPressed: paymentState.singleEPaymentIsReadyToConfirm
+                  ? () async {
+                      try {
+                        await ref
+                            .read(dashboardControllerProvider.notifier)
+                            .createSaleFromEPayment(paymentState);
+                      } on PosDetailIdUnavailableException catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(e.message)));
+                        }
+                        return;
+                      } on PosIdentityUnavailableException catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(e.message)));
+                        }
+                        return;
+                      } on ReceiptPrintException catch (e) {
+                        // Sale is already saved by this point — only
+                        // printing failed, so warn but still close out
+                        // the modal below rather than blocking the
+                        // cashier from starting the next sale.
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(e.message)));
+                        }
+                      }
+                      notifier.reset();
+                      if (context.mounted) Navigator.of(context).pop();
+                    }
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppPalette.teal500,
+                foregroundColor: colors.onPrimary,
+                disabledBackgroundColor: colors.disabledFill,
+                disabledForegroundColor: colors.textDisabled,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: Text(
+                'Confirm payment',
+                style: AppTypography.ui(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -533,6 +703,16 @@ class _CashScreen extends ConsumerStatefulWidget {
 class _CashScreenState extends ConsumerState<_CashScreen> {
   late final TextEditingController _amountController;
 
+  // canRequestFocus: false is the actual fix for the numpad-only input
+  // model — without it, tapping the readOnly field still hands it real
+  // platform text-input focus, and on Android/Windows that focus can
+  // both summon the OS keyboard AND race with/clobber the numpad's own
+  // controller.value writes as the platform IME syncs back against a
+  // field it thinks it owns. A non-focusable FocusNode keeps the field
+  // interactive (onTap still fires, cursor still shows) without ever
+  // handing it real input focus.
+  final FocusNode _amountFocusNode = FocusNode(canRequestFocus: false);
+
   @override
   void initState() {
     super.initState();
@@ -545,6 +725,7 @@ class _CashScreenState extends ConsumerState<_CashScreen> {
   @override
   void dispose() {
     _amountController.dispose();
+    _amountFocusNode.dispose();
     super.dispose();
   }
 
@@ -558,143 +739,206 @@ class _CashScreenState extends ConsumerState<_CashScreen> {
     final tendered = paymentState.cashAmountTendered;
     final isShort = tendered != null && tendered - total < -0.01;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+    // Split into a scrollable left column (everything except the
+    // numpad) and a fixed-width numpad rail on the right that's part of
+    // this Row, not the ScrollView — so it never scrolls out of view no
+    // matter how tall the left side gets. This mirrors how a physical
+    // POS terminal's numeric pad is a fixed panel, not something that
+    // moves around with the receipt above it.
+    //
+    // The outer modal Column sizes itself to content (mainAxisSize.min)
+    // so steps like the root cubes don't force the dialog to its full
+    // maxHeight — but that means a bare Row here, under a loose
+    // Flexible, would have no intrinsic height to stretch its
+    // CrossAxisAlignment.stretch children into and could collapse.
+    // ConstrainedBox with a sensible minHeight gives it one, without
+    // forcing every other step to the same fixed height.
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 620),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Amount tendered',
-            style: AppTypography.ui(
-              color: colors.textSecondary,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Amount tendered',
+                    style: AppTypography.ui(
+                      color: colors.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: primaryTapTarget + 8,
+                    child: TextField(
+                      controller: _amountController,
+                      focusNode: _amountFocusNode,
+                      // readOnly stops Android/Windows from summoning the
+                      // OS soft keyboard on focus — all input for this
+                      // field comes from the AmountNumpad rail instead.
+                      // showCursor keeps it looking and feeling like a
+                      // live, editable field. focusNode above additionally
+                      // stops the field from ever taking real platform
+                      // focus at all (see _amountFocusNode's doc comment)
+                      // — readOnly alone wasn't reliably enough to keep
+                      // the OS keyboard and IME fully out of the picture.
+                      readOnly: true,
+                      showCursor: true,
+                      textAlign: TextAlign.right,
+                      style: AppTypography.display(
+                        color: colors.textPrimary,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      decoration: InputDecoration(
+                        prefixText: '₱ ',
+                        filled: true,
+                        fillColor: colors.surfaceVariant,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // One-tap exact-amount shortcut — the dominant
+                  // real-world case is a customer handing over precisely
+                  // what's owed, and keying that figure in digit by digit
+                  // is pure friction for something this common.
+                  SizedBox(
+                    width: double.infinity,
+                    height: primaryTapTarget,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        notifier.setCashExactAmount(total);
+                        _amountController.text = formatAmountForField(total);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: colors.primary,
+                        side: BorderSide(color: colors.primary, width: 1.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        'EXACT AMOUNT (₱${formatAmountForField(total)})',
+                        style: AppTypography.ui(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: changeDue != null
+                          ? colors.primaryContainer
+                          : colors.surfaceVariant,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Text(
+                      changeDue != null
+                          ? (changeDue < 0.01
+                                ? 'No change due'
+                                : 'Change due: ₱${formatAmountForField(changeDue)}')
+                          : isShort
+                          ? 'Short by ₱${formatAmountForField(total - tendered!)}'
+                          : 'Enter the amount the customer is paying with.',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.ui(
+                        color: changeDue != null
+                            ? colors.primary
+                            : isShort
+                            ? colors.danger
+                            : colors.textSecondary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: primaryTapTarget,
+                    child: ElevatedButton(
+                      onPressed: paymentState.cashIsReadyToConfirm(total)
+                          ? () async {
+                              try {
+                                await ref
+                                    .read(dashboardControllerProvider.notifier)
+                                    .createSaleFromCash();
+                              } on PosDetailIdUnavailableException catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(e.message)),
+                                  );
+                                }
+                                return;
+                              } on PosIdentityUnavailableException catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(e.message)),
+                                  );
+                                }
+                                return;
+                              } on ReceiptPrintException catch (e) {
+                                // Sale is already saved — only printing
+                                // failed. Warn, but still close out the
+                                // modal below.
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(e.message)),
+                                  );
+                                }
+                              }
+                              notifier.reset();
+                              if (context.mounted) Navigator.of(context).pop();
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppPalette.teal500,
+                        foregroundColor: colors.onPrimary,
+                        disabledBackgroundColor: colors.disabledFill,
+                        disabledForegroundColor: colors.textDisabled,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        'Confirm payment',
+                        style: AppTypography.ui(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            height: primaryTapTarget + 8,
-            child: TextField(
-              controller: _amountController,
-              autofocus: true,
-              textAlign: TextAlign.right,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              inputFormatters: const [AmountInputFormatter()],
-              style: AppTypography.display(
-                color: colors.textPrimary,
-                fontSize: 26,
-                fontWeight: FontWeight.w700,
-              ),
-              decoration: InputDecoration(
-                prefixText: '₱ ',
-                filled: true,
-                fillColor: colors.surfaceVariant,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              onChanged: (text) {
-                notifier.setCashAmountTendered(parseAmountField(text));
-              },
-            ),
-          ),
-          const SizedBox(height: 14),
-          // One-tap exact-amount shortcut — the dominant real-world
-          // case is a customer handing over precisely what's owed, and
-          // typing that figure out digit by digit on a touch keyboard
-          // is pure friction for something this common.
-          SizedBox(
-            width: double.infinity,
-            height: primaryTapTarget,
-            child: OutlinedButton(
-              onPressed: () {
-                notifier.setCashExactAmount(total);
-                _amountController.text = formatAmountForField(total);
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: colors.primary,
-                side: BorderSide(color: colors.primary, width: 1.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              child: Text(
-                'EXACT AMOUNT (₱${formatAmountForField(total)})',
-                style: AppTypography.ui(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              color: changeDue != null
-                  ? colors.primaryContainer
-                  : colors.surfaceVariant,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Text(
-              changeDue != null
-                  ? (changeDue < 0.01
-                        ? 'No change due'
-                        : 'Change due: ₱${formatAmountForField(changeDue)}')
-                  : isShort
-                  ? 'Short by ₱${formatAmountForField(total - tendered!)}'
-                  : 'Enter the amount the customer is paying with.',
-              textAlign: TextAlign.center,
-              style: AppTypography.ui(
-                color: changeDue != null
-                    ? colors.primary
-                    : isShort
-                    ? colors.danger
-                    : colors.textSecondary,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            height: primaryTapTarget,
-            child: ElevatedButton(
-              onPressed: paymentState.cashIsReadyToConfirm(total)
-                  ? () {
-                      notifier.reset();
-                      Navigator.of(context).pop();
-                    }
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppPalette.teal500,
-                foregroundColor: colors.onPrimary,
-                disabledBackgroundColor: colors.disabledFill,
-                disabledForegroundColor: colors.textDisabled,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              child: Text(
-                'Confirm payment',
-                style: AppTypography.ui(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+          _NumpadRail(
+            controller: _amountController,
+            onChanged: notifier.setCashAmountTendered,
           ),
         ],
       ),
@@ -743,92 +987,253 @@ class _SplitChoiceOptions extends ConsumerWidget {
 
 /// Renders the two slots for whichever split kind is active, plus a
 /// remaining/settled banner and the Confirm button.
-class _SplitLayout extends ConsumerWidget {
+/// Owns both split slots' amount controllers and tracks which one is
+/// currently "active" (last tapped) — the on-screen numpad below the
+/// two blocks always drives whichever one that is. A ConsumerWidget
+/// couldn't hold this: two amount fields are visible at once here, so
+/// "which field does the shared numpad type into" is real state that
+/// has to live above both fields, not inside either one individually.
+class _SplitLayout extends ConsumerStatefulWidget {
   const _SplitLayout({required this.kind});
 
   final SplitKind kind;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_SplitLayout> createState() => _SplitLayoutState();
+}
+
+class _SplitLayoutState extends ConsumerState<_SplitLayout> {
+  late final TextEditingController _slot0AmountController;
+  late final TextEditingController _slot1AmountController;
+
+  // canRequestFocus: false, same reasoning as _CashScreenState's
+  // _amountFocusNode — stops these readOnly fields from ever taking
+  // real platform text-input focus, which is what let the OS
+  // keyboard/IME interfere with the numpad's own writes to the
+  // controller. Owned here (not inside _CashRow/_EPaymentBlock) for the
+  // same reason the controllers are: FocusNode needs a stable
+  // create-once/dispose-once lifecycle, which the stateless
+  // _CashRow/_EPaymentBlock can't provide on their own.
+  final FocusNode _slot0FocusNode = FocusNode(canRequestFocus: false);
+  final FocusNode _slot1FocusNode = FocusNode(canRequestFocus: false);
+
+  /// Which slot (0 or 1) the numpad is currently typing into. Starts on
+  /// slot 0 so the numpad is immediately usable without an extra tap —
+  /// the cashier's very first action on this screen is almost always
+  /// entering the first slot's amount.
+  int _activeSlot = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    final slots = ref.read(paymentControllerProvider).splitSlots;
+    _slot0AmountController = TextEditingController(
+      text: slots[0].amount == null
+          ? ''
+          : formatAmountForField(slots[0].amount!),
+    );
+    _slot1AmountController = TextEditingController(
+      text: slots[1].amount == null
+          ? ''
+          : formatAmountForField(slots[1].amount!),
+    );
+  }
+
+  @override
+  void dispose() {
+    _slot0AmountController.dispose();
+    _slot1AmountController.dispose();
+    _slot0FocusNode.dispose();
+    _slot1FocusNode.dispose();
+    super.dispose();
+  }
+
+  TextEditingController get _activeController =>
+      _activeSlot == 0 ? _slot0AmountController : _slot1AmountController;
+
+  void _handleNumpadChanged(double? amount) {
+    ref
+        .read(paymentControllerProvider.notifier)
+        .setSplitSlotAmount(_activeSlot, amount);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.colors;
     final total = ref.watch(dashboardControllerProvider).total;
     final paymentState = ref.watch(paymentControllerProvider);
     final notifier = ref.read(paymentControllerProvider.notifier);
     final remaining = total - paymentState.splitAssignedTotal;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+    // Same fixed-rail shape as _CashScreen: a scrollable left column for
+    // the two slot blocks + banners + confirm, and a numpad rail on the
+    // right that stays put regardless of how tall the left side gets.
+    // Both slots share the one rail — which slot it currently drives is
+    // shown by the label above the numpad and by the highlighted border
+    // on whichever block is active (see _CashRow/_EPaymentBlock's
+    // isActive). Wrapped in a minHeight ConstrainedBox for the same
+    // reason _CashScreen is — see that screen's build() for why a bare
+    // Row here could otherwise collapse under a loose Flexible.
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 620),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Side-by-side, not stacked — the modal is wide enough now
-          // (sized for a 14" landscape terminal) that laying both
-          // tenders out horizontally keeps every field within a short
-          // reach and avoids a tall, scroll-heavy column of two full
-          // dropdown+reference+amount blocks.
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: kind == SplitKind.cashAndEPayment
-                      ? _CashRow(total: total)
-                      : const _EPaymentBlock(index: 0, title: 'E-Payment 1'),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: _EPaymentBlock(
-                    index: 1,
-                    title: kind == SplitKind.cashAndEPayment
-                        ? 'E-Payment'
-                        : 'E-Payment 2',
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Side-by-side, not stacked — the modal is wide enough
+                  // now (sized for a 14" landscape terminal) that laying
+                  // both tenders out horizontally keeps every field
+                  // within a short reach and avoids a tall, scroll-heavy
+                  // column of two full dropdown+reference+amount blocks.
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: widget.kind == SplitKind.cashAndEPayment
+                              ? _CashRow(
+                                  total: total,
+                                  amountController: _slot0AmountController,
+                                  amountFocusNode: _slot0FocusNode,
+                                  isActive: _activeSlot == 0,
+                                  onActivate: () =>
+                                      setState(() => _activeSlot = 0),
+                                )
+                              : _EPaymentBlock(
+                                  index: 0,
+                                  title: 'E-Payment 1',
+                                  amountController: _slot0AmountController,
+                                  amountFocusNode: _slot0FocusNode,
+                                  isActive: _activeSlot == 0,
+                                  onActivate: () =>
+                                      setState(() => _activeSlot = 0),
+                                ),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: _EPaymentBlock(
+                            index: 1,
+                            title: widget.kind == SplitKind.cashAndEPayment
+                                ? 'E-Payment'
+                                : 'E-Payment 2',
+                            amountController: _slot1AmountController,
+                            amountFocusNode: _slot1FocusNode,
+                            isActive: _activeSlot == 1,
+                            onActivate: () => setState(() => _activeSlot = 1),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  _RemainingBanner(remaining: remaining),
+                  if (!paymentState.isSplitReady &&
+                      paymentState.splitSlots[0].method != null &&
+                      paymentState.splitSlots[1].method != null &&
+                      paymentState.splitSlots[0].method ==
+                          paymentState.splitSlots[1].method) ...[
+                    const SizedBox(height: 14),
+                    _WarningBanner(
+                      text:
+                          'Choose two different E-payment methods for the split.',
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: primaryTapTarget,
+                    child: ElevatedButton(
+                      onPressed: paymentState.splitIsReadyToConfirm(total)
+                          ? () async {
+                              // Only Cash + one E-payment is wired up to
+                              // actually create a sale right now —
+                              // E-payment + E-payment isn't handled yet
+                              // (see DashboardController's "SALE
+                              // CREATION" doc comment).
+                              if (paymentState.splitKind ==
+                                  SplitKind.cashAndEPayment) {
+                                try {
+                                  await ref
+                                      .read(
+                                        dashboardControllerProvider.notifier,
+                                      )
+                                      .createSaleFromCashEPaymentSplit(
+                                        paymentState,
+                                      );
+                                } on PosDetailIdUnavailableException catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(e.message)),
+                                    );
+                                  }
+                                  return;
+                                } on PosIdentityUnavailableException catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(e.message)),
+                                    );
+                                  }
+                                  return;
+                                } on ReceiptPrintException catch (e) {
+                                  // Sale is already saved — only
+                                  // printing failed. Warn, but still
+                                  // close out the modal below.
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(e.message)),
+                                    );
+                                  }
+                                }
+                              }
+                              notifier.reset();
+                              if (context.mounted) Navigator.of(context).pop();
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppPalette.teal500,
+                        foregroundColor: colors.onPrimary,
+                        disabledBackgroundColor: colors.disabledFill,
+                        disabledForegroundColor: colors.textDisabled,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        'Confirm payment',
+                        style: AppTypography.ui(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 20),
-          _RemainingBanner(remaining: remaining),
-          if (!paymentState.isSplitReady &&
-              paymentState.splitSlots[0].method != null &&
-              paymentState.splitSlots[1].method != null &&
-              paymentState.splitSlots[0].method ==
-                  paymentState.splitSlots[1].method) ...[
-            const SizedBox(height: 14),
-            _WarningBanner(
-              text: 'Choose two different E-payment methods for the split.',
-            ),
-          ],
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            height: primaryTapTarget,
-            child: ElevatedButton(
-              onPressed: paymentState.splitIsReadyToConfirm(total)
-                  ? () {
-                      notifier.reset();
-                      Navigator.of(context).pop();
-                    }
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppPalette.teal500,
-                foregroundColor: colors.onPrimary,
-                disabledBackgroundColor: colors.disabledFill,
-                disabledForegroundColor: colors.textDisabled,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              child: Text(
-                'Confirm payment',
-                style: AppTypography.ui(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+          _NumpadRail(
+            controller: _activeController,
+            onChanged: _handleNumpadChanged,
+            // Only the split rail needs this label — with two live
+            // amount fields on screen, the cashier needs an explicit,
+            // always-visible answer to "which one am I about to type
+            // into", not just the tapped field's highlighted border
+            // (easy to miss at a glance, especially right after
+            // switching).
+            activeSlotLabel: _activeSlot == 0
+                ? (widget.kind == SplitKind.cashAndEPayment
+                      ? 'Typing into: Cash'
+                      : 'Typing into: E-Payment 1')
+                : (widget.kind == SplitKind.cashAndEPayment
+                      ? 'Typing into: E-Payment'
+                      : 'Typing into: E-Payment 2'),
           ),
         ],
       ),
@@ -839,45 +1244,36 @@ class _SplitLayout extends ConsumerWidget {
 /// The fixed Cash row for the Cash+E-Payment split: label on the left
 /// (not a dropdown — Cash is the only thing this slot can ever be),
 /// amount field on the right, per the "Cash with amount on its right"
-/// layout.
-class _CashRow extends ConsumerStatefulWidget {
-  const _CashRow({required this.total});
+/// layout. The amount field's controller and numpad-activation are
+/// owned by the parent `_SplitLayout` (see `_activeController` there),
+/// not by this widget, since the numpad is shared across both slots.
+class _CashRow extends ConsumerWidget {
+  const _CashRow({
+    required this.total,
+    required this.amountController,
+    required this.amountFocusNode,
+    required this.isActive,
+    required this.onActivate,
+  });
 
   final double total;
+  final TextEditingController amountController;
+  final FocusNode amountFocusNode;
+  final bool isActive;
+  final VoidCallback onActivate;
 
   @override
-  ConsumerState<_CashRow> createState() => _CashRowState();
-}
-
-class _CashRowState extends ConsumerState<_CashRow> {
-  late final TextEditingController _amountController;
-
-  @override
-  void initState() {
-    super.initState();
-    final existing = ref.read(paymentControllerProvider).splitSlots[0].amount;
-    _amountController = TextEditingController(
-      text: existing == null ? '' : formatAmountForField(existing),
-    );
-  }
-
-  @override
-  void dispose() {
-    _amountController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final notifier = ref.read(paymentControllerProvider.notifier);
-
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border, width: 1.5),
+        border: Border.all(
+          color: isActive ? colors.primary : colors.border,
+          width: isActive ? 2 : 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -920,16 +1316,28 @@ class _CashRowState extends ConsumerState<_CashRow> {
           // Amount, on its own full-width row to its right of the
           // implicit "Cash" label above — per the cash-slot layout: the
           // method reads first, its amount follows immediately after.
+          // Tapping the field is what tells the shared numpad below to
+          // start driving this slot instead of the other one, via
+          // TextField's own onTap — no wrapping GestureDetector needed
+          // (and one caused real problems: stacking a GestureDetector
+          // around a TextField makes both compete to handle the same
+          // tap, and depending on hit-test order, that could either
+          // swallow the tap before onActivate ran or let the field
+          // slip past readOnly and grab real platform focus anyway).
+          // amountFocusNode (canRequestFocus: false, owned by
+          // _SplitLayoutState) is what actually guarantees this field
+          // can never take real text-input focus, keeping it fully
+          // numpad-driven instead of racing with the OS keyboard/IME.
           SizedBox(
             width: double.infinity,
             height: primaryTapTarget,
             child: TextField(
-              controller: _amountController,
+              controller: amountController,
+              focusNode: amountFocusNode,
+              readOnly: true,
+              showCursor: true,
+              onTap: onActivate,
               textAlign: TextAlign.right,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              inputFormatters: const [AmountInputFormatter()],
               style: AppTypography.ui(
                 color: colors.textPrimary,
                 fontSize: 18,
@@ -939,7 +1347,9 @@ class _CashRowState extends ConsumerState<_CashRow> {
                 prefixText: '₱ ',
                 labelText: 'Amount',
                 filled: true,
-                fillColor: colors.surfaceVariant,
+                fillColor: isActive
+                    ? colors.primaryContainer.withValues(alpha: 0.4)
+                    : colors.surfaceVariant,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,
@@ -949,28 +1359,28 @@ class _CashRowState extends ConsumerState<_CashRow> {
                   borderSide: BorderSide.none,
                 ),
               ),
-              onChanged: (text) {
-                notifier.setSplitSlotAmount(0, parseAmountField(text));
-              },
             ),
           ),
           const SizedBox(height: 12),
           // Auto-fills whatever's left of the charge total after the
           // other (E-payment) slot, so a cashier taking exact cash
-          // doesn't have to type the figure out digit by digit on a
-          // touch keyboard — the most common cash case by far is
-          // "customer hands over exactly what's owed on this slot".
+          // doesn't have to key the figure in for something this
+          // common: the customer handing over exactly what's owed on
+          // this slot.
           SizedBox(
             width: double.infinity,
             height: primaryTapTarget,
             child: OutlinedButton(
               onPressed: () {
-                notifier.fillRemainingAmount(0, widget.total);
+                onActivate();
+                ref
+                    .read(paymentControllerProvider.notifier)
+                    .fillRemainingAmount(0, total);
                 final updated = ref
                     .read(paymentControllerProvider)
                     .splitSlots[0]
                     .amount;
-                _amountController.text = updated == null
+                amountController.text = updated == null
                     ? ''
                     : formatAmountForField(updated);
               },
@@ -999,33 +1409,43 @@ class _CashRowState extends ConsumerState<_CashRow> {
 /// One E-payment split block: method dropdown, Reference ID, Amount.
 /// Used for the single E-payment slot in Cash+E-Payment (`index: 1`) and
 /// for both slots in E-Payment+E-Payment (`index: 0` and `index: 1`).
+/// The amount field's controller and numpad-activation are owned by the
+/// parent `_SplitLayout`; this widget still owns its own Reference ID
+/// controller, since that field isn't numpad-driven and each block's
+/// reference text is genuinely independent of the other's.
 class _EPaymentBlock extends ConsumerStatefulWidget {
-  const _EPaymentBlock({required this.index, required this.title});
+  const _EPaymentBlock({
+    required this.index,
+    required this.title,
+    required this.amountController,
+    required this.amountFocusNode,
+    required this.isActive,
+    required this.onActivate,
+  });
 
   final int index;
   final String title;
+  final TextEditingController amountController;
+  final FocusNode amountFocusNode;
+  final bool isActive;
+  final VoidCallback onActivate;
 
   @override
   ConsumerState<_EPaymentBlock> createState() => _EPaymentBlockState();
 }
 
 class _EPaymentBlockState extends ConsumerState<_EPaymentBlock> {
-  late final TextEditingController _amountController;
   late final TextEditingController _referenceController;
 
   @override
   void initState() {
     super.initState();
     final slot = ref.read(paymentControllerProvider).splitSlots[widget.index];
-    _amountController = TextEditingController(
-      text: slot.amount == null ? '' : formatAmountForField(slot.amount!),
-    );
     _referenceController = TextEditingController(text: slot.referenceId ?? '');
   }
 
   @override
   void dispose() {
-    _amountController.dispose();
     _referenceController.dispose();
     super.dispose();
   }
@@ -1061,7 +1481,10 @@ class _EPaymentBlockState extends ConsumerState<_EPaymentBlock> {
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border, width: 1.5),
+        border: Border.all(
+          color: widget.isActive ? colors.primary : colors.border,
+          width: widget.isActive ? 2 : 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1137,16 +1560,26 @@ class _EPaymentBlockState extends ConsumerState<_EPaymentBlock> {
             ),
           ),
           const SizedBox(height: 14),
+          // readOnly + tap-to-activate, same as the Cash slot's amount
+          // field — this field's actual input comes from the shared
+          // numpad below both blocks, keyed to whichever slot was last
+          // tapped (see _SplitLayoutState._activeSlot). No wrapping
+          // GestureDetector (TextField.onTap already fires reliably on
+          // its own, and stacking one around a TextField only creates a
+          // tap-handling race); amountFocusNode (canRequestFocus: false)
+          // is what actually stops this field from taking real platform
+          // focus — see the matching comment in _CashRow for the full
+          // reasoning.
           SizedBox(
             width: double.infinity,
             height: primaryTapTarget,
             child: TextField(
-              controller: _amountController,
+              controller: widget.amountController,
+              focusNode: widget.amountFocusNode,
+              readOnly: true,
+              showCursor: true,
+              onTap: widget.onActivate,
               textAlign: TextAlign.right,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              inputFormatters: const [AmountInputFormatter()],
               style: AppTypography.ui(
                 color: colors.textPrimary,
                 fontSize: 18,
@@ -1156,7 +1589,9 @@ class _EPaymentBlockState extends ConsumerState<_EPaymentBlock> {
                 prefixText: '₱ ',
                 labelText: 'Amount',
                 filled: true,
-                fillColor: colors.surfaceVariant,
+                fillColor: widget.isActive
+                    ? colors.primaryContainer.withValues(alpha: 0.4)
+                    : colors.surfaceVariant,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,
@@ -1166,24 +1601,19 @@ class _EPaymentBlockState extends ConsumerState<_EPaymentBlock> {
                   borderSide: BorderSide.none,
                 ),
               ),
-              onChanged: (text) {
-                notifier.setSplitSlotAmount(
-                  widget.index,
-                  parseAmountField(text),
-                );
-              },
             ),
           ),
           const SizedBox(height: 12),
           // Stacked below the amount field rather than squeezed beside
-          // it — in the now-narrower Expanded column this keeps REST at
-          // full tap-target width instead of shrinking it to fit next
-          // to the field.
+          // it — in the now-narrower Expanded column this keeps FILL
+          // REMAINING at full tap-target width instead of shrinking it
+          // to fit next to the field.
           SizedBox(
             width: double.infinity,
             height: primaryTapTarget,
             child: OutlinedButton(
               onPressed: () {
+                widget.onActivate();
                 ref
                     .read(paymentControllerProvider.notifier)
                     .fillRemainingAmount(
@@ -1194,7 +1624,7 @@ class _EPaymentBlockState extends ConsumerState<_EPaymentBlock> {
                     .read(paymentControllerProvider)
                     .splitSlots[widget.index]
                     .amount;
-                _amountController.text = updated == null
+                widget.amountController.text = updated == null
                     ? ''
                     : formatAmountForField(updated);
               },
@@ -1286,6 +1716,79 @@ class _WarningBanner extends StatelessWidget {
               text,
               style: AppTypography.ui(color: colors.danger, fontSize: 14),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// --- Numpad rail ---------------------------------------------------
+
+/// A fixed-width panel that pins an `AmountNumpad` to the right edge of
+/// whichever screen hosts it, outside that screen's own scrollable
+/// content. It never scrolls — the numpad is a permanent part of the
+/// layout the same way a physical POS terminal's number pad is a fixed
+/// panel, not something that moves around depending on how much other
+/// content is above it. A vertical divider marks the boundary so the
+/// two regions (scrollable content vs. fixed numpad) read as distinct
+/// even though they share one background color.
+class _NumpadRail extends StatelessWidget {
+  const _NumpadRail({
+    required this.controller,
+    required this.onChanged,
+    this.activeSlotLabel,
+  });
+
+  final TextEditingController controller;
+  final ValueChanged<double?> onChanged;
+
+  /// Optional header text shown above the numpad — used on the split
+  /// screens, where two amount fields are visible at once, to make
+  /// "which one is this numpad about to type into" unambiguous even
+  /// before the cashier looks closely at which block has the
+  /// highlighted border. Omitted on single-field screens (like
+  /// _CashScreen) where there's nothing to disambiguate.
+  final String? activeSlotLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      // Widened from the original 320 — the numpad itself now fills
+      // whatever width/height this rail gives it (see AmountNumpad),
+      // so a narrow rail directly limited how large each key could be.
+      // 380 keeps keys comfortably above the touch-target floor even
+      // accounting for the rail's own padding and the gaps between
+      // keys.
+      width: 380,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colors.surfaceVariant.withValues(alpha: 0.3),
+        border: Border(left: BorderSide(color: colors.borderSubtle)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (activeSlotLabel != null) ...[
+            Text(
+              activeSlotLabel!,
+              textAlign: TextAlign.center,
+              style: AppTypography.ui(
+                color: colors.primary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          // Expanded, not just placed in the Column, so the numpad
+          // claims all the rail's remaining height (the label above
+          // takes only what it needs) rather than sizing to its own
+          // minimum and leaving empty space above/below it — that gap
+          // was exactly what made the numpad look small before.
+          Expanded(
+            child: AmountNumpad(controller: controller, onChanged: onChanged),
           ),
         ],
       ),

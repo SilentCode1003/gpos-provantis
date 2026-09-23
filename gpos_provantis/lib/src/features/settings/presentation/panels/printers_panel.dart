@@ -2,10 +2,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../controllers/app_settings_controller.dart';
 import '../controllers/settings_controller.dart';
+import '../controllers/usb_scan_controller.dart';
 import 'package:gpos_provantis/src/core/database/domain/printer_dto.dart';
+import 'package:gpos_provantis/src/core/database/domain/settings_dto.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import '../screens/settings_shared.dart';
+import 'package:gpos_provantis/src/services/printing/usb_printing.dart';
+import 'package:gpos_provantis/src/services/printing/wifi_printing.dart';
+import 'package:flutter_thermal_printer/utils/printer.dart';
 
 /// =========================================================================
 /// PRINTERS PANEL — list/add/edit/test printers backed by `PrinterDto` and
@@ -16,6 +22,12 @@ import '../screens/settings_shared.dart';
 /// etc.) don't require touching or re-reading the rest of the settings
 /// screen. Everything below is private to this file except `PrintersPanel`
 /// itself, which the settings shell references from its section list.
+///
+/// PRINTER ASSIGNMENT — below the printer list, the user picks which saved
+/// printer is the Main printer and which is the Sub printer. Only the
+/// printer's uuid (`PrinterDto.id`) is stored, in the `mainPrinter` /
+/// `subPrinter` columns of the settings row, saved through
+/// `appSettingsProvider`. `UNREGISTERED` means "not assigned".
 /// =========================================================================
 
 /// -----------------------------------------------------------------------
@@ -37,6 +49,28 @@ IconData _connectionTypeIcon(String type) => switch (type) {
 /// `error` state slots in without reshaping the row widget.
 enum _PrinterStatus { online, offline }
 
+/// The two jobs a saved printer can be assigned to. The choice is stored
+/// as the printer's uuid in the matching settings column.
+enum _PrinterRole {
+  main('Main printer', Icons.print_rounded),
+  sub('Sub printer', Icons.print_outlined);
+
+  const _PrinterRole(this.label, this.icon);
+
+  final String label;
+  final IconData icon;
+}
+
+/// Finds the saved printer whose uuid is [id]. Returns `null` when nothing
+/// is assigned (`UNREGISTERED`) or when the stored uuid no longer matches
+/// any saved printer, so a stale assignment simply shows as "Not assigned".
+PrinterDto? _printerById(List<PrinterDto> printers, String id) {
+  for (final printer in printers) {
+    if (printer.id == id) return printer;
+  }
+  return null;
+}
+
 class PrintersPanel extends ConsumerStatefulWidget {
   const PrintersPanel();
 
@@ -45,6 +79,9 @@ class PrintersPanel extends ConsumerStatefulWidget {
 }
 
 class _PrintersPanelState extends ConsumerState<PrintersPanel> {
+  final _usbPrinterService = UsbPrinterService();
+  final _wifiPrinterService = WifiPrinterService();
+
   Future<void> _openAddPrinterSheet() async {
     final result = await showModalBottomSheet<PrinterDto>(
       context: context,
@@ -75,17 +112,95 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
     }
   }
 
-  void _removePrinter(PrinterDto printer) {
-    ref.read(settingsControllerProvider.notifier).removePrinter(printer.id);
+  Future<void> _removePrinter(PrinterDto printer) async {
+    try {
+      await ref
+          .read(settingsControllerProvider.notifier)
+          .removePrinter(printer.id);
+
+      // If this printer was the main or sub printer, un-assign it so the
+      // settings never point at a printer that no longer exists.
+      await ref
+          .read(appSettingsProvider.notifier)
+          .clearPrinterAssignment(printer.id);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not remove printer: $e')));
+    }
   }
 
-  /// Placeholder test action — sends nothing yet, just gives the cashier
-  /// feedback that the tap registered. Wire up to a real test-print job
-  /// once the printing service is in place.
-  void _testPrinter(BuildContext context, PrinterDto printer) {
-    ScaffoldMessenger.of(context).showSnackBar(
+  /// Opens the picker for [role] and saves the choice. Only the printer's
+  /// uuid is stored; picking "None" stores `UNREGISTERED` (via null).
+  Future<void> _openPrinterPicker({
+    required _PrinterRole role,
+    required List<PrinterDto> printers,
+    required String? selectedId,
+  }) async {
+    final result = await showModalBottomSheet<_PickResult>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _PrinterPickerSheet(
+        role: role,
+        printers: printers,
+        selectedId: selectedId,
+      ),
+    );
+
+    // Dismissed without choosing anything.
+    if (result == null) return;
+
+    final notifier = ref.read(appSettingsProvider.notifier);
+    try {
+      switch (role) {
+        case _PrinterRole.main:
+          await notifier.setMainPrinter(result.printerId);
+        case _PrinterRole.sub:
+          await notifier.setSubPrinter(result.printerId);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not save the ${role.label.toLowerCase()}.'),
+        ),
+      );
+    }
+  }
+
+  /// Sends a real test ticket to [printer], routed to the USB or WiFi
+  /// service based on its saved connection type. Bluetooth isn't wired up
+  /// yet — there's no `BluetoothPrinterService` in this project — so that
+  /// case shows a clear "not supported yet" message instead of silently
+  /// doing nothing.
+  Future<void> _testPrinter(BuildContext context, PrinterDto printer) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
       SnackBar(content: Text('Sending test print to ${printer.name}…')),
     );
+
+    try {
+      switch (printer.connectionType) {
+        case 'USB':
+          await _usbPrinterService.printTestPage(printer);
+        case 'WIFI':
+          await _wifiPrinterService.printTestPage(printer);
+        case 'BLUETOOTH':
+          throw Exception('Bluetooth printing isn\'t wired up yet.');
+        default:
+          throw Exception('Unknown connection type: ${printer.connectionType}');
+      }
+
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Test print sent to ${printer.name}.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('Test print failed: $e')));
+    }
   }
 
   Future<void> _openActionsSheet(PrinterDto printer) async {
@@ -170,6 +285,8 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final printersAsync = ref.watch(settingsControllerProvider);
+    final settings =
+        ref.watch(appSettingsProvider).value ?? SettingsDto.defaults();
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -233,6 +350,22 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
                     _AddPrinterSlot(onTap: _openAddPrinterSheet),
                   ],
                 ),
+              ),
+            ),
+            const SizedBox(height: Space.xxl),
+            _PrinterAssignmentSection(
+              mainPrinter: _printerById(printers, settings.mainPrinter),
+              subPrinter: _printerById(printers, settings.subPrinter),
+              hasPrinters: printers.isNotEmpty,
+              onSelect: (role) => _openPrinterPicker(
+                role: role,
+                printers: printers,
+                selectedId: _printerById(
+                  printers,
+                  role == _PrinterRole.main
+                      ? settings.mainPrinter
+                      : settings.subPrinter,
+                )?.id,
               ),
             ),
           ],
@@ -418,6 +551,352 @@ class _AddPrinterSlot extends StatelessWidget {
 }
 
 /// -----------------------------------------------------------------------
+/// PRINTER ASSIGNMENT — two rows (Main / Sub). Tapping one opens a sheet
+/// listing every saved printer to pick from.
+/// -----------------------------------------------------------------------
+
+class _PrinterAssignmentSection extends StatelessWidget {
+  const _PrinterAssignmentSection({
+    required this.mainPrinter,
+    required this.subPrinter,
+    required this.hasPrinters,
+    required this.onSelect,
+  });
+
+  final PrinterDto? mainPrinter;
+  final PrinterDto? subPrinter;
+  final bool hasPrinters;
+  final ValueChanged<_PrinterRole> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Assigned printers',
+          style: AppTypography.display(
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            color: colors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: Space.xs),
+        Text(
+          'Choose which saved printer is the main printer and which is the '
+          'sub printer',
+          style: AppTypography.ui(fontSize: 15, color: colors.textSecondary),
+        ),
+        const SizedBox(height: Space.lg),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: colors.borderSubtle),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(17),
+            child: Column(
+              children: [
+                _AssignmentRow(
+                  role: _PrinterRole.main,
+                  printer: mainPrinter,
+                  enabled: hasPrinters,
+                  onTap: () => onSelect(_PrinterRole.main),
+                ),
+                Divider(height: 1, thickness: 1, color: colors.borderSubtle),
+                _AssignmentRow(
+                  role: _PrinterRole.sub,
+                  printer: subPrinter,
+                  enabled: hasPrinters,
+                  onTap: () => onSelect(_PrinterRole.sub),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (!hasPrinters) ...[
+          const SizedBox(height: Space.md),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Space.xs),
+            child: Text(
+              'Add a printer above to assign it.',
+              style: AppTypography.ui(
+                fontSize: 13,
+                color: colors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _AssignmentRow extends StatelessWidget {
+  const _AssignmentRow({
+    required this.role,
+    required this.printer,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final _PrinterRole role;
+  final PrinterDto? printer;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final assigned = printer;
+
+    return Material(
+      color: colors.surface,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 76),
+          padding: const EdgeInsets.symmetric(
+            horizontal: Space.lg,
+            vertical: Space.md,
+          ),
+          child: Row(
+            children: [
+              Icon(role.icon, size: 22, color: colors.textSecondary),
+              const SizedBox(width: Space.lg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      role.label,
+                      style: AppTypography.ui(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      assigned == null
+                          ? 'Not assigned'
+                          : '${assigned.name} · '
+                                '${_connectionLabel(assigned.connectionType)}',
+                      style: AppTypography.ui(
+                        fontSize: 13,
+                        color: assigned == null
+                            ? colors.textDisabled
+                            : colors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: Space.md),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: colors.textDisabled,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// What the picker sheet returns. Wrapping the id lets "None" (a `null`
+/// printerId) be told apart from the sheet simply being dismissed (where
+/// the sheet itself returns `null`).
+class _PickResult {
+  const _PickResult(this.printerId);
+
+  final String? printerId;
+}
+
+class _PrinterPickerSheet extends StatelessWidget {
+  const _PrinterPickerSheet({
+    required this.role,
+    required this.printers,
+    required this.selectedId,
+  });
+
+  final _PrinterRole role;
+  final List<PrinterDto> printers;
+
+  /// The uuid of the printer currently assigned to [role], or `null` if
+  /// none (which highlights the "None" row).
+  final String? selectedId;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.8,
+      ),
+      padding: const EdgeInsets.fromLTRB(
+        Space.lg,
+        Space.md,
+        Space.lg,
+        Space.xxl,
+      ),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: Space.lg),
+                decoration: BoxDecoration(
+                  color: colors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: Space.sm),
+              child: Text(
+                'Select ${role.label.toLowerCase()}',
+                style: AppTypography.ui(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(height: Space.md),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final printer in printers)
+                    _PickerTile(
+                      icon: _connectionTypeIcon(printer.connectionType),
+                      title: printer.name,
+                      subtitle:
+                          '${_connectionLabel(printer.connectionType)} · '
+                          '${printer.address}',
+                      selected: printer.id == selectedId,
+                      onTap: () =>
+                          Navigator.of(context).pop(_PickResult(printer.id)),
+                    ),
+                  _PickerTile(
+                    icon: Icons.block_rounded,
+                    title: 'None',
+                    subtitle: 'Leave this printer unassigned',
+                    selected: selectedId == null,
+                    onTap: () =>
+                        Navigator.of(context).pop(const _PickResult(null)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PickerTile extends StatelessWidget {
+  const _PickerTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Space.xs),
+      child: Material(
+        color: selected
+            ? colors.primaryContainer.withValues(alpha: 0.35)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 68),
+            padding: const EdgeInsets.symmetric(
+              horizontal: Space.md,
+              vertical: Space.sm,
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 22, color: colors.textSecondary),
+                const SizedBox(width: Space.lg),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTypography.ui(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: AppTypography.ui(
+                          fontSize: 13,
+                          color: colors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: Space.md),
+                Icon(
+                  selected
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: 24,
+                  color: selected ? colors.primary : colors.textDisabled,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// -----------------------------------------------------------------------
 /// PRINTER FORM SHEET — shared by both Add and Edit. Passing `existing`
 /// pre-fills every field and switches the sheet into edit mode (title and
 /// submit label change accordingly); omitting it is the add flow.
@@ -426,7 +905,7 @@ class _AddPrinterSlot extends StatelessWidget {
 const _connectionTypes = ['BLUETOOTH', 'WIFI', 'USB'];
 const _paperSizes = ['58', '72', '80'];
 
-class _PrinterFormSheet extends StatefulWidget {
+class _PrinterFormSheet extends ConsumerStatefulWidget {
   const _PrinterFormSheet({this.existing});
 
   /// When set, the sheet opens pre-filled for editing this printer rather
@@ -436,10 +915,10 @@ class _PrinterFormSheet extends StatefulWidget {
   bool get isEditing => existing != null;
 
   @override
-  State<_PrinterFormSheet> createState() => _PrinterFormSheetState();
+  ConsumerState<_PrinterFormSheet> createState() => _PrinterFormSheetState();
 }
 
-class _PrinterFormSheetState extends State<_PrinterFormSheet> {
+class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
   final _formKey = GlobalKey<FormState>();
   late final _nameController = TextEditingController(
     text: widget.existing?.name ?? '',
@@ -452,6 +931,12 @@ class _PrinterFormSheetState extends State<_PrinterFormSheet> {
   String? _paperSize;
   bool _showConnectionError = false;
   bool _showPaperSizeError = false;
+
+  /// The USB device the user tapped in the scan results. `null` until they
+  /// pick one, even if editing a printer that was originally USB — on
+  /// edit, `_addressController` already carries the saved address, and a
+  /// fresh pick here is what overrides it.
+  Printer? _selectedUsbDevice;
 
   @override
   void initState() {
@@ -531,11 +1016,18 @@ class _PrinterFormSheetState extends State<_PrinterFormSheet> {
 
   void _submit() {
     final formValid = _formKey.currentState!.validate();
+    final addressMissing = _addressController.text.trim().isEmpty;
     setState(() {
       _showConnectionError = _connectionType == null;
       _showPaperSizeError = _paperSize == null;
     });
     if (!formValid || _connectionType == null || _paperSize == null) return;
+    if (_connectionType == 'USB' && addressMissing) {
+      // The USB branch swaps the text field for the device picker, so
+      // there's no Form validator catching this — enforce it here instead.
+      setState(() {});
+      return;
+    }
 
     final printer = PrinterDto(
       id:
@@ -637,10 +1129,20 @@ class _PrinterFormSheetState extends State<_PrinterFormSheet> {
                       options: _connectionTypes,
                       selected: _connectionType,
                       iconFor: _connectionTypeIcon,
-                      onSelected: (value) => setState(() {
-                        _connectionType = value;
-                        _showConnectionError = false;
-                      }),
+                      onSelected: (value) {
+                        setState(() {
+                          _connectionType = value;
+                          _showConnectionError = false;
+                        });
+                        final scanController = ref.read(
+                          usbScanControllerProvider.notifier,
+                        );
+                        if (value == 'USB') {
+                          scanController.start();
+                        } else {
+                          scanController.stop();
+                        }
+                      },
                     ),
                     if (_showConnectionError) ...[
                       const SizedBox(height: Space.sm),
@@ -650,16 +1152,36 @@ class _PrinterFormSheetState extends State<_PrinterFormSheet> {
 
                     _FieldLabel(_addressLabel),
                     const SizedBox(height: Space.sm),
-                    _TouchTextField(
-                      controller: _addressController,
-                      hintText: _addressHint,
-                      textInputAction: TextInputAction.next,
-                      enabled: _connectionType != null,
-                      validator: (value) =>
-                          (value == null || value.trim().isEmpty)
-                          ? "Enter the printer's address"
-                          : null,
-                    ),
+                    if (_connectionType == 'USB')
+                      _UsbDevicePicker(
+                        selectedDevice: _selectedUsbDevice,
+                        onDeviceSelected: (device) {
+                          setState(() {
+                            _selectedUsbDevice = device;
+                            _addressController.text = device.address ?? '';
+                            if (_nameController.text.trim().isEmpty &&
+                                device.name != null) {
+                              _nameController.text = device.name!;
+                            }
+                          });
+                        },
+                      )
+                    else
+                      _TouchTextField(
+                        controller: _addressController,
+                        hintText: _addressHint,
+                        textInputAction: TextInputAction.next,
+                        enabled: _connectionType != null,
+                        validator: (value) =>
+                            (value == null || value.trim().isEmpty)
+                            ? "Enter the printer's address"
+                            : null,
+                      ),
+                    if (_connectionType == 'USB' &&
+                        _addressController.text.trim().isEmpty) ...[
+                      const SizedBox(height: Space.sm),
+                      const _ErrorText('Select a USB device'),
+                    ],
                     const SizedBox(height: Space.xxl),
 
                     const _FieldLabel('Paper size'),
@@ -706,6 +1228,183 @@ class _PrinterFormSheetState extends State<_PrinterFormSheet> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Scan button + live device list for the USB branch of the printer form.
+/// Watches `usbScanControllerProvider`, so it updates as devices are found
+/// without the parent form needing to know anything about the scan stream.
+class _UsbDevicePicker extends ConsumerWidget {
+  const _UsbDevicePicker({
+    required this.selectedDevice,
+    required this.onDeviceSelected,
+  });
+
+  final Printer? selectedDevice;
+  final ValueChanged<Printer> onDeviceSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final scanState = ref.watch(usbScanControllerProvider);
+    final scanController = ref.read(usbScanControllerProvider.notifier);
+
+    return Container(
+      padding: const EdgeInsets.all(Space.md),
+      decoration: BoxDecoration(
+        color: colors.surfaceVariant,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Material(
+            color: scanState.isScanning ? colors.danger : colors.primary,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: scanState.isScanning
+                  ? scanController.stop
+                  : scanController.start,
+              child: Container(
+                height: 56,
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      scanState.isScanning
+                          ? Icons.stop_rounded
+                          : Icons.search_rounded,
+                      size: 20,
+                      color: colors.onPrimary,
+                    ),
+                    const SizedBox(width: Space.sm),
+                    Text(
+                      scanState.isScanning
+                          ? 'Stop scanning'
+                          : 'Scan for USB printers',
+                      style: AppTypography.ui(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: colors.onPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (scanState.isScanning) ...[
+            const SizedBox(height: Space.sm),
+            const LinearProgressIndicator(),
+          ],
+          if (selectedDevice != null) ...[
+            const SizedBox(height: Space.sm),
+            Container(
+              padding: const EdgeInsets.all(Space.sm),
+              decoration: BoxDecoration(
+                color: colors.success.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: colors.success),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle_rounded,
+                    size: 18,
+                    color: colors.success,
+                  ),
+                  const SizedBox(width: Space.sm),
+                  Expanded(
+                    child: Text(
+                      'Selected: ${selectedDevice!.name ?? selectedDevice!.address}',
+                      style: AppTypography.ui(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: colors.success,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (scanState.devices.isNotEmpty) ...[
+            const SizedBox(height: Space.sm),
+            Container(
+              constraints: const BoxConstraints(maxHeight: 220),
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: colors.borderSubtle),
+              ),
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: scanState.devices.length,
+                separatorBuilder: (_, __) =>
+                    Divider(height: 1, color: colors.borderSubtle),
+                itemBuilder: (context, index) {
+                  final device = scanState.devices[index];
+                  final isSelected = selectedDevice?.address == device.address;
+                  return Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => onDeviceSelected(device),
+                      child: Container(
+                        constraints: const BoxConstraints(minHeight: 60),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: Space.md,
+                          vertical: Space.sm,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    device.name ?? 'Unknown device',
+                                    style: AppTypography.ui(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: colors.textPrimary,
+                                    ),
+                                  ),
+                                  Text(
+                                    device.address ?? '—',
+                                    style: AppTypography.ui(
+                                      fontSize: 12,
+                                      color: colors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (isSelected)
+                              Icon(Icons.check_rounded, color: colors.success),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ] else if (!scanState.isScanning) ...[
+            const SizedBox(height: Space.sm),
+            Text(
+              'No USB printers found yet. Make sure it\'s plugged in and tap scan.',
+              style: AppTypography.ui(
+                fontSize: 13,
+                color: colors.textSecondary,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

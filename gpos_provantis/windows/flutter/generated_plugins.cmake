@@ -3,8 +3,10 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  flutter_thermal_printer
   screen_retriever_windows
   sqlite3_flutter_libs
+  universal_ble
   window_manager
 )
 

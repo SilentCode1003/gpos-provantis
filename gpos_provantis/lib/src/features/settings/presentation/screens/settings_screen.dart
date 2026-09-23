@@ -7,7 +7,10 @@ import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'settings_shared.dart';
 import '../panels/printers_panel.dart';
 import '../panels/theme_panel.dart';
+import '../panels/transactions_panel.dart';
+import '../panels/pos_config_panel.dart';
 import '../panels/placeholder_panels.dart';
+import '../panels/counter_display_panel.dart';
 
 /// =========================================================================
 /// SETTINGS SCREEN — touch-first layout for a counter-mounted POS panel.
@@ -22,12 +25,15 @@ import '../panels/placeholder_panels.dart';
 /// cashier already typed.
 ///
 /// Sections:
-///   1. Printers — list/add/edit/test printers (fields based on `PrinterDto`)
-///   2. Sync     — placeholder
-///   3. System   — placeholder
-///   4. Theme    — light/system/dark toggle
-///   5. Users    — placeholder (staff/PIN access)
-///   6. About    — placeholder (app version, support info)
+///   1. Printers          — list/add/edit/test printers (fields based on `PrinterDto`)
+///   2. Transactions      — receipt/transaction behavior toggles
+///   3. POS Config        — company/BIR details printed on official receipts
+///   4. Sync              — placeholder
+///   5. System            — placeholder
+///   6. Theme             — light/system/dark toggle
+///   7. Users             — placeholder (staff/PIN access)
+///   8. Counter Display   — placeholder (customer-facing screen)
+///   9. About             — placeholder (app version, support info)
 ///
 /// This file is the shell only: nav strip, top bar, and switching between
 /// sections. Each section's actual content lives in its own file under
@@ -52,6 +58,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: PrintersPanel.new,
     ),
     SettingsSection(
+      label: 'Transactions',
+      icon: Icons.receipt_long_rounded,
+      builder: TransactionsPanel.new,
+    ),
+    SettingsSection(
+      label: 'POS Config',
+      icon: Icons.storefront_rounded,
+      builder: PosConfigPanel.new,
+    ),
+    SettingsSection(
       label: 'Sync',
       icon: Icons.sync_rounded,
       builder: SyncPanel.new,
@@ -70,6 +86,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       label: 'Users',
       icon: Icons.badge_rounded,
       builder: UsersPanel.new,
+    ),
+    SettingsSection(
+      label: 'Counter Display',
+      icon: Icons.monitor_rounded,
+      builder: CounterDisplayPanel.new,
     ),
   ];
 
@@ -280,24 +301,25 @@ class _NavStrip extends StatelessWidget {
     final colors = context.colors;
 
     return Container(
-      width: 84,
+      width: 128,
       color: colors.surface,
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(Space.sm),
-            child: Column(
-              children: [
-                for (var i = 0; i < sections.length; i++)
-                  _NavTile(
-                    section: sections[i],
-                    selected: i == selectedIndex,
-                    onTap: () => onSelect(i),
-                  ),
-              ],
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(Space.sm),
+              child: Column(
+                children: [
+                  for (var i = 0; i < sections.length; i++)
+                    _NavTile(
+                      section: sections[i],
+                      selected: i == selectedIndex,
+                      onTap: () => onSelect(i),
+                    ),
+                ],
+              ),
             ),
           ),
-          const Spacer(),
           Padding(
             padding: const EdgeInsets.all(Space.sm),
             child: _NavTile(
@@ -339,24 +361,29 @@ class _NavTile extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Container(
-            width: 68,
-            height: compact ? 60 : 68,
+            width: 112,
+            constraints: BoxConstraints(minHeight: compact ? 72 : 84),
+            padding: const EdgeInsets.symmetric(vertical: Space.md),
             alignment: Alignment.center,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   section.icon,
-                  size: compact ? 19 : 22,
+                  size: compact ? 24 : 28,
                   color: selected ? colors.onPrimary : colors.textSecondary,
                 ),
-                const SizedBox(height: Space.xs),
+                const SizedBox(height: Space.sm),
                 Text(
                   section.label,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: AppTypography.ui(
-                    fontSize: compact ? 10 : 11,
+                    fontSize: compact ? 12 : 13,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                     color: selected ? colors.onPrimary : colors.textSecondary,
+                    height: 1.15,
                   ),
                 ),
               ],

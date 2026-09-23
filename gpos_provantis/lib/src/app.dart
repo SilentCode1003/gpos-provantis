@@ -5,6 +5,7 @@ import 'package:device_preview_plus/device_preview_plus.dart';
 import 'core/theme/theme.dart';
 import 'routing/app_router.dart';
 import 'services/sync/overlay/catalog_sync_overlay.dart';
+import 'services/sync/controller/sales_sync_controller.dart';
 
 class GposProvantisApp extends ConsumerWidget {
   const GposProvantisApp({super.key});
@@ -13,6 +14,17 @@ class GposProvantisApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final goRouter = ref.watch(goRouterProvider);
     final themeMode = ref.watch(themeModeControllerProvider);
+
+    // Starts the background sales-upload service for the lifetime of
+    // the app — see sales_sync_controller.dart's file doc comment.
+    // salesSyncControllerProvider is keepAlive, so simply reading it
+    // once here is what makes its build() run (and its internal
+    // Timer.periodic start) the first time the app widget tree builds;
+    // nothing else about this widget needs the state itself, hence
+    // ref.watch with the value unused rather than assigned to a
+    // variable — watching (not read) so this stays wired up the same
+    // way if the provider is ever invalidated/rebuilt.
+    ref.watch(salesSyncControllerProvider);
 
     // 1. Initialize ScreenUtil for the 2015-2026 Android range
     return ScreenUtilInit(

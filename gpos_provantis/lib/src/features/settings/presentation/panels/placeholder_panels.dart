@@ -59,6 +59,21 @@ class UsersPanel extends StatelessWidget {
   }
 }
 
+// class CounterDisplayPanel extends StatelessWidget {
+//   const CounterDisplayPanel();
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return const PanelPlaceholder(
+//       icon: Icons.monitor_rounded,
+//       title: 'Counter Display',
+//       description:
+//           'Configure the customer-facing display — layout, promo/idle '
+//           'screen content, and connection to a secondary screen.',
+//     );
+//   }
+// }
+
 class AboutPanel extends StatelessWidget {
   const AboutPanel();
 

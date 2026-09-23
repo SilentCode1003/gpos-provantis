@@ -37,6 +37,15 @@ import 'package:flutter/services.dart';
 /// just typed instead of jumping to the end of the field on every
 /// keystroke — the naive approach (reformat and leave the cursor at
 /// newValue.selection) breaks exactly that way.
+///
+/// TWO ENTRY POINTS, ONE RULESET: `AmountInputFormatter` (a
+/// `TextInputFormatter`) handles real typed/pasted edits; `NumpadKey` +
+/// `applyNumpadKey` handle taps on the on-screen numpad
+/// (`AmountNumpad`, in amount_numpad.dart) this POS uses instead of the
+/// OS soft keyboard. Both funnel through `_AmountEditCore.reformat` so
+/// the two input paths enforce identical rules and can't quietly drift
+/// apart — a numpad tap and the equivalent keystroke always produce the
+/// same result.
 /// =========================================================================
 
 /// Formats a known-good double as grouped, fixed-2-decimal text — e.g.
@@ -75,80 +84,152 @@ class _AmountInputFormatterGrouping {
   }
 }
 
-class AmountInputFormatter extends TextInputFormatter {
-  const AmountInputFormatter({this.maxDecimalDigits = 2});
+/// One key on the numpad: a digit 0-9, the decimal point, or backspace.
+/// Modeled as a sealed-ish enum rather than passing raw strings around,
+/// so `applyNumpadKey` below can't be called with something that isn't
+/// actually a key on the pad.
+enum NumpadKey {
+  d0,
+  d1,
+  d2,
+  d3,
+  d4,
+  d5,
+  d6,
+  d7,
+  d8,
+  d9,
+  point,
+  backspace;
 
-  final int maxDecimalDigits;
+  /// The literal character this key inserts, or null for backspace
+  /// (which removes rather than inserts).
+  String? get character {
+    switch (this) {
+      case NumpadKey.d0:
+        return '0';
+      case NumpadKey.d1:
+        return '1';
+      case NumpadKey.d2:
+        return '2';
+      case NumpadKey.d3:
+        return '3';
+      case NumpadKey.d4:
+        return '4';
+      case NumpadKey.d5:
+        return '5';
+      case NumpadKey.d6:
+        return '6';
+      case NumpadKey.d7:
+        return '7';
+      case NumpadKey.d8:
+        return '8';
+      case NumpadKey.d9:
+        return '9';
+      case NumpadKey.point:
+        return '.';
+      case NumpadKey.backspace:
+        return null;
+    }
+  }
+}
 
+/// Applies one [NumpadKey] tap to the field's current grouped/formatted
+/// text and cursor position, returning the new formatted text +
+/// selection — the exact same result the `TextInputFormatter` below
+/// would produce for the equivalent keystroke, since both route through
+/// `_AmountEditCore.apply`. This is what lets the on-screen numpad and
+/// (if a hardware/barcode-scanner keyboard is ever plugged into a
+/// terminal) real typing stay behaviorally identical rather than
+/// silently drifting into two different rule sets over time.
+TextEditingValue applyNumpadKey(TextEditingValue current, NumpadKey key) {
+  final text = current.text;
+  final cursor = current.selection.end < 0
+      ? text.length
+      : current.selection.end;
+
+  final String rawNext;
+  final int rawCursorAfterEdit;
+  if (key == NumpadKey.backspace) {
+    if (cursor <= 0) return current; // nothing before the cursor to remove
+    // Deleting a comma should remove the digit before it too — a comma
+    // is display formatting the cashier never typed, so backspacing
+    // "onto" one should feel like backspacing past it, not require a
+    // second tap that appears to do nothing.
+    var deleteFrom = cursor - 1;
+    if (text[deleteFrom] == ',') deleteFrom -= 1;
+    if (deleteFrom < 0) return current;
+    rawNext = text.substring(0, deleteFrom) + text.substring(cursor);
+    rawCursorAfterEdit = deleteFrom;
+  } else {
+    final char = key.character!;
+    rawNext = text.substring(0, cursor) + char + text.substring(cursor);
+    rawCursorAfterEdit = cursor + char.length;
+  }
+
+  return _AmountEditCore.reformat(
+    rawText: rawNext,
+    rawCursor: rawCursorAfterEdit,
+    fallback: current,
+  );
+}
+
+/// Core "given raw (possibly just-edited, possibly still comma-grouped)
+/// text and a raw cursor position, produce the validated/reformatted
+/// result" logic — shared by the character-by-character
+/// `TextInputFormatter` (below) and `applyNumpadKey` (above), so the
+/// two input paths can never quietly disagree about what's a valid
+/// amount.
+class _AmountEditCore {
+  static const int maxDecimalDigits = 2;
   static final RegExp _validCharacter = RegExp(r'^[0-9.,]$');
 
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final newText = newValue.text;
-
-    // Empty is always allowed — the field being cleared out entirely is
-    // a normal, valid intermediate state, not something to reject.
-    if (newText.isEmpty) {
-      return newValue;
+  /// Returns the reformatted, validated TextEditingValue, or [fallback]
+  /// unchanged if the edit described by [rawText]/[rawCursor] isn't a
+  /// valid amount edit (bad character, second decimal point, too many
+  /// decimal digits, or a leading zero run).
+  static TextEditingValue reformat({
+    required String rawText,
+    required int rawCursor,
+    required TextEditingValue fallback,
+  }) {
+    if (rawText.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
     }
 
-    // Reject anything that isn't a digit, a decimal point, or a comma
-    // outright — this is what stops a hardware/software keyboard's
-    // letter keys from ever landing in the field. Commas are accepted
-    // here only so this formatter can strip and re-lay them itself
-    // below; nothing downstream treats a user-typed comma as
-    // meaningful on its own.
-    for (final char in newText.split('')) {
-      if (!_validCharacter.hasMatch(char)) return oldValue;
+    for (final char in rawText.split('')) {
+      if (!_validCharacter.hasMatch(char)) return fallback;
     }
 
-    // How many "significant" characters (digits, plus a decimal point
-    // if one precedes the cursor) sat before the cursor in the new
-    // value — commas don't count, since they're pure display
-    // formatting this formatter inserts/removes on its own. The
-    // decimal point DOES count here, unlike in the digit-only count
-    // used elsewhere: if it didn't, typing "123" + "." would anchor
-    // the cursor to "after the 3rd digit", which sits *before* the
-    // dot the user just typed rather than after it — landing back on
-    // the ones place instead of moving into the cents.
-    final cursorIndex = newValue.selection.end < 0
-        ? newText.length
-        : newValue.selection.end;
-    final textBeforeCursor = newText.substring(0, cursorIndex);
+    final textBeforeCursor = rawText.substring(
+      0,
+      rawCursor.clamp(0, rawText.length),
+    );
     final digitsBeforeCursor = textBeforeCursor
         .replaceAll(RegExp(r'[^0-9]'), '')
         .length;
     final dotIsBeforeCursor = textBeforeCursor.contains('.');
 
-    // Strip commas before validating/splitting — they're purely
-    // display formatting from here on, re-added at the end.
-    final unformatted = newText.replaceAll(',', '');
+    final unformatted = rawText.replaceAll(',', '');
 
-    // At most one decimal point.
     final dotCount = '.'.allMatches(unformatted).length;
-    if (dotCount > 1) return oldValue;
+    if (dotCount > 1) return fallback;
 
     final parts = unformatted.split('.');
     final wholePart = parts[0];
     final fractionPart = parts.length > 1 ? parts[1] : null;
 
-    // No leading zeros ("00", "007") other than a bare "0" or "0." —
-    // prevents a mis-tap from quietly turning "5" into "05" and then
-    // "005" without the cashier noticing the drift.
-    if (wholePart.length > 1 && wholePart.startsWith('0')) return oldValue;
+    if (wholePart.length > 1 && wholePart.startsWith('0')) return fallback;
 
-    // Cap decimal places at maxDecimalDigits (2 for currency) — a third
-    // typed digit after the point is simply not accepted, same as a
-    // stray letter wouldn't be.
     if (fractionPart != null && fractionPart.length > maxDecimalDigits) {
-      return oldValue;
+      return fallback;
     }
 
     final grouped =
-        _groupWholePart(wholePart) +
+        _AmountInputFormatterGrouping.groupWholePart(wholePart) +
         (fractionPart != null
             ? '.$fractionPart'
             : (unformatted.endsWith('.') ? '.' : ''));
@@ -174,7 +255,7 @@ class AmountInputFormatter extends TextInputFormatter {
   /// would leave the cursor sitting right before the dot instead of
   /// after it, which is what let the next digit typed land on the ones
   /// place instead of the cents place.
-  int _resolveCursorOffset(
+  static int _resolveCursorOffset(
     String text,
     int targetDigitCount,
     bool dotAlreadyTyped,
@@ -182,32 +263,16 @@ class AmountInputFormatter extends TextInputFormatter {
     final afterDigits = _offsetAfterNDigits(text, targetDigitCount);
     if (!dotAlreadyTyped) return afterDigits;
     final dotIndex = text.indexOf('.');
-    // The decimal point should sit at or immediately after
-    // afterDigits — step past it if it's right there, otherwise trust
-    // the digit-based offset (covers the "0 digits typed yet, cursor
-    // sits after a leading dot" edge case, which shouldn't normally
-    // arise since a lone "." isn't a valid amount, but stays safe
-    // either way).
     if (dotIndex >= 0 && dotIndex >= afterDigits) {
       return dotIndex + 1;
     }
     return afterDigits;
   }
 
-  /// Inserts thousands-separator commas into a whole-number digit
-  /// string: "1234567" -> "1,234,567". Assumes no existing punctuation
-  /// (callers strip commas before calling this). Delegates to the same
-  /// grouping logic `formatAmountForField` uses, so live-typed and
-  /// programmatically-set amounts always group identically.
-  String _groupWholePart(String digits) =>
-      _AmountInputFormatterGrouping.groupWholePart(digits);
-
   /// Finds the character offset in [text] that sits immediately after
   /// the [targetDigitCount]-th digit (commas and the decimal point
-  /// don't count). Used to re-anchor the cursor to "after the digit the
-  /// cashier just typed" rather than to a raw character index that's
-  /// meaningless once commas shift around it.
-  int _offsetAfterNDigits(String text, int targetDigitCount) {
+  /// don't count).
+  static int _offsetAfterNDigits(String text, int targetDigitCount) {
     if (targetDigitCount <= 0) return 0;
     var digitsSeen = 0;
     for (var i = 0; i < text.length; i++) {
@@ -217,6 +282,24 @@ class AmountInputFormatter extends TextInputFormatter {
       }
     }
     return text.length;
+  }
+}
+
+class AmountInputFormatter extends TextInputFormatter {
+  const AmountInputFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return _AmountEditCore.reformat(
+      rawText: newValue.text,
+      rawCursor: newValue.selection.end < 0
+          ? newValue.text.length
+          : newValue.selection.end,
+      fallback: oldValue,
+    );
   }
 }
 

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'category_visibility.dart';
 import 'dashboard_constants.dart';
 
 /// --- Product grid: label-forward, no image placeholders --------------------
@@ -19,6 +20,11 @@ import 'dashboard_constants.dart';
 /// placeholder inventory. Now that gap shows `_ProductGridLoadingState`
 /// instead, and `_EmptyCatalog` only appears once the stream has
 /// actually confirmed the (filtered) category has nothing in it.
+///
+/// HIDDEN CATEGORIES: products are only reachable through their category,
+/// and hidden categories get no tile or chip, so their products never
+/// appear. The check below is a safety net for the one odd case where the
+/// sheet is already open on a category that was hidden in the meantime.
 class ProductGrid extends ConsumerWidget {
   const ProductGrid({super.key});
 
@@ -28,9 +34,14 @@ class ProductGrid extends ConsumerWidget {
     // Watching state so the grid rebuilds on category swap, on every
     // keystroke in the sheet's search field, and as the products stream
     // moves from loading -> data (or -> error) after login/sync.
-    ref.watch(dashboardControllerProvider);
+    final state = ref.watch(dashboardControllerProvider);
+    final hidden = ref.watch(hiddenCategoryCodesProvider);
     final status = controller.productsStatus;
     final products = controller.productsForCatalogSheet();
+
+    if (isCategoryIdHidden(state.catalogSheetCategoryId, hidden)) {
+      return const _HiddenCategoryState();
+    }
 
     if (status == CatalogLoadStatus.loading) {
       return const _ProductGridLoadingState();
@@ -121,6 +132,39 @@ class _ProductGridErrorState extends ConsumerWidget {
             const SizedBox(height: 12),
             Text(
               'Couldn\'t load products.',
+              textAlign: TextAlign.center,
+              style: AppTypography.ui(color: colors.textDisabled, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown instead of the products if the open category has been hidden in
+/// Settings > Counter Display.
+class _HiddenCategoryState extends ConsumerWidget {
+  const _HiddenCategoryState();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.visibility_off_rounded,
+              size: 40,
+              color: colors.textDisabled,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'This category is hidden.',
               textAlign: TextAlign.center,
               style: AppTypography.ui(color: colors.textDisabled, fontSize: 14),
             ),

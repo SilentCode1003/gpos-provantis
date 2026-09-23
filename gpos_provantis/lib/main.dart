@@ -49,7 +49,7 @@ void main() async {
     WindowOptions windowOptions = const WindowOptions(
       center: true,
       title: "Gpos Provantis - Android Debug Mode",
-      fullScreen: true,
+      fullScreen: false,
     );
     windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.show();

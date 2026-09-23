@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'category_visibility.dart';
 import 'others_sheet.dart';
 import 'top_bar.dart';
 
@@ -74,9 +75,7 @@ class _ActionsRail extends ConsumerWidget {
         child: Row(
           children: [
             _ActionButton(
-              icon: isShiftOpen
-                  ? PhosphorIcons.stop
-                  : PhosphorIcons.play,
+              icon: isShiftOpen ? PhosphorIcons.stop : PhosphorIcons.play,
               label: isShiftOpen ? 'End shift' : 'Start shift',
               emphasized: !isShiftOpen,
               onTap: notifier.toggleShift,
@@ -200,6 +199,12 @@ class _ActionButton extends StatelessWidget {
 /// fall back to placeholder data. Now that gap shows `_CatalogLoadingState`
 /// instead, and `_CatalogEmptyState` only appears once the stream has
 /// actually confirmed there's nothing there.
+///
+/// HIDDEN CATEGORIES: categories the user switched off in Settings >
+/// Counter Display are filtered out before grouping (see
+/// `category_visibility.dart`). If that leaves nothing, `_CatalogAllHiddenState`
+/// says so — deliberately different from "No categories yet" so it never
+/// reads as a failed sync.
 class _CategoryGrid extends ConsumerWidget {
   const _CategoryGrid();
 
@@ -211,13 +216,20 @@ class _CategoryGrid extends ConsumerWidget {
     ref.watch(dashboardControllerProvider);
     final controller = ref.watch(dashboardControllerProvider.notifier);
     final status = controller.categoriesStatus;
-    final categories = controller.categories;
+    final hidden = ref.watch(hiddenCategoryCodesProvider);
+    // Wait for the settings row too, so a hidden category never flashes
+    // on screen for a frame before the setting has loaded.
+    final settingsLoading = ref.watch(
+      appSettingsProvider.select((s) => s.isLoading && !s.hasValue),
+    );
+    final allCategories = controller.categories;
+    final categories = filterVisibleCategories(allCategories, hidden);
 
     // Still syncing from the API into Drift — show a spinner rather than
     // "No categories yet", which previously got shown (briefly, or not
     // so briefly on a slow connection) right after login before the
     // first batch of categories had synced.
-    if (status == CatalogLoadStatus.loading) {
+    if (status == CatalogLoadStatus.loading || settingsLoading) {
       return _CatalogLoadingState(colors: colors);
     }
 
@@ -226,7 +238,10 @@ class _CategoryGrid extends ConsumerWidget {
     }
 
     if (categories.isEmpty) {
-      return _CatalogEmptyState(colors: colors);
+      // Categories exist, but every one of them is switched off.
+      return allCategories.isEmpty
+          ? _CatalogEmptyState(colors: colors)
+          : _CatalogAllHiddenState(colors: colors);
     }
 
     // Artificial grouping: anything with "Paint" in its name goes in the
@@ -418,6 +433,40 @@ class _CatalogEmptyState extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               'No categories yet',
+              textAlign: TextAlign.center,
+              style: AppTypography.ui(color: colors.textDisabled, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown when categories exist but the user has turned every one of them
+/// off in Settings > Counter Display.
+class _CatalogAllHiddenState extends StatelessWidget {
+  const _CatalogAllHiddenState({required this.colors});
+
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.visibility_off_rounded,
+              size: 40,
+              color: colors.textDisabled,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'All categories are hidden.\n'
+              'Turn them on in Settings > Counter Display.',
               textAlign: TextAlign.center,
               style: AppTypography.ui(color: colors.textDisabled, fontSize: 14),
             ),

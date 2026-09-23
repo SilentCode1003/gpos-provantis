@@ -6,6 +6,7 @@ import 'package:gpos_provantis/src/core/database/app_database.dart';
 import 'package:gpos_provantis/src/core/database/providers/discounts_dao_provider.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'dashboard_constants.dart';
 
 /// Opens the discount picker as a modal bottom sheet and applies
 /// whichever discount the cashier taps. Returns once the sheet is
@@ -65,6 +66,27 @@ class _DiscountPickerSheet extends ConsumerWidget {
                         discounts: discounts,
                         selectedDiscountId: state.selectedDiscount?.discountId,
                         onPick: (discount) {
+                          if (notifier.discountRequiresCustomerInfo(discount)) {
+                            // Push the ID + Fullname sheet on top; it
+                            // applies the discount itself on confirm
+                            // (see _CustomerInfoSheet) and pops back
+                            // out through both sheets. If the cashier
+                            // backs out instead, nothing is applied and
+                            // only the customer-info sheet closes,
+                            // leaving the discount list open underneath.
+                            // Not awaited here — onPick is a plain
+                            // synchronous callback (ValueChanged), and
+                            // nothing downstream needs to know when the
+                            // second sheet finishes closing.
+                            showModalBottomSheet<void>(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) =>
+                                  _CustomerInfoSheet(discount: discount),
+                            );
+                            return;
+                          }
                           notifier.applyDiscount(discount);
                           Navigator.of(context).pop();
                         },
@@ -338,6 +360,243 @@ class _ErrorState extends StatelessWidget {
               message,
               textAlign: TextAlign.center,
               style: AppTypography.ui(color: colors.textDisabled, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// --- CUSTOMER INFO: ID + Fullname prompt for PWD/Senior discounts -------
+///
+/// Opened on top of the discount list (as a second sheet, not a
+/// replacement of it) when the tapped discount requires customer info —
+/// see `DashboardController.discountRequiresCustomerInfo`. Both fields
+/// are required before "Apply discount" enables; confirming applies the
+/// discount with the entered info and closes both this sheet and the
+/// discount list underneath. Backing out (the header's X) closes only
+/// this sheet, leaving the discount list open with nothing applied.
+class _CustomerInfoSheet extends ConsumerStatefulWidget {
+  const _CustomerInfoSheet({required this.discount});
+
+  final DiscountsTableData discount;
+
+  @override
+  ConsumerState<_CustomerInfoSheet> createState() => _CustomerInfoSheetState();
+}
+
+class _CustomerInfoSheetState extends ConsumerState<_CustomerInfoSheet> {
+  final _idController = TextEditingController();
+  final _fullNameController = TextEditingController();
+
+  bool get _isReady =>
+      _idController.text.trim().isNotEmpty &&
+      _fullNameController.text.trim().isNotEmpty;
+
+  @override
+  void dispose() {
+    _idController.dispose();
+    _fullNameController.dispose();
+    super.dispose();
+  }
+
+  void _confirm() {
+    final notifier = ref.read(dashboardControllerProvider.notifier);
+    notifier.applyDiscount(
+      widget.discount,
+      customerInfo: DiscountCustomerInfo(
+        id: _idController.text.trim(),
+        fullName: _fullNameController.text.trim(),
+      ),
+    );
+    // Resolve the navigator once, before popping anything — after the
+    // first pop, this sheet's own `context` belongs to a widget that's
+    // being torn down, so re-resolving Navigator.of(context) a second
+    // time against it would be reading from a context mid-removal.
+    // popUntil walks back to (and stops just past) the discount-list
+    // sheet in one call using the navigator captured up front, rather
+    // than issuing two separate pops against a context that's already
+    // gone stale after the first one.
+    final navigator = Navigator.of(context);
+    navigator.pop(); // this sheet
+    navigator.pop(); // the discount-list sheet underneath
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Padding(
+      // Lifts the sheet clear of the on-screen keyboard, same pattern
+      // Flutter's own examples use for a bottom-sheet text form — the
+      // sheet's bottom padding grows by exactly the keyboard's height.
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: colors.borderSubtle,
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 12, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.discount.name,
+                      style: AppTypography.display(
+                        color: colors.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Material(
+                    color: colors.surfaceVariant,
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      onTap: () => Navigator.of(context).pop(),
+                      customBorder: const CircleBorder(),
+                      child: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Icon(
+                          PhosphorIcons.x,
+                          size: 20,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Divider(height: 1, color: colors.borderSubtle),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'This discount requires the customer\u2019s ID and full '
+                    'name on record.',
+                    style: AppTypography.ui(
+                      color: colors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'ID number',
+                    style: AppTypography.ui(
+                      color: colors.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: primaryTapTarget,
+                    child: TextField(
+                      controller: _idController,
+                      textCapitalization: TextCapitalization.characters,
+                      style: AppTypography.ui(
+                        color: colors.textPrimary,
+                        fontSize: 16,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'e.g. 1234-5678-9012',
+                        filled: true,
+                        fillColor: colors.surfaceVariant,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Full name',
+                    style: AppTypography.ui(
+                      color: colors.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: primaryTapTarget,
+                    child: TextField(
+                      controller: _fullNameController,
+                      textCapitalization: TextCapitalization.words,
+                      style: AppTypography.ui(
+                        color: colors.textPrimary,
+                        fontSize: 16,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'e.g. Juan Dela Cruz',
+                        filled: true,
+                        fillColor: colors.surfaceVariant,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: primaryTapTarget,
+                    child: ElevatedButton(
+                      onPressed: _isReady ? _confirm : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppPalette.teal500,
+                        foregroundColor: colors.onPrimary,
+                        disabledBackgroundColor: colors.disabledFill,
+                        disabledForegroundColor: colors.textDisabled,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        'Apply discount',
+                        style: AppTypography.ui(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
