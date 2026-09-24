@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -33,9 +34,19 @@ import 'package:image/image.dart' as img;
 /// Every failure path returns `null` — exactly like `top_bar.dart` — so a
 /// bad/missing logo silently skips the logo on the ticket rather than
 /// throwing and blocking the sale from printing at all.
+///
+/// [maxWidthPx]/[maxHeightPx] describe a bounding box, not a forced
+/// size: the logo is scaled down to fit inside it with its original
+/// aspect ratio kept intact (whichever side is proportionally larger
+/// becomes the constrained one), never stretched/squashed to fill both
+/// dimensions and never upscaled past its source resolution's fit
+/// within the box. A tall/narrow logo and a wide/short logo passed the
+/// same box therefore come out different sizes from each other, by
+/// design — both simply fit inside the same box.
 Future<img.Image?> decodeBranchLogo(
   String rawLogo, {
-  required int targetWidthPx,
+  required int maxWidthPx,
+  required int maxHeightPx,
 }) async {
   final raw = rawLogo.trim();
   if (raw.isEmpty) return null;
@@ -46,9 +57,17 @@ Future<img.Image?> decodeBranchLogo(
   final format = _sniffLogoFormat(bytes);
   switch (format) {
     case _LogoFormat.svg:
-      return _rasterizeSvg(bytes, targetWidthPx: targetWidthPx);
+      return _rasterizeSvg(
+        bytes,
+        maxWidthPx: maxWidthPx,
+        maxHeightPx: maxHeightPx,
+      );
     case _LogoFormat.raster:
-      return _decodeRaster(bytes, targetWidthPx: targetWidthPx);
+      return _decodeRaster(
+        bytes,
+        maxWidthPx: maxWidthPx,
+        maxHeightPx: maxHeightPx,
+      );
   }
 }
 
@@ -60,8 +79,10 @@ Future<img.Image?> decodeBranchLogo(
 /// clearer at a `generator.image(...)` call site.
 Future<img.Image?> decodeBranchLogoForTicket(
   String rawLogo, {
-  required int targetWidthPx,
-}) => decodeBranchLogo(rawLogo, targetWidthPx: targetWidthPx);
+  required int maxWidthPx,
+  required int maxHeightPx,
+}) =>
+    decodeBranchLogo(rawLogo, maxWidthPx: maxWidthPx, maxHeightPx: maxHeightPx);
 
 /// Strips a `data:image/...;base64,` prefix if present (some upload
 /// flows store the whole data URI rather than stripping it server-side),
@@ -110,19 +131,59 @@ _LogoFormat _sniffLogoFormat(Uint8List bytes) {
 }
 
 /// Decodes raster bytes (PNG/JPEG/WebP/GIF/BMP/...) via `package:image`
-/// and resizes to [targetWidthPx] wide, preserving aspect ratio, so the
-/// logo fits the printable width of whatever paper size is in use.
-/// Returns `null` if `package:image` can't recognize the bytes as a real,
-/// complete image (corrupt/truncated data) — same "degrade to no logo"
-/// behavior as every other failure path here.
-img.Image? _decodeRaster(Uint8List bytes, {required int targetWidthPx}) {
+/// and scales to fit inside [maxWidthPx] x [maxHeightPx], preserving
+/// aspect ratio (see `decodeBranchLogo`'s doc comment — this never
+/// stretches to fill both dimensions). Returns `null` if `package:image`
+/// can't recognize the bytes as a real, complete image (corrupt/truncated
+/// data) — same "degrade to no logo" behavior as every other failure
+/// path here.
+img.Image? _decodeRaster(
+  Uint8List bytes, {
+  required int maxWidthPx,
+  required int maxHeightPx,
+}) {
   final decoded = img.decodeImage(bytes);
   if (decoded == null) return null;
-  return img.copyResize(decoded, width: targetWidthPx);
+
+  final fitted = _fitWithinBox(
+    srcWidth: decoded.width,
+    srcHeight: decoded.height,
+    maxWidth: maxWidthPx,
+    maxHeight: maxHeightPx,
+  );
+  return img.copyResize(decoded, width: fitted.width, height: fitted.height);
 }
 
-/// Rasterizes SVG markup to a `img.Image` of [targetWidthPx] wide via
-/// `dart:ui`, with no widget tree or `BuildContext` involved.
+/// Scales `srcWidth`x`srcHeight` down to fit inside `maxWidth`x`maxHeight`
+/// with aspect ratio kept intact — whichever axis would overflow more
+/// relative to its own max is the constrained one, and the other axis
+/// follows the same scale factor rather than being independently capped
+/// (which is what would stretch/squash the image). Never upscales: a
+/// source already smaller than the box on both axes is returned as-is.
+({int width, int height}) _fitWithinBox({
+  required int srcWidth,
+  required int srcHeight,
+  required int maxWidth,
+  required int maxHeight,
+}) {
+  if (srcWidth <= 0 || srcHeight <= 0) {
+    return (width: maxWidth, height: maxHeight);
+  }
+
+  final widthScale = maxWidth / srcWidth;
+  final heightScale = maxHeight / srcHeight;
+  final scale = math.min(1.0, math.min(widthScale, heightScale));
+
+  final width = (srcWidth * scale).round().clamp(1, maxWidth);
+  final height = (srcHeight * scale).round().clamp(1, maxHeight);
+  return (width: width, height: height);
+}
+
+/// Rasterizes SVG markup to a `img.Image` that fits inside
+/// [maxWidthPx] x [maxHeightPx] via `dart:ui`, with no widget tree or
+/// `BuildContext` involved. See `decodeBranchLogo`'s doc comment — the
+/// source aspect ratio is preserved, so the drawn canvas itself is sized
+/// to the fitted dimensions rather than always being `maxWidthPx` wide.
 ///
 /// This still needs `flutter_svg`'s parser to turn the markup into a
 /// `ui.Picture` (there's no pure-`dart:ui` SVG parser — `dart:ui` only
@@ -135,7 +196,8 @@ img.Image? _decodeRaster(Uint8List bytes, {required int targetWidthPx}) {
 /// `top_bar.dart`'s `SvgPicture.memory` `errorBuilder` fallback.
 Future<img.Image?> _rasterizeSvg(
   Uint8List svgBytes, {
-  required int targetWidthPx,
+  required int maxWidthPx,
+  required int maxHeightPx,
 }) async {
   try {
     // `vg.loadPicture` (from `package:vector_graphics`, re-exported by
@@ -150,9 +212,14 @@ Future<img.Image?> _rasterizeSvg(
     final srcSize = pictureInfo.size;
     if (srcSize.width <= 0 || srcSize.height <= 0) return null;
 
-    final targetHeightPx = (targetWidthPx * srcSize.height / srcSize.width)
-        .round()
-        .clamp(1, 1 << 16);
+    final fitted = _fitWithinBox(
+      srcWidth: srcSize.width.round(),
+      srcHeight: srcSize.height.round(),
+      maxWidth: maxWidthPx,
+      maxHeight: maxHeightPx,
+    );
+    final targetWidthPx = fitted.width;
+    final targetHeightPx = fitted.height;
 
     final recorder = ui.PictureRecorder();
     final canvas = ui.Canvas(recorder);

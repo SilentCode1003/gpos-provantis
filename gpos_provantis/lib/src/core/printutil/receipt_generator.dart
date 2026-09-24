@@ -131,6 +131,7 @@ class ReceiptSaleData {
     required this.ecash,
     required this.referenceId,
     required this.paymentName,
+    this.isReprint = false,
   });
 
   final String detailId;
@@ -166,6 +167,14 @@ class ReceiptSaleData {
   /// Display name of the e-payment method (e.g. `'GCash'`). Blank for
   /// a pure-CASH sale.
   final String paymentName;
+
+  /// True when this ticket is being printed again for an already-saved
+  /// sale, rather than at the moment of the original checkout. Purely a
+  /// print-layout flag — it never affects `SalesTable`, the sale's
+  /// `isSync` state, or anything else about the underlying sale record;
+  /// it only tells `_buildTicketBytes` to add the REPRINT marker so the
+  /// customer/cashier can tell this ticket apart from the original.
+  final bool isReprint;
 
   int get totalItemCount => items.fold(0, (sum, item) => sum + item.quantity);
 
@@ -300,15 +309,16 @@ class ReceiptGenerator {
     // Decoded/rasterized here (before `_buildTicketBytes`, which stays
     // synchronous) since `decodeBranchLogo` is async — see
     // `logo_image.dart` for why SVG rasterization needs to await
-    // `dart:ui`. `paperSize.width` is the exact dot width `Generator`
-    // itself prints at for this paper size (58/72/80mm all differ), so
-    // the logo is sized in the same units as everything else on the
-    // ticket rather than a guessed pixel count; 70% keeps it from
-    // running edge-to-edge, matching how the branch name/address above
-    // it are centered with margin, not full-bleed.
+    // `dart:ui`. Fixed 50x50px box regardless of paper size: a small,
+    // consistent logo rather than one that scales with paper width (the
+    // 70%-of-paper-width sizing this replaced could run quite large on
+    // 80mm paper). `decodeBranchLogo` fits the logo inside this box
+    // without stretching it, so a non-square logo comes out smaller than
+    // 50px on whichever axis its aspect ratio implies.
     final logo = await decodeBranchLogo(
       branch?.logo ?? '',
-      targetWidthPx: (paperSize.width * 0.7).round(),
+      maxWidthPx: 250,
+      maxHeightPx: 250,
     );
 
     final bytes = _buildTicketBytes(
@@ -357,6 +367,23 @@ class ReceiptGenerator {
     // fallback-to-icon behavior on-screen.
     if (logo != null) {
       bytes += ticket.image(logo);
+    }
+
+    // Sits below the logo and above the branch name, so it's the first
+    // thing read on the ticket after the logo either way (logo present
+    // or not) — the customer shouldn't have to reach the footer to find
+    // out this isn't the original ticket.
+    if (sale.isReprint) {
+      bytes += ticket.text(
+        '**REPRINT**',
+        styles: const PosStyles(
+          align: PosAlign.center,
+          bold: true,
+          height: PosTextSize.size2,
+          width: PosTextSize.size2,
+        ),
+        linesAfter: 1,
+      );
     }
 
     bytes += ticket.text(
@@ -420,6 +447,9 @@ class ReceiptGenerator {
     // CASHIER/POS/SN# on the left, STAFF/SHIFT/BRANCH on the right.
     // STAFF has no field of its own yet, so it mirrors CASHIER for now.
     // CASHIER and SHIFT are explicitly bold; the other four are plain.
+    // The right column (STAFF/SHIFT/BRANCH) reads value-first —
+    // `reversedRight` prints e.g. `1:SHIFT` instead of `SHIFT: 1` — the
+    // left column keeps the normal `LABEL: value` order.
     bytes += _kv(
       ticket,
       wide,
@@ -428,6 +458,7 @@ class ReceiptGenerator {
       'STAFF',
       sale.cashier,
       leftBold: true,
+      reversedRight: true,
     );
     bytes += _kv(
       ticket,
@@ -437,8 +468,17 @@ class ReceiptGenerator {
       'SHIFT',
       sale.shift,
       rightBold: true,
+      reversedRight: true,
     );
-    bytes += _kv(ticket, wide, 'SN#', serialNumber, 'BRANCH', sale.branchId);
+    bytes += _kv(
+      ticket,
+      wide,
+      'SN#',
+      serialNumber,
+      'BRANCH',
+      sale.branchId,
+      reversedRight: true,
+    );
 
     bytes += ticket.hr();
 
@@ -536,11 +576,19 @@ class ReceiptGenerator {
 
       bytes += ticket.hr();
       bytes += ticket.text(
-        'Customer Name: __________________________',
+        'Customer Name: ____________________________',
         styles: PosStyles(bold: wide),
       );
       bytes += ticket.text(
-        'Customer TIN:  __________________________',
+        'Customer Address: _________________________',
+        styles: PosStyles(bold: wide),
+      );
+      bytes += ticket.text(
+        'Customer TIN:  ____________________________',
+        styles: PosStyles(bold: wide),
+      );
+      bytes += ticket.text(
+        'Business Type: ____________________________',
         styles: PosStyles(bold: wide),
       );
     }
@@ -609,6 +657,14 @@ class ReceiptGenerator {
   /// (which had no bold in `_kv` at all pre-split); an explicit
   /// [leftBold]/[rightBold] still applies to its row on narrow paper too,
   /// so CASHIER/SHIFT stay bold there as well.
+  ///
+  /// [reversedRight], when true, prints the right column as
+  /// `value:label` (e.g. `1:SHIFT`) instead of the normal `label: value`
+  /// — used for STAFF/SHIFT/BRANCH, which sit in the right column and
+  /// are read value-first rather than label-first. The left column is
+  /// never affected by this flag. On narrow paper the right value's row
+  /// still stacks under the left row same as always; only the text
+  /// within that row's own column changes shape.
   List<int> _kv(
     Generator ticket,
     bool wide,
@@ -618,8 +674,12 @@ class ReceiptGenerator {
     String rightValue, {
     bool leftBold = false,
     bool? rightBold,
+    bool reversedRight = false,
   }) {
     final resolvedRightBold = rightBold ?? wide;
+    final rightText = reversedRight
+        ? '$rightValue:$rightLabel'
+        : '$rightLabel: $rightValue';
     if (wide) {
       return ticket.row([
         PosColumn(
@@ -628,7 +688,7 @@ class ReceiptGenerator {
           styles: PosStyles(bold: leftBold),
         ),
         PosColumn(
-          text: '$rightLabel: $rightValue',
+          text: rightText,
           width: 6,
           styles: PosStyles(align: PosAlign.right, bold: resolvedRightBold),
         ),
@@ -644,7 +704,7 @@ class ReceiptGenerator {
       ]),
       ...ticket.row([
         PosColumn(
-          text: '$rightLabel: $rightValue',
+          text: rightText,
           width: 12,
           styles: PosStyles(bold: resolvedRightBold),
         ),

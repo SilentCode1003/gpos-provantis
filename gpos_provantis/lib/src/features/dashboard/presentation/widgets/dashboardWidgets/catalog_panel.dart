@@ -59,9 +59,31 @@ class _ActionsRail extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
+    // Watching the provider (not just `.read`ing the notifier) so this
+    // widget rebuilds whenever `pos_shift` changes — `shiftStatus` is
+    // derived live off that DB stream now (see the getter's doc
+    // comment in dashboard_controller.dart), not off `state` directly.
     final state = ref.watch(dashboardControllerProvider);
     final notifier = ref.read(dashboardControllerProvider.notifier);
-    final isShiftOpen = state.shiftStatus == ShiftStatus.open;
+    final isShiftOpen = notifier.shiftStatus == ShiftStatus.open;
+    final isToggling = state.isTogglingShift;
+
+    Future<void> handleShiftTap() async {
+      try {
+        await notifier.toggleShift();
+      } catch (error) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isShiftOpen
+                  ? 'Failed to end shift: $error'
+                  : 'Failed to start shift: $error',
+            ),
+          ),
+        );
+      }
+    }
 
     return Container(
       width: double.infinity,
@@ -78,7 +100,9 @@ class _ActionsRail extends ConsumerWidget {
               icon: isShiftOpen ? PhosphorIcons.stop : PhosphorIcons.play,
               label: isShiftOpen ? 'End shift' : 'Start shift',
               emphasized: !isShiftOpen,
-              onTap: notifier.toggleShift,
+              enabled: !isToggling,
+              loading: isToggling,
+              onTap: handleShiftTap,
             ),
             const SizedBox(width: 10),
             _ActionButton(
@@ -130,6 +154,7 @@ class _ActionButton extends StatelessWidget {
     required this.onTap,
     this.emphasized = false,
     this.enabled = true,
+    this.loading = false,
   });
 
   final IconData icon;
@@ -137,6 +162,13 @@ class _ActionButton extends StatelessWidget {
   final VoidCallback onTap;
   final bool emphasized;
   final bool enabled;
+
+  /// Swaps the leading icon for a small spinner and forces [enabled]
+  /// off (via the caller passing `enabled: !isToggling` — this flag
+  /// only changes what's drawn, the caller still owns whether taps are
+  /// accepted). Used by the shift button while `startShift`/`endShift`
+  /// is in flight.
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -157,11 +189,21 @@ class _ActionButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 26,
-                color: enabled ? foreground : colors.textDisabled,
-              ),
+              if (loading)
+                SizedBox(
+                  width: 26,
+                  height: 26,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: enabled ? foreground : colors.textDisabled,
+                  ),
+                )
+              else
+                Icon(
+                  icon,
+                  size: 26,
+                  color: enabled ? foreground : colors.textDisabled,
+                ),
               const SizedBox(width: 10),
               Text(
                 label,

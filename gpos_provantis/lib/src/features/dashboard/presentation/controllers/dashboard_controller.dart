@@ -16,6 +16,12 @@ import 'package:gpos_provantis/src/core/database/providers/pos_config_dao_provid
 import 'package:gpos_provantis/src/core/database/providers/pos_shift_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/user_data_dao_provider.dart';
+// TODO: confirm this path — inferred from pos_shift_repository.dart's own
+// `import '../domain/pos_shift_dto.dart';`, which implies the repository
+// file sits in a sibling folder to `domain` (e.g. `.../data/pos_shift_repository.dart`
+// or `.../repositories/pos_shift_repository.dart`). Adjust to match
+// wherever that file actually lives in the project.
+import 'package:gpos_provantis/src/core/database/repository/pos_shift_repository.dart';
 import 'payments_controller.dart';
 import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
     show
@@ -187,6 +193,7 @@ class DashboardState {
     this.selectedDiscount,
     this.selectedDiscountCustomerInfo,
     this.shiftStatus = ShiftStatus.closed,
+    this.isTogglingShift = false,
     this.catalogSheetCategoryId,
     this.catalogSearchQuery = '',
   });
@@ -223,9 +230,18 @@ class DashboardState {
   /// with no room for POS-only fields like this.
   final DiscountCustomerInfo? selectedDiscountCustomerInfo;
 
-  /// Whether the cashier has clocked in ("Start shift"). Toggled from
-  /// the top bar — see `_TopBar` in the screen file.
+  /// Whether the cashier has clocked in ("Start shift"). Legacy/local
+  /// field — `DashboardController.shiftStatus` (the getter, not this
+  /// field) is the real source of truth now, derived live off
+  /// `pos_shift`. This field is kept around for `copyWith` compat but
+  /// the UI should read the controller's getter, not this.
   final ShiftStatus shiftStatus;
+
+  /// True while a start-shift/end-shift API call is in flight — drives
+  /// the shift button's loading spinner and disables it so a second
+  /// tap can't fire a duplicate request while the first is still
+  /// resolving. Set/cleared entirely by `toggleShift()`.
+  final bool isTogglingShift;
 
   double get subtotal => cartLines.fold(0, (sum, line) => sum + line.lineTotal);
 
@@ -269,6 +285,7 @@ class DashboardState {
     Object? selectedDiscount = _unset,
     Object? selectedDiscountCustomerInfo = _unset,
     ShiftStatus? shiftStatus,
+    bool? isTogglingShift,
     // Same sentinel trick as above, for closing the catalog sheet.
     Object? catalogSheetCategoryId = _unset,
     String? catalogSearchQuery,
@@ -284,6 +301,7 @@ class DashboardState {
           ? this.selectedDiscountCustomerInfo
           : selectedDiscountCustomerInfo as DiscountCustomerInfo?,
       shiftStatus: shiftStatus ?? this.shiftStatus,
+      isTogglingShift: isTogglingShift ?? this.isTogglingShift,
       catalogSheetCategoryId: identical(catalogSheetCategoryId, _unset)
           ? this.catalogSheetCategoryId
           : catalogSheetCategoryId as String?,
@@ -626,6 +644,9 @@ class DashboardController extends _$DashboardController {
   AsyncValue<List<ProductPriceTableData>> _productsAsync() =>
       ref.watch(productPriceProvider);
 
+  AsyncValue<List<PosShiftTableData>> _posShiftsAsync() =>
+      ref.watch(posShiftProvider);
+
   // maybeWhen (not the newer `.valueOrNull` getter) so this keeps
   // compiling against older riverpod versions too — functionally the
   // same thing: fall through to the last-known data on loading/error,
@@ -638,6 +659,17 @@ class DashboardController extends _$DashboardController {
   List<ProductPriceTableData> _watchProducts() => _productsAsync().maybeWhen(
     data: (items) => items,
     orElse: () => const <ProductPriceTableData>[],
+  );
+
+  // Same maybeWhen fallback as the two getters above — on `loading`
+  // (right after login, before pos_shift has synced/populated yet) or
+  // `error`, this reads as "no shift rows", which resolves to
+  // ShiftStatus.closed below. That's the safe default: a transient
+  // loading/error blip should never make the UI claim a shift is open
+  // when it can't actually confirm one.
+  List<PosShiftTableData> _watchPosShifts() => _posShiftsAsync().maybeWhen(
+    data: (items) => items,
+    orElse: () => const <PosShiftTableData>[],
   );
 
   @override
@@ -670,6 +702,25 @@ class DashboardController extends _$DashboardController {
     error: (_, __) => CatalogLoadStatus.error,
     loading: () => CatalogLoadStatus.loading,
   );
+
+  /// Whether a shift is currently open — derived live from `pos_shift`,
+  /// not from `DashboardState.shiftStatus` (that field is legacy/local
+  /// only and no longer the source of truth; see the doc comment above
+  /// `toggleShift()`).
+  ///
+  /// Rule: `open` if ANY row in `pos_shift` has `status == 'START'`.
+  /// An empty table — no rows at all — reads as `closed`, i.e. no
+  /// shift has been started (or the previous one already ended and
+  /// was cleared), so the top bar's button should read "Start shift".
+  /// This matches `replacePosShifts` fully clearing the table on each
+  /// sync: a sync that comes back with `[]` correctly flips the button
+  /// back to "Start shift" rather than leaving it stuck on whatever it
+  /// showed before that sync.
+  ShiftStatus get shiftStatus {
+    final rows = _watchPosShifts();
+    final hasOpenShift = rows.any((row) => row.status == 'START');
+    return hasOpenShift ? ShiftStatus.open : ShiftStatus.closed;
+  }
 
   List<Category> get categories {
     final rows = _watchCategories();
@@ -743,12 +794,44 @@ class DashboardController extends _$DashboardController {
     state = state.copyWith(catalogSearchQuery: query);
   }
 
-  void toggleShift() {
-    state = state.copyWith(
-      shiftStatus: state.shiftStatus == ShiftStatus.open
-          ? ShiftStatus.closed
-          : ShiftStatus.open,
-    );
+  /// Starts or ends the shift against the server, then re-syncs
+  /// `pos_shift` from the server's own response (via
+  /// `fetchAndSavePosShifts`) so `shiftStatus` above reflects what the
+  /// server actually recorded — not an optimistic local flip. That
+  /// matters here specifically because `startShift`/`endShift` don't
+  /// return the shift row themselves (see pos_shift_repository.dart),
+  /// only a bare success/failure; `fetchAndSavePosShifts` is what pulls
+  /// the real row (or confirms it's gone) afterward.
+  ///
+  /// Sets `isTogglingShift` for the duration so the button can show a
+  /// spinner and disable itself against double-taps. On failure, the
+  /// flag is still cleared (via `finally`) and the error is rethrown —
+  /// callers (the button's `onTap`) are expected to catch it and show
+  /// a SnackBar; nothing here swallows a failed call.
+  ///
+  /// Raw request/response details are only in the repository's
+  /// `debugPrint` calls (`startShift`/`endShift` in
+  /// pos_shift_repository.dart) — check the console/logs to see
+  /// exactly what the server sent back.
+  Future<void> toggleShift() async {
+    if (state.isTogglingShift) return; // guard against double-tap
+
+    final repository = ref.read(posShiftRepositoryProvider);
+    final wasOpen = shiftStatus == ShiftStatus.open;
+
+    state = state.copyWith(isTogglingShift: true);
+    try {
+      if (wasOpen) {
+        await repository.endShift();
+      } else {
+        await repository.startShift();
+      }
+      // Re-sync so `shiftStatus` (derived off `pos_shift`) reflects
+      // whatever the server actually recorded for this start/end call.
+      await repository.fetchAndSavePosShifts();
+    } finally {
+      state = state.copyWith(isTogglingShift: false);
+    }
   }
 
   /// Applies (or switches to) a discount picked from the discount

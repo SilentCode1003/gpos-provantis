@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:gpos_provantis/src/services/sync/catalog_sync.dart';
+import 'package:gpos_provantis/src/services/sync/controller/catalog_sync_controller.dart';
 
 /// --- Others sheet: 11-item grid of secondary actions -----------------------
 ///
@@ -82,10 +84,17 @@ class OthersSheet extends ConsumerWidget {
   }
 }
 
-class _OtherActionTile extends StatelessWidget {
+class _OtherActionTile extends ConsumerWidget {
   const _OtherActionTile({required this.action});
 
   final OtherAction action;
+
+  /// Ids handled as a direct in-place effect rather than a route push —
+  /// currently just triggering a catalog re-sync. Kept separate from
+  /// [_routeMap] since it's a different kind of dispatch (fire an
+  /// action vs push a screen), not another entry in the "no screen
+  /// yet" bucket.
+  static const _syncActionId = 'sync_data';
 
   static const _iconMap = {
     'receipt_long_rounded': Icons.receipt_long_rounded,
@@ -102,8 +111,10 @@ class _OtherActionTile extends StatelessWidget {
   };
 
   /// Maps an [OtherAction.id] to the route path it should push. Ids with
-  /// no screen yet (cash drop, open cashdrawer, sync data, restart POS)
-  /// are omitted — those tiles just close the sheet for now.
+  /// no screen yet (cash drop, open cashdrawer, restart POS) are omitted
+  /// — those tiles just close the sheet for now. `sync_data` is also
+  /// absent here, but for a different reason: it's dispatched via
+  /// [_syncActionId] above rather than a route push.
   static const _routeMap = {
     'receipt': '/receipts',
     'reports': '/reports',
@@ -115,7 +126,7 @@ class _OtherActionTile extends StatelessWidget {
   };
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final icon = _iconMap[action.icon] ?? Icons.touch_app_rounded;
     final route = _routeMap[action.id];
@@ -126,7 +137,16 @@ class _OtherActionTile extends StatelessWidget {
       child: InkWell(
         onTap: () {
           Navigator.of(context).pop();
-          if (route != null) {
+          if (action.id == _syncActionId) {
+            // Fire-and-forget: CatalogSyncController's state drives the
+            // global CatalogSyncOverlay (mounted near the app root), so
+            // there's nothing more for this tile to await or display —
+            // the barrier/toast/failure banner will surface on top of
+            // whatever screen the user lands on after the sheet closes.
+            ref
+                .read(catalogSyncControllerProvider.notifier)
+                .runSync(ref.read(catalogSyncServiceProvider));
+          } else if (route != null) {
             context.push(route);
           }
         },
