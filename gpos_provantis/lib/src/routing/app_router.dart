@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'app_routes.dart';
+import 'root_navigator_key.dart';
 import 'package:gpos_provantis/src/features/settings/presentation/screens/settings_screen.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/screens/dashboard_others_panel.dart';
@@ -32,6 +33,7 @@ CupertinoPage<void> _buildPageWithTransition(
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/startup',
     debugLogDiagnostics: true,
     routes: [

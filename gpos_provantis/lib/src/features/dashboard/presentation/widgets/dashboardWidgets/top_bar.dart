@@ -10,6 +10,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/providers/pos_detail_id_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/providers/pos_shift_dao_provider.dart';
 import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
 
 /// --- Top bar: status only (branch, time, shift, OR number) + branding -----
@@ -80,6 +82,8 @@ class TopBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final branchName = _watchBranchName(ref);
+    final detailID = _watchDetailID(ref);
+    final shiftID = _watchShiftID(ref);
 
     return Container(
       width: double.infinity,
@@ -103,9 +107,9 @@ class TopBar extends ConsumerWidget {
                   // Shift status doubles as the "Shift" value here since
                   // there's no separate open/close shift number in the
                   // controller yet — "1" is the placeholder shift count.
-                  const _StatusItem(label: 'Shift', value: '1'),
+                  _StatusItem(label: 'Shift', value: shiftID),
                   _StatusDivider(),
-                  const _StatusItem(label: 'OR number', value: '100000000'),
+                  _StatusItem(label: 'OR number', value: detailID),
                 ],
               ),
             ),
@@ -142,6 +146,42 @@ String _watchBranchName(WidgetRef ref) {
     },
     error: (_, __) => '—',
     loading: () => '—',
+  );
+}
+
+String _watchDetailID(WidgetRef ref) {
+  final detailIdConfig = ref.watch(posDetailIdProvider);
+  return detailIdConfig.when(
+    data: (config) {
+      final detailID = config?.posDetailId.trim() ?? '';
+      return detailID.isNotEmpty ? detailID : '-';
+    },
+    error: (_, _) => '-',
+    loading: () => '-',
+  );
+}
+
+/// Reads the current shift number off `posShiftProvider`, falling back to
+/// '-' whenever there isn't one to show.
+///
+/// EMPTY LIST IS A NORMAL STATE, NOT AN ERROR: ending a shift makes the
+/// server-synced `pos_shift` table come back empty (`replacePosShifts`
+/// fully clears it on each sync — see `DashboardController.shiftStatus`).
+/// This used to do `config.first.shift`, which throws
+/// `Bad state: No element` on exactly that empty list and took the whole
+/// `TopBar` down the instant the cashier pressed End shift. `.when`'s
+/// `error:` branch doesn't help here — the provider *succeeded*, it just
+/// emitted `[]`, so the throw happened inside the `data:` callback.
+String _watchShiftID(WidgetRef ref) {
+  final shiftIDConfig = ref.watch(posShiftProvider);
+  return shiftIDConfig.when(
+    data: (config) {
+      if (config.isEmpty) return '-';
+      final shiftID = config.first.shift.trim();
+      return shiftID.isNotEmpty ? shiftID : '-';
+    },
+    error: (_, _) => '-',
+    loading: () => '-',
   );
 }
 

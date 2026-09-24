@@ -33,6 +33,9 @@ dependencies:
   flutter_thermal_printer: ^2.3.0
   flutter_multi_formatter: ^2.13.11
 
+  # Restarting
+  restart_app: ^1.10.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

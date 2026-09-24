@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
 import 'category_visibility.dart';
 import 'others_sheet.dart';
 import 'top_bar.dart';
@@ -69,6 +70,26 @@ class _ActionsRail extends ConsumerWidget {
     final isToggling = state.isTogglingShift;
 
     Future<void> handleShiftTap() async {
+      // Confirm BEFORE touching the server — start/end shift are real
+      // server-side state changes, and this button sits in a row the
+      // cashier taps constantly, so an accidental brush shouldn't be
+      // able to close out the till. Wording differs by direction: ending
+      // is the consequential one (it locks Cash drop / Reprint / Others
+      // until a new shift is started), starting is routine.
+      final confirmed = await showConfirmDialog(
+        context,
+        title: isShiftOpen ? 'End shift?' : 'Start shift?',
+        body: isShiftOpen
+            ? 'This will close the current shift. Cash drop, Reprint and '
+                  'Others will be unavailable until you start a new one.'
+            : 'This will open a new shift so you can begin taking sales.',
+        confirmLabel: isShiftOpen ? 'END SHIFT' : 'START SHIFT',
+      );
+      // `showConfirmDialog` returns `bool?` (null when dismissed by
+      // tapping outside / back), so anything but an explicit true is a
+      // cancel. `context.mounted` because we just awaited a dialog.
+      if (confirmed != true || !context.mounted) return;
+
       try {
         await notifier.toggleShift();
       } catch (error) {

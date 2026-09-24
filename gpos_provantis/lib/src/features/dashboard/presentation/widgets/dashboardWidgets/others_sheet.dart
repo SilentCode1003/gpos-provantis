@@ -7,6 +7,10 @@ import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:gpos_provantis/src/services/sync/catalog_sync.dart';
 import 'package:gpos_provantis/src/services/sync/controller/catalog_sync_controller.dart';
+import 'package:gpos_provantis/src/services/pos_restart_service.dart';
+import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/refund_sheet.dart';
+import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/reprint_sheet.dart';
+import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/send_ereceipt_sheet.dart';
 
 /// --- Others sheet: 11-item grid of secondary actions -----------------------
 ///
@@ -90,11 +94,23 @@ class _OtherActionTile extends ConsumerWidget {
   final OtherAction action;
 
   /// Ids handled as a direct in-place effect rather than a route push —
-  /// currently just triggering a catalog re-sync. Kept separate from
-  /// [_routeMap] since it's a different kind of dispatch (fire an
-  /// action vs push a screen), not another entry in the "no screen
-  /// yet" bucket.
+  /// triggering a catalog re-sync, or running the restart-POS flow.
+  /// Kept separate from [_routeMap] since these are a different kind
+  /// of dispatch (fire an action / open a flow vs push a screen), not
+  /// another entry in the "no screen yet" bucket.
   static const _syncActionId = 'sync_data';
+
+  /// TODO: verify this against whatever id `controller.otherActions`
+  /// actually assigns to the restart-POS tile. This file's class doc
+  /// comment lists "restart POS" among ids with no screen yet (it
+  /// currently just closes the sheet), and `_iconMap` already has a
+  /// `restart_alt_rounded` entry for it, but the real `OtherAction.id`
+  /// string wasn't visible from this file alone — `restart_pos` is a
+  /// guess following the snake_case pattern of the other ids above
+  /// (`sync_data`, `cash_report`, etc). If `otherActions` uses a
+  /// different id, update this constant to match — everything else
+  /// below (the `else if` branch, the flow call) stays the same.
+  static const _restartPosActionId = 'restart_pos';
 
   static const _iconMap = {
     'receipt_long_rounded': Icons.receipt_long_rounded,
@@ -110,19 +126,28 @@ class _OtherActionTile extends ConsumerWidget {
     'restart_alt_rounded': Icons.restart_alt_rounded,
   };
 
+  /// Ids that open a form bottom sheet (OR number / email entry) instead of
+  /// pushing a route. Each launcher receives the *root* navigator's context
+  /// (see `onTap` below) so it stays valid after this tile's own sheet has
+  /// popped.
+  static final Map<String, Future<void> Function(BuildContext)> _sheetMap = {
+    're_print': ReprintSheet.show,
+    'refund': RefundSheet.show,
+    'send_e-receipt': SendEReceiptSheet.show,
+  };
+
   /// Maps an [OtherAction.id] to the route path it should push. Ids with
-  /// no screen yet (cash drop, open cashdrawer, restart POS) are omitted
-  /// — those tiles just close the sheet for now. `sync_data` is also
-  /// absent here, but for a different reason: it's dispatched via
-  /// [_syncActionId] above rather than a route push.
+  /// no screen yet (cash drop, open cashdrawer) are omitted — those
+  /// tiles just close the sheet for now. `sync_data`, [_restartPosActionId]
+  /// and the [_sheetMap] ids are also absent here, but for a different
+  /// reason: each is dispatched as its own in-place action (sync, restart
+  /// flow, form sheet) rather than a route push — see the `onTap` handler
+  /// below.
   static const _routeMap = {
     'receipt': '/receipts',
     'reports': '/reports',
     'cash_report': '/cash-reports',
     'sold_items': '/sold-items',
-    're_print': '/reprint',
-    'refund': '/refunds',
-    'send_e-receipt': '/send-ereceipt',
   };
 
   @override
@@ -136,8 +161,19 @@ class _OtherActionTile extends ConsumerWidget {
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: () {
+          // Grab the root navigator's context BEFORE popping this sheet.
+          // `context` (this tile) is torn down by the pop below, so opening
+          // the next sheet against it can silently fail — same failure mode
+          // documented on the restart-POS branch.
+          final rootContext = Navigator.of(
+            context,
+            rootNavigator: true,
+          ).context;
+          final openSheet = _sheetMap[action.id];
           Navigator.of(context).pop();
-          if (action.id == _syncActionId) {
+          if (openSheet != null) {
+            openSheet(rootContext);
+          } else if (action.id == _syncActionId) {
             // Fire-and-forget: CatalogSyncController's state drives the
             // global CatalogSyncOverlay (mounted near the app root), so
             // there's nothing more for this tile to await or display —
@@ -146,6 +182,16 @@ class _OtherActionTile extends ConsumerWidget {
             ref
                 .read(catalogSyncControllerProvider.notifier)
                 .runSync(ref.read(catalogSyncServiceProvider));
+          } else if (action.id == _restartPosActionId) {
+            // No longer needs this tile's `context` at all — the flow
+            // opens its dialogs against the app's root navigator
+            // context instead (see root_navigator_key.dart), which
+            // stays valid regardless of this sheet closing. That fixes
+            // the earlier bug where the countdown dialog silently
+            // failed to appear: it was being opened against this
+            // tile's context right as the sheet's `Navigator.pop()`
+            // above started tearing that context down.
+            showRestartPosFlow(ref);
           } else if (route != null) {
             context.push(route);
           }
