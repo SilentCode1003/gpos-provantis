@@ -24,7 +24,6 @@ class SetupController extends _$SetupController {
     state = state.copyWith(posId: value, errorMessage: null);
   }
 
-  /// Updates the raw address input and recomposes [SetupState.domain].
   void setAddress(String value) {
     state = state.copyWith(address: value, errorMessage: null);
     _recomposeDomain();
@@ -49,8 +48,6 @@ class SetupController extends _$SetupController {
     state = state.copyWith(domain: '$protocol$hostAndPort/');
   }
 
-  /// Called by the screen when the protocol dropdown (http/https) changes,
-  /// since that also affects the composed domain.
   void setProtocol(String protocol) {
     state = state.copyWith(protocol: protocol);
     _recomposeDomain();
@@ -58,7 +55,7 @@ class SetupController extends _$SetupController {
 
   String? validatePort(String? value) {
     final port = (value ?? '').trim();
-    if (port.isEmpty) return null; // optional
+    if (port.isEmpty) return null;
 
     if (!_portPattern.hasMatch(port)) {
       return 'Port must be numbers only';
@@ -92,7 +89,6 @@ class SetupController extends _$SetupController {
     }
 
     try {
-      // 1. Save the domain and await the write completing.
       debugPrint('🔧 saveSetup: saving domain="$domain"');
       await ref.read(domainConfigDaoProvider).saveDomain(domain);
       debugPrint('🔧 saveSetup: domain write committed');
@@ -111,7 +107,6 @@ class SetupController extends _$SetupController {
       }
       debugPrint('🔧 saveSetup: domain confirmed, starting sync');
 
-      // 3. Fetch + save branch and pos config from the server.
       final syncResult = await ref
           .read(initialSyncServiceProvider)
           .run(branchId: branchId, posId: posId);

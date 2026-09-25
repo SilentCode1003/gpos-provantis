@@ -16,11 +16,6 @@ import 'package:gpos_provantis/src/core/database/providers/pos_config_dao_provid
 import 'package:gpos_provantis/src/core/database/providers/pos_shift_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/user_data_dao_provider.dart';
-// TODO: confirm this path — inferred from pos_shift_repository.dart's own
-// `import '../domain/pos_shift_dto.dart';`, which implies the repository
-// file sits in a sibling folder to `domain` (e.g. `.../data/pos_shift_repository.dart`
-// or `.../repositories/pos_shift_repository.dart`). Adjust to match
-// wherever that file actually lives in the project.
 import 'package:gpos_provantis/src/core/database/repository/pos_shift_repository.dart';
 import 'payments_controller.dart';
 import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
@@ -32,12 +27,6 @@ import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
 
 part 'dashboard_controller.g.dart';
 
-/// ID + full name captured for discounts that legally require recording
-/// who the discount was given to (PWD, Senior Citizen) — see
-/// `_discountRequiresCustomerInfo` for how a discount is recognized as
-/// one of these. Immutable and small on purpose: this only ever needs
-/// to travel from the discount-picker sheet into `DashboardState` and
-/// then into one JSON object in `_buildDiscountDetailJson`.
 class DiscountCustomerInfo {
   const DiscountCustomerInfo({required this.id, required this.fullName});
 
@@ -45,63 +34,17 @@ class DiscountCustomerInfo {
   final String fullName;
 }
 
-/// Whether [discount] is the kind that legally requires an ID + full
-/// name to be recorded against it (PWD, Senior Citizen) — matched by
-/// keyword against `discount.name` rather than a dedicated flag column,
-/// since the discounts synced from the server don't carry one and the
-/// exact wording/casing of a given discount's name isn't fixed (e.g.
-/// "PWD", "pwd", "Person's with Disability", "Senior", "Senior
-/// Citizen" all need to match).
-///
-/// This is a heuristic, not a guarantee: a discount that happens to be
-/// named e.g. "Non-PWD Promo" or "Senior Staff Bonus" would also match
-/// and incorrectly prompt for customer info. If that ever becomes a
-/// real problem, the real fix is a dedicated column on the discounts
-/// table, not a smarter keyword list here.
 bool _discountRequiresCustomerInfo(DiscountsTableData discount) {
-  // Lowercase and drop apostrophes so "Person's" / "Persons" both
-  // normalize the same way before the substring checks below.
   final normalized = discount.name.toLowerCase().replaceAll("'", '');
 
   final isSenior = normalized.contains('senior');
 
-  // "pwd" as a literal acronym, OR the spelled-out form — checked as
-  // two separate word-fragments ("person"/"disab") rather than one
-  // fixed phrase, since "person" vs "persons" and "disability" vs
-  // "disabilities"/"disabled" all need to match without enumerating
-  // every combination.
   final isPwd =
       normalized.contains('pwd') ||
       (normalized.contains('person') && normalized.contains('disab'));
 
   return isSenior || isPwd;
 }
-
-/// =========================================================================
-/// DASHBOARD CONTROLLER — POS main screen state.
-///
-/// DATA SOURCE: categories and products are streamed live from the local
-/// Drift database via `categoriesProvider`/`productPriceProvider`, which
-/// in turn are kept in sync by `CategoriesRepository`/
-/// `ProductPriceRepository` fetching from the API on login/sync. Both
-/// streams go through an explicit `loading` / `error` / `data` state
-/// (`CatalogLoadStatus`) rather than being collapsed into an empty list —
-/// see `categoriesStatus`/`productsStatus` below. This matters because
-/// "no rows yet" (still syncing, right after login) and "synced, and
-/// there really are zero categories/products" need different UI: the
-/// former should show a loading state, not an empty one.
-///
-/// Cart lives here (not in the widget tree) since it needs to persist
-/// across category switches — switching categories only changes which
-/// products are visible in the grid, it must never touch the cart.
-///
-/// CATALOG SHEET: tapping a category no longer swaps a grid in place —
-/// it opens `catalogSheetCategoryId` (the right-side sheet's "which
-/// category" state, separate from nothing else since there's no more
-/// always-visible grid) and the screen slides in an overlay. Search text
-/// (`catalogSearchQuery`) filters within whichever category is open.
-/// Both reset to closed/empty together via `closeCatalogSheet()`.
-/// =========================================================================
 
 /// One purchasable item, mapped from a synced `ProductPriceTableData` row
 /// — see `DashboardController.productsForCatalogSheet()`.

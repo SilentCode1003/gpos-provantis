@@ -1,4 +1,3 @@
-// Location: src/features/auth/controllers/login_controller.dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:gpos_provantis/src/core/database/repository/login_repository.dart';
 import 'package:gpos_provantis/src/services/sync/catalog_sync.dart';

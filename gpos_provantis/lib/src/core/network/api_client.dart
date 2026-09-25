@@ -37,12 +37,7 @@ Dio apiClient(Ref ref) {
 
   dio.interceptors.add(DedupeInterceptor());
 
-  // Reads the logged-in user's APK straight from UserDataTable, same DAO
-  // used by userDataProvider (see user_data_dao_provider.dart). Empty
-  // during setup (before any login has happened) — that's expected, since
-  // /branch/getbranch and /pos/getposconfig don't require it. Any endpoint
-  // behind the server's auth middleware DOES require it, so this header
-  // must carry a real APK by the time the user reaches those calls.
+  // Reads logged-in user's APK from UserDataTable. Empty during setup.
   final userDataDao = ref.watch(userDataDaoProvider);
 
   dio.interceptors.add(
@@ -71,9 +66,7 @@ Dio apiClient(Ref ref) {
             }
           }
         } else {
-          // Expected during setup / initial sync: no user has logged in
-          // yet, so there's no APK. Branch and POS config endpoints don't
-          // require it, so this placeholder header is harmless for them.
+          // Setup/initial sync: no user logged in yet, no APK required.
           options.headers['Authorization'] = 'Bearer missing_local_apk';
         }
 

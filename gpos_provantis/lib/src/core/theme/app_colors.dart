@@ -1,43 +1,26 @@
 // Location: src/core/theme/app_colors.dart
 import 'package:flutter/material.dart';
 
-/// =========================================================================
-/// APP COLORS — single source of truth for the POS V2 palette.
-///
-/// Structure:
-///   1. `AppPalette`   — raw, mode-agnostic hex tokens (the "paint swatches").
-///                        Never use these directly in widgets.
-///   2. `AppColors`    — semantic, mode-aware roles (the "usage"). This is
-///                        what you actually call from UI code, e.g.
-///                        `context.colors.primary` or `context.colors.danger`.
-///   3. `AppColors.light` / `AppColors.dark` — the two concrete instances.
-///
-/// Brand source color: #009184 (teal), the only color the V1 app used
-/// besides white. Every other token here is derived from it or chosen to
-/// harmonize with it, so V2 stays visually a "sibling" of V1 while adding
-/// full semantic + dark mode support.
-/// =========================================================================
-
+/// APP COLORS — semantic, mode-aware color roles tuned to V1 brand teal (#009184).
+/// Use AppColors (context.colors), not AppPalette, in UI code.
 /// Raw color swatches. Purely mechanical — no meaning attached yet.
-/// Naming follows a Material-style tonal scale: lower number = lighter.
+/// Naming follows Material tonal scale: lower number = lighter.
 abstract class AppPalette {
-  // ---- Brand teal (derived from #009184) ---------------------------------
+  // Brand teal from exact V1 color
   static const teal50 = Color(0xFFF1F8F8);
   static const teal100 = Color(0xFFDEF2F1);
   static const teal200 = Color(0xFFB8EAE6);
   static const teal300 = Color(0xFF81E4DB);
   static const teal400 = Color(0xFF30E8D8);
-  static const teal500 = Color(0xFF009184); // <- exact V1 brand color
+  static const teal500 = Color(0xFF009184); // Exact V1 brand color
   static const teal600 = Color(0xFF03776D);
   static const teal700 = Color(0xFF055C54);
   static const teal800 = Color(0xFF05423D);
   static const teal900 = Color(0xFF052E2A);
   static const teal950 = Color(0xFF041B19);
 
-  // ---- Neutrals (slightly teal-tinted grays, not pure gray) --------------
-  // A hint of the brand hue in the neutrals keeps light/dark surfaces from
-  // feeling like a generic gray Material app bolted onto a teal logo.
-  static const neutral0 = Color(0xFFFFFFFF); // <- exact V1 white
+  // Slightly teal-tinted grays to feel cohesive with brand
+  static const neutral0 = Color(0xFFFFFFFF); // Exact V1 white
   static const neutral50 = Color(0xFFF7F9F9);
   static const neutral100 = Color(0xFFEDF1F1);
   static const neutral200 = Color(0xFFDCE3E2);
@@ -48,17 +31,13 @@ abstract class AppPalette {
   static const neutral700 = Color(0xFF404C4B);
   static const neutral750 = Color(0xFF333D3C); // lifted dark-mode background
   static const neutral800 = Color(0xFF2A3332);
-  static const neutral850 = Color(0xFF232B2A); // lifted dark-mode surface
+  static const neutral850 = Color(0xFF232B2A); // Dark surface
   static const neutral900 = Color(0xFF1C2322);
   static const neutral950 = Color(0xFF0F1414);
-  static const neutral1000 = Color(
-    0xFF0A0D0D,
-  ); // unused by AppColors.dark now —
-  // kept only in case something elsewhere in the app reaches for true
-  // near-black directly; the semantic dark theme below no longer uses it.
+  static const neutral1000 = Color(0xFF0A0D0D); // True near-black (unused)
 
-  // ---- Semantic hues (status colors, tuned to sit well next to teal) -----
-  static const green500 = Color(0xFF2E9E5B); // success
+  // Semantic hues tuned to sit well next to teal
+  static const green500 = Color(0xFF2E9E5B); // Success
   static const green700 = Color(0xFF1F7A45);
   static const green200 = Color(0xFFB8E6C8);
   static const green950 = Color(0xFF0F2A1A);

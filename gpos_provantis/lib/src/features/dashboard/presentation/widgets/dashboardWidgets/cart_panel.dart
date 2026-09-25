@@ -1,4 +1,3 @@
-// Location: src/features/dashboard/presentation/widgets/dashboardWidgets/cart_panel.dart
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -11,14 +10,6 @@ import 'dashboard_constants.dart';
 import 'discount_picker_sheet.dart';
 import 'payments_modal.dart';
 
-/// --- Cart panel (left) -----------------------------------------------------
-
-/// How long the darkening scrim + "Tap here to close" hint stay visible
-/// after the catalog sheet opens, before fading themselves out on their
-/// own. Tap-to-dismiss itself is NOT on a timer — it keeps working for
-/// as long as the sheet is open, this only controls how long the visual
-/// reminder sticks around before getting out of the way so the cart
-/// items underneath are fully legible again.
 const Duration _cartScrimAutoFadeDelay = Duration(seconds: 3);
 
 class CartPanel extends ConsumerStatefulWidget {
@@ -29,11 +20,6 @@ class CartPanel extends ConsumerStatefulWidget {
 }
 
 class _CartPanelState extends ConsumerState<CartPanel> {
-  // Whether the scrim/hint should currently be visible. Distinct from
-  // `state.isCatalogSheetOpen` on purpose: the sheet can stay open far
-  // longer than 3 seconds, but the darkening + hint shouldn't — this
-  // flag is what actually drives their opacity, separately from
-  // whether the sheet itself is still open.
   bool _showScrim = false;
   Timer? _autoFadeTimer;
   bool? _wasSheetOpen;
@@ -44,12 +30,6 @@ class _CartPanelState extends ConsumerState<CartPanel> {
     super.dispose();
   }
 
-  // Called every build with the sheet's current open/closed state.
-  // Using `didChangeDependencies`-style manual diffing here (a plain
-  // `bool? _wasSheetOpen` compared each build) rather than
-  // `ref.listen`, since this widget already reads `isCatalogSheetOpen`
-  // via `ref.watch` in `build` for layout purposes anyway — a second
-  // separate listener would just be reacting to the same value twice.
   void _syncScrimTimer(bool isSheetOpen) {
     if (_wasSheetOpen == isSheetOpen) return;
     _wasSheetOpen = isSheetOpen;
@@ -57,20 +37,12 @@ class _CartPanelState extends ConsumerState<CartPanel> {
     _autoFadeTimer?.cancel();
 
     if (isSheetOpen) {
-      // Freshly opened: show the scrim/hint immediately, then start the
-      // countdown to fade them back out. Re-opening after a close
-      // always restarts this from full visibility — there's no
-      // "remembers it already faded once" state, since the user
-      // closing and re-opening the sheet is a new enough moment to earn
-      // the reminder again.
       setState(() => _showScrim = true);
       _autoFadeTimer = Timer(_cartScrimAutoFadeDelay, () {
         if (mounted) setState(() => _showScrim = false);
       });
     } else {
-      // Sheet just closed: hide immediately rather than waiting out
-      // whatever's left of the 3 seconds — there's nothing left to
-      // hint at once the sheet itself is gone.
+      // Hide scrim immediately when sheet closes.
       _showScrim = false;
     }
   }
@@ -96,15 +68,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
     _syncScrimTimer(state.isCatalogSheetOpen);
 
     return GestureDetector(
-      // "Tap outside the sheet closes it" also means tapping over here
-      // on the cart side, since the sheet only ever covers the right
-      // panel. Only intercepts taps while the sheet is actually open, so
-      // it never steals normal cart-line taps (stepper, remove, hold,
-      // charge) the rest of the time. This stays active for the sheet's
-      // entire open duration, independent of `_showScrim` — the scrim
-      // fading out after 3 seconds is purely visual and doesn't mean
-      // tap-to-close stops working, it just means the cart is fully
-      // visible again while it's still tappable-to-dismiss underneath.
+      // Tap-to-close: active while sheet is open, even if scrim has faded.
       behavior: state.isCatalogSheetOpen
           ? HitTestBehavior.opaque
           : HitTestBehavior.deferToChild,
@@ -129,21 +93,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
               ],
             ),
           ),
-          // Darkens the cart while the sheet is freshly open, then fades
-          // itself back out after `_cartScrimAutoFadeDelay` (see
-          // `_showScrim`) so the cart items are fully visible again
-          // without the user having to do anything. Fades in using the
-          // same timing/curve constants the sheet's own opening scrim
-          // uses, so the two sides read as one continuous dimming at
-          // the moment the sheet opens; the *fade back out* on the
-          // timer uses the sheet's close-duration/curve as well, purely
-          // because it's the same "dismiss-flavored" motion, not
-          // because the sheet is actually closing. Purely visual; the
-          // GestureDetector above (not this) handles the actual dismiss
-          // tap, and IgnorePointer here keeps this layer out of its
-          // way. Positioned.fill is required — without it (or
-          // StackFit.expand on the Stack alone) a bare DecoratedBox has
-          // no intrinsic size and paints at zero-by-zero.
+          // Darkening scrim that fades out after delay. Purely visual.
           Positioned.fill(
             child: IgnorePointer(
               child: AnimatedOpacity(
@@ -158,14 +108,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
               ),
             ),
           ),
-          // "Tap here to close" hint — subtle icon + label directly on
-          // the scrim (no card/button chrome), just enough to make the
-          // darkened cart legible as a dismiss surface for the same
-          // `_showScrim` window as the darkening above, then fades out
-          // alongside it. Purely visual (IgnorePointer) since the
-          // GestureDetector wrapping the whole Stack already owns the
-          // actual tap — and keeps owning it even once this hint (and
-          // the darkening) have faded away.
+          // Tap-to-close hint overlay. Fades with scrim.
           Positioned.fill(
             child: IgnorePointer(
               child: AnimatedOpacity(
@@ -184,14 +127,6 @@ class _CartPanelState extends ConsumerState<CartPanel> {
   }
 }
 
-/// Subtle "tap to close" hint shown over the darkened cart while the
-/// catalog sheet is freshly open — no card, pill, or button chrome;
-/// just an icon and label sitting directly on the dark scrim, the way a
-/// hint (not a control) should read. Fades out (see `_showScrim` in
-/// `_CartPanelState`) a few seconds after appearing rather than staying
-/// up for as long as the sheet itself is open. `Colors.white` regardless
-/// of theme since it's painted on top of a black scrim, not the panel's
-/// own surface color.
 class _TapToCloseHint extends StatelessWidget {
   const _TapToCloseHint();
 
@@ -219,12 +154,6 @@ class _TapToCloseHint extends StatelessWidget {
   }
 }
 
-// Matches `TopBar`'s rendered height exactly (16 top padding + the
-// 72-tall `_topBarTapTarget` profile circle + 12 bottom padding — see
-// top_bar.dart) so the cart header and the top bar line up edge-to-edge
-// across the cart/catalog split, rather than each sizing independently
-// off their own padding + tallest child and drifting apart if either
-// changes.
 const double _cartHeaderHeight = 100;
 
 class _CartHeader extends StatelessWidget {
@@ -232,11 +161,6 @@ class _CartHeader extends StatelessWidget {
 
   final int itemCount;
 
-  /// Null-safe by construction from the caller (`CartPanel` only ever
-  /// passes `notifier.clearCart` here), but the button itself only
-  /// renders `if (itemCount > 0)` below — an empty cart has nothing to
-  /// remove, so the action shouldn't be offered at all rather than
-  /// rendered-but-disabled.
   final VoidCallback onRemoveAll;
 
   @override
@@ -248,13 +172,7 @@ class _CartHeader extends StatelessWidget {
       height: _cartHeaderHeight,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        // V1 brand teal, not a neutral surface — see `AppPalette.teal500`
-        // doc comment (the exact V1 #009184), same fill already used for
-        // the emphasized "Start shift" button and the profile ring in
-        // top_bar.dart. `colors.primary` would drift per-theme (it's a
-        // lighter tint in dark mode); this header wants the literal
-        // brand color regardless of theme, so it reads from the palette
-        // directly rather than the semantic token.
+        // V1 brand teal (used consistently across themes)
         color: AppPalette.teal500,
         border: Border(bottom: BorderSide(color: colors.borderSubtle)),
       ),
@@ -278,14 +196,7 @@ class _CartHeader extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                // `primaryContainer`/`onPrimaryContainer` are tuned to sit
-                // on the neutral background, not on `teal500` itself —
-                // on top of the solid brand fill they'd lose contrast (in
-                // dark mode `primaryContainer` is a darker teal, close in
-                // value to the fill behind it). A translucent white pill
-                // instead, same "tinted pill on a solid color" pattern as
-                // `_ProfileMenuRow`'s icon backdrop in top_bar.dart, just
-                // inverted for a dark-colored fill.
+                // Translucent white pill on teal background
                 color: colors.onPrimary.withOpacity(0.18),
                 borderRadius: BorderRadius.circular(999),
               ),
@@ -299,14 +210,7 @@ class _CartHeader extends StatelessWidget {
               ),
             ),
           const Spacer(),
-          // Only offered once there's actually something to clear — an
-          // empty cart has nothing for this to do, so it's absent
-          // rather than rendered-and-disabled. Confirms first via the
-          // same shared `showConfirmDialog` Logout already uses in
-          // top_bar.dart — clearing an entire in-progress sale is just
-          // as hard to walk back as logging out mid-shift, so it gets
-          // the same "are you sure" guard rather than firing on a
-          // single accidental tap.
+          // Only shown when cart has items, requires confirmation.
           if (itemCount > 0) _RemoveAllButton(onTap: onRemoveAll),
         ],
       ),
@@ -314,17 +218,6 @@ class _CartHeader extends StatelessWidget {
   }
 }
 
-/// "Remove all" — clears every line from the cart in one tap instead of
-/// making the cashier back out each line individually via its own swipe
-/// or trash icon (see `_CartLineTile`). Text-only, no button chrome, so
-/// it doesn't visually compete with the item-count pill for attention
-/// in a header that's otherwise just a title — same "hint/secondary
-/// action sits quietly" spirit as `_TapToCloseHint` rather than a full
-/// `ElevatedButton`. `colors.onPrimary` at reduced opacity (not
-/// `colors.danger`) since this sits on the solid teal header fill,
-/// where the danger-red token isn't guaranteed enough contrast against
-/// brand teal in every theme; the destructive weight instead comes from
-/// the confirm dialog it opens, not the button's own color.
 class _RemoveAllButton extends StatelessWidget {
   const _RemoveAllButton({required this.onTap});
 
@@ -406,17 +299,6 @@ class _EmptyCart extends StatelessWidget {
   }
 }
 
-/// Wraps the cart's `ListView.separated` with two pieces of "there's more
-/// content" feedback that only appear when they're actually true:
-///   - a soft shadow/gradient fade at whichever edge (top and/or bottom)
-///     still has off-screen content, so a long cart doesn't just end
-///     abruptly at the header/footer seam with no visual cue it's a
-///     scrollable region rather than the full list.
-///   - a small downward arrow hovering just above the footer, shown only
-///     while there's more to scroll to below — nudges a cashier who
-///     might not otherwise think to try scrolling a POS panel.
-/// Needs to be stateful since it listens to the `ScrollController` to
-/// decide whether either edge currently has more content.
 class _ScrollableCartList extends StatefulWidget {
   const _ScrollableCartList({required this.cartLines});
 
@@ -429,11 +311,7 @@ class _ScrollableCartList extends StatefulWidget {
 class _ScrollableCartListState extends State<_ScrollableCartList> {
   final _controller = ScrollController();
 
-  // Whether there's currently off-screen content above/below the
-  // viewport. Both start false and get corrected on the first post-frame
-  // check once real content dimensions are known — starting `true` would
-  // flash a fade/arrow for a split second on short carts that were never
-  // actually scrollable.
+  // Whether there's off-screen content above/below.
   bool _canScrollUp = false;
   bool _canScrollDown = false;
 
@@ -441,11 +319,7 @@ class _ScrollableCartListState extends State<_ScrollableCartList> {
   void initState() {
     super.initState();
     _controller.addListener(_updateScrollAffordances);
-    // Content isn't laid out yet during initState — check again right
-    // after the first frame so a cart that opens already-scrollable
-    // (e.g. resumed from a held sale with many lines) shows the bottom
-    // fade/arrow immediately instead of waiting for the first scroll
-    // event.
+    // Check scroll affordances after first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _updateScrollAffordances();
     });
@@ -454,9 +328,7 @@ class _ScrollableCartListState extends State<_ScrollableCartList> {
   @override
   void didUpdateWidget(covariant _ScrollableCartList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Cart contents changed (line added/removed/qty changed) — the
-    // scrollable extent may have changed with it, so re-check after this
-    // frame builds rather than waiting for the next manual scroll.
+    // Re-check scroll affordances when cart contents change.
     if (oldWidget.cartLines != widget.cartLines) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _updateScrollAffordances();
@@ -467,9 +339,7 @@ class _ScrollableCartListState extends State<_ScrollableCartList> {
   void _updateScrollAffordances() {
     if (!_controller.hasClients) return;
     final position = _controller.position;
-    // A small epsilon rather than an exact 0/max comparison — floating
-    // point scroll extents can land a fraction of a pixel short of the
-    // true edge even when visually fully scrolled.
+    // Small epsilon tolerance for floating point scroll position.
     const epsilon = 2.0;
     final canUp = position.pixels > position.minScrollExtent + epsilon;
     final canDown = position.pixels < position.maxScrollExtent - epsilon;
@@ -504,23 +374,19 @@ class _ScrollableCartListState extends State<_ScrollableCartList> {
             return _CartLineTile(line: widget.cartLines[index]);
           },
         ),
-        // Top fade — sits just under the header, only visible once the
-        // list has been scrolled down from the very top.
+        // Top fade when scrolled down.
         _EdgeFade(
           visible: _canScrollUp,
           alignment: Alignment.topCenter,
           colors: colors,
         ),
-        // Bottom fade — sits just above the footer, visible whenever
-        // there's more content below the fold.
+        // Bottom fade when more content below.
         _EdgeFade(
           visible: _canScrollDown,
           alignment: Alignment.bottomCenter,
           colors: colors,
         ),
-        // Top scroll-hint arrow — mirrors the bottom one below, shown
-        // only while there's unscrolled content above (i.e. the cashier
-        // has scrolled down and might not realize there's more above).
+        // Top scroll hint arrow.
         Positioned(
           left: 0,
           right: 0,
@@ -536,10 +402,7 @@ class _ScrollableCartListState extends State<_ScrollableCartList> {
             ),
           ),
         ),
-        // Bottom scroll-hint arrow, layered on top of the bottom fade —
-        // same visibility condition (only while there's more below), but
-        // its own widget so the fade and the arrow can be tuned
-        // independently later without tangling their logic together.
+        // Bottom scroll hint arrow.
         Positioned(
           left: 0,
           right: 0,
@@ -560,17 +423,7 @@ class _ScrollableCartListState extends State<_ScrollableCartList> {
   }
 }
 
-/// Soft gradient fade at one edge of the scroll viewport — the visual
-/// language for "there's more content this way" (same idea as a fading
-/// horizontal scroller, just vertical here). `IgnorePointer` since this
-/// is a pure overlay and must never intercept the taps/drags meant for
-/// the list underneath it.
-///
-/// Lightened from the first pass, which used `colors.shadow` at full
-/// strength — that token is tuned for drop shadows under raised cards,
-/// not a soft top/bottom vignette, and read as a noticeably dark band
-/// here. Peak opacity is now scaled down (30% of the token's own alpha)
-/// so it stays a gentle cue rather than competing with the content.
+/// Soft gradient fade at scroll viewport edges to indicate more content.
 class _EdgeFade extends StatelessWidget {
   const _EdgeFade({
     required this.visible,
@@ -584,8 +437,7 @@ class _EdgeFade extends StatelessWidget {
 
   static const _fadeHeight = 28.0;
 
-  // Fraction of `colors.shadow`'s own alpha used at the fade's darkest
-  // point. Tuned down from full strength (1.0) — see class doc comment.
+  // Peak opacity scale factor for the fade.
   static const _peakOpacityScale = 0.3;
 
   @override
@@ -620,18 +472,10 @@ class _EdgeFade extends StatelessWidget {
   }
 }
 
-/// Which way a `_ScrollHintArrow` points and bounces — toward whichever
-/// edge still has unscrolled content.
+/// Direction for scroll hint arrow to point.
 enum _ScrollHintDirection { up, down }
 
-/// Small bouncing chevron near an edge of the cart list — the "psst,
-/// there's more this way" nudge. One arrow lives just under the header
-/// (pointing up, for content already scrolled past) and one just above
-/// the footer (pointing down, for content not yet scrolled to); both use
-/// this same widget, just with an opposite `direction`. Purely decorative
-/// (wrapped in `IgnorePointer` by the caller), looping for as long as
-/// it's visible rather than a one-shot animation, since a cashier
-/// glancing at the screen mid-shift might miss a single bounce.
+/// Bouncing arrow hint to indicate scrollable content.
 class _ScrollHintArrow extends StatefulWidget {
   const _ScrollHintArrow({required this.colors, required this.direction});
 
@@ -654,8 +498,7 @@ class _ScrollHintArrowState extends State<_ScrollHintArrow>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
-    // Bounce toward the direction being pointed at — an "up" arrow
-    // nudges upward (negative offset), a "down" arrow nudges downward.
+    // Bounce in the direction being pointed.
     final bounceTowards = widget.direction == _ScrollHintDirection.up
         ? -5.0
         : 5.0;
@@ -704,12 +547,7 @@ class _CartLineTile extends ConsumerWidget {
 
   final CartLine line;
 
-  /// Shared by the ✕ button and the swipe gesture so both paths agree on
-  /// what "remove" means and both get the same confirmation guard — a
-  /// touchscreen POS makes an accidental full-width swipe easy to
-  /// trigger while scrolling the cart, so unlike a plain tap on a small
-  /// target, the swipe path needs a confirm step before it actually
-  /// removes anything.
+  /// Confirm before removing item (used for both tap and swipe).
   Future<bool> _confirmRemove(BuildContext context) async {
     final confirmed = await showConfirmDialog(
       context,
@@ -725,9 +563,7 @@ class _CartLineTile extends ConsumerWidget {
     final colors = context.colors;
     final notifier = ref.read(dashboardControllerProvider.notifier);
 
-    // Keyed on product id (not the line's position) so Dismissible can
-    // correctly tell lines apart as the cart reorders/shrinks — without
-    // a stable key it can mis-animate or dismiss the wrong tile.
+    // Key by product ID for correct tracking during cart reordering.
     return Dismissible(
       key: ValueKey(line.product.id),
       direction: DismissDirection.endToStart,
@@ -781,11 +617,7 @@ class _CartLineTile extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                // 56x56 hit area even though the glyph itself is small —
-                // this is the "10x10 pixel X button" fixed. The icon stays
-                // visually modest; the InkWell/tap area does not. Routes
-                // through the same `_confirmRemove` guard as the swipe so
-                // a stray tap mid-shift can't silently drop a line either.
+                // 56x56 tap target with confirmation guard.
                 Material(
                   color: Colors.transparent,
                   shape: const CircleBorder(),
@@ -799,12 +631,7 @@ class _CartLineTile extends ConsumerWidget {
                     child: SizedBox(
                       width: minTapTarget,
                       height: minTapTarget,
-                      // Was unstyled, so it fell back to Flutter's
-                      // default icon color instead of the theme — that's
-                      // why it wasn't visible. `textSecondary` matches
-                      // the weight of the "$X each" line right above it:
-                      // present, but not competing with the product name
-                      // or the line total for attention.
+                      // Icon color matches secondary text weight
                       child: Icon(
                         PhosphorIcons.x,
                         size: 20,

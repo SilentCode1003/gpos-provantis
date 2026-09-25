@@ -11,6 +11,7 @@ import 'package:gpos_provantis/src/services/pos_restart_service.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/refund_sheet.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/reprint_sheet.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/send_ereceipt_sheet.dart';
+import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/cash_drop_sheet.dart';
 
 /// --- Others sheet: 11-item grid of secondary actions -----------------------
 ///
@@ -112,6 +113,13 @@ class _OtherActionTile extends ConsumerWidget {
   /// below (the `else if` branch, the flow call) stays the same.
   static const _restartPosActionId = 'restart_pos';
 
+  /// TODO: same caveat as [_restartPosActionId] above — 'cash_drop' is a
+  /// guess at the real `OtherAction.id` for the cash drop tile, following
+  /// the same snake_case pattern as the other ids. Verify against
+  /// `controller.otherActions` and update if it differs. This id is also
+  /// referenced in `_sheetMap` below.
+  static const _cashDropActionId = 'cash_drop';
+
   static const _iconMap = {
     'receipt_long_rounded': Icons.receipt_long_rounded,
     'summarize_rounded': Icons.summarize_rounded,
@@ -124,6 +132,10 @@ class _OtherActionTile extends ConsumerWidget {
     'inbox_rounded': Icons.inbox_rounded,
     'sync_rounded': Icons.sync_rounded,
     'restart_alt_rounded': Icons.restart_alt_rounded,
+    // Added for the cash drop tile. Distinct from 'payments_rounded'
+    // (already in use elsewhere in this map) to avoid two tiles reading
+    // as the same icon at a glance.
+    'point_of_sale_rounded': Icons.point_of_sale_rounded,
   };
 
   /// Ids that open a form bottom sheet (OR number / email entry) instead of
@@ -134,15 +146,21 @@ class _OtherActionTile extends ConsumerWidget {
     're_print': ReprintSheet.show,
     'refund': RefundSheet.show,
     'send_e-receipt': SendEReceiptSheet.show,
+    // CashDropSheet.show resolves with a CashDropResult (or null if
+    // dismissed) rather than void, so it's wrapped here to match this map's
+    // Future<void> signature. Whatever needs to persist/print the drop
+    // should read that result where the drop is actually handled — this
+    // tile only opens the sheet.
+    'cash_drop': (context) => CashDropSheet.show(context),
   };
 
   /// Maps an [OtherAction.id] to the route path it should push. Ids with
-  /// no screen yet (cash drop, open cashdrawer) are omitted — those
-  /// tiles just close the sheet for now. `sync_data`, [_restartPosActionId]
-  /// and the [_sheetMap] ids are also absent here, but for a different
-  /// reason: each is dispatched as its own in-place action (sync, restart
-  /// flow, form sheet) rather than a route push — see the `onTap` handler
-  /// below.
+  /// no screen yet (e.g. open cashdrawer) are omitted — those tiles just
+  /// close the sheet for now. `sync_data`, [_restartPosActionId] and the
+  /// [_sheetMap] ids (including cash drop, as of this sheet's addition) are
+  /// also absent here, but for a different reason: each is dispatched as
+  /// its own in-place action (sync, restart flow, form sheet) rather than a
+  /// route push — see the `onTap` handler below.
   static const _routeMap = {
     'receipt': '/receipts',
     'reports': '/reports',

@@ -4,20 +4,8 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_typography.dart';
 
-/// =========================================================================
-/// APP THEME — builds the two `ThemeData` objects Flutter needs
-/// (`theme` + `darkTheme`), each carrying its `AppColors` as a
-/// `ThemeExtension` so `context.colors` can find it.
-///
-/// Wire into MaterialApp like:
-///
-///   MaterialApp.router(
-///     theme: AppTheme.light,
-///     darkTheme: AppTheme.dark,
-///     themeMode: ref.watch(themeModeControllerProvider),
-///     routerConfig: router,
-///   )
-/// =========================================================================
+/// APP THEME — builds ThemeData objects with AppColors as ThemeExtension.
+/// Use AppTheme.light and AppTheme.dark in MaterialApp configuration.
 
 abstract class AppTheme {
   static ThemeData get light => _build(AppColors.light);
@@ -124,11 +112,7 @@ abstract class AppTheme {
   }
 
   static TextTheme _textTheme(AppColors colors) {
-    // Base face is Public Sans (the UI/functional face) — correct default
-    // for the vast majority of Text widgets, which are cashier-facing
-    // chrome, not brand moments. Screens that need the display face
-    // (Fraunces) for a headline should reach for `AppTypography.display(...)`
-    // explicitly rather than relying on textTheme.
+    // Default to Public Sans (UI face). Fraunces brand headlines use AppTypography.display().
     final base = AppTypography.uiTextTheme(
       ThemeData(brightness: colors.brightness).textTheme,
     );

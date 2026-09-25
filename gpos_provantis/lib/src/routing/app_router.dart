@@ -11,18 +11,7 @@ import 'package:gpos_provantis/src/features/setup/presentation/screens/setup_scr
 import 'package:gpos_provantis/src/features/login/presentation/screens/login_screen.dart';
 import 'package:gpos_provantis/src/features/startup/presentation/screens/startup_screen.dart';
 
-/// Builds a page using [CupertinoPage], which gives every route the
-/// native iOS-style slide-in/slide-out transition AND, crucially, the
-/// native edge-swipe-to-pop gesture for free — dragging from the left
-/// edge correctly reveals the actual previous screen underneath in
-/// real time, with matching parallax, because Flutter's own routing
-/// machinery handles the layering instead of a hand-rolled widget.
-///
-/// A previous version of this file tried to reproduce this with a
-/// custom AnimatedBuilder transition plus a manual drag-detecting
-/// wrapper. That approach only animated the current screen away on
-/// drag with nothing genuinely rendered underneath it, which showed a
-/// black screen mid-swipe. CupertinoPage avoids that entirely.
+/// Builds a CupertinoPage with native iOS-style slide transition and edge-swipe-to-pop gesture.
 CupertinoPage<void> _buildPageWithTransition(
   BuildContext context,
   GoRouterState state,

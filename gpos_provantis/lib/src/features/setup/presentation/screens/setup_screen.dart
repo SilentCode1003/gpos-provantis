@@ -62,12 +62,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           message: 'Terminal setup saved successfully.',
           type: AppToastType.success,
         );
-        
-        // Hand off back to /startup so StartupController re-runs its
-        // domain check and routes on to /login. StartupController stays
-        // the single source of truth for "where do we go next" (see
-        // app_router.dart) instead of Setup deciding to go to /login
-        // itself.
+
         context.go('/startup?fromSetup=true');
       }
     }
@@ -177,11 +172,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                         const SizedBox(height: 16),
                       ],
 
-                      // Domain row: HTTP/HTTPS dropdown + Address + Port,
-                      // all under one label. Port is visually de-emphasized
-                      // (smaller, "Optional" hint as its hint text rather
-                      // than a separate labeled section) since most users
-                      // will never need to touch it.
                       _buildFieldLabel('Domain / Server Address', colors),
                       const SizedBox(height: 6),
                       Row(
@@ -281,12 +271,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                               enabled: !state.isLoading,
                               keyboardType: TextInputType.number,
                               textAlign: TextAlign.center,
-                              // Belt-and-suspenders alongside controller
-                              // -side validation: restrict input at the
-                              // keyboard level too, since a pasted value
-                              // can bypass keyboardType alone. Real
-                              // enforcement still happens in
-                              // SetupController.validatePort.
                               inputFormatters: [
                                 FilteringTextInputFormatter.digitsOnly,
                                 LengthLimitingTextInputFormatter(5),
@@ -313,7 +297,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Branch ID Field
                       _buildFieldLabel('Branch ID', colors),
                       const SizedBox(height: 6),
                       TextFormField(
@@ -338,7 +321,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // POS ID Field
                       _buildFieldLabel('POS ID', colors),
                       const SizedBox(height: 6),
                       TextFormField(
@@ -363,7 +345,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Submit Button
                       SizedBox(
                         height: 48,
                         child: ElevatedButton(

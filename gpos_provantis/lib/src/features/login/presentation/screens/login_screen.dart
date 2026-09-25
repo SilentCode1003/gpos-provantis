@@ -1,10 +1,3 @@
-// Location: src/features/auth/screens/login_screen.dart
-//
-// Requires `google_fonts` in pubspec.yaml (used indirectly via
-// AppTypography in core/theme) — add it if it isn't there yet.
-// Check https://pub.dev/packages/google_fonts for the current version:
-//   dependencies:
-//     google_fonts: ^<latest>
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -17,30 +10,6 @@ import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_pro
 import 'package:gpos_provantis/src/core/database/providers/pos_config_dao_provider.dart';
 import 'package:gpos_provantis/src/shared/widgets/app_toast.dart';
 import '../controllers/login_controller.dart';
-
-/// =========================================================================
-/// LOGIN SCREEN — flat, lightweight, V1-teal split layout.
-///
-/// PERFORMANCE NOTE: this app targets low-spec touchscreen POS hardware.
-/// Deliberately avoided here: BackdropFilter/blur, gradients-as-decoration,
-/// glow shadows, and any per-frame animation. Everything is a flat fill —
-/// cheap to paint and cheap to repaint on every keystroke/focus change.
-/// If a design later calls for something heavier, that's a conscious
-/// per-widget trade-off, not a default.
-///
-/// THEME-AWARE: every widget below reads `context.colors` (see
-/// `app_colors_extension.dart`) rather than a hardcoded `AppColors.light`
-/// constant, so the screen follows the user's light/dark preference
-/// (`themeModeControllerProvider`) like the rest of the app. The brand
-/// panel's teal fill (`AppPalette.teal500`) is intentionally NOT
-/// theme-aware — it's the fixed brand color in both modes — but text/icons
-/// drawn on top of it still resolve via `context.colors.onPrimary` since
-/// that role is itself defined per-mode (see `app_colors.dart`).
-///
-/// Layout: 3:5 split (≈37.5/62.5, close to golden ratio) — brand panel on
-/// the left, form on the right. Collapses to a stacked layout below the
-/// breakpoint for phone-sized/portrait screens.
-/// =========================================================================
 
 const double _splitLayoutBreakpoint = 720;
 
@@ -60,8 +29,6 @@ class LoginScreen extends ConsumerWidget {
     );
   }
 }
-
-/// --- Wide: side-by-side brand panel + form --------------------------------
 
 class _WideLayout extends StatelessWidget {
   const _WideLayout();
@@ -92,8 +59,6 @@ class _WideLayout extends StatelessWidget {
   }
 }
 
-/// --- Narrow: compact brand band + form below ------------------------------
-
 class _NarrowLayout extends StatelessWidget {
   const _NarrowLayout();
 
@@ -122,15 +87,6 @@ class _NarrowLayout extends StatelessWidget {
   }
 }
 
-/// --- Brand panel — flat V1 teal, placeholder for a future image ---------
-///
-/// The teal fill itself stays fixed brand color in both light and dark
-/// mode (a POS brand panel isn't expected to go "dark mode teal") — only
-/// the text/icon color drawn on top resolves through `context.colors`,
-/// since `onPrimary` is itself defined differently per mode in
-/// `app_colors.dart` (near-white on light, near-black on dark) to keep
-/// contrast correct against the teal.
-
 class _BrandPanel extends StatelessWidget {
   const _BrandPanel();
 
@@ -138,9 +94,6 @@ class _BrandPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
 
-    // Flat fill only — no gradient. Swap this Container's `color` for a
-    // full-bleed Image widget later when the picture is ready; layout
-    // and text below are already positioned to sit on top of it.
     return Container(
       color: AppPalette.teal500,
       child: Center(
@@ -176,8 +129,6 @@ class _BrandPanel extends StatelessWidget {
   }
 }
 
-/// --- Compact brand band (narrow layout) -----------------------------------
-
 class _BrandBand extends StatelessWidget {
   const _BrandBand();
 
@@ -209,8 +160,6 @@ class _BrandBand extends StatelessWidget {
   }
 }
 
-/// Simple flat logo mark — no shadow/glow (cheap to paint). Swap for a real
-/// asset (Image.asset) once branding exists.
 class _LogoMark extends StatelessWidget {
   const _LogoMark({required this.color, this.size = 60});
 
@@ -230,8 +179,6 @@ class _LogoMark extends StatelessWidget {
     );
   }
 }
-
-/// --- The form ------------------------------------------------------------
 
 class _LoginForm extends ConsumerStatefulWidget {
   const _LoginForm();
@@ -385,8 +332,6 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
   }
 }
 
-/// --- Flat input field — solid fill, no blur/animation --------------------
-
 class _FlatField extends StatelessWidget {
   const _FlatField({
     required this.label,
@@ -459,8 +404,6 @@ class _FlatField extends StatelessWidget {
   }
 }
 
-/// --- Sign in button — flat fill, no gradient/shadow ------------------
-
 class _SignInButton extends StatelessWidget {
   const _SignInButton({required this.isLoading, required this.onPressed});
 
@@ -507,8 +450,6 @@ class _SignInButton extends StatelessWidget {
   }
 }
 
-/// --- Setup / Sync — flat icon buttons -----------------------------------
-
 class _SetupButton extends StatelessWidget {
   const _SetupButton();
 
@@ -522,10 +463,6 @@ class _SetupButton extends StatelessWidget {
   }
 }
 
-/// Leaving login for /setup mid-session is disruptive — it interrupts
-/// whoever's signing in and re-opens the domain/branch/POS config. A
-/// stray tap on a touchscreen POS shouldn't be able to trigger that, so
-/// this requires a deliberate second confirmation before navigating.
 Future<void> _confirmReturnToSetup(BuildContext context) async {
   final confirmed = await showConfirmDialog(
     context,
@@ -543,12 +480,6 @@ Future<void> _confirmReturnToSetup(BuildContext context) async {
   }
 }
 
-/// Re-runs [InitialSyncService] using the branchId/posId already saved
-/// locally during setup (there's no form on this screen to type them in —
-/// they come from BranchConfigDao/PosConfigDao). Guards against double-taps
-/// with [_isSyncing] since a stray tap on a touchscreen POS could otherwise
-/// fire two syncs; the second would just hit InitialSyncService's own
-/// duplicate-request no-op, but disabling here avoids the wasted request.
 class _SyncButton extends ConsumerStatefulWidget {
   const _SyncButton();
 
@@ -592,16 +523,12 @@ class _SyncButtonState extends ConsumerState<_SyncButton> {
           type: AppToastType.success,
         );
       } else if (result.errorMessage != null) {
-        // A real failure (network, missing/empty server response, etc).
         AppToast.show(
           context,
           message: 'Failed to sync: ${result.errorMessage}',
           type: AppToastType.error,
         );
       }
-      // errorMessage == null with success == false means a duplicate
-      // request was blocked — the original sync is still in flight, so
-      // stay silent rather than showing a misleading error or success toast.
     } finally {
       if (mounted) setState(() => _isSyncing = false);
     }
@@ -618,8 +545,6 @@ class _SyncButtonState extends ConsumerState<_SyncButton> {
   }
 }
 
-/// Flat circular icon button — solid fill, no shadow/blur/animation.
-/// Shared so Setup/Sync stay visually identical.
 class _FlatIconButton extends StatelessWidget {
   const _FlatIconButton({
     required this.icon,

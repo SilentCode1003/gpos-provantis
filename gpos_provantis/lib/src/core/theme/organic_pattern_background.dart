@@ -2,65 +2,15 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-/// =========================================================================
-/// CONCENTRIC CIRCLE PATTERN BACKGROUND — sparse, loosely scattered rings
-/// of varying sizes, referencing a light doodle/target-circle texture.
-/// Built for a brand selling large-scale outdoor art (statuary, fountains,
-/// garden stone) — background texture, not a foreground statement.
-///
-/// NO OVERLAP: each cluster's placement is checked against every
-/// previously placed cluster's center + outer radius before it's
-/// committed, so no two clusters' circles ever touch or overlap. If a
-/// collision-free spot can't be found within a retry budget (dense
-/// `clusterCount` on a small canvas), that cluster is skipped rather than
-/// forced to overlap — so the rendered count may be slightly under
-/// `clusterCount` in tight spaces, never over-dense or overlapping.
-///
-/// RANDOMIZATION — SEEDED, ROTATES EVERY 24H (in-memory, not persisted):
-/// The pattern is deterministic per seed (`Random(seed)`), and the seed
-/// itself is stored in a process-wide static (`_PatternSeed`), generated
-/// lazily the first time any instance of this widget paints. Every
-/// subsequent paint — including ones triggered by unrelated rebuilds like
-/// button hover, focus changes, or parent setState — reuses that same
-/// seed and therefore renders the exact same layout, so the pattern no
-/// longer visibly reshuffles on every repaint.
-///
-/// The seed rotates automatically once 24 hours have elapsed since it was
-/// generated: the next paint after that point notices the age, generates
-/// a fresh seed + timestamp, and every widget instance picks up the new
-/// layout on its next repaint.
-///
-/// IN-MEMORY ONLY: the seed/timestamp live in a static field, not on
-/// disk — nothing is persisted via shared_preferences or similar. This
-/// means a full app restart also gets a fresh seed (there's nothing to
-/// restore), and a long-lived app session will additionally rotate once
-/// 24h of wall-clock time passes while still running. Both were called
-/// out as intended behavior; swap `_PatternSeed` for a disk-backed store
-/// if the pattern should instead survive restarts and only rotate on the
-/// 24h clock regardless of relaunches.
-///
-/// PERFORMANCE: `shouldRepaint` compares seed/color/opacity/clusterCount
-/// like a normal `CustomPainter` — repaint is skipped whenever none of
-/// those changed, so hover/focus/rebuild churn no longer costs a repaint
-/// at all. The 24h rotation is picked up the next time a repaint *does*
-/// legitimately happen (e.g. navigating back to this screen); this widget
-/// doesn't run its own timer to force a repaint the instant 24h ticks
-/// over while the screen is sitting idle on-screen.
-/// =========================================================================
-
-/// Process-wide seed store — shared by every `OrganicPatternBackground`
-/// instance so they all render the same layout, and so the 24h rotation
-/// only needs to happen in one place.
+/// Concentric circle pattern background. Sparse, scattered rings with no overlaps.
+/// Seeded randomly, rotates seed every 24 hours. Optimized to skip repaints.
 abstract class _PatternSeed {
   static const _rotateAfter = Duration(hours: 24);
 
   static int? _seed;
   static DateTime? _generatedAt;
 
-  /// Current seed, generating (or regenerating, past the 24h mark) as
-  /// needed. Safe to call from `paint()` on every frame — it's a cheap
-  /// timestamp comparison in the common case where nothing needs to
-  /// change.
+  /// Current seed, regenerating past 24h mark as needed.
   static int get current {
     final now = DateTime.now();
     final generatedAt = _generatedAt;

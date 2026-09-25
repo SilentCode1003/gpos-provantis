@@ -5,24 +5,6 @@ import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/core/theme/organic_pattern_background.dart';
 import '../controllers/startup_controller.dart';
 
-/// =========================================================================
-/// STARTUP / SPLASH SCREEN
-///
-/// The one true "brand moment" in the whole app — shown for a fixed
-/// minimum duration on a cold boot while StartupController resolves
-/// whether this device has already been configured (see
-/// startup_controller.dart). Everything after this screen (login,
-/// dashboard, settings) is operational chrome; this is the only place
-/// that gets to be quiet and unhurried.
-///
-/// SIGNATURE ELEMENT: the same concentric-ring motif used as background
-/// texture on SetupScreen (see organic_pattern_background.dart) is drawn
-/// here as a single foreground ring, animating outward from the wordmark
-/// like a signal settling — visually rhyming "this device is finding its
-/// configuration" with the literal shape already established elsewhere
-/// in the app, rather than reaching for a generic spinner.
-/// =========================================================================
-
 class StartupScreen extends ConsumerStatefulWidget {
   const StartupScreen({super.key});
 
@@ -53,20 +35,10 @@ class _StartupScreenState extends ConsumerState<StartupScreen>
   Widget build(BuildContext context) {
     final colors = context.colors;
 
-    // If we were sent here right after a successful Setup save (see
-    // SetupScreen._handleSubmit), skip the artificial minimum splash
-    // duration — this pass is just re-confirming the domain that was
-    // just saved, not a genuine cold boot, so holding the splash for
-    // the full duration would just look like a redundant extra screen
-    // between Setup and Login.
     final fromSetup =
         GoRouterState.of(context).uri.queryParameters['fromSetup'] == 'true';
     final provider = startupControllerProvider(enforceMinDuration: !fromSetup);
 
-    // ref.listen (not ref.watch alone) so navigation fires exactly once
-    // when the destination resolves, rather than on every rebuild of this
-    // widget — navigating from inside build() directly can trigger
-    // "called during build" errors and can double-fire.
     ref.listen<AsyncValue<StartupDestination>>(provider, (previous, next) {
       next.whenData((destination) {
         if (!mounted) return;
@@ -148,10 +120,6 @@ class _StartupScreenState extends ConsumerState<StartupScreen>
   }
 }
 
-/// The still center of the mark: a single filled dot in brand teal. Stays
-/// on screen whether or not the ring animation is running, so
-/// `reduceMotion` users still get a complete, intentional mark rather
-/// than an empty box.
 class _StaticMark extends StatelessWidget {
   const _StaticMark({required this.colors});
 
@@ -172,14 +140,6 @@ class _StaticMark extends StatelessWidget {
   }
 }
 
-/// Draws 3 concentric rings expanding outward from center and fading as
-/// they grow, looping continuously — the same "target/doodle" language as
-/// OrganicPatternBackground's static clusters, but foregrounded and in
-/// motion for the one screen in the app where a brand moment is earned.
-///
-/// Rings are offset by 1/3 of the cycle from each other so a new ring is
-/// always originating as another fades out — reads as a continuous pulse
-/// rather than three rings resetting in sync.
 class _SignalRingPainter extends CustomPainter {
   _SignalRingPainter({required this.progress, required this.ringColor});
 
@@ -197,13 +157,9 @@ class _SignalRingPainter extends CustomPainter {
       final offset = i / _ringCount;
       final t = (progress + offset) % 1.0;
 
-      // Ease-out: rings move fastest right after originating, then slow
-      // as they approach maxRadius — reads as settling, not mechanical.
       final eased = 1 - (1 - t) * (1 - t);
       final radius = eased * maxRadius;
 
-      // Fade in quickly, then fade out over the back half of the cycle,
-      // so a ring never just pops into existence or vanishes abruptly.
       final fadeIn = (t / 0.15).clamp(0.0, 1.0);
       final fadeOut = 1 - ((t - 0.4) / 0.6).clamp(0.0, 1.0);
       final opacity = (fadeIn * fadeOut).clamp(0.0, 1.0) * 0.55;
