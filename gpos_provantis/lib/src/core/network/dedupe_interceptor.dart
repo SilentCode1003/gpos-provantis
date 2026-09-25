@@ -1,42 +1,12 @@
-// lib/core/network/dedupe_interceptor.dart
 import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:crypto/crypto.dart';
 
-/// Key used in [RequestOptions.extra] to opt a specific call into dedupe
-/// blocking. Dedupe is now OFF by default for every request — it only
-/// applies when a call explicitly asks for it, e.g.:
-///
-/// ```dart
-/// _dio.post(
-///   '/mobile-api/addrequstot',
-///   data: {...},
-///   options: Options(extra: {dedupeBlockKey: true}),
-/// );
-/// ```
-///
-/// Why opt-in instead of opt-out: this interceptor used to dedupe *every*
-/// POST/PUT/PATCH globally, which silently swallowed legitimate repeat
-/// calls (polling, refresh-on-rebuild, "get latest status" type endpoints)
-/// any time the method+path+body happened to match a call still in
-/// flight. Flipping to opt-in means only calls that actually need
-/// duplicate-submission protection (form submits, "create/update/cancel"
-/// actions users might double-tap) pay that cost.
 const String dedupeBlockKey = 'blockAggressive';
 
-/// Safety-valve: if for any reason onResponse/onError never fires for a
-/// request (e.g. it's cancelled upstream some other way, or a bug), the
-/// in-flight entry would leak forever and permanently block that
-/// fingerprint. This TTL guarantees it eventually clears itself.
 const Duration _dedupeTtl = Duration(seconds: 30);
 
-/// Blocks duplicate in-flight requests (same method + path + body) from
-/// ever reaching the network, but ONLY for requests that explicitly opt in
-/// via `Options(extra: {dedupeBlockKey: true})`. This protects against
-/// double-taps, race conditions in UI-level submit guards, retry storms,
-/// etc. on the specific calls that ask for it — without risking legitimate
-/// concurrent/repeat calls elsewhere in the app getting silently dropped.
 class DedupeInterceptor extends Interceptor {
   final _inFlight = <String, Timer>{};
 
@@ -55,9 +25,6 @@ class DedupeInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // Opt-in only. If the call didn't ask to be deduped, let it through
-    // untouched — this is the fix for important calls like
-    // fetchNextClockAction / _fetchData getting blocked.
     final wantsDedupe = options.extra[dedupeBlockKey] == true;
     if (!wantsDedupe) {
       return handler.next(options);
@@ -78,8 +45,6 @@ class DedupeInterceptor extends Interceptor {
       );
     }
 
-    // Belt-and-suspenders auto-expiry in case onResponse/onError is
-    // skipped for some reason.
     _inFlight[key] = Timer(_dedupeTtl, () => _inFlight.remove(key));
     handler.next(options);
   }

@@ -1,24 +1,7 @@
-// Location: src/features/dashboard/presentation/widgets/dashboardWidgets/pos_form_sheet.dart
 import 'package:flutter/material.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 
-/// --- Shared scaffold for touchscreen form sheets ---------------------------
-///
-/// Every "type something in, then confirm" bottom sheet (re-print, refund,
-/// send e-receipt) is built on this so keyboard handling and touch sizing
-/// live in exactly one place.
-///
-/// Keyboard behavior: the sheet must be opened via [showPosFormSheet] (which
-/// sets `isScrollControlled: true`). Inside, [AnimatedPadding] tracks
-/// `MediaQuery.viewInsets.bottom` so the whole sheet rides above the
-/// keyboard, and the body is scrollable so a short landscape screen can
-/// still reach every field instead of overflowing.
-
-/// Opens [child] as a keyboard-aware modal bottom sheet.
-///
-/// `useSafeArea` keeps the sheet clear of the status bar / notches when the
-/// keyboard pushes it to full height on small screens.
 Future<T?> showPosFormSheet<T>(BuildContext context, {required Widget child}) {
   return showModalBottomSheet<T>(
     context: context,
@@ -47,8 +30,6 @@ class PosFormSheet extends StatelessWidget {
   final String? subtitle;
   final IconData? icon;
 
-  /// Optional tint for the header icon chip and submit button. Falls back to
-  /// `colors.primary`. Used by the refund sheet to pick up `colors.refund`.
   final Color? accent;
   final Color? onAccent;
 
@@ -67,8 +48,6 @@ class PosFormSheet extends StatelessWidget {
     return Align(
       alignment: Alignment.bottomCenter,
       child: ConstrainedBox(
-        // Full-width fields on a landscape tablet are absurdly wide and hard
-        // to scan. Cap and center.
         constraints: const BoxConstraints(maxWidth: 560),
         child: AnimatedPadding(
           duration: const Duration(milliseconds: 200),
@@ -87,7 +66,6 @@ class PosFormSheet extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Drag handle — same dimensions as OthersSheet.
                   Center(
                     child: Container(
                       width: 40,
@@ -100,7 +78,6 @@ class PosFormSheet extends StatelessWidget {
                     ),
                   ),
 
-                  // Header: icon chip + title (+ optional subtitle).
                   Row(
                     children: [
                       if (icon != null) ...[
@@ -140,8 +117,7 @@ class PosFormSheet extends StatelessWidget {
                           ],
                         ),
                       ),
-                      // Explicit close target — a 4px drag handle is not a
-                      // reliable dismiss affordance on a POS touchscreen.
+
                       SizedBox(
                         width: 48,
                         height: 48,
@@ -178,11 +154,6 @@ class PosFormSheet extends StatelessWidget {
   }
 }
 
-/// --- Labeled, oversized text field -----------------------------------------
-///
-/// Label sits *above* the field (not as a floating Material label) so it
-/// never shifts/shrinks while the cashier is typing, and stays readable at
-/// arm's length. 64px tall, 18px input text, thick focus ring.
 class PosTextField extends StatelessWidget {
   const PosTextField({
     super.key,
@@ -265,8 +236,7 @@ class PosTextField extends StatelessWidget {
             fontSize: 18,
             fontWeight: FontWeight.w500,
           ),
-          // Keep the field visible above the keyboard even when it's
-          // multiline and grows; padding here is extra scroll headroom.
+
           scrollPadding: const EdgeInsets.only(bottom: 120),
           decoration: InputDecoration(
             hintText: hint,
@@ -285,8 +255,7 @@ class PosTextField extends StatelessWidget {
             prefixIcon: icon == null
                 ? null
                 : Icon(icon, size: 24, color: colors.textSecondary),
-            // 64px total height for single-line fields; multiline gets
-            // natural height with the same vertical padding.
+
             contentPadding: EdgeInsets.symmetric(
               horizontal: 18,
               vertical: multiline ? 18 : 21,
@@ -303,7 +272,6 @@ class PosTextField extends StatelessWidget {
   }
 }
 
-/// --- Full-width 60px action button -----------------------------------------
 class PosSheetButton extends StatelessWidget {
   const PosSheetButton({
     super.key,

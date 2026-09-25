@@ -1,4 +1,3 @@
-// Location: src/features/dashboard/presentation/widgets/dashboardWidgets/catalog_panel.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
@@ -8,23 +7,6 @@ import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
 import 'category_visibility.dart';
 import 'others_sheet.dart';
 import 'top_bar.dart';
-
-/// --- Catalog panel (right): top bar + actions row + category grid ---------
-///
-/// No product grid here anymore — tapping a category opens `CatalogSheet`
-/// instead, which is stacked on top of this panel by
-/// `CatalogPanelWithSheet`. The category rail was removed in favor of a
-/// single full grid of categories (`_CategoryGrid`) filling the space
-/// below the actions row — no need for two presentations of the same
-/// list once the grid covers every category without scrolling.
-///
-/// The actions row (Start/End shift, Cash drop, Reprint, Settings,
-/// Others) used to live inside `TopBar` itself. It's a second row here
-/// now so the top bar can be status-only (branch, time, shift, OR
-/// number) — see `top_bar.dart`'s doc comment. Same buttons, same
-/// behavior, same touchscreen-sized pill styling; only the location and
-/// the widget names (`_ActionsRail`/`_ActionButton`, not
-/// `_TopBarButton`) changed.
 
 class CatalogPanel extends ConsumerWidget {
   const CatalogPanel({super.key});
@@ -46,36 +28,19 @@ class CatalogPanel extends ConsumerWidget {
   }
 }
 
-/// --- Actions row: shift toggle, cash drop, reprint, settings, others -----
-///
-/// Relocated from `TopBar` — same five actions, same behavior, same
-/// touchscreen pill sizing (`_actionsRailTapTarget`, a step above
-/// `primaryTapTarget` for the same reason the old top bar row was: this
-/// cluster is tapped constantly mid-shift). Only the surrounding chrome
-/// (own row, own background) is new, since it's no longer sharing space
-/// with the profile icon.
 class _ActionsRail extends ConsumerWidget {
   const _ActionsRail();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    // Watching the provider (not just `.read`ing the notifier) so this
-    // widget rebuilds whenever `pos_shift` changes — `shiftStatus` is
-    // derived live off that DB stream now (see the getter's doc
-    // comment in dashboard_controller.dart), not off `state` directly.
+
     final state = ref.watch(dashboardControllerProvider);
     final notifier = ref.read(dashboardControllerProvider.notifier);
     final isShiftOpen = notifier.shiftStatus == ShiftStatus.open;
     final isToggling = state.isTogglingShift;
 
     Future<void> handleShiftTap() async {
-      // Confirm BEFORE touching the server — start/end shift are real
-      // server-side state changes, and this button sits in a row the
-      // cashier taps constantly, so an accidental brush shouldn't be
-      // able to close out the till. Wording differs by direction: ending
-      // is the consequential one (it locks Cash drop / Reprint / Others
-      // until a new shift is started), starting is routine.
       final confirmed = await showConfirmDialog(
         context,
         title: isShiftOpen ? 'End shift?' : 'Start shift?',
@@ -85,9 +50,7 @@ class _ActionsRail extends ConsumerWidget {
             : 'This will open a new shift so you can begin taking sales.',
         confirmLabel: isShiftOpen ? 'END SHIFT' : 'START SHIFT',
       );
-      // `showConfirmDialog` returns `bool?` (null when dismissed by
-      // tapping outside / back), so anything but an explicit true is a
-      // cancel. `context.mounted` because we just awaited a dialog.
+
       if (confirmed != true || !context.mounted) return;
 
       try {
@@ -159,13 +122,6 @@ class _ActionsRail extends ConsumerWidget {
   }
 }
 
-/// A step above [primaryTapTarget] — touchscreen POS, and every button in
-/// this row (shift toggle, cash drop, reprint, others) is a
-/// high-frequency action, so it errs on the side of bigger rather than
-/// sitting at the shared cross-app floor. Scoped to this row only, same
-/// as the old `_topBarTapTarget` it replaces — deliberately not a change
-/// to `primaryTapTarget` itself, which other screens still rely on at
-/// its original size.
 const double _actionsRailTapTarget = 72;
 
 class _ActionButton extends StatelessWidget {
@@ -184,11 +140,6 @@ class _ActionButton extends StatelessWidget {
   final bool emphasized;
   final bool enabled;
 
-  /// Swaps the leading icon for a small spinner and forces [enabled]
-  /// off (via the caller passing `enabled: !isToggling` — this flag
-  /// only changes what's drawn, the caller still owns whether taps are
-  /// accepted). Used by the shift button while `startShift`/`endShift`
-  /// is in flight.
   final bool loading;
 
   @override
@@ -242,56 +193,24 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-/// Fills the space below the actions row with every category, split into
-/// two labeled groups: "Paint" (any category whose name contains "Paint")
-/// and "Products" (everything else). This is a purely presentational
-/// grouping — `Category` has no group/type field of its own, so the split
-/// is done here by inspecting `category.name`, not by anything stored in
-/// the controller/model. If a real category-group concept is ever added
-/// server-side, this is the place to swap the name-sniffing below for a
-/// real field.
-///
-/// Tiles are flat/uniform (see `_CategoryTile`), not highlighted-on-
-/// selection like the old rail: tapping one always opens `CatalogSheet`,
-/// it's an action rather than a togglable filter, so there's no
-/// "currently active" state worth drawing attention to here.
-///
-/// LOADING: gated on `controller.categoriesStatus`, not on
-/// `categories.isEmpty` — right after login the Drift stream hasn't
-/// emitted yet, which used to read (incorrectly) as "no categories" and
-/// fall back to placeholder data. Now that gap shows `_CatalogLoadingState`
-/// instead, and `_CatalogEmptyState` only appears once the stream has
-/// actually confirmed there's nothing there.
-///
-/// HIDDEN CATEGORIES: categories the user switched off in Settings >
-/// Counter Display are filtered out before grouping (see
-/// `category_visibility.dart`). If that leaves nothing, `_CatalogAllHiddenState`
-/// says so — deliberately different from "No categories yet" so it never
-/// reads as a failed sync.
 class _CategoryGrid extends ConsumerWidget {
   const _CategoryGrid();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    // Watching state so this rebuilds as the categories stream moves
-    // from loading -> data (or -> error) after login/sync.
+
     ref.watch(dashboardControllerProvider);
     final controller = ref.watch(dashboardControllerProvider.notifier);
     final status = controller.categoriesStatus;
     final hidden = ref.watch(hiddenCategoryCodesProvider);
-    // Wait for the settings row too, so a hidden category never flashes
-    // on screen for a frame before the setting has loaded.
+
     final settingsLoading = ref.watch(
       appSettingsProvider.select((s) => s.isLoading && !s.hasValue),
     );
     final allCategories = controller.categories;
     final categories = filterVisibleCategories(allCategories, hidden);
 
-    // Still syncing from the API into Drift — show a spinner rather than
-    // "No categories yet", which previously got shown (briefly, or not
-    // so briefly on a slow connection) right after login before the
-    // first batch of categories had synced.
     if (status == CatalogLoadStatus.loading || settingsLoading) {
       return _CatalogLoadingState(colors: colors);
     }
@@ -301,15 +220,11 @@ class _CategoryGrid extends ConsumerWidget {
     }
 
     if (categories.isEmpty) {
-      // Categories exist, but every one of them is switched off.
       return allCategories.isEmpty
           ? _CatalogEmptyState(colors: colors)
           : _CatalogAllHiddenState(colors: colors);
     }
 
-    // Artificial grouping: anything with "Paint" in its name goes in the
-    // Paint group; everything else falls into Products. Case-insensitive
-    // so 'paint', 'Paint', 'PAINT' all match the same way.
     final paintCategories = <Category>[];
     final productCategories = <Category>[];
     for (final category in categories) {
@@ -336,16 +251,13 @@ class _CategoryGrid extends ConsumerWidget {
             onTap: controller.selectCategory,
           ),
         ],
-        // Trailing breathing room so the last row isn't flush with the
-        // bottom edge of the panel.
+
         const SliverToBoxAdapter(child: SizedBox(height: 20)),
       ],
     );
   }
 }
 
-/// Section label above each group ("Paint" / "Products") — plain text,
-/// no card/background, just enough to separate the two groups visually.
 class _GroupHeader extends StatelessWidget {
   const _GroupHeader({required this.label});
 
@@ -372,9 +284,6 @@ class _GroupHeader extends StatelessWidget {
   }
 }
 
-/// The grid of tiles for one group — same sizing/spacing as the old
-/// single grid, just scoped to whichever subset of categories belongs to
-/// this group.
 class _CategorySliverGrid extends StatelessWidget {
   const _CategorySliverGrid({required this.categories, required this.onTap});
 
@@ -404,10 +313,6 @@ class _CategorySliverGrid extends StatelessWidget {
   }
 }
 
-/// Shown while the categories stream hasn't emitted its first value yet —
-/// the gap right after login before the initial API-to-Drift sync has
-/// written anything. This is what used to be masked by falling back to
-/// placeholder categories; now it's an honest loading state instead.
 class _CatalogLoadingState extends StatelessWidget {
   const _CatalogLoadingState({required this.colors});
 
@@ -442,9 +347,6 @@ class _CatalogLoadingState extends StatelessWidget {
   }
 }
 
-/// Shown if the categories stream itself errors (e.g. the local Drift
-/// query fails) — distinct from `_CatalogEmptyState` so a real failure
-/// doesn't silently read as "there just aren't any categories".
 class _CatalogErrorState extends StatelessWidget {
   const _CatalogErrorState({required this.colors});
 
@@ -476,9 +378,6 @@ class _CatalogErrorState extends StatelessWidget {
   }
 }
 
-/// Shown only if the category list itself is empty — an edge case the old
-/// placeholder never had to distinguish from "sheet just isn't open yet",
-/// since that's now the grid's default (non-empty) state.
 class _CatalogEmptyState extends StatelessWidget {
   const _CatalogEmptyState({required this.colors});
 
@@ -506,8 +405,6 @@ class _CatalogEmptyState extends StatelessWidget {
   }
 }
 
-/// Shown when categories exist but the user has turned every one of them
-/// off in Settings > Counter Display.
 class _CatalogAllHiddenState extends StatelessWidget {
   const _CatalogAllHiddenState({required this.colors});
 
@@ -561,10 +458,6 @@ class _CategoryTile extends StatelessWidget {
     final colors = context.colors;
     final icon = _iconMap[category.icon] ?? PhosphorIcons.shapes;
 
-    // Flat, uniform styling — no "selected" state. Every tile does the
-    // same thing (opens the catalog sheet for that category), so there's
-    // nothing here that should read as toggled on/off the way a product
-    // card or a filter chip would.
     return Material(
       color: colors.surfaceVariant,
       borderRadius: BorderRadius.circular(14),

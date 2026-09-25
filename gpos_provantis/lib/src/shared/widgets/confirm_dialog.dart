@@ -1,9 +1,6 @@
-// Location: src/shared/widgets/confirm_dialog.dart
 import 'package:flutter/material.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 
-/// CONFIRM DIALOG — single confirmation design for the whole app.
-/// Flat, no chrome, tuned for POS performance discipline.
 Future<bool?> showConfirmDialog(
   BuildContext context, {
   required String title,
@@ -42,14 +39,11 @@ class ConfirmDialog extends StatelessWidget {
   final String title;
   final String body;
 
-  /// Short all-caps label above title (e.g. "RETURN TO SETUP"). Optional.
   final String? eyebrow;
 
   final String confirmLabel;
   final String cancelLabel;
 
-  /// True (destructive) for irreversible actions; false for confirmations.
-  /// Controls color (danger vs primary) and eyebrow tone.
   final bool isDestructive;
 
   @override
@@ -109,7 +103,7 @@ class ConfirmDialog extends StatelessWidget {
                 ],
               ),
             ),
-            // Subtle divider between text lines (not full-weight border)
+
             Divider(height: 1, thickness: 1, color: colors.borderSubtle),
             Row(
               children: [
@@ -138,7 +132,6 @@ class ConfirmDialog extends StatelessWidget {
   }
 }
 
-/// Flat, full-width text action with hairline divider between choices.
 class _DialogAction extends StatelessWidget {
   const _DialogAction({
     required this.label,

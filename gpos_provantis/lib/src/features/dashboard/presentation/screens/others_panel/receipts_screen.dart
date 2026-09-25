@@ -1,28 +1,3 @@
-// Location: src/features/dashboard/presentation/screens/receipts_screen.dart
-//
-// Lists every saved sale (newest first) so a cashier can find one,
-// preview it, and reprint its ticket. Reads live off `salesProvider` (a
-// StreamNotifierProvider already watching `SalesDao.watchAllSales()`),
-// so a sale saved anywhere else in the app shows up here without this
-// screen needing its own polling or refresh button.
-//
-// TOUCHSCREEN POS LAYOUT: this screen is operated by tapping a finger on
-// a fixed POS terminal, not a mouse — every row is a single large tap
-// target (the whole card, not a small icon buried in a corner) and the
-// only action inside the preview (Reprint) is a full-width, thumb-height
-// button, not an icon button. No control on this screen is sized for
-// pointer precision.
-//
-// PREVIEW BEFORE PRINT: tapping a sale opens a bottom sheet laid out like
-// the actual thermal ticket (monospace, same section order as
-// `_buildTicketBytes` in receipt_generator.dart: header, transaction
-// info, items, totals) so a cashier can confirm it's the right sale
-// before committing paper to it, instead of finding out only after
-// reprinting. The sheet and the print both build their content from the
-// exact same `receiptSaleDataFromSaleRow(sale)` call (see
-// receipt_reprint_controller.dart) — the preview is never at risk of
-// showing something different from what the printer produces, because
-// there's only one place that does the row-to-ticket-data translation.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -73,11 +48,6 @@ class ReceiptsScreen extends ConsumerWidget {
             );
           }
 
-          // Newest first — `watchAllSales()` carries no ORDER BY of its
-          // own (unlike `getUnsyncedSales()`, which sorts ascending for
-          // upload order), so sorting for *display* is this screen's
-          // own concern, deliberately the opposite direction from the
-          // upload queue's oldest-first order.
           final sorted = [...sales]
             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
@@ -125,13 +95,6 @@ class _ReceiptsMessage extends StatelessWidget {
   }
 }
 
-/// One sale row. The entire card is the tap target (min 72px tall) —
-/// tapping anywhere opens the preview sheet, where Reprint actually
-/// lives. There's deliberately no separate print icon out here: a small
-/// icon at the edge of a card is the easiest kind of control to miss or
-/// mis-tap on a fixed touchscreen, and printing straight from the list
-/// with no preview is exactly the "wasted paper" problem this screen
-/// exists to avoid.
 class _SaleTile extends StatelessWidget {
   const _SaleTile({required this.sale});
 
@@ -205,9 +168,6 @@ class _SaleTile extends StatelessWidget {
   }
 }
 
-/// Compact day/time block standing in for a "list thumbnail" — lets a
-/// cashier scan a long list by date at a glance instead of reading a
-/// full timestamp string on every row.
 class _DateBadge extends StatelessWidget {
   const _DateBadge({required this.dateTime});
 
@@ -274,11 +234,6 @@ class _DateBadge extends StatelessWidget {
   }
 }
 
-/// Bottom sheet previewing a sale in the same shape it'll actually
-/// print in — header, transaction info, items, totals, in the same
-/// order `_buildTicketBytes` lays them out — with one large Reprint
-/// button pinned at the bottom. Opening this costs nothing (no paper,
-/// no printer round trip); only the button at the bottom does.
 class _ReceiptPreviewSheet extends ConsumerStatefulWidget {
   const _ReceiptPreviewSheet({required this.sale});
 
@@ -332,10 +287,7 @@ class _ReceiptPreviewSheetState extends ConsumerState<_ReceiptPreviewSheet> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    // Same translation the actual print uses (see this file's header
-    // comment) — the preview below is built from the identical
-    // `ReceiptSaleData` that would be handed to the printer, not a
-    // second, separately-maintained summary of the row.
+
     final saleData = receiptSaleDataFromSaleRow(widget.sale);
 
     return DraggableScrollableSheet(
@@ -376,9 +328,7 @@ class _ReceiptPreviewSheetState extends ConsumerState<_ReceiptPreviewSheet> {
                         ),
                       ),
                     ),
-                    // Large, unambiguous close target — matches the
-                    // Reprint button's touch-target height rather than
-                    // the default small IconButton hit area.
+
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
                       icon: const Icon(Icons.close_rounded),
@@ -443,11 +393,6 @@ class _ReceiptPreviewSheetState extends ConsumerState<_ReceiptPreviewSheet> {
   }
 }
 
-/// Renders a `ReceiptSaleData` as a mock ticket — monospace, dashed
-/// rules, same section order as `_buildTicketBytes` in
-/// receipt_generator.dart (REPRINT marker → transaction info → items →
-/// totals → payment) — so what a cashier sees here reads as "this is
-/// what will come out of the printer," not a generic detail screen.
 class _ReceiptPreviewTicket extends StatelessWidget {
   const _ReceiptPreviewTicket({required this.saleData});
 
@@ -456,11 +401,7 @@ class _ReceiptPreviewTicket extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final mono = AppTypography.ui(
-      color: colors.textPrimary,
-      fontSize: 13,
-      // fontFamily: 'monospace',
-    );
+    final mono = AppTypography.ui(color: colors.textPrimary, fontSize: 13);
 
     return Container(
       width: double.infinity,

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Placeholder screen for Cash Reports.
-/// Push with: context.push('/cash-reports');
 class CashReportsScreen extends StatelessWidget {
   const CashReportsScreen({super.key});
 

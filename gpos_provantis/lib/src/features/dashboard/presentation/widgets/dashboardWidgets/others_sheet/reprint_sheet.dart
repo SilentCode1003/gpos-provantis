@@ -1,11 +1,6 @@
-// Location: src/features/dashboard/presentation/widgets/dashboardWidgets/reprint_sheet.dart
 import 'package:flutter/material.dart';
 import 'pos_form_sheet.dart';
 
-/// --- Re-print sheet: asks the cashier for the OR Number --------------------
-///
-/// PLACEHOLDER: submit currently does nothing (just a TODO). Wire the real
-/// re-print call into [_onSubmit] later.
 class ReprintSheet extends StatefulWidget {
   const ReprintSheet({super.key});
 
@@ -23,7 +18,7 @@ class _ReprintSheetState extends State<ReprintSheet> {
   @override
   void initState() {
     super.initState();
-    // Rebuild on every keystroke so the submit button enables/disables.
+
     _orController.addListener(() => setState(() {}));
   }
 
@@ -35,10 +30,7 @@ class _ReprintSheetState extends State<ReprintSheet> {
 
   bool get _canSubmit => _orController.text.trim().isNotEmpty;
 
-  void _onSubmit() {
-    // TODO: implement re-print using `_orController.text.trim()`.
-    // Intentionally a no-op for now — the sheet stays open.
-  }
+  void _onSubmit() {}
 
   @override
   Widget build(BuildContext context) {

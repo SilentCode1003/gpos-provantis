@@ -6,6 +6,7 @@ import 'core/theme/theme.dart';
 import 'routing/app_router.dart';
 import 'services/sync/overlay/catalog_sync_overlay.dart';
 import 'services/sync/controller/sales_sync_controller.dart';
+import 'services/check_health_service.dart';
 
 class GposProvantisApp extends ConsumerWidget {
   const GposProvantisApp({super.key});
@@ -15,21 +16,21 @@ class GposProvantisApp extends ConsumerWidget {
     final goRouter = ref.watch(goRouterProvider);
     final themeMode = ref.watch(themeModeControllerProvider);
 
-    // Background sales-upload service for app lifetime (see sales_sync_controller.dart).
     ref.watch(salesSyncControllerProvider);
+    // Starts the 10s health-check poll loop as soon as the app boots, same
+    // as the sales sync watcher above. See ServerHealthController for why
+    // this is foreground-only and keepAlive.
+    ref.watch(serverHealthControllerProvider);
 
-    // 1. Initialize ScreenUtil for the 2015-2026 Android range
     return ScreenUtilInit(
       designSize: const Size(360, 800), // Our "Golden Standard" base math
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        // 2. Return the MaterialApp.router
         return MaterialApp.router(
           title: 'Gpos Provantis',
           debugShowCheckedModeBanner: false,
 
-          // CatalogSyncOverlay renders above all screens to show sync status.
           locale: DevicePreview.locale(context),
           builder: (context, child) => CatalogSyncOverlay(
             child: DevicePreview.appBuilder(context, child),
@@ -37,9 +38,8 @@ class GposProvantisApp extends ConsumerWidget {
 
           routerConfig: goRouter,
 
-          // Theme with contextual AppColors extension (see theme/).
           theme: AppTheme.light,
-          // Reminder to uncomment this later
+
           darkTheme: AppTheme.dark,
           themeMode: themeMode,
         );

@@ -1,4 +1,3 @@
-// Location: src/features/settings/panels/counter_display_panel.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,16 +6,6 @@ import 'package:gpos_provantis/src/core/theme/theme.dart';
 import '../controllers/app_settings_controller.dart';
 import '../screens/settings_shared.dart';
 
-/// Counter Display section — one toggle per category, deciding whether
-/// that category (and its products) shows on the main screen.
-///
-/// The category list is dynamic: it comes straight from
-/// `categoriesProvider`, so whatever the sync saves to the database
-/// shows up here automatically.
-///
-/// Every tap is saved right away to the `counterDisplay` column (see
-/// `CounterDisplayCodec` for the format). There is no Save button.
-/// The main screen can read the result with `hiddenCategoryCodesProvider`.
 class CounterDisplayPanel extends ConsumerWidget {
   const CounterDisplayPanel();
 
@@ -122,7 +111,6 @@ class CounterDisplayPanel extends ConsumerWidget {
   }
 }
 
-/// "3 of 8 shown" summary plus Show all / Hide all shortcuts.
 class _BulkActionsRow extends StatelessWidget {
   const _BulkActionsRow({
     required this.shownCount,
@@ -197,8 +185,6 @@ class _BulkButton extends StatelessWidget {
   }
 }
 
-/// One row: category name on the left, switch on the right. The whole
-/// row is tappable, not just the switch, since this is a touchscreen.
 class _CategoryToggleTile extends StatelessWidget {
   const _CategoryToggleTile({
     required this.name,
@@ -250,7 +236,6 @@ class _CategoryToggleTile extends StatelessWidget {
   }
 }
 
-/// Loading / empty / error message shown in place of the list.
 class _StateMessage extends StatelessWidget {
   const _StateMessage({
     required this.icon,

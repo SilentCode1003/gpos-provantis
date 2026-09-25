@@ -1,4 +1,3 @@
-// tables/user_data_table.dart
 import 'package:drift/drift.dart';
 
 class UserDataTable extends Table {

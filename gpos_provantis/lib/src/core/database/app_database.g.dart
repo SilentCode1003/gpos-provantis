@@ -12113,20 +12113,13 @@ class $AppDatabaseManager {
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Riverpod provider to make the database accessible throughout the app.
-/// [keepAlive] is true because we want one database instance to live as long as the app.
 
 @ProviderFor(appDatabase)
 final appDatabaseProvider = AppDatabaseProvider._();
 
-/// Riverpod provider to make the database accessible throughout the app.
-/// [keepAlive] is true because we want one database instance to live as long as the app.
-
 final class AppDatabaseProvider
     extends $FunctionalProvider<AppDatabase, AppDatabase, AppDatabase>
     with $Provider<AppDatabase> {
-  /// Riverpod provider to make the database accessible throughout the app.
-  /// [keepAlive] is true because we want one database instance to live as long as the app.
   AppDatabaseProvider._()
     : super(
         from: null,

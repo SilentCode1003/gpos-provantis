@@ -1,12 +1,6 @@
-// Location: src/core/theme/app_colors.dart
 import 'package:flutter/material.dart';
 
-/// APP COLORS — semantic, mode-aware color roles tuned to V1 brand teal (#009184).
-/// Use AppColors (context.colors), not AppPalette, in UI code.
-/// Raw color swatches. Purely mechanical — no meaning attached yet.
-/// Naming follows Material tonal scale: lower number = lighter.
 abstract class AppPalette {
-  // Brand teal from exact V1 color
   static const teal50 = Color(0xFFF1F8F8);
   static const teal100 = Color(0xFFDEF2F1);
   static const teal200 = Color(0xFFB8EAE6);
@@ -19,7 +13,6 @@ abstract class AppPalette {
   static const teal900 = Color(0xFF052E2A);
   static const teal950 = Color(0xFF041B19);
 
-  // Slightly teal-tinted grays to feel cohesive with brand
   static const neutral0 = Color(0xFFFFFFFF); // Exact V1 white
   static const neutral50 = Color(0xFFF7F9F9);
   static const neutral100 = Color(0xFFEDF1F1);
@@ -36,7 +29,6 @@ abstract class AppPalette {
   static const neutral950 = Color(0xFF0F1414);
   static const neutral1000 = Color(0xFF0A0D0D); // True near-black (unused)
 
-  // Semantic hues tuned to sit well next to teal
   static const green500 = Color(0xFF2E9E5B); // Success
   static const green700 = Color(0xFF1F7A45);
   static const green200 = Color(0xFFB8E6C8);
@@ -57,8 +49,6 @@ abstract class AppPalette {
   static const blue200 = Color(0xFFC0DCF0);
   static const blue950 = Color(0xFF0D2033);
 
-  // ---- POS-specific accents ----------------------------------------------
-  // Common POS states that don't map cleanly to generic success/warn/error.
   static const violet500 = Color(0xFF7C5CC4); // e.g. "on hold" / "parked sale"
   static const violet700 = Color(0xFF5E439C);
   static const violet200 = Color(0xFFDBD0F0);
@@ -68,21 +58,16 @@ abstract class AppPalette {
   static const orange200 = Color(0xFFF5D3B8);
 }
 
-/// Semantic, theme-aware color roles.
-///
-/// Instantiate via [AppColors.light] / [AppColors.dark] — don't construct
-/// this directly elsewhere. Access from widgets via the `context.colors`
-/// extension defined in `app_colors_extension.dart`.
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
   const AppColors({
     required this.brightness,
-    // Brand
+
     required this.primary,
     required this.onPrimary,
     required this.primaryContainer,
     required this.onPrimaryContainer,
-    // Surfaces
+
     required this.background,
     required this.onBackground,
     required this.surface,
@@ -92,12 +77,12 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.surfaceRaised, // cards, sheets, dialogs sitting above surface
     required this.border,
     required this.borderSubtle,
-    // Text
+
     required this.textPrimary,
     required this.textSecondary,
     required this.textDisabled,
     required this.onColor, // text/icon color to use ON a colored fill (e.g. onPrimary alias)
-    // Status
+
     required this.success,
     required this.onSuccess,
     required this.successContainer,
@@ -114,12 +99,12 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.onInfo,
     required this.infoContainer,
     required this.onInfoContainer,
-    // POS-specific
+
     required this.held, // parked / on-hold sale
     required this.onHeld,
     required this.refund, // refund / void action
     required this.onRefund,
-    // Utility
+
     required this.shadow,
     required this.overlay, // scrim behind modals/sheets
     required this.divider,
@@ -128,13 +113,11 @@ class AppColors extends ThemeExtension<AppColors> {
 
   final Brightness brightness;
 
-  // Brand
   final Color primary;
   final Color onPrimary;
   final Color primaryContainer;
   final Color onPrimaryContainer;
 
-  // Surfaces
   final Color background;
   final Color onBackground;
   final Color surface;
@@ -145,43 +128,36 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color border;
   final Color borderSubtle;
 
-  // Text
   final Color textPrimary;
   final Color textSecondary;
   final Color textDisabled;
   final Color onColor;
 
-  // Status: success
   final Color success;
   final Color onSuccess;
   final Color successContainer;
   final Color onSuccessContainer;
 
-  // Status: warning
   final Color warning;
   final Color onWarning;
   final Color warningContainer;
   final Color onWarningContainer;
 
-  // Status: danger
   final Color danger;
   final Color onDanger;
   final Color dangerContainer;
   final Color onDangerContainer;
 
-  // Status: info
   final Color info;
   final Color onInfo;
   final Color infoContainer;
   final Color onInfoContainer;
 
-  // POS-specific
   final Color held;
   final Color onHeld;
   final Color refund;
   final Color onRefund;
 
-  // Utility
   final Color shadow;
   final Color overlay;
   final Color divider;
@@ -189,9 +165,6 @@ class AppColors extends ThemeExtension<AppColors> {
 
   bool get isDark => brightness == Brightness.dark;
 
-  // ---------------------------------------------------------------------
-  // LIGHT
-  // ---------------------------------------------------------------------
   static const light = AppColors(
     brightness: Brightness.light,
 
@@ -246,20 +219,6 @@ class AppColors extends ThemeExtension<AppColors> {
     disabledFill: AppPalette.neutral100,
   );
 
-  // ---------------------------------------------------------------------
-  // DARK
-  // ---------------------------------------------------------------------
-  // Base is a LIFTED teal-tinted charcoal (neutral750), not a near-black
-  // (previously neutral1000, ~5% luminance). Near-black backgrounds next
-  // to near-white text create the exact AMOLED-style contrast spike
-  // that's hard on the eyes over a long POS shift — pure black also
-  // causes halation/smearing on OLED under bright retail lighting and
-  // makes the teal brand color look washed out next to it. Lifting the
-  // background AND softening textPrimary (neutral100 -> neutral200) pulls
-  // both ends of the scale in toward each other instead of camping at
-  // opposite extremes — same legible-in-the-dark result, gentler get-there.
-  // Containers get darker, desaturated status hues rather than just
-  // dimming the light-mode ones, per Material 3 guidance.
   static const dark = AppColors(
     brightness: Brightness.dark,
 
@@ -308,11 +267,6 @@ class AppColors extends ThemeExtension<AppColors> {
     refund: AppPalette.orange500,
     onRefund: AppPalette.neutral950,
 
-    // Shadow/overlay kept as near-black washes rather than lifted —
-    // these are transparency-based (not a fill), so they still need to
-    // read as "recede/dim" against the new lighter surfaces, and a
-    // lifted shadow color would just look gray and washed out instead
-    // of receding.
     shadow: Color(0x66000000), // 40% black — needs to read on dark surfaces
     overlay: Color(0x99000000), // 60% black
     divider: AppPalette.neutral700,

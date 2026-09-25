@@ -1,4 +1,3 @@
-// Location: src/features/settings/panels/pos_config_panel.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,25 +6,10 @@ import 'package:gpos_provantis/src/core/theme/theme.dart';
 import '../controllers/app_settings_controller.dart';
 import '../screens/settings_shared.dart';
 
-/// =========================================================================
-/// POS CONFIG PANEL — company/BIR receipt-compliance fields.
-///
-/// Saved to the database through `appSettingsProvider` when the cashier
-/// taps "Save configuration". Nothing is written while typing, so a
-/// half-finished edit never reaches the receipt.
-///
-/// The database stores the text `UNREGISTERED` in any field that has not
-/// been filled in yet. That word is only a placeholder for the database,
-/// so this panel shows those fields as empty and writes `UNREGISTERED`
-/// back if a field is saved blank (see `_fromDb` / `_toDb`).
-/// =========================================================================
-
 const _unregistered = 'UNREGISTERED';
 
-/// Database value -> what the text box should show.
 String _fromDb(String value) => value == _unregistered ? '' : value;
 
-/// What the text box holds -> database value.
 String _toDb(String text) {
   final trimmed = text.trim();
   return trimmed.isEmpty ? _unregistered : trimmed;
@@ -49,9 +33,6 @@ class _PosConfigPanelState extends ConsumerState<PosConfigPanel> {
   final _permitToUseController = TextEditingController();
   final _machineIdController = TextEditingController();
 
-  /// True once the boxes have been filled from the database. The fill
-  /// happens only once, so later database updates cannot overwrite what
-  /// the cashier is in the middle of typing.
   bool _filled = false;
 
   bool _saving = false;
@@ -60,11 +41,9 @@ class _PosConfigPanelState extends ConsumerState<PosConfigPanel> {
   void initState() {
     super.initState();
 
-    // Fields might already have data (opening the panel a second time).
     final current = ref.read(appSettingsProvider).value;
     if (current != null) _fillFrom(current);
 
-    // Or the data may still be loading. Fill as soon as it arrives.
     ref.listenManual(appSettingsProvider, (previous, next) {
       final data = next.value;
       if (!_filled && data != null) _fillFrom(data);

@@ -25,7 +25,6 @@ class CategoriesRepository {
 
   CategoriesRepository(this._ref, this._dao);
 
-  // Fetch categories from the API and save them to the database.
   Future<void> fetchAndSaveCategories() async {
     await _ref.read(domainConfigDaoProvider).cacheReady;
 
@@ -35,11 +34,6 @@ class CategoriesRepository {
     try {
       response = await dio.get('/category/active');
     } on DioException catch (e) {
-      // Network/transport-level failure: no connection, timeout, or the
-      // server responded with an error status Dio treats as an
-      // exception. e.response is populated when the server DID respond
-      // (e.g. 4xx/5xx) — logging both cases separately tells you whether
-      // the request even reached the server.
       debugPrint(
         '[CategoriesRepository] GET /category/active failed: '
         '${e.type} — ${e.message}',
@@ -67,11 +61,6 @@ class CategoriesRepository {
             .toList(),
       );
     } catch (e, st) {
-      // The request succeeded but parsing the body into CategoriesDto
-      // failed — e.g. the server changed a field name/type, or the
-      // top-level shape isn't a List where expected. Logging the raw
-      // body above plus this error is what actually tells you whether
-      // this is a parsing bug vs a genuinely empty/malformed response.
       debugPrint('[CategoriesRepository] Failed to parse response: $e');
       debugPrint('[CategoriesRepository] $st');
       rethrow;

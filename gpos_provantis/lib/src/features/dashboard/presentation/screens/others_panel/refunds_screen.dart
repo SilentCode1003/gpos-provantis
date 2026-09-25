@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 
-/// Placeholder screen for Refunds.
-/// Push with: context.push('/refunds');
 class RefundsScreen extends StatelessWidget {
   const RefundsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Refunds'),
-      ),
+      appBar: AppBar(title: const Text('Refunds')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

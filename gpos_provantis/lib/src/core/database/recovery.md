@@ -1,4 +1,5 @@
 # Database Recovery Guide
+
 ### Drift + SQLite — `AppDatabase` / `gpos_provantis_local.sqlite`
 
 ---
@@ -13,13 +14,13 @@ A migration mistake almost never destroys user data. It usually just **breaks th
 
 ## Error Matrix — What Went Wrong & How to Fix It
 
-| Mistake | Symptom | Salvageable? | Fix |
-|---|---|---|---|
-| Forgot to increment `schemaVersion` | App runs, but crashes on data access: `no such column` / `no such table` | ✅ 100% | Increment version → restart |
-| Forgot the `onUpgrade` loop | New tables never created → crash on access | ✅ 100% | Add loop back → bump version → restart |
-| Forgot `addColumn` line | Column exists in code, not in DB → crash on read/write | ✅ 100% | Add the missing line → bump version → restart |
-| Syntax error in migration | App crashes at startup (DB init fails) | ✅ 100% | Fix the Dart/SQL error → restart |
-| Wrote `DROP TABLE` / `DELETE FROM` | Data is gone from the affected table | ⚠️ Partial | Restore from backup; structure recovers on next migration |
+| Mistake                             | Symptom                                                                  | Salvageable? | Fix                                                       |
+| ----------------------------------- | ------------------------------------------------------------------------ | ------------ | --------------------------------------------------------- |
+| Forgot to increment `schemaVersion` | App runs, but crashes on data access: `no such column` / `no such table` | ✅ 100%      | Increment version → restart                               |
+| Forgot the `onUpgrade` loop         | New tables never created → crash on access                               | ✅ 100%      | Add loop back → bump version → restart                    |
+| Forgot `addColumn` line             | Column exists in code, not in DB → crash on read/write                   | ✅ 100%      | Add the missing line → bump version → restart             |
+| Syntax error in migration           | App crashes at startup (DB init fails)                                   | ✅ 100%      | Fix the Dart/SQL error → restart                          |
+| Wrote `DROP TABLE` / `DELETE FROM`  | Data is gone from the affected table                                     | ⚠️ Partial   | Restore from backup; structure recovers on next migration |
 
 ---
 
@@ -85,7 +86,7 @@ Add this print statement inside `onUpgrade` to confirm migrations are firing:
 ```dart
 onUpgrade: (m, from, to) async {
   print('>>> MIGRATING DATABASE FROM v$from TO v$to');
-  // ... your logic ...
+
   print('>>> MIGRATION COMPLETE');
 },
 ```
@@ -99,9 +100,9 @@ If you see no output, the version was not incremented or the app was not fully r
 Every schema change requires **one version bump**. Use comments to track why.
 
 ```dart
-// v1 — initial schema: employees table
-// v2 — added employees.age
-// v3 — added employees.salary
+
+
+
 @override
 int get schemaVersion => 3;
 ```
@@ -118,6 +119,7 @@ if (from < 3) {
 ```
 
 The `if (from < N)` guards ensure that:
+
 - A fresh install runs **no** migration logic.
 - A user on v1 upgrading to v3 runs **both** v2 and v3 migrations.
 - A user on v2 upgrading to v3 runs **only** the v3 migration.
@@ -126,15 +128,15 @@ The `if (from < N)` guards ensure that:
 
 ## What Is Always Safe
 
-| Operation | Safe? |
-|---|---|
-| Adding a new table | ✅ Always safe |
-| Adding a nullable column | ✅ Always safe |
-| Adding a column with a default value | ✅ Always safe |
-| Renaming a column | ⚠️ Requires manual migration |
-| Dropping a column | ⚠️ SQLite does not support `DROP COLUMN` natively |
-| Dropping a table | ❌ Destroys data permanently |
-| `DELETE FROM` in migration | ❌ Destroys data permanently |
+| Operation                            | Safe?                                             |
+| ------------------------------------ | ------------------------------------------------- |
+| Adding a new table                   | ✅ Always safe                                    |
+| Adding a nullable column             | ✅ Always safe                                    |
+| Adding a column with a default value | ✅ Always safe                                    |
+| Renaming a column                    | ⚠️ Requires manual migration                      |
+| Dropping a column                    | ⚠️ SQLite does not support `DROP COLUMN` natively |
+| Dropping a table                     | ❌ Destroys data permanently                      |
+| `DELETE FROM` in migration           | ❌ Destroys data permanently                      |
 
 ---
 
@@ -148,4 +150,4 @@ The `if (from < N)` guards ensure that:
 
 ---
 
-*Generated for: `AppDatabase` · `gpos_provantis_local.sqlite` · Drift + Riverpod*
+_Generated for: `AppDatabase` · `gpos_provantis_local.sqlite` · Drift + Riverpod_

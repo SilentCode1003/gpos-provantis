@@ -8,21 +8,14 @@ part of 'domain_config_dao_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// DAO provider for DomainConfigTable, used both by the setup flow (to
-/// write the domain) and by [activeDomainProvider] (to read it).
 
 @ProviderFor(domainConfigDao)
 final domainConfigDaoProvider = DomainConfigDaoProvider._();
-
-/// DAO provider for DomainConfigTable, used both by the setup flow (to
-/// write the domain) and by [activeDomainProvider] (to read it).
 
 final class DomainConfigDaoProvider
     extends
         $FunctionalProvider<DomainConfigDao, DomainConfigDao, DomainConfigDao>
     with $Provider<DomainConfigDao> {
-  /// DAO provider for DomainConfigTable, used both by the setup flow (to
-  /// write the domain) and by [activeDomainProvider] (to read it).
   DomainConfigDaoProvider._()
     : super(
         from: null,

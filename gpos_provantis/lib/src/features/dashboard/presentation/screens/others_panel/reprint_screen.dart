@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 
-/// Placeholder screen for Reprint Receipt.
-/// Push with: context.push('/reprint');
 class ReprintScreen extends StatelessWidget {
   const ReprintScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reprint Receipt'),
-      ),
+      appBar: AppBar(title: const Text('Reprint Receipt')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

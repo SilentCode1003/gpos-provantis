@@ -1,4 +1,3 @@
-// Location: src/features/settings/settings_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,37 +10,6 @@ import '../panels/transactions_panel.dart';
 import '../panels/pos_config_panel.dart';
 import '../panels/placeholder_panels.dart';
 import '../panels/counter_display_panel.dart';
-
-/// =========================================================================
-/// SETTINGS SCREEN — touch-first layout for a counter-mounted POS panel.
-///
-/// Ground-up redesign (v3): a flush vertical icon strip stands in for the
-/// old tab bar / nav rail — rounded tiles, icon + short label, no
-/// hard-edged "physical key" styling and no F-key labeling, since this is
-/// a touchscreen device operated by a fingertip, not a keyboard. Every
-/// tile targets ~68-76dp, well past Material's 48dp minimum, because a
-/// mis-tap on this screen either fires the wrong settings section or —
-/// worse, inside the add-printer flow — silently loses whatever the
-/// cashier already typed.
-///
-/// Sections:
-///   1. Printers          — list/add/edit/test printers (fields based on `PrinterDto`)
-///   2. Transactions      — receipt/transaction behavior toggles
-///   3. POS Config        — company/BIR details printed on official receipts
-///   4. Sync              — placeholder
-///   5. System            — placeholder
-///   6. Theme             — light/system/dark toggle
-///   7. Users             — placeholder (staff/PIN access)
-///   8. Counter Display   — placeholder (customer-facing screen)
-///   9. About             — placeholder (app version, support info)
-///
-/// This file is the shell only: nav strip, top bar, and switching between
-/// sections. Each section's actual content lives in its own file under
-/// `panels/`, and small pieces shared by more than one panel live in
-/// `settings_shared.dart`. Splitting it this way keeps any single file
-/// from growing past what's comfortable to read/update, and means adding
-/// or reworking one section never requires touching the others.
-/// =========================================================================
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -159,12 +127,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 }
 
-/// -----------------------------------------------------------------------
-/// TOP BAR — back button, wordmark, and a small breadcrumb for the active
-/// section. The strip below carries the actual wayfinding, so this bar's
-/// only job is orientation plus a way out.
-/// -----------------------------------------------------------------------
-
 class _TopBar extends StatelessWidget {
   const _TopBar({required this.activeLabel});
 
@@ -229,8 +191,6 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-/// A large square icon button — stands in for bare `IconButton`s, which
-/// default to a 40dp target too tight for a 14" panel tapped at an angle.
 class _TouchIconButton extends StatelessWidget {
   const _TouchIconButton({
     required this.icon,
@@ -270,14 +230,6 @@ class _TouchIconButton extends StatelessWidget {
     return Tooltip(message: tooltip!, child: button);
   }
 }
-
-/// -----------------------------------------------------------------------
-/// NAV STRIP — flush vertical strip of rounded icon tiles. Icon + short
-/// label, sized for a fingertip. The active tile carries a solid
-/// `primary` fill; everything else stays flat and quiet. "About" sits
-/// pinned to the bottom, visually separated from the main section list so
-/// it doesn't compete with the working sections above it.
-/// -----------------------------------------------------------------------
 
 class _NavStrip extends StatelessWidget {
   const _NavStrip({

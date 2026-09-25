@@ -1,11 +1,7 @@
-// Location: src/core/theme/app_theme.dart
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 import 'app_typography.dart';
-
-/// APP THEME — builds ThemeData objects with AppColors as ThemeExtension.
-/// Use AppTheme.light and AppTheme.dark in MaterialApp configuration.
 
 abstract class AppTheme {
   static ThemeData get light => _build(AppColors.light);
@@ -112,7 +108,6 @@ abstract class AppTheme {
   }
 
   static TextTheme _textTheme(AppColors colors) {
-    // Default to Public Sans (UI face). Fraunces brand headlines use AppTypography.display().
     final base = AppTypography.uiTextTheme(
       ThemeData(brightness: colors.brightness).textTheme,
     );

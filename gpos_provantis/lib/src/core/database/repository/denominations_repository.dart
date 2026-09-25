@@ -71,11 +71,6 @@ class DenominationsRepository {
       );
     }
 
-    // Log every id the server sent, plus any duplicates within THIS
-    // response — if a UNIQUE constraint failure follows, this tells you
-    // whether the server itself sent the same id twice (a payload bug)
-    // as opposed to two separate calls racing each other (a concurrency
-    // bug). A non-empty duplicates set here means it's the former.
     final ids = records.map((d) => d.id).toList();
     final seen = <int>{};
     final duplicateIds = <int>{};
@@ -114,12 +109,6 @@ class DenominationsRepository {
     try {
       await _dao.replaceDenominations(denominations);
     } catch (e) {
-      // If this throws a UNIQUE constraint failure and duplicateIds above
-      // was EMPTY, that rules out a duplicated server payload — it means
-      // another fetchAndSaveDenominations() call (different callId) is
-      // running concurrently and its delete()/insert() interleaved with
-      // this one's. Check for a second [Denominations][otherCallId] block
-      // overlapping with this one in the log.
       debugPrint('[Denominations][$callId] replaceDenominations() failed: $e');
       rethrow;
     }

@@ -1,5 +1,3 @@
-// lib/core/network/api_client.dart
-
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:gpos_provantis/src/core/database/providers/user_data_dao_provider.dart';
@@ -14,10 +12,6 @@ Dio apiClient(Ref ref) {
   final domainAsync = ref.watch(activeDomainProvider);
   final dao = ref.watch(domainConfigDaoProvider);
   final baseUrl = domainAsync.value ?? dao.cachedDomain;
-
-  // debugPrint('🌐 apiClient baseUrl resolved: $baseUrl');
-  // debugPrint('🌐 activeDomainProvider raw AsyncValue: $domainAsync');
-  // debugPrint('🌐 DomainConfigDao.cachedDomain: ${dao.cachedDomain}');
 
   if (baseUrl == null || baseUrl.isEmpty) {
     throw StateError(
@@ -37,7 +31,6 @@ Dio apiClient(Ref ref) {
 
   dio.interceptors.add(DedupeInterceptor());
 
-  // Reads logged-in user's APK from UserDataTable. Empty during setup.
   final userDataDao = ref.watch(userDataDaoProvider);
 
   dio.interceptors.add(
@@ -56,7 +49,6 @@ Dio apiClient(Ref ref) {
           options.headers['Authorization'] = 'Bearer $apk';
           final method = options.method.toUpperCase();
           if (method == 'GET' || method == 'DELETE') {
-            // Context-specific params handled in features
           } else {
             final existing = options.data;
             if (existing is Map) {
@@ -66,15 +58,9 @@ Dio apiClient(Ref ref) {
             }
           }
         } else {
-          // Setup/initial sync: no user logged in yet, no APK required.
           options.headers['Authorization'] = 'Bearer missing_local_apk';
         }
 
-        // debugPrint('>>> ${options.method} ${options.uri}');
-        // debugPrint('>>> baseUrl: ${options.baseUrl}');
-        // debugPrint('>>> path: ${options.path}');
-        // debugPrint('>>> headers: ${options.headers}');
-        // debugPrint('>>> data: ${options.data}');
         return handler.next(options);
       },
       onError: (error, handler) {

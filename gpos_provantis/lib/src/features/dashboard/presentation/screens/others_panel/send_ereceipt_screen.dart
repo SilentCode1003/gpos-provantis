@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 
-/// Placeholder screen for Send eReceipt.
-/// Push with: context.push('/send-ereceipt');
 class SendEreceiptScreen extends StatelessWidget {
   const SendEreceiptScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Send eReceipt'),
-      ),
+      appBar: AppBar(title: const Text('Send eReceipt')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

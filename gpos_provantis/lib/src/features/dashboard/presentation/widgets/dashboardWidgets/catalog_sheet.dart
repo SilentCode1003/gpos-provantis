@@ -1,4 +1,3 @@
-// Location: src/features/dashboard/presentation/widgets/dashboardWidgets/catalog_sheet.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,76 +7,6 @@ import 'category_visibility.dart';
 import 'dashboard_constants.dart';
 import 'product_grid.dart';
 
-/// --- Catalog sheet: right-side overlay, opens on category tap -------------
-///
-/// Slides in from the right edge, clipped to the bounds of whichever
-/// ancestor Stack it's placed in (see `_CatalogPanelWithSheet` in
-/// `dashboard_layout.dart` — that's the whole right panel on wide
-/// layouts, the lower portion of the column on narrow ones). Dismiss via:
-///   - tapping the scrim (dims BOTH the catalog panel behind the sheet
-///     and the cart panel on the other side — see `_ScrimOverlay`, which
-///     `CartPanel` also mounts so the darkening isn't limited to the
-///     sheet's own panel)
-///   - dragging the left-edge grip handle back toward the right
-///   - the close button in the sheet's header, or the close bar in its
-///     footer
-///   - tapping a category in the compact strip does NOT dismiss — it
-///     swaps content in place, which is the whole point of keeping the
-///     strip inside the sheet.
-///
-/// ============================================================================
-/// REWRITE NOTE — why this file changed, and what the old bug was
-/// ============================================================================
-/// The previous version drove `_controller.forward()`/`.reverse()` from a
-/// helper (`_syncWithState`) called directly inside `build()`, keyed off
-/// `ref.watch(...isCatalogSheetOpen)`. That's the actual bug behind "first
-/// tap does nothing, second tap opens it": starting an `AnimationController`
-/// is a side effect, and side effects triggered from inside `build()` run
-/// too late to affect the frame currently being built — the
-/// `AnimatedBuilder` further down in that same `build()` call had already
-/// read `_controller.value` (still `0`) before `forward()`'s first tick
-/// could land, so that first frame painted closed. The *second* tap worked
-/// because by then the controller had residual state from the first,
-/// half-started animation.
-///
-/// The fix: **open/close is now triggered from `ref.listen`**, which is
-/// Riverpod's dedicated hook for exactly this — reacting to a provider
-/// change with a side effect, guaranteed to run outside of (and before)
-/// the widget's own `build()`, so `forward()`/`reverse()` are already
-/// in flight by the time this frame's `AnimatedBuilder` reads
-/// `_controller.value`. No more one-tap-late animation start.
-///
-/// Everything else was also simplified while rebuilding:
-///   - One `CurvedAnimation` (not two) with `Curves.easeOutCubic` for
-///     both directions — a single curve that looks good moving either
-///     way reads as more "physical" than swapping curves by direction,
-///     and removes a branch that had to track `AnimationStatus` just to
-///     pick which curve was "current."
-///   - One `AnimatedBuilder` (not two) driving both the scrim opacity and
-///     the sheet's slide offset off the same `_curve.value` read in a
-///     single `builder` callback — the old version split these across a
-///     nested pair of `AnimatedBuilder`s listening to the same animation,
-///     which was extra rebuild plumbing for no behavioral difference.
-///   - `Transform.translate` (a compositor-level paint transform, same
-///     performance characteristics as the old `SlideTransition`) instead
-///     of `SlideTransition` itself, since `Transform.translate` takes a
-///     plain `Offset` computed straight from `_curve.value` and
-///     `sheetWidth` — no separate `Tween<Offset>.animate(...)` object to
-///     rebuild every time direction changes.
-///   - The old "fully closed → return SizedBox.shrink()" early-out has
-///     been removed. Collapsing the subtree to zero size is what forced
-///     `LayoutBuilder` to (re)measure `sheetWidth` from scratch the next
-///     time the sheet opened, adding a layout pass on the critical path
-///     of the open animation. The sheet is now always laid out (so its
-///     width is always known and stable), just visually and hit-test
-///     hidden while closed via `Offstage` + `IgnorePointer` — cheap to
-///     keep mounted, and removes a source of first-frame jank.
-///   - Drag handling is unchanged in spirit (same physical flick/settle
-///     rule) but now clamps against the controller's *current* animated
-///     value rather than assuming it starts a drag from a fully
-///     open/closed rest state, so grabbing the handle mid-animation
-///     doesn't jump.
-/// ============================================================================
 class CatalogSheet extends ConsumerStatefulWidget {
   const CatalogSheet({super.key});
 
@@ -87,9 +16,6 @@ class CatalogSheet extends ConsumerStatefulWidget {
 
 class _CatalogSheetState extends ConsumerState<CatalogSheet>
     with SingleTickerProviderStateMixin {
-  /// 0 = fully closed, 1 = fully open. Single source of truth for the
-  /// sheet's position — gestures and the open/close animation both just
-  /// write into this same controller.
   late final AnimationController _controller;
   late final CurvedAnimation _curve;
 
@@ -128,17 +54,14 @@ class _CatalogSheetState extends ConsumerState<CatalogSheet>
 
   void _onDragStart(DragStartDetails details) {
     _isDragging = true;
-    // Dragging interrupts any in-flight open/close animation at its
-    // current value rather than jumping — continuity is most of what
-    // makes a drag feel physical instead of janky.
+
     _controller.stop(canceled: true);
   }
 
   void _onDragUpdate(DragUpdateDetails details, double sheetWidth) {
     if (sheetWidth <= 0) return;
     final delta = details.primaryDelta ?? 0;
-    // Dragging right (positive dx) closes, so it subtracts from the
-    // open-ness value.
+
     _controller.value = (_controller.value - delta / sheetWidth).clamp(
       0.0,
       1.0,
@@ -150,10 +73,6 @@ class _CatalogSheetState extends ConsumerState<CatalogSheet>
     final velocity = details.primaryVelocity ?? 0;
     final normalizedVelocity = sheetWidth > 0 ? velocity / sheetWidth : 0.0;
 
-    // Fast flick commits in the flick's direction regardless of how far
-    // it's traveled; a slow drag falls back to whichever side of
-    // halfway it settled on. This is the same physical-feeling rule
-    // native sheets and drawers use.
     final bool shouldClose;
     if (normalizedVelocity.abs() > 0.7) {
       shouldClose = normalizedVelocity > 0;
@@ -161,12 +80,6 @@ class _CatalogSheetState extends ConsumerState<CatalogSheet>
       shouldClose = _controller.value < 0.5;
     }
 
-    // fling's velocity is "fraction of range per second", the same
-    // units _controller.value already uses, so the drag's own
-    // normalized velocity plugs straight in — a fast flick keeps the
-    // finger's momentum instead of snapping into a fixed-duration tween.
-    // Slow releases (no real velocity) fall back to a calm default fling
-    // speed rather than a sluggish near-zero one.
     final flingSpeed = normalizedVelocity.abs() > 0.1
         ? normalizedVelocity.abs().clamp(1.0, 8.0)
         : 4.0;
@@ -181,14 +94,6 @@ class _CatalogSheetState extends ConsumerState<CatalogSheet>
 
   @override
   Widget build(BuildContext context) {
-    // Side effect (starting the animation) lives here, in `ref.listen`,
-    // NOT in the body of `build()` below — see the REWRITE NOTE above for
-    // why that distinction is exactly what fixes the "first tap does
-    // nothing" bug. `ref.listen` fires after `build()` computes but
-    // before the frame is handed to the renderer, so by the time
-    // `AnimatedBuilder` reads `_controller.value` on the *next* frame
-    // (which the animation's own `forward()`/`reverse()` call schedules),
-    // the controller is already mid-flight.
     ref.listen(
       dashboardControllerProvider.select((s) => s.isCatalogSheetOpen),
       (previous, isOpen) {
@@ -207,12 +112,6 @@ class _CatalogSheetState extends ConsumerState<CatalogSheet>
         return AnimatedBuilder(
           animation: _curve,
           builder: (context, child) {
-            // Settled fully closed (not mid-drag/mid-animation) — hide
-            // from hit-testing so nothing here steals taps meant for the
-            // category rail underneath. Offstage (not a collapsed-size
-            // widget) keeps the subtree laid out and its width known, so
-            // reopening never needs a fresh measure pass — see REWRITE
-            // NOTE.
             final isSettledClosed =
                 _curve.value <= 0 && !_controller.isAnimating && !_isDragging;
 
@@ -249,11 +148,6 @@ class _CatalogSheetState extends ConsumerState<CatalogSheet>
   }
 }
 
-/// Semi-transparent tap-to-close layer. Mounted twice — once here behind
-/// the sheet, once inside `CartPanel` — both driven by the same opacity
-/// value read off shared state, so the cart darkens in lockstep with the
-/// sheet's own scrim rather than needing a second animation to stay in
-/// sync.
 class _ScrimOverlay extends StatelessWidget {
   const _ScrimOverlay({required this.opacity, required this.onTap});
 
@@ -279,13 +173,6 @@ class _ScrimOverlay extends StatelessWidget {
   }
 }
 
-/// Chrome shared by both the drag-handle rail and the sheet's content —
-/// split out so the handle can sit visually attached to the sheet's left
-/// edge without being inside the scrollable content column. The drag
-/// gesture lives entirely on `_DragHandle` (see below) — this widget
-/// just wires the callbacks through — so a vertical swipe anywhere else
-/// on the sheet (the product grid, the search field) is free to scroll
-/// without fighting a horizontal-drag recognizer.
 class _CatalogSheetChrome extends StatelessWidget {
   const _CatalogSheetChrome({
     required this.onDragStart,
@@ -320,13 +207,6 @@ class _CatalogSheetChrome extends StatelessWidget {
   }
 }
 
-/// The visible affordance that the sheet is draggable: a slim vertical
-/// rail along the sheet's left edge with a pill grip centered on it.
-/// This rail — and only this rail — owns the horizontal drag gesture,
-/// so swiping inside the product grid or search field still scrolls/
-/// types instead of dragging the sheet. The whole rail is tappable-width
-/// (not just the thin pill), matching the touch-target floor the rest
-/// of the screen holds to.
 class _DragHandle extends StatelessWidget {
   const _DragHandle({
     required this.onDragStart,
@@ -393,12 +273,6 @@ class _CatalogSheetContent extends StatelessWidget {
   }
 }
 
-/// Bottom-of-sheet close bar — a second, always-in-reach dismiss target
-/// alongside the header's close icon, so a cashier's thumb doesn't have
-/// to travel back up to the top after scrolling through a long product
-/// grid. Full-width and at the primary tap-target height, matching the
-/// weight of other bottom-anchored actions on this screen (Hold sale /
-/// Charge in the cart footer).
 class _CatalogSheetFooter extends ConsumerWidget {
   const _CatalogSheetFooter();
 
@@ -435,7 +309,6 @@ class _CatalogSheetFooter extends ConsumerWidget {
   }
 }
 
-/// Title + close button + search field.
 class _CatalogSheetHeader extends ConsumerWidget {
   const _CatalogSheetHeader();
 
@@ -487,10 +360,7 @@ class _CatalogSheetHeader extends ConsumerWidget {
                     child: Icon(
                       Icons.close_rounded,
                       size: 22,
-                      // Explicit color — without this it falls back to
-                      // the ambient IconTheme, which on this surface
-                      // rendered light-on-light and made the button
-                      // effectively invisible.
+
                       color: colors.textPrimary,
                     ),
                   ),
@@ -536,9 +406,6 @@ class _CatalogSearchFieldState extends ConsumerState<_CatalogSearchField> {
     final colors = context.colors;
     final notifier = ref.read(dashboardControllerProvider.notifier);
 
-    // Clears the field's own text whenever the controller state's query
-    // goes back to empty from somewhere else (i.e. `closeCatalogSheet`)
-    // without fighting the user mid-keystroke.
     final query = ref.watch(
       dashboardControllerProvider.select((s) => s.catalogSearchQuery),
     );
@@ -586,10 +453,6 @@ class _CatalogSearchFieldState extends ConsumerState<_CatalogSearchField> {
   }
 }
 
-/// Slim horizontal category strip inside the sheet — lets the cashier
-/// switch categories without closing the sheet first. Tapping a tile
-/// here swaps the sheet's contents in place via the same
-/// `selectCategory` call the main rail uses.
 class _CompactCategoryStrip extends ConsumerWidget {
   const _CompactCategoryStrip();
 
@@ -600,8 +463,7 @@ class _CompactCategoryStrip extends ConsumerWidget {
     final categoryId = ref.watch(
       dashboardControllerProvider.select((s) => s.catalogSheetCategoryId),
     );
-    // Categories the user switched off in Settings > Counter Display
-    // don't get a chip here either.
+
     final hidden = ref.watch(hiddenCategoryCodesProvider);
     final categories = filterVisibleCategories(controller.categories, hidden);
 

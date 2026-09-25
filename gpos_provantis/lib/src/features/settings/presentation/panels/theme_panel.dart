@@ -1,4 +1,3 @@
-// Location: src/features/settings/panels/theme_panel.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,12 +30,6 @@ String _themeModeLabel(String option) => switch (option) {
   _ => 'System',
 };
 
-/// Appearance section — light/system/dark, backed by
-/// `themeModeControllerProvider` (see `theme_mode_provider.dart`), which
-/// persists the choice to disk and drives `MaterialApp.themeMode`
-/// directly. This panel only reads/writes that provider; it doesn't hold
-/// any local state of its own, so the toggle stays correct even if the
-/// mode was changed elsewhere or the app was relaunched.
 class ThemePanel extends ConsumerWidget {
   const ThemePanel();
 

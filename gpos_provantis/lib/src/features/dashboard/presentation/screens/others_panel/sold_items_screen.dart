@@ -1,31 +1,3 @@
-// Location: src/features/dashboard/presentation/screens/sold_items_screen.dart
-//
-// Lets a cashier/manager look up what sold in a given window, filtered
-// by date range, category, and/or a single product. Visually this
-// mirrors receipts_screen.dart on purpose (same card shape, spacing,
-// typography, date badge) so the two screens read as one family, but
-// the interaction model is different: receipts is a live, unfiltered
-// feed; sold items is a query the person builds and then runs.
-//
-// TOUCHSCREEN POS LAYOUT: same rules as ReceiptsScreen — every tappable
-// thing here is sized for a finger on a fixed terminal, not a mouse.
-// Date range is chip presets (Today / This Week / This Month / Custom)
-// rather than typing dates. Category and Product are big bottom-sheet
-// pickers rather than native Material dropdowns, because a
-// DropdownButton's menu renders with small, mouse-scaled touch targets
-// that are easy to mis-tap on a POS screen. Filters do NOT auto-apply —
-// changing a chip or picker only stages the filter; results only
-// refresh when the cashier taps "Apply Filters", so a stray tap while
-// scrolling never fires a query, and switching several filters in a
-// row (date, then category, then product) doesn't reload the list on
-// every intermediate step.
-//
-// DATA SOURCE: there is no sold-items query in the DAO layer yet — see
-// the TODO on `_SoldItemsResults`. The filter chrome below is complete
-// and real (wired to `categoriesProvider` / `productPriceProvider` for
-// the picker options); only the final "run the query" call is a stub,
-// so plugging in a real DAO method later is a single-method swap, not
-// a screen rewrite.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -43,7 +15,6 @@ class _DateRange {
   final DateTime end;
 }
 
-/// Staged filter state — what the person has picked but not yet run.
 class _SoldItemsFilters {
   const _SoldItemsFilters({
     this.preset = _DatePreset.today,
@@ -100,8 +71,6 @@ class _SoldItemsFilters {
   }
 }
 
-/// What's actually been searched for. Null until "Apply Filters" is
-/// tapped the first time.
 class _AppliedQuery {
   const _AppliedQuery({required this.range, this.category, this.product});
   final _DateRange range;
@@ -169,9 +138,6 @@ class _SoldItemsScreenState extends ConsumerState<SoldItemsScreen> {
   }
 }
 
-/// Sticky filter panel: date presets, category picker, product picker,
-/// Apply button. Kept as one card so it reads as a single control
-/// surface separate from the results feed below it.
 class _FiltersPanel extends StatelessWidget {
   const _FiltersPanel({
     required this.filters,
@@ -271,8 +237,6 @@ class _FiltersPanel extends StatelessWidget {
   Future<void> _openCategoryPicker(BuildContext context) async {
     final selected = await _CategoryPickerSheet.show(context);
     if (selected != null) {
-      // A fresh category invalidates whatever product was picked under
-      // the old one, so the two filters never silently disagree.
       onChanged(filters.copyWith(category: selected, clearProduct: true));
     }
   }
@@ -288,8 +252,6 @@ class _FiltersPanel extends StatelessWidget {
   }
 }
 
-/// Four large chips, one row, equal width — the whole chip is the tap
-/// target, not a radio dot inside it.
 class _DatePresetRow extends StatelessWidget {
   const _DatePresetRow({required this.filters, required this.onChanged});
 
@@ -351,8 +313,7 @@ class _DatePresetRow extends StatelessWidget {
             ),
     );
     if (result == null) return null;
-    // End is exclusive internally (start of the day *after* the picked
-    // end date) so range comparisons downstream stay half-open.
+
     return _DateRange(
       start: DateTime(result.start.year, result.start.month, result.start.day),
       end: DateTime(
@@ -407,9 +368,6 @@ class _PresetChip extends StatelessWidget {
   }
 }
 
-/// Looks like a dropdown but opens a full bottom-sheet picker instead
-/// of a native menu — same reasoning as the preset chips: bigger,
-/// more forgiving tap targets than a compact Material dropdown menu.
 class _PickerField extends StatelessWidget {
   const _PickerField({
     required this.label,
@@ -501,8 +459,6 @@ class _PickerField extends StatelessWidget {
   }
 }
 
-/// Full-height list picker, same sheet chrome (grabber, title, close)
-/// as ReceiptsScreen's preview sheet, so pickers feel like the same app.
 class _CategoryPickerSheet extends ConsumerWidget {
   const _CategoryPickerSheet();
 
@@ -630,16 +586,6 @@ class _ProductPickerSheet extends ConsumerWidget {
   }
 }
 
-/// Sheet chrome (grabber, title, close) around a scrollable body.
-///
-/// `builder` receives the sheet's own `ScrollController` and must hand
-/// it to exactly one scrollable widget (typically a `ListView`) inside
-/// an `Expanded`. Do NOT nest that list inside another `ListView` or
-/// `SingleChildScrollView` here — a sliver-based list placed as a lone
-/// child of another sliver list has no bounded height to lay out
-/// against, which is what was throwing `child.hasSize` / repaint
-/// boundary layout errors when this scaffold used to wrap `child` in
-/// its own outer `ListView`.
 class _PickerSheetScaffold extends StatelessWidget {
   const _PickerSheetScaffold({required this.title, required this.builder});
 
@@ -710,8 +656,6 @@ class _PickerSheetScaffold extends StatelessWidget {
   }
 }
 
-/// One row in a picker sheet — 56px tall minimum, full-width tap area,
-/// matching the receipts list tile's "whole card is the button" rule.
 class _PickerTile extends StatelessWidget {
   const _PickerTile({required this.title, this.subtitle, required this.onTap});
 
@@ -773,17 +717,6 @@ class _PickerTile extends StatelessWidget {
   }
 }
 
-/// Results for the applied query. There is no sold-items DAO yet, so
-/// this renders the empty state until that lands.
-///
-/// TODO(sold-items-data): replace this stub with a real query, e.g. a
-/// `SoldItemsDao.watchSoldItems({range, categoryCode, productId})`
-/// built the same way `SalesDao` / `ProductPriceDao` are — a Drift
-/// query joining sales line items to `product_price_table` /
-/// `categories_table`, filtered by `query.range`, `query.category`,
-/// and `query.product`. Once that exists, swap the `data: []` below
-/// for `ref.watch(soldItemsProvider(query))` and feed real rows into
-/// `_SoldItemTile`.
 class _SoldItemsResults extends ConsumerWidget {
   const _SoldItemsResults({required this.query});
 
@@ -791,7 +724,6 @@ class _SoldItemsResults extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Stub result set — always empty until the DAO exists.
     final List<Never> data = const [];
 
     if (data.isEmpty) {

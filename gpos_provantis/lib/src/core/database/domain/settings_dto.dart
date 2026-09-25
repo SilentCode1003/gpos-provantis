@@ -1,4 +1,3 @@
-// Location: src/core/database/domain/settings_dto.dart
 import 'package:drift/drift.dart' show Value;
 import 'package:gpos_provantis/src/core/database/app_database.dart';
 
@@ -23,12 +22,8 @@ class SettingsDto {
     required this.machineIdentificationNumber,
   });
 
-  /// The id of the one and only settings row.
   static const String defaultId = 'settings_config';
 
-  /// What a fresh install looks like before anything is saved.
-  /// Matches the defaults in `SettingsTable`. `counterDisplay` starts as
-  /// `[]` (nothing hidden) instead of `UNREGISTERED`.
   factory SettingsDto.defaults() => const SettingsDto(
     id: defaultId,
     mainPrinter: 'UNREGISTERED',
@@ -92,7 +87,6 @@ class SettingsDto {
     );
   }
 
-  /// Builds a DTO from a database row.
   factory SettingsDto.fromTableData(SettingsTableData row) {
     return SettingsDto(
       id: row.id,
@@ -116,7 +110,6 @@ class SettingsDto {
     );
   }
 
-  /// Turns this DTO into something the database can save.
   SettingsTableCompanion toCompanion() {
     return SettingsTableCompanion(
       id: Value(id),
@@ -141,7 +134,6 @@ class SettingsDto {
     );
   }
 
-  /// Copy with changes. Panels use this to change one field and keep the rest.
   SettingsDto copyWith({
     String? mainPrinter,
     String? subPrinter,

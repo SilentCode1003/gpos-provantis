@@ -29,11 +29,6 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
     return select(salesTable).watch();
   }
 
-  /// Every sale not yet confirmed synced (`isSync == '0'`), oldest
-  /// first by `createdAt` — the order sales were created locally, which
-  /// is also the order they must be *uploaded* in (see
-  /// `SalesRepository.uploadSales`'s doc comment for why strict order
-  /// matters here).
   Future<List<SalesTableData>> getUnsyncedSales() {
     return (select(salesTable)
           ..where((row) => row.isSync.equals('0'))
@@ -44,9 +39,6 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
         .get();
   }
 
-  /// Marks one sale, by its local UUID primary key, as confirmed synced.
-  /// Called only after the server has actually acknowledged that sale
-  /// (a `'success'` or `'exist'` response) — never speculatively.
   Future<void> markSynced(String id) {
     return (update(salesTable)..where((row) => row.id.equals(id))).write(
       const SalesTableCompanion(isSync: Value('1')),

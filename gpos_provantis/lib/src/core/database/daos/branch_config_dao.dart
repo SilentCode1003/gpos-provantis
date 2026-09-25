@@ -9,9 +9,6 @@ class BranchConfigDao extends DatabaseAccessor<AppDatabase>
     with _$BranchConfigDaoMixin {
   BranchConfigDao(super.db);
 
-  /// Saves (inserts or overwrites) the single branch config row.
-  /// `id` uses the table's fixed default ('branch_config'), so this is
-  /// always an upsert against that one row.
   Future<void> saveBranch(BranchConfigTableCompanion branch) {
     return into(branchConfigTable).insertOnConflictUpdate(branch);
   }

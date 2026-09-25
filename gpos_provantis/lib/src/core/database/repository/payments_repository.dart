@@ -25,14 +25,11 @@ class PaymentsRepository {
 
   PaymentsRepository(this._ref, this._dao);
 
-  // Fetch payments from the API and save them to the database.
   Future<void> fetchAndSavePayments() async {
     await _ref.read(domainConfigDaoProvider).cacheReady;
 
     final dio = _ref.read(apiClientProvider);
     final response = await dio.post('/payment/getactive');
-    
-    // debugPrint('Payments: $response}');
 
     final apiResponse = ApiResponseModel<List<PaymentsDto>>.fromDioResponse(
       response,

@@ -1,4 +1,3 @@
-// Location: src/features/settings/panels/printers_panel.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,27 +12,6 @@ import 'package:gpos_provantis/src/services/printing/usb_printing.dart';
 import 'package:gpos_provantis/src/services/printing/wifi_printing.dart';
 import 'package:flutter_thermal_printer/utils/printer.dart';
 
-/// =========================================================================
-/// PRINTERS PANEL — list/add/edit/test printers backed by `PrinterDto` and
-/// `settingsControllerProvider`.
-///
-/// Split out of the old monolithic `settings_screen.dart` so this panel's
-/// own future changes (new printer fields, real device status polling,
-/// etc.) don't require touching or re-reading the rest of the settings
-/// screen. Everything below is private to this file except `PrintersPanel`
-/// itself, which the settings shell references from its section list.
-///
-/// PRINTER ASSIGNMENT — below the printer list, the user picks which saved
-/// printer is the Main printer and which is the Sub printer. Only the
-/// printer's uuid (`PrinterDto.id`) is stored, in the `mainPrinter` /
-/// `subPrinter` columns of the settings row, saved through
-/// `appSettingsProvider`. `UNREGISTERED` means "not assigned".
-/// =========================================================================
-
-/// -----------------------------------------------------------------------
-
-/// Connection-type icon lookup, shared by the printer row and the add/edit
-/// sheet — one source of truth instead of duplicating the switch twice.
 IconData _connectionTypeIcon(String type) => switch (type) {
   'BLUETOOTH' => Icons.bluetooth_rounded,
   'WIFI' => Icons.wifi_rounded,
@@ -41,16 +19,8 @@ IconData _connectionTypeIcon(String type) => switch (type) {
   _ => Icons.print_outlined,
 };
 
-/// Connection status shown as a colored dot + label on each row.
-///
-/// This is UI-only for now — there's no live device polling wired up yet,
-/// so every printer renders as `online` until real status data exists.
-/// Kept as its own enum (rather than a bool) so a future `connecting` or
-/// `error` state slots in without reshaping the row widget.
 enum _PrinterStatus { online, offline }
 
-/// The two jobs a saved printer can be assigned to. The choice is stored
-/// as the printer's uuid in the matching settings column.
 enum _PrinterRole {
   main('Main printer', Icons.print_rounded),
   sub('Sub printer', Icons.print_outlined);
@@ -61,9 +31,6 @@ enum _PrinterRole {
   final IconData icon;
 }
 
-/// Finds the saved printer whose uuid is [id]. Returns `null` when nothing
-/// is assigned (`UNREGISTERED`) or when the stored uuid no longer matches
-/// any saved printer, so a stale assignment simply shows as "Not assigned".
 PrinterDto? _printerById(List<PrinterDto> printers, String id) {
   for (final printer in printers) {
     if (printer.id == id) return printer;
@@ -118,8 +85,6 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
           .read(settingsControllerProvider.notifier)
           .removePrinter(printer.id);
 
-      // If this printer was the main or sub printer, un-assign it so the
-      // settings never point at a printer that no longer exists.
       await ref
           .read(appSettingsProvider.notifier)
           .clearPrinterAssignment(printer.id);
@@ -131,8 +96,6 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
     }
   }
 
-  /// Opens the picker for [role] and saves the choice. Only the printer's
-  /// uuid is stored; picking "None" stores `UNREGISTERED` (via null).
   Future<void> _openPrinterPicker({
     required _PrinterRole role,
     required List<PrinterDto> printers,
@@ -149,7 +112,6 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
       ),
     );
 
-    // Dismissed without choosing anything.
     if (result == null) return;
 
     final notifier = ref.read(appSettingsProvider.notifier);
@@ -170,11 +132,6 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
     }
   }
 
-  /// Sends a real test ticket to [printer], routed to the USB or WiFi
-  /// service based on its saved connection type. Bluetooth isn't wired up
-  /// yet — there's no `BluetoothPrinterService` in this project — so that
-  /// case shows a clear "not supported yet" message instead of silently
-  /// doing nothing.
   Future<void> _testPrinter(BuildContext context, PrinterDto printer) async {
     final messenger = ScaffoldMessenger.of(context);
     messenger.showSnackBar(
@@ -314,18 +271,7 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
                         '${printers.length == 1 ? 'printer' : 'printers'} connected',
             ),
             const SizedBox(height: Space.lg),
-            // One continuous bordered group — rows separated by hairlines,
-            // not floating cards — with the add-printer slot as the final
-            // row rather than a separate button living above the list.
-            //
-            // Rounding lives on an explicit `ClipRRect` wrapping the whole
-            // group, not on `Container.clipBehavior`. Any child that paints
-            // its own full-perimeter border (as `_AddPrinterSlot` used to)
-            // draws square corners that get sliced off right where the
-            // parent's curve starts, which is what read as "cut off" on the
-            // top/bottom edges. `_AddPrinterSlot` no longer paints a boxed
-            // border at all — just a tinted fill and a top hairline — so
-            // there's nothing left to visibly collide with the outer curve.
+
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
@@ -375,9 +321,6 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
   }
 }
 
-/// A single printer row — status dot, connection icon, name + metadata.
-/// Tapping anywhere on the row opens the actions sheet (Edit / Test /
-/// Remove); there are no inline icon buttons cluttering the row itself.
 class _PrinterRow extends StatelessWidget {
   const _PrinterRow({
     required this.printer,
@@ -481,12 +424,6 @@ String _connectionLabel(String type) => switch (type) {
   _ => type,
 };
 
-/// The redesigned "add printer" entry point: a dashed, tinted slot at the
-/// end of the printer list, styled like the next open bay in a row of
-/// hardware rather than a standalone button bolted above it. When the
-/// list is empty, this is the only thing shown — the empty state and the
-/// add action are now the same element instead of two separate pieces of
-/// UI saying the same thing.
 class _AddPrinterSlot extends StatelessWidget {
   const _AddPrinterSlot({required this.onTap});
 
@@ -496,12 +433,6 @@ class _AddPrinterSlot extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
 
-    // No boxed border here — a full `Border.all` on a row that sits flush
-    // against the group's rounded outer corners paints square edges that
-    // visibly collide with the curve above/below it. A top hairline (the
-    // same treatment as the dividers between printer rows) plus a tinted
-    // fill reads as "this row is different" without fighting the parent's
-    // rounding anywhere.
     return Material(
       color: colors.primaryContainer.withValues(alpha: 0.35),
       child: InkWell(
@@ -549,11 +480,6 @@ class _AddPrinterSlot extends StatelessWidget {
     );
   }
 }
-
-/// -----------------------------------------------------------------------
-/// PRINTER ASSIGNMENT — two rows (Main / Sub). Tapping one opens a sheet
-/// listing every saved printer to pick from.
-/// -----------------------------------------------------------------------
 
 class _PrinterAssignmentSection extends StatelessWidget {
   const _PrinterAssignmentSection({
@@ -710,9 +636,6 @@ class _AssignmentRow extends StatelessWidget {
   }
 }
 
-/// What the picker sheet returns. Wrapping the id lets "None" (a `null`
-/// printerId) be told apart from the sheet simply being dismissed (where
-/// the sheet itself returns `null`).
 class _PickResult {
   const _PickResult(this.printerId);
 
@@ -729,8 +652,6 @@ class _PrinterPickerSheet extends StatelessWidget {
   final _PrinterRole role;
   final List<PrinterDto> printers;
 
-  /// The uuid of the printer currently assigned to [role], or `null` if
-  /// none (which highlights the "None" row).
   final String? selectedId;
 
   @override
@@ -896,20 +817,12 @@ class _PickerTile extends StatelessWidget {
   }
 }
 
-/// -----------------------------------------------------------------------
-/// PRINTER FORM SHEET — shared by both Add and Edit. Passing `existing`
-/// pre-fills every field and switches the sheet into edit mode (title and
-/// submit label change accordingly); omitting it is the add flow.
-/// -----------------------------------------------------------------------
-
 const _connectionTypes = ['BLUETOOTH', 'WIFI', 'USB'];
 const _paperSizes = ['58', '72', '80'];
 
 class _PrinterFormSheet extends ConsumerStatefulWidget {
   const _PrinterFormSheet({this.existing});
 
-  /// When set, the sheet opens pre-filled for editing this printer rather
-  /// than creating a new one.
   final PrinterDto? existing;
 
   bool get isEditing => existing != null;
@@ -932,10 +845,6 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
   bool _showConnectionError = false;
   bool _showPaperSizeError = false;
 
-  /// The USB device the user tapped in the scan results. `null` until they
-  /// pick one, even if editing a printer that was originally USB — on
-  /// edit, `_addressController` already carries the saved address, and a
-  /// fresh pick here is what overrides it.
   Printer? _selectedUsbDevice;
 
   @override
@@ -966,9 +875,6 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
     _ => 'Select a connection type first',
   };
 
-  /// Whether the form differs from its starting point — an empty form on
-  /// add, or the original values on edit. Either way, this is what gates
-  /// the discard-confirmation dialog: don't ask if there's nothing to lose.
   bool get _hasUnsavedChanges {
     final existing = widget.existing;
     if (existing == null) {
@@ -1023,8 +929,6 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
     });
     if (!formValid || _connectionType == null || _paperSize == null) return;
     if (_connectionType == 'USB' && addressMissing) {
-      // The USB branch swaps the text field for the device picker, so
-      // there's no Form validator catching this — enforce it here instead.
       setState(() {});
       return;
     }
@@ -1233,9 +1137,6 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
   }
 }
 
-/// Scan button + live device list for the USB branch of the printer form.
-/// Watches `usbScanControllerProvider`, so it updates as devices are found
-/// without the parent form needing to know anything about the scan stream.
 class _UsbDevicePicker extends ConsumerWidget {
   const _UsbDevicePicker({
     required this.selectedDevice,

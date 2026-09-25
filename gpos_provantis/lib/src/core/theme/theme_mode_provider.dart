@@ -1,4 +1,3 @@
-// Location: src/core/theme/theme_mode_provider.dart
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,21 +6,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'theme_mode_provider.g.dart';
-
-/// =========================================================================
-/// THEME MODE — user's chosen appearance: light / dark / system.
-///
-/// `ThemeMode` (from Flutter) already models exactly this: `light`, `dark`,
-/// `system`. No need to invent a parallel enum — we persist and expose
-/// Flutter's own type directly.
-///
-/// Usage in a widget:
-///   final mode = ref.watch(themeModeControllerProvider);
-///   MaterialApp(themeMode: mode, ...)
-///
-/// To change it (e.g. from a settings page):
-///   ref.read(themeModeControllerProvider.notifier).setMode(ThemeMode.dark);
-/// =========================================================================
 
 const _fileName = 'theme_mode.json';
 
@@ -52,7 +36,6 @@ String _encode(ThemeMode mode) => switch (mode) {
 class ThemeModeController extends _$ThemeModeController {
   @override
   ThemeMode build() {
-    // Kick off async load; defaults to system until it resolves.
     _load();
     return ThemeMode.system;
   }
@@ -65,7 +48,6 @@ class ThemeModeController extends _$ThemeModeController {
       final mode = _decode(raw['mode'] as String? ?? 'system');
       state = mode;
     } catch (_) {
-      // Corrupt or unreadable file — fall back silently to system.
       state = ThemeMode.system;
     }
   }
@@ -75,13 +57,9 @@ class ThemeModeController extends _$ThemeModeController {
     try {
       final file = await _themeModeFile();
       await file.writeAsString(jsonEncode({'mode': _encode(mode)}));
-    } catch (_) {
-      // Persistence failure shouldn't crash the UI toggle — the in-memory
-      // state is already updated; it just won't survive an app restart.
-    }
+    } catch (_) {}
   }
 
-  /// Convenience cycle: system -> light -> dark -> system ...
   Future<void> cycle() async {
     final next = switch (state) {
       ThemeMode.system => ThemeMode.light,
@@ -91,11 +69,3 @@ class ThemeModeController extends _$ThemeModeController {
     await setMode(next);
   }
 }
-
-/// True dark/light resolution accounting for `ThemeMode.system`.
-///
-/// Riverpod can't read `MediaQuery` on its own (that needs a BuildContext),
-/// so widgets that need "is it *actually* dark right now" — not just the
-/// user's preference — should use the `context.colors` / `context.isDarkMode`
-/// extension in `app_colors_extension.dart` instead of this provider.
-/// This provider only tracks the user's raw preference (light/dark/system).

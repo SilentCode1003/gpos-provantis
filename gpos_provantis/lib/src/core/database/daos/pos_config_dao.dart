@@ -9,10 +9,6 @@ class PosConfigDao extends DatabaseAccessor<AppDatabase>
     with _$PosConfigDaoMixin {
   PosConfigDao(super.db);
 
-  /// Saves (inserts or overwrites) the single pos config row.
-  /// `id` uses the table's fixed default ('pos_config'), so this is
-  /// always an upsert against that one row (this device only ever
-  /// represents one POS terminal).
   Future<void> savePos(POSConfigTableCompanion pos) {
     return into(pOSConfigTable).insertOnConflictUpdate(pos);
   }

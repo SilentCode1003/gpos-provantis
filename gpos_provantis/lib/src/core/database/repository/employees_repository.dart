@@ -25,7 +25,6 @@ class EmployeesRepository {
 
   EmployeesRepository(this._ref, this._dao);
 
-  // Fetch employees from the API and save them to the database.
   Future<void> fetchAndSaveEmployees() async {
     await _ref.read(domainConfigDaoProvider).cacheReady;
 

@@ -1,4 +1,3 @@
-// Location: src/features/dashboard/presentation/widgets/dashboardWidgets/product_grid.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,33 +6,13 @@ import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/d
 import 'category_visibility.dart';
 import 'dashboard_constants.dart';
 
-/// --- Product grid: label-forward, no image placeholders --------------------
-
-/// Lives inside `CatalogSheet` now (not the always-visible panel) —
-/// reads `productsForCatalogSheet()`, which is already filtered by both
-/// the sheet's open category and its search query.
-///
-/// LOADING: gated on `controller.productsStatus`, not on
-/// `products.isEmpty` — right after login the product-price stream
-/// hasn't emitted its first synced batch yet, which used to read
-/// (incorrectly) as "no products in this category" and fall back to
-/// placeholder inventory. Now that gap shows `_ProductGridLoadingState`
-/// instead, and `_EmptyCatalog` only appears once the stream has
-/// actually confirmed the (filtered) category has nothing in it.
-///
-/// HIDDEN CATEGORIES: products are only reachable through their category,
-/// and hidden categories get no tile or chip, so their products never
-/// appear. The check below is a safety net for the one odd case where the
-/// sheet is already open on a category that was hidden in the meantime.
 class ProductGrid extends ConsumerWidget {
   const ProductGrid({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(dashboardControllerProvider.notifier);
-    // Watching state so the grid rebuilds on category swap, on every
-    // keystroke in the sheet's search field, and as the products stream
-    // moves from loading -> data (or -> error) after login/sync.
+
     final state = ref.watch(dashboardControllerProvider);
     final hidden = ref.watch(hiddenCategoryCodesProvider);
     final status = controller.productsStatus;
@@ -71,10 +50,6 @@ class ProductGrid extends ConsumerWidget {
   }
 }
 
-/// Shown while the product-price stream hasn't emitted its first value
-/// yet — the gap right after login before the initial API-to-Drift sync
-/// has written anything. This is what used to be masked by falling back
-/// to placeholder products; now it's an honest loading state instead.
 class _ProductGridLoadingState extends ConsumerWidget {
   const _ProductGridLoadingState();
 
@@ -108,9 +83,6 @@ class _ProductGridLoadingState extends ConsumerWidget {
   }
 }
 
-/// Shown if the product-price stream itself errors — distinct from
-/// `_EmptyCatalog` so a real failure doesn't silently read as "there's
-/// just nothing in this category".
 class _ProductGridErrorState extends ConsumerWidget {
   const _ProductGridErrorState();
 
@@ -142,8 +114,6 @@ class _ProductGridErrorState extends ConsumerWidget {
   }
 }
 
-/// Shown instead of the products if the open category has been hidden in
-/// Settings > Counter Display.
 class _HiddenCategoryState extends ConsumerWidget {
   const _HiddenCategoryState();
 
@@ -198,12 +168,6 @@ class _EmptyCatalog extends ConsumerWidget {
   }
 }
 
-/// No image placeholder — label-forward card per direction: bigger name
-/// and price instead of an unpopulated image block. The whole card is one
-/// large tap target (not just a small "add" button inside it), since
-/// "tap the product to add it" is the entire interaction — except when
-/// `stock` is 0, in which case there's nothing to add and the card is
-/// disabled entirely (see OUT OF STOCK below).
 class _ProductCard extends ConsumerWidget {
   const _ProductCard({required this.product});
 
@@ -214,31 +178,10 @@ class _ProductCard extends ConsumerWidget {
     final colors = context.colors;
     final notifier = ref.read(dashboardControllerProvider.notifier);
 
-    // OUT OF STOCK: `addToCart` itself has no stock check (it'll happily
-    // add a 0-stock product if called), so the guard has to live here —
-    // this is the only path a cashier has to add a product to the cart.
     final isOutOfStock = product.stock <= 0;
 
-    // Card-to-card separation used to rely entirely on `borderSubtle`, but
-    // in dark mode `borderSubtle` (neutral800) is the exact same color as
-    // `surface` (also neutral800) — a border with zero contrast against
-    // its own fill, i.e. invisible. First fix split fill from edge:
-    //   - fill: `surfaceRaised` instead of `surface`, for luminance
-    //     separation from the panel background in both modes.
-    //   - edge: dark mode got a real 1.5px `border` (neutral700 vs
-    //     neutral850 fill); light mode leaned on `elevation: 1` alone.
-    // That light-mode shadow turned out too faint on its own — `shadow`
-    // is only 12% black, and `surfaceRaised` (pure white) sits right next
-    // to `background` (neutral50), so there was barely any edge to see.
-    // Both modes now draw the same `colors.border` outline; the shadow
-    // stays as a secondary depth cue in light mode rather than the only
-    // one.
     final isDark = colors.isDark;
 
-    // Disabled treatment mirrors `_ActionButton` elsewhere in the
-    // dashboard: swap the fill for `disabledFill` and every foreground
-    // color for `textDisabled`, rather than just intercepting the tap
-    // and leaving the card looking fully interactive.
     final cardFill = isOutOfStock ? colors.disabledFill : colors.surfaceRaised;
     final textColor = isOutOfStock ? colors.textDisabled : colors.textPrimary;
 

@@ -1,18 +1,6 @@
-// Location: src/features/settings/panels/placeholder_panels.dart
 import 'package:flutter/material.dart';
 
 import '../screens/settings_shared.dart';
-
-/// =========================================================================
-/// PLACEHOLDER PANELS — Sync / System / Users / About. Each is a thin
-/// wrapper around the shared `PanelPlaceholder` so the layout stays
-/// consistent and there's a single place to update once real content
-/// lands in any of them.
-///
-/// Once a section grows real UI (as Printers and Theme already have),
-/// pull it out into its own file in this `panels/` folder rather than
-/// growing it here — that's the whole point of the split.
-/// =========================================================================
 
 class SyncPanel extends StatelessWidget {
   const SyncPanel();
@@ -58,21 +46,6 @@ class UsersPanel extends StatelessWidget {
     );
   }
 }
-
-// class CounterDisplayPanel extends StatelessWidget {
-//   const CounterDisplayPanel();
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return const PanelPlaceholder(
-//       icon: Icons.monitor_rounded,
-//       title: 'Counter Display',
-//       description:
-//           'Configure the customer-facing display — layout, promo/idle '
-//           'screen content, and connection to a secondary screen.',
-//     );
-//   }
-// }
 
 class AboutPanel extends StatelessWidget {
   const AboutPanel();

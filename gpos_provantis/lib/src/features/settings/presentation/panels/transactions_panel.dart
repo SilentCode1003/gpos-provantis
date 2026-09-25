@@ -1,4 +1,3 @@
-// Location: src/features/settings/panels/transactions_panel.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -6,15 +5,6 @@ import 'package:gpos_provantis/src/core/database/domain/settings_dto.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import '../controllers/app_settings_controller.dart';
 import '../screens/settings_shared.dart';
-
-/// =========================================================================
-/// TRANSACTIONS PANEL — receipt/transaction behavior toggles.
-///
-/// Every toggle is saved to the database the moment it is tapped, through
-/// `appSettingsProvider` (the single settings row in `SettingsTable`).
-/// There is no Save button and no local state here — the switches always
-/// show what is actually stored, so they stay correct after a restart.
-/// =========================================================================
 
 class TransactionsPanel extends ConsumerWidget {
   const TransactionsPanel();
@@ -25,8 +15,6 @@ class TransactionsPanel extends ConsumerWidget {
     final settingsAsync = ref.watch(appSettingsProvider);
     final controller = ref.read(appSettingsProvider.notifier);
 
-    // While loading (or if the read failed) show the defaults, so the
-    // panel never flashes a blank screen.
     final settings = settingsAsync.value ?? SettingsDto.defaults();
 
     return ListView(
@@ -123,10 +111,6 @@ class TransactionsPanel extends ConsumerWidget {
   }
 }
 
-/// One toggle row: icon, title + optional subtitle, and a touch-sized
-/// switch. Local to this panel for now — if a second panel ends up
-/// needing the exact same row shape, pull it into `settings_shared.dart`
-/// then (see that file's own note on when something earns a shared home).
 class _ToggleRow extends StatelessWidget {
   const _ToggleRow({
     required this.icon,

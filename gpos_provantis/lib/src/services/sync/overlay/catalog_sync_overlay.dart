@@ -1,33 +1,3 @@
-// Location: src/services/sync/catalog_sync_overlay.dart
-//
-// Wrap this once near the app root (e.g. inside MaterialApp.builder, or
-// around the root Navigator) so it can show on top of ANY screen — not
-// just login. It reacts to CatalogSyncController's global state, so
-// triggering a sync from login, a manual sync button, or anywhere else
-// all surface through this same overlay.
-//
-// Success is reported via AppToast rather than an overlay banner —
-// AppToast already owns "transient, self-dismissing, stacks above
-// everything" as a concern (see app_toast.dart), so a sync-succeeded
-// message reuses that instead of this widget inventing a second,
-// slightly-different version of the same idea. Only the two states that
-// need to BLOCK or persist on screen (syncing / failed) are drawn here.
-//
-// SELF-CONTAINED OVERLAY: this widget hosts its own `Overlay` (see
-// `build` below) rather than relying on one already being present above
-// it in the tree. Reason: when this widget is wired in via
-// `MaterialApp.router`'s `builder` parameter — the documented, intended
-// place to put it — `builder` runs OUTSIDE the subtree Navigator/Overlay
-// actually construct. `builder`'s `child` argument is the routed app;
-// `builder` itself (and anything wrapping `child`, including this
-// widget) sits ABOVE that Navigator, not below it. So a BuildContext
-// taken from this widget's own `build()` has no Overlay ancestor, and
-// AppToast.show(context) — which needs one to insert its OverlayEntry —
-// throws "No Overlay widget found." Giving this widget its own local
-// Overlay makes AppToast.show work no matter where in the app's tree
-// CatalogSyncOverlay ends up wired in, without depending on reaching
-// into `child`'s subtree (which may not always be mounted, or may
-// change shape independent of this file).
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
@@ -45,19 +15,6 @@ class CatalogSyncOverlay extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // The Overlay itself needs no rebuild logic of its own — everything
-    // reactive lives inside the OverlayEntry's builder below, which
-    // Overlay re-invokes whenever the entry is marked dirty (via
-    // setState on the entry, or — as here — because the ConsumerWidget
-    // inside it rebuilds on provider changes same as any other).
-    //
-    // Directionality + Material wrap the entry's content because this
-    // Overlay sits ABOVE MaterialApp.router in the tree (see the class
-    // doc above) — it does NOT inherit either from a Scaffold/Material
-    // further down like normal in-app widgets do. Without them, Text
-    // widgets here paint as Flutter's debug fallback: red text with a
-    // yellow double underline, which is the render-error indicator for
-    // "no Directionality/Material ancestor," not a font-loading state.
     return Overlay(
       initialEntries: [
         OverlayEntry(
@@ -74,10 +31,6 @@ class CatalogSyncOverlay extends ConsumerWidget {
   }
 }
 
-/// Everything that used to live directly in `CatalogSyncOverlay.build`.
-/// Split out so its `BuildContext` (used for `AppToast.show`) is one
-/// that's actually inside the `OverlayEntry` above — i.e. guaranteed to
-/// have this file's own `Overlay` as an ancestor.
 class _CatalogSyncOverlayBody extends ConsumerWidget {
   const _CatalogSyncOverlayBody({required this.child});
 
@@ -87,12 +40,6 @@ class _CatalogSyncOverlayBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final syncState = ref.watch(catalogSyncControllerProvider);
 
-    // ref.listen (not ref.watch) for the success toast — this is exactly
-    // what it's for: react to a state TRANSITION with a one-off side
-    // effect, without that side effect being tied to build() re-running.
-    // Riverpod calls this after the frame that changed the state, so
-    // there's no need to manually track "previous status" or defer with
-    // addPostFrameCallback the way build()-based side effects would.
     ref.listen(catalogSyncControllerProvider, (previous, next) {
       if (previous?.status == CatalogSyncStatus.syncing &&
           next.status == CatalogSyncStatus.idle) {
@@ -116,35 +63,11 @@ class _CatalogSyncOverlayBody extends ConsumerWidget {
   }
 }
 
-/// Full-screen, non-dismissible barrier shown while catalog sync runs.
-/// Blocks interaction with whatever screen is underneath (e.g. the
-/// dashboard the user just landed on right after login).
-///
-/// DESIGN: the underlying screen stays visible — blurred and dimmed,
-/// never fully replaced — so this reads as "the app paused for a
-/// moment," not a crash/takeover screen. The scrim is a fixed dark,
-/// frosted surface (NOT theme-driven): whether the app is in light or
-/// dark mode, this overlay always darkens what's behind it to the same
-/// degree, the way a native OS permission sheet or camera modal does.
-/// That's a deliberate exception to the app's usual context.colors
-/// pattern — light mode's own scrim (colors.overlay, ~40% black) isn't
-/// dark enough to keep white text/teal rings legible over a bright
-/// dashboard, and flipping text color per-mode instead would make the
-/// overlay look like two different products depending on theme. A
-/// single fixed dark scrim keeps it visually consistent everywhere.
-///
-/// The ring-bloom animation reuses OrganicPatternBackground's own
-/// concentric-circle motif as the loading motion itself, instead of a
-/// generic spinner — rings drawing outward in staggered clusters reads
-/// as "your catalog is assembling," which ties the loading state back
-/// to the same brand texture used elsewhere, rather than a loader that
-/// could belong to any app.
 class _SyncingBarrier extends StatelessWidget {
   const _SyncingBarrier({required this.stepLog});
 
   final List<String> stepLog;
 
-  // Fixed regardless of AppColors.light/dark — see class doc.
   static const _scrimColor = Color(0xE60A0D0D); // ~90% AppPalette.neutral1000
   static const _headlineColor = AppPalette.neutral0;
 
@@ -194,21 +117,6 @@ class _SyncingBarrier extends StatelessWidget {
   }
 }
 
-/// Scrolling, terminal/console-style log of every step announced so
-/// far — each entry stays on screen (like a chat history or `tail -f`)
-/// instead of the old design where a new label replaced the previous
-/// one. New lines append at the bottom and the view auto-scrolls to
-/// keep the latest entry visible, the way a CLI or chat transcript
-/// does.
-///
-/// [entries] is the raw, unthrottled log from CatalogSyncState —
-/// CatalogSyncService fires several `notify` calls back-to-back in the
-/// same tick (see its class doc), so entries can arrive several at a
-/// time rather than one by one. This widget owns the "reveal one line
-/// at a time" pacing itself, purely as a client-side presentation
-/// effect — nothing upstream is slowed down to accommodate it, so a
-/// fast sync still finishes exactly as fast; this just animates
-/// catching up to whatever's already in [entries] once it does.
 class _StepLog extends StatefulWidget {
   const _StepLog({required this.entries});
 
@@ -221,11 +129,6 @@ class _StepLog extends StatefulWidget {
 class _StepLogState extends State<_StepLog> {
   final _scrollController = ScrollController();
 
-  /// How many of widget.entries have been revealed in the log so far.
-  /// Ticks up on a short timer rather than jumping straight to
-  /// entries.length, so a burst of simultaneous entries still reads as
-  /// a sequence of lines being printed rather than all appearing at
-  /// once.
   int _revealedCount = 0;
   Timer? _revealTimer;
 
@@ -241,7 +144,6 @@ class _StepLogState extends State<_StepLog> {
   void didUpdateWidget(_StepLog oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.entries.length < oldWidget.entries.length) {
-      // A new sync started and the log was reset.
       _revealedCount = 0;
     }
     _scheduleReveal();
@@ -307,12 +209,6 @@ class _StepLogState extends State<_StepLog> {
   }
 }
 
-/// Single line in the step log, styled like a console/chat line: a
-/// small marker followed by the label. The most recent line is
-/// highlighted (full opacity, teal marker) while older lines recede
-/// (dimmer, neutral marker) — reads as "this just happened" vs. "this
-/// already happened," the way a chat transcript distinguishes the
-/// newest message without needing timestamps.
 class _StepLogLine extends StatelessWidget {
   const _StepLogLine({required this.label, required this.isLatest});
 
@@ -372,15 +268,6 @@ class _StepLogLine extends StatelessWidget {
   }
 }
 
-/// The loading motion: 5 clusters of concentric rings bloom outward and
-/// fade in a staggered, looping sequence — the same "cluster of
-/// concentric circles" language as OrganicPatternBackground, used here
-/// as active motion instead of static texture. Positions/sizes are
-/// fixed (not randomized per the app's brand pattern) since this needs
-/// to look identical and intentional every time it appears, not vary
-/// like the ambient background pattern does.
-///
-/// Pure CustomPainter + AnimationController — no new package.
 class _RingBloom extends StatefulWidget {
   const _RingBloom();
 
@@ -394,11 +281,6 @@ class _RingBloomState extends State<_RingBloom>
 
   static const _cycleDuration = Duration(milliseconds: 3200);
 
-  // Cluster centers (relative to the 120x120 canvas center) + outer
-  // radius + stagger delay (as a fraction of the cycle). Five clusters:
-  // one centered, four scattered around it — echoes the "sparse,
-  // scattered cluster" composition from OrganicPatternBackground at a
-  // small scale.
   static const _clusters = [
     _ClusterSpec(offset: Offset.zero, outerRadius: 34, delayFraction: 0.0),
     _ClusterSpec(
@@ -482,23 +364,16 @@ class _RingBloomPainter extends CustomPainter {
         final tierScale = 1.0 - (r / (_ringsPerCluster - 1)) * 0.7;
         final ringDelay = cluster.delayFraction + (r * 0.15 / 3.2);
 
-        // Each ring's local animation phase: 0->1 loops, offset by this
-        // ring's own delay so clusters/rings bloom in a staggered
-        // sequence rather than all pulsing in lockstep.
         final local = ((cyclePosition - ringDelay) % 1.0 + 1.0) % 1.0;
 
         double growth;
         double opacity;
         if (local < 0.5) {
-          // Grow phase: eased outward from nothing to full size,
-          // fading in quickly at the start.
           final t = local / 0.5;
           final eased = 1 - math.pow(1 - t, 3).toDouble();
           growth = eased;
           opacity = (t * 3).clamp(0.0, 1.0) * 0.85;
         } else {
-          // Fade phase: keeps drifting slightly outward while fading
-          // out, like a ripple dissipating.
           final t = (local - 0.5) / 0.5;
           growth = 1.0 + t * 0.15;
           opacity = 0.85 * (1 - t);
@@ -524,10 +399,6 @@ class _RingBloomPainter extends CustomPainter {
   }
 }
 
-/// Persistent banner shown when sync fails, so the app remains usable
-/// (the user already logged in successfully — sync failing shouldn't
-/// trap them) while still surfacing the problem clearly until they
-/// dismiss it.
 class _SyncFailedBanner extends ConsumerWidget {
   const _SyncFailedBanner({required this.message});
 

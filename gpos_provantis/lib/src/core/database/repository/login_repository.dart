@@ -25,17 +25,7 @@ class UserDataRepository {
 
   UserDataRepository(this._ref, this._dao);
 
-  /// Calls POST /branch/getbranch with the given branchId, and saves the
-  /// first matching record to BranchConfigTable. Throws on network/parse
-  /// failure — callers (InitialSyncService) decide how to surface that.
   Future<void> fetchAndSaveUser(String username, String password) async {
-    // Wait for DomainConfigDao's startup cache warm-up to finish before
-    // touching apiClient. This matters specifically right after an app
-    // restart: the in-memory domain cache starts empty and is repopulated
-    // from the DB in the background as soon as the DAO is constructed —
-    // this closes that brief window instead of racing it. On any call
-    // after the very first one, cacheReady is already complete and this
-    // returns instantly.
     await _ref.read(domainConfigDaoProvider).cacheReady;
 
     final dio = _ref.read(apiClientProvider);

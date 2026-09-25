@@ -11,10 +11,6 @@ BranchConfigDao branchConfigDao(Ref ref) {
   return BranchConfigDao(db);
 }
 
-/// Streams the currently configured branch from the local database.
-/// Value is null before setup has ever run.
-/// Manually written (not @riverpod) to avoid a known riverpod_generator
-/// bug resolving Drift-generated types — see rrousselGit/riverpod#4370.
 final branchConfigProvider =
     StreamNotifierProvider<BranchConfigNotifier, BranchConfigTableData?>(
       BranchConfigNotifier.new,

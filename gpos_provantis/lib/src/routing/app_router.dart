@@ -11,7 +11,6 @@ import 'package:gpos_provantis/src/features/setup/presentation/screens/setup_scr
 import 'package:gpos_provantis/src/features/login/presentation/screens/login_screen.dart';
 import 'package:gpos_provantis/src/features/startup/presentation/screens/startup_screen.dart';
 
-/// Builds a CupertinoPage with native iOS-style slide transition and edge-swipe-to-pop gesture.
 CupertinoPage<void> _buildPageWithTransition(
   BuildContext context,
   GoRouterState state,
@@ -50,7 +49,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) =>
             _buildPageWithTransition(context, state, const DashboardScreen()),
       ),
-      // Dashboard Others Panel
+
       GoRoute(
         path: '/cash-reports',
         name: AppRoute.cashReports.name,

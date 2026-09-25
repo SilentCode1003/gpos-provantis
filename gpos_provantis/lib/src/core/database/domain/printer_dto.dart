@@ -16,7 +16,6 @@ class PrinterDto {
     required this.paperSize,
   });
 
-  /// From a row already persisted in Drift.
   factory PrinterDto.fromTableData(PrintersTableData data) {
     return PrinterDto(
       id: data.id,
@@ -27,10 +26,6 @@ class PrinterDto {
     );
   }
 
-  /// To a companion for insert/update. `id` is included so
-  /// `upsertPrinter` can match on primary key when editing; for a brand
-  /// new printer created without an id yet, pass `forInsert: true` to let
-  /// the table's `clientDefault` uuid generator take over instead.
   PrintersTableCompanion toCompanion({bool forInsert = false}) {
     return PrintersTableCompanion(
       id: forInsert || id.isEmpty ? const Value.absent() : Value(id),

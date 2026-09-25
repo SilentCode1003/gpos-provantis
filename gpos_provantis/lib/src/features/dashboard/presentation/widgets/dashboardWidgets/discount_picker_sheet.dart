@@ -1,4 +1,3 @@
-// Location: src/features/dashboard/presentation/widgets/dashboardWidgets/discount_picker_sheet.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
@@ -8,11 +7,6 @@ import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'dashboard_constants.dart';
 
-/// Opens the discount picker as a modal bottom sheet and applies
-/// whichever discount the cashier taps. Returns once the sheet is
-/// dismissed (either by a pick or by the cashier backing out) — callers
-/// don't need to do anything with the result themselves, since applying
-/// the discount happens inside the sheet via `dashboardControllerProvider`.
 Future<void> showDiscountPickerSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
@@ -67,17 +61,6 @@ class _DiscountPickerSheet extends ConsumerWidget {
                         selectedDiscountId: state.selectedDiscount?.discountId,
                         onPick: (discount) {
                           if (notifier.discountRequiresCustomerInfo(discount)) {
-                            // Push the ID + Fullname sheet on top; it
-                            // applies the discount itself on confirm
-                            // (see _CustomerInfoSheet) and pops back
-                            // out through both sheets. If the cashier
-                            // backs out instead, nothing is applied and
-                            // only the customer-info sheet closes,
-                            // leaving the discount list open underneath.
-                            // Not awaited here — onPick is a plain
-                            // synchronous callback (ValueChanged), and
-                            // nothing downstream needs to know when the
-                            // second sheet finishes closing.
                             showModalBottomSheet<void>(
                               context: context,
                               isScrollControlled: true,
@@ -125,10 +108,7 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          // Only offered once a discount is actually applied — nothing
-          // to clear otherwise, so the affordance stays hidden rather
-          // than rendered-and-disabled (same pattern as the cart's own
-          // "Remove all").
+
           if (hasDiscount) _RemoveDiscountButton(onTap: onClear),
         ],
       ),
@@ -136,13 +116,6 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// "Remove discount" — deliberately built as its own small pill (rounded
-/// container + icon + label) rather than a bare `TextButton`, so it reads
-/// as a real control sitting in the header, not a stray line of text
-/// floating next to the title. Same "contained chip" language the
-/// discount tiles below use for their rate badge, just sized down and
-/// given a tap ripple — a plain text button here got lost next to
-/// 'Apply discount' since nothing gave it any visual weight of its own.
 class _RemoveDiscountButton extends StatelessWidget {
   const _RemoveDiscountButton({required this.onTap});
 
@@ -368,15 +341,6 @@ class _ErrorState extends StatelessWidget {
   }
 }
 
-/// --- CUSTOMER INFO: ID + Fullname prompt for PWD/Senior discounts -------
-///
-/// Opened on top of the discount list (as a second sheet, not a
-/// replacement of it) when the tapped discount requires customer info —
-/// see `DashboardController.discountRequiresCustomerInfo`. Both fields
-/// are required before "Apply discount" enables; confirming applies the
-/// discount with the entered info and closes both this sheet and the
-/// discount list underneath. Backing out (the header's X) closes only
-/// this sheet, leaving the discount list open with nothing applied.
 class _CustomerInfoSheet extends ConsumerStatefulWidget {
   const _CustomerInfoSheet({required this.discount});
 
@@ -410,14 +374,7 @@ class _CustomerInfoSheetState extends ConsumerState<_CustomerInfoSheet> {
         fullName: _fullNameController.text.trim(),
       ),
     );
-    // Resolve the navigator once, before popping anything — after the
-    // first pop, this sheet's own `context` belongs to a widget that's
-    // being torn down, so re-resolving Navigator.of(context) a second
-    // time against it would be reading from a context mid-removal.
-    // popUntil walks back to (and stops just past) the discount-list
-    // sheet in one call using the navigator captured up front, rather
-    // than issuing two separate pops against a context that's already
-    // gone stale after the first one.
+
     final navigator = Navigator.of(context);
     navigator.pop(); // this sheet
     navigator.pop(); // the discount-list sheet underneath
@@ -428,9 +385,6 @@ class _CustomerInfoSheetState extends ConsumerState<_CustomerInfoSheet> {
     final colors = context.colors;
 
     return Padding(
-      // Lifts the sheet clear of the on-screen keyboard, same pattern
-      // Flutter's own examples use for a bottom-sheet text form — the
-      // sheet's bottom padding grows by exactly the keyboard's height.
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),

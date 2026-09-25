@@ -1,16 +1,9 @@
-// Location: src/shared/widgets/app_toast.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 
-/// APP TOAST — app-wide replacement for SnackBar. Always appears above all other UI.
-/// Shows in a bottom-left stack; each toast animates in/out and times out independently.
-/// Flat fill, no shadow/blur — consistent with app's performance discipline.
 enum AppToastType { neutral, success, error }
 
-/// Wrap your app's root widget (inside MaterialApp.builder) with this so
-/// `AppToast.show` always has a root-overlay BuildContext to insert into,
-/// regardless of which screen or dialog is currently active.
 class AppToastHost extends StatelessWidget {
   const AppToastHost({super.key, required this.child});
 
@@ -35,7 +28,6 @@ class _ToastEntry {
   final Duration duration;
 }
 
-/// Holds live toast list and notifies the overlay entry hosting the stack.
 class _ToastQueue extends ChangeNotifier {
   final List<_ToastEntry> entries = [];
 
@@ -60,8 +52,6 @@ abstract class AppToast {
   static OverlayEntry? _hostEntry;
   static int _nextId = 0;
 
-  /// Shows a toast above everything else in the app, stacked bottom-left.
-  /// Each toast animates in/out and times out independently.
   static void show(
     BuildContext context, {
     required String message,
@@ -86,7 +76,6 @@ abstract class AppToast {
     overlay.insert(entry);
   }
 
-  /// Dismiss all toasts currently showing.
   static void dismiss() {
     _queue.clear();
   }
@@ -129,7 +118,7 @@ class _AppToastStackState extends State<_AppToastStack> {
         right: false,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 460),
-          // Smooth height as toasts are added/removed.
+
           child: AnimatedSize(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOut,
@@ -137,7 +126,7 @@ class _AppToastStackState extends State<_AppToastStack> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
-              // Oldest toast at bottom, newest above; stack rises upward.
+
               children: [
                 for (final entry in entries.reversed)
                   _AppToastView(
@@ -185,7 +174,7 @@ class _AppToastViewState extends State<_AppToastView>
   @override
   void initState() {
     super.initState();
-    // Flat fade + short rise, controller drives entrance and exit.
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 180),
@@ -211,7 +200,7 @@ class _AppToastViewState extends State<_AppToastView>
     if (_closing) return;
     _closing = true;
     _dismissTimer?.cancel();
-    // Play entrance animation in reverse before removing from queue.
+
     await _controller.reverse();
     if (mounted) widget.onDismiss();
   }
@@ -223,7 +212,6 @@ class _AppToastViewState extends State<_AppToastView>
       case AppToastType.error:
         return colors.isDark ? colors.dangerContainer : colors.danger;
       case AppToastType.neutral:
-        // InvertedSnackBar theme: surfaceVariant in dark, textPrimary in light.
         return colors.isDark ? colors.surfaceVariant : colors.textPrimary;
     }
   }
@@ -250,7 +238,6 @@ class _AppToastViewState extends State<_AppToastView>
         child: SlideTransition(
           position: _slide,
           child: Material(
-            // Flat fill, no elevation/shadow — cheap-to-paint discipline.
             color: _fillColor(colors),
             borderRadius: BorderRadius.circular(10),
             child: InkWell(

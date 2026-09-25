@@ -1,21 +1,7 @@
-// Location: src/features/settings/settings_shared.dart
 import 'package:flutter/material.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 
-/// =========================================================================
-/// SETTINGS SHARED — widgets and constants used by more than one settings
-/// panel (or by the settings shell itself).
-///
-/// Kept deliberately small: a widget only belongs here once a second panel
-/// actually needs it. Anything used by exactly one panel should live next
-/// to that panel instead (e.g. `_FieldLabel`, `_TouchTextField` live in
-/// `panels/printers_panel.dart` since only the printer form uses them).
-/// =========================================================================
-
-/// Fixed spacing scale — every gap on the settings screen comes from here
-/// rather than a one-off number, so rhythm stays consistent as the screen
-/// grows.
 abstract class Space {
   static const xs = 4.0;
   static const sm = 8.0;
@@ -26,8 +12,6 @@ abstract class Space {
   static const xxxl = 32.0;
 }
 
-/// One entry in the settings nav strip: icon + label + which panel it
-/// shows when selected.
 class SettingsSection {
   const SettingsSection({
     required this.label,
@@ -40,7 +24,6 @@ class SettingsSection {
   final Widget Function() builder;
 }
 
-/// Simple title/subtitle header, used at the top of every panel.
 class PanelHeader extends StatelessWidget {
   const PanelHeader({required this.title, required this.subtitle});
 
@@ -72,9 +55,6 @@ class PanelHeader extends StatelessWidget {
   }
 }
 
-/// One row inside a bottom-sheet list of actions (e.g. the printer actions
-/// sheet: Edit / Test / Remove). Generic enough for any future "tap a row,
-/// open a sheet of actions" panel.
 class ActionSheetTile extends StatelessWidget {
   const ActionSheetTile({
     required this.icon,
@@ -121,10 +101,6 @@ class ActionSheetTile extends StatelessWidget {
   }
 }
 
-/// A row of mutually-exclusive string options rendered as touch-sized
-/// segments. Used by the printer form (connection type, paper size) and
-/// the theme panel (light/system/dark) — any future single-choice picker
-/// on this screen should reach for this rather than a new widget.
 class SegmentedTouchControl extends StatelessWidget {
   const SegmentedTouchControl({
     required this.options,
@@ -198,11 +174,6 @@ class SegmentedTouchControl extends StatelessWidget {
   }
 }
 
-/// Generic "coming soon" body for a settings section with no real UI yet.
-/// Sync / System / Users / About all use this today; a section should
-/// stop passing through here the moment it gets real content (see how
-/// `ThemePanel` used to use this before the light/system/dark toggle was
-/// built out).
 class PanelPlaceholder extends StatelessWidget {
   const PanelPlaceholder({
     required this.icon,

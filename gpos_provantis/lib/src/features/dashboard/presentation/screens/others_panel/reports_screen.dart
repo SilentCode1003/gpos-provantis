@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 
-/// Placeholder screen for Reports.
-/// Push with: context.push('/reports');
 class ReportsScreen extends StatelessWidget {
   const ReportsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reports'),
-      ),
+      appBar: AppBar(title: const Text('Reports')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

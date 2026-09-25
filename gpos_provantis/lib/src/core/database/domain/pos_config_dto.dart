@@ -1,6 +1,3 @@
-/// Parses one POS record from POST /pos/getposconfig.
-/// Matches the confirmed sample response exactly:
-/// { posid, posname, serial, min, ptu, status, createdby, createddate }
 class PosConfigDto {
   final int posId;
   final String posName;

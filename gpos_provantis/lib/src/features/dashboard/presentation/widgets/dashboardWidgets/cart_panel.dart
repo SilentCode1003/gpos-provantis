@@ -42,7 +42,6 @@ class _CartPanelState extends ConsumerState<CartPanel> {
         if (mounted) setState(() => _showScrim = false);
       });
     } else {
-      // Hide scrim immediately when sheet closes.
       _showScrim = false;
     }
   }
@@ -68,7 +67,6 @@ class _CartPanelState extends ConsumerState<CartPanel> {
     _syncScrimTimer(state.isCatalogSheetOpen);
 
     return GestureDetector(
-      // Tap-to-close: active while sheet is open, even if scrim has faded.
       behavior: state.isCatalogSheetOpen
           ? HitTestBehavior.opaque
           : HitTestBehavior.deferToChild,
@@ -93,7 +91,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
               ],
             ),
           ),
-          // Darkening scrim that fades out after delay. Purely visual.
+
           Positioned.fill(
             child: IgnorePointer(
               child: AnimatedOpacity(
@@ -108,7 +106,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
               ),
             ),
           ),
-          // Tap-to-close hint overlay. Fades with scrim.
+
           Positioned.fill(
             child: IgnorePointer(
               child: AnimatedOpacity(
@@ -172,7 +170,6 @@ class _CartHeader extends StatelessWidget {
       height: _cartHeaderHeight,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        // V1 brand teal (used consistently across themes)
         color: AppPalette.teal500,
         border: Border(bottom: BorderSide(color: colors.borderSubtle)),
       ),
@@ -182,10 +179,6 @@ class _CartHeader extends StatelessWidget {
           Text(
             'Current sale',
             style: AppTypography.display(
-              // `onPrimary` — the token for text/icons sitting on a solid
-              // primary fill — not `textPrimary`, which is tuned for the
-              // neutral surface this header no longer has and would go
-              // near-invisible on teal.
               color: colors.onPrimary,
               fontSize: 22,
               fontWeight: FontWeight.w600,
@@ -196,7 +189,6 @@ class _CartHeader extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                // Translucent white pill on teal background
                 color: colors.onPrimary.withOpacity(0.18),
                 borderRadius: BorderRadius.circular(999),
               ),
@@ -210,7 +202,7 @@ class _CartHeader extends StatelessWidget {
               ),
             ),
           const Spacer(),
-          // Only shown when cart has items, requires confirmation.
+
           if (itemCount > 0) _RemoveAllButton(onTap: onRemoveAll),
         ],
       ),
@@ -311,7 +303,6 @@ class _ScrollableCartList extends StatefulWidget {
 class _ScrollableCartListState extends State<_ScrollableCartList> {
   final _controller = ScrollController();
 
-  // Whether there's off-screen content above/below.
   bool _canScrollUp = false;
   bool _canScrollDown = false;
 
@@ -319,7 +310,7 @@ class _ScrollableCartListState extends State<_ScrollableCartList> {
   void initState() {
     super.initState();
     _controller.addListener(_updateScrollAffordances);
-    // Check scroll affordances after first frame.
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _updateScrollAffordances();
     });
@@ -328,7 +319,7 @@ class _ScrollableCartListState extends State<_ScrollableCartList> {
   @override
   void didUpdateWidget(covariant _ScrollableCartList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Re-check scroll affordances when cart contents change.
+
     if (oldWidget.cartLines != widget.cartLines) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _updateScrollAffordances();
@@ -339,7 +330,7 @@ class _ScrollableCartListState extends State<_ScrollableCartList> {
   void _updateScrollAffordances() {
     if (!_controller.hasClients) return;
     final position = _controller.position;
-    // Small epsilon tolerance for floating point scroll position.
+
     const epsilon = 2.0;
     final canUp = position.pixels > position.minScrollExtent + epsilon;
     final canDown = position.pixels < position.maxScrollExtent - epsilon;
@@ -374,19 +365,19 @@ class _ScrollableCartListState extends State<_ScrollableCartList> {
             return _CartLineTile(line: widget.cartLines[index]);
           },
         ),
-        // Top fade when scrolled down.
+
         _EdgeFade(
           visible: _canScrollUp,
           alignment: Alignment.topCenter,
           colors: colors,
         ),
-        // Bottom fade when more content below.
+
         _EdgeFade(
           visible: _canScrollDown,
           alignment: Alignment.bottomCenter,
           colors: colors,
         ),
-        // Top scroll hint arrow.
+
         Positioned(
           left: 0,
           right: 0,
@@ -402,7 +393,7 @@ class _ScrollableCartListState extends State<_ScrollableCartList> {
             ),
           ),
         ),
-        // Bottom scroll hint arrow.
+
         Positioned(
           left: 0,
           right: 0,
@@ -423,7 +414,6 @@ class _ScrollableCartListState extends State<_ScrollableCartList> {
   }
 }
 
-/// Soft gradient fade at scroll viewport edges to indicate more content.
 class _EdgeFade extends StatelessWidget {
   const _EdgeFade({
     required this.visible,
@@ -437,7 +427,6 @@ class _EdgeFade extends StatelessWidget {
 
   static const _fadeHeight = 28.0;
 
-  // Peak opacity scale factor for the fade.
   static const _peakOpacityScale = 0.3;
 
   @override
@@ -472,10 +461,8 @@ class _EdgeFade extends StatelessWidget {
   }
 }
 
-/// Direction for scroll hint arrow to point.
 enum _ScrollHintDirection { up, down }
 
-/// Bouncing arrow hint to indicate scrollable content.
 class _ScrollHintArrow extends StatefulWidget {
   const _ScrollHintArrow({required this.colors, required this.direction});
 
@@ -498,7 +485,7 @@ class _ScrollHintArrowState extends State<_ScrollHintArrow>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
-    // Bounce in the direction being pointed.
+
     final bounceTowards = widget.direction == _ScrollHintDirection.up
         ? -5.0
         : 5.0;
@@ -531,10 +518,7 @@ class _ScrollHintArrowState extends State<_ScrollHintArrow>
         },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-          // decoration: BoxDecoration(
-          //   color: widget.colors.primaryContainer.withValues(alpha: 0.9),
-          //   borderRadius: BorderRadius.circular(999),
-          // ),
+
           child: Icon(icon, size: 22, color: widget.colors.primary),
         ),
       ),
@@ -547,7 +531,6 @@ class _CartLineTile extends ConsumerWidget {
 
   final CartLine line;
 
-  /// Confirm before removing item (used for both tap and swipe).
   Future<bool> _confirmRemove(BuildContext context) async {
     final confirmed = await showConfirmDialog(
       context,
@@ -563,7 +546,6 @@ class _CartLineTile extends ConsumerWidget {
     final colors = context.colors;
     final notifier = ref.read(dashboardControllerProvider.notifier);
 
-    // Key by product ID for correct tracking during cart reordering.
     return Dismissible(
       key: ValueKey(line.product.id),
       direction: DismissDirection.endToStart,
@@ -617,7 +599,7 @@ class _CartLineTile extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                // 56x56 tap target with confirmation guard.
+
                 Material(
                   color: Colors.transparent,
                   shape: const CircleBorder(),
@@ -631,7 +613,7 @@ class _CartLineTile extends ConsumerWidget {
                     child: SizedBox(
                       width: minTapTarget,
                       height: minTapTarget,
-                      // Icon color matches secondary text weight
+
                       child: Icon(
                         PhosphorIcons.x,
                         size: 20,
@@ -649,10 +631,6 @@ class _CartLineTile extends ConsumerWidget {
   }
 }
 
-/// Red reveal behind a cart line as it's swiped left — trailing-aligned
-/// (icon/label sit at the right edge, where the swipe is headed) so the
-/// affordance reads in the direction of the gesture, same idea as native
-/// swipe-to-delete on iOS/Android list rows.
 class _SwipeToRemoveBackground extends StatelessWidget {
   const _SwipeToRemoveBackground({required this.colors});
 
@@ -765,9 +743,7 @@ class _CartFooter extends ConsumerWidget {
       child: Column(
         children: [
           _TotalsRow(label: 'Subtotal', value: state.subtotal, colors: colors),
-          // Only shown once a discount is actually applied — mirrors
-          // "Remove all"/"Remove discount" only appearing once there's
-          // something to act on, rather than a permanent zero-value row.
+
           if (state.hasDiscount) ...[
             const SizedBox(height: 4),
             _TotalsRow(
@@ -827,12 +803,7 @@ class _CartFooter extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    // Label reflects whichever discount (if any) is
-                    // currently applied, same "button doubles as status"
-                    // pattern the old hold button used ('Hold sale' ->
-                    // 'Held') — tapping again re-opens the sheet to
-                    // switch or clear it, rather than needing a separate
-                    // control just to change discounts.
+
                     label: Text(
                       state.hasDiscount
                           ? '${state.selectedDiscount!.rate}% off'
@@ -851,8 +822,6 @@ class _CartFooter extends ConsumerWidget {
                 child: SizedBox(
                   height: primaryTapTarget,
                   child: ElevatedButton(
-                    // Modal, not a full-screen route — see the doc
-                    // comment atop payment_modal.dart for why.
                     onPressed: hasItems
                         ? () => showPaymentModal(context)
                         : null,
@@ -896,9 +865,6 @@ class _TotalsRow extends StatelessWidget {
   final double value;
   final AppColors colors;
 
-  /// Overrides the value text's color — used for the discount row so it
-  /// reads as a distinct, non-neutral line in the breakdown rather than
-  /// blending into the plain subtotal/tax rows above it.
   final Color? valueColor;
 
   @override

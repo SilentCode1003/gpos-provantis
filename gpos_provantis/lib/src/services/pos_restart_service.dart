@@ -1,27 +1,3 @@
-// Location: src/services/pos_restart_service.dart
-//
-// "Restart POS" flow: confirm -> cancelable 5s countdown -> app exits
-// and relaunches itself, on both Android and Windows.
-//
-// PLATFORM REALITY CHECK (read this before changing anything below):
-// Neither Android nor Windows lets an app fully close-and-reopen
-// itself using pure Dart/Flutter APIs — both OSes sandbox that for
-// security reasons. The actual relaunch is done by the `restart_app`
-// package (native code per platform):
-//   - Android: relaunches the main activity via PackageManager, then
-//     terminates the old process.
-//   - Windows: spawns a new process of the same executable via
-//     CreateProcess, then terminates the current one.
-// This file only owns the everything-up-to-that-point UX (confirm
-// dialog, countdown, cancel) and then hands off to that package for
-// the actual OS-level relaunch. There's no way to implement the
-// relaunch itself in pure Dart — if `restart_app` is ever removed,
-// this whole flow needs a different native mechanism, not just a
-// different function call.
-//
-// REQUIRES: restart_app: ^1.10.1 (or compatible — this targets the
-// `Restart.restartApp()` -> `RestartResult` API introduced in 1.8.3)
-// added to pubspec.yaml. This file will not compile without it.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -34,54 +10,18 @@ import 'package:gpos_provantis/src/routing/root_navigator_key.dart';
 
 part 'pos_restart_service.g.dart';
 
-/// Thin wrapper around `Restart.restartApp()` so call sites depend on
-/// this service (mockable/testable) rather than the package directly.
 @Riverpod(keepAlive: true)
 PosRestartService posRestartService(Ref ref) => const PosRestartService();
 
 class PosRestartService {
   const PosRestartService();
 
-  /// Fires the actual OS-level restart. Does not return under normal
-  /// success — the process is terminated by the native side. If it
-  /// returns, `result.success` is false and the process is still
-  /// alive, so the caller can show an error instead of just hanging.
   Future<RestartResult> restart() {
     return Restart.restartApp();
   }
 }
 
-/// Call this from a button's `onTap` (e.g. the "Restart POS" tile in
-/// `OthersSheet`) to run the whole flow: confirm -> countdown -> exit
-/// and relaunch. Handles its own dialogs; the caller doesn't need to
-/// manage any state.
-///
-/// Deliberately does NOT take the caller's `BuildContext` for showing
-/// dialogs — only `WidgetRef` to do a single, synchronous provider
-/// read up front. Every dialog in this flow instead opens against
-/// `rootNavigatorKey.currentContext`, the app's root Navigator context
-/// (wired in via `GoRouter(navigatorKey: rootNavigatorKey, ...)` in
-/// app_router.dart), which stays alive for the whole app lifetime.
-///
-/// That distinction is why the countdown dialog was silently failing
-/// to appear before this fix: the original version took the caller's
-/// context (a bottom-sheet list tile's), and the very first thing that
-/// tap handler did was `Navigator.pop()` to close the sheet — which
-/// starts tearing down that tile's context as part of the sheet's
-/// close animation. The confirm dialog *happened* to still open (the
-/// teardown likely hadn't reached it yet), but by the time the second
-/// `showDialog` call ran for the countdown, that context was no longer
-/// valid to open a dialog against, so it silently did nothing.
-///
-/// Usage:
-/// ```dart
-/// onTap: () => showRestartPosFlow(ref),
-/// ```
 Future<void> showRestartPosFlow(WidgetRef ref) async {
-  // One-shot synchronous read of a `keepAlive` provider — safe to do
-  // with a widget-scoped `ref` even though this function is async,
-  // since it happens immediately, before any `await` in this function
-  // gives anything a chance to unmount.
   final service = ref.read(posRestartServiceProvider);
 
   final confirmed = await _showConfirmDialog();
@@ -92,8 +32,6 @@ Future<void> showRestartPosFlow(WidgetRef ref) async {
 
   final result = await service.restart();
 
-  // Only reachable if the restart failed — a successful restart kills
-  // this process before this line would run.
   final context = rootNavigatorKey.currentContext;
   if (context == null || !context.mounted) return;
   ScaffoldMessenger.of(context).showSnackBar(
@@ -132,12 +70,6 @@ Future<bool?> _showConfirmDialog() {
         ),
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
-          // AlertDialog lays `actions` out inside an OverflowBar, not a
-          // Row/Flex — Expanded can't be a direct child of OverflowBar
-          // (that's what threw "Incorrect use of ParentDataWidget").
-          // Wrapping both buttons in one Row here gives Expanded a
-          // real Flex ancestor, and that single Row becomes the one
-          // and only item OverflowBar has to lay out.
           Row(
             children: [
               Expanded(
@@ -162,9 +94,6 @@ Future<bool?> _showConfirmDialog() {
   );
 }
 
-/// Shows the 5-second cancelable countdown. Returns `true` if it ran
-/// out and the restart should proceed, `false`/`null` if the person
-/// tapped Cancel or dismissed the dialog before it finished.
 Future<bool?> _showCountdownDialog() {
   final context = rootNavigatorKey.currentContext;
   if (context == null) return Future.value(null);
@@ -197,7 +126,7 @@ class _CountdownDialogState extends State<_CountdownDialog> {
   void _onTick(Timer timer) {
     if (_secondsLeft <= 1) {
       timer.cancel();
-      // Countdown reached zero — proceed with the restart.
+
       Navigator.of(context).pop(true);
       return;
     }
@@ -269,15 +198,15 @@ class _CountdownDialogState extends State<_CountdownDialog> {
             Text(
               'The app will close and reopen automatically.',
               textAlign: TextAlign.center,
-              style: AppTypography.ui(color: colors.textSecondary, fontSize: 14),
+              style: AppTypography.ui(
+                color: colors.textSecondary,
+                fontSize: 14,
+              ),
             ),
           ],
         ),
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
-          // Single button, so no Row/Expanded needed here — SizedBox
-          // stretches it without requiring a Flex ancestor (OverflowBar
-          // isn't one; see the note in _showConfirmDialog above).
           SizedBox(
             width: double.infinity,
             child: _DialogButton(label: 'Cancel', onTap: _cancel),

@@ -11,7 +11,7 @@ import 'package:gpos_provantis/src/core/database/providers/promo_dao_provider.da
 
 import '../domain/promo_dto.dart';
 
-part 'promo_repository.g.dart';
+part 'sold_items_repository.g.dart';
 
 @Riverpod(keepAlive: true)
 PromoRepository promoRepository(Ref ref) {

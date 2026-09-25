@@ -8,14 +8,9 @@ part of 'pos_restart_service.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Thin wrapper around `Restart.restartApp()` so call sites depend on
-/// this service (mockable/testable) rather than the package directly.
 
 @ProviderFor(posRestartService)
 final posRestartServiceProvider = PosRestartServiceProvider._();
-
-/// Thin wrapper around `Restart.restartApp()` so call sites depend on
-/// this service (mockable/testable) rather than the package directly.
 
 final class PosRestartServiceProvider
     extends
@@ -25,8 +20,6 @@ final class PosRestartServiceProvider
           PosRestartService
         >
     with $Provider<PosRestartService> {
-  /// Thin wrapper around `Restart.restartApp()` so call sites depend on
-  /// this service (mockable/testable) rather than the package directly.
   PosRestartServiceProvider._()
     : super(
         from: null,

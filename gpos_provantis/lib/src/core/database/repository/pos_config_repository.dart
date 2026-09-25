@@ -25,13 +25,7 @@ class PosRepository {
 
   PosRepository(this._ref, this._dao);
 
-  /// Calls POST /pos/getposconfig with the given posId, and saves the
-  /// first matching record to POSConfigTable. Throws on network/parse
-  /// failure — callers (InitialSyncService) decide how to surface that.
   Future<void> fetchAndSavePos(String posId) async {
-    // See BranchRepository.fetchAndSaveBranch for why this wait matters —
-    // closes the brief window right after app restart where the domain
-    // cache hasn't loaded from disk yet.
     await _ref.read(domainConfigDaoProvider).cacheReady;
 
     final dio = _ref.read(apiClientProvider);
@@ -62,7 +56,9 @@ class PosRepository {
         ptu: Value(pos.ptu),
         status: Value(pos.status),
         createdBy: Value(pos.createdBy),
-        createdDate: Value(DateTime.tryParse(pos.createdDate) ?? DateTime.now()),
+        createdDate: Value(
+          DateTime.tryParse(pos.createdDate) ?? DateTime.now(),
+        ),
       ),
     );
   }

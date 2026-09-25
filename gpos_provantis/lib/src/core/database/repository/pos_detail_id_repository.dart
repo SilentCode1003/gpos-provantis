@@ -25,9 +25,6 @@ class PosDetailIdRepository {
 
   PosDetailIdRepository(this._ref, this._dao);
 
-  // Fetch the pos detail id from the API and save it to the database.
-  // Server returns "data" as a plain string, e.g. {"msg":"success","data":"100012264"}
-  // — not a list of objects — so no DTO/list mapping is needed here.
   Future<void> fetchAndSavePosDetailId() async {
     await _ref.read(domainConfigDaoProvider).cacheReady;
 

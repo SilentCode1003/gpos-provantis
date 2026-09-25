@@ -1,10 +1,3 @@
-/// Parses one branch record from POST /branch/getbranch.
-///
-/// NOTE: the exact field names below (branchid, branchname, ...) mirror the
-/// lowercase-no-underscore style of the confirmed POS response
-/// (posid, posname, createdby, createddate). The real /branch/getbranch
-/// payload wasn't provided, so if the server uses different keys, this is
-/// the only place that needs to change.
 class BranchConfigDto {
   final String branchId;
   final String branchName;
