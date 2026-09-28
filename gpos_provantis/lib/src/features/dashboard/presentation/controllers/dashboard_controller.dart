@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:gpos_provantis/src/core/database/app_database.dart';
@@ -17,6 +18,7 @@ import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_pro
 import 'package:gpos_provantis/src/core/database/providers/user_data_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/repository/pos_shift_repository.dart';
 import 'payments_controller.dart';
+import 'package:gpos_provantis/src/services/end_shift_service.dart';
 import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
     show
         ReceiptGenerator,
@@ -84,6 +86,24 @@ class CartLine {
 }
 
 enum ShiftStatus { closed, open }
+
+/// Outcome of [DashboardController.toggleShift].
+///
+/// Ending a shift is two steps: closing it on the server, then printing the
+/// Z-reading. The shift being closed is what matters, so a printing problem is
+/// reported here instead of thrown, letting the UI say "Shift ended, but the
+/// report could not be printed" rather than a misleading failure.
+class ToggleShiftResult {
+  const ToggleShiftResult({required this.wasEnding, this.printError});
+
+  /// True if this call ended a shift; false if it started one.
+  final bool wasEnding;
+
+  /// Set only when the shift ended fine but the Z-reading did not print.
+  final Object? printError;
+
+  bool get reportPrinted => wasEnding && printError == null;
+}
 
 enum CatalogLoadStatus { loading, error, data }
 
@@ -526,21 +546,54 @@ class DashboardController extends _$DashboardController {
     state = state.copyWith(catalogSearchQuery: query);
   }
 
-  Future<void> toggleShift() async {
-    if (state.isTogglingShift) return; // guard against double-tap
+  Future<ToggleShiftResult> toggleShift() async {
+    if (state.isTogglingShift) {
+      // guard against double-tap
+      return const ToggleShiftResult(wasEnding: false);
+    }
 
     final repository = ref.read(posShiftRepositoryProvider);
     final wasOpen = shiftStatus == ShiftStatus.open;
 
     state = state.copyWith(isTogglingShift: true);
     try {
-      if (wasOpen) {
-        await repository.endShift();
-      } else {
+      if (!wasOpen) {
         await repository.startShift();
+        await repository.fetchAndSavePosShifts();
+        return const ToggleShiftResult(wasEnding: false);
       }
 
+      // Capture which POS/shift/date we are closing BEFORE ending it:
+      // fetchAndSavePosShifts() below refreshes pos_shift and would otherwise
+      // change what _PosIdentity.resolve() returns. Resolving first also means
+      // that if the identity is unavailable we fail before touching the server.
+      final identity = await _PosIdentity.resolve(ref);
+      final posId = int.parse(identity.posId);
+      final shiftId = int.parse(identity.shift);
+      final businessDate = _formatBusinessDate(DateTime.now());
+
+      await repository.endShift();
+
+      // The shift is now closed on the server. pos_shift must be refreshed no
+      // matter what happens next, or the UI keeps showing an open shift.
       await repository.fetchAndSavePosShifts();
+
+      // Fetch + save + print the Z-reading. A failure here (printer offline,
+      // no saved copy while offline, ...) must not look like the shift failed
+      // to end, so it is captured and returned instead of thrown.
+      try {
+        await ref
+            .read(endShiftServiceProvider)
+            .printEndShiftReport(
+              date: businessDate,
+              posId: posId,
+              shiftId: shiftId,
+            );
+        return const ToggleShiftResult(wasEnding: true);
+      } catch (e, st) {
+        debugPrint('toggleShift: shift ended but report failed: $e\n$st');
+        return ToggleShiftResult(wasEnding: true, printError: e);
+      }
     } finally {
       state = state.copyWith(isTogglingShift: false);
     }
@@ -819,6 +872,13 @@ class DashboardController extends _$DashboardController {
           ),
         );
   }
+}
+
+/// The shift report's `date` is date-only ("yyyy-MM-dd", e.g. "2026-09-24"),
+/// unlike [_formatSaleDate] which appends the time.
+String _formatBusinessDate(DateTime dateTime) {
+  String twoDigits(int n) => n.toString().padLeft(2, '0');
+  return '${dateTime.year}-${twoDigits(dateTime.month)}-${twoDigits(dateTime.day)}';
 }
 
 String _formatSaleDate(DateTime dateTime) {

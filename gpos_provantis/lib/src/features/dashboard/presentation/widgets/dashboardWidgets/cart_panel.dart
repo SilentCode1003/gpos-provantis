@@ -485,7 +485,7 @@ class _ScrollHintArrowState extends State<_ScrollHintArrow>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
-
+ 
     final bounceTowards = widget.direction == _ScrollHintDirection.up
         ? -5.0
         : 5.0;

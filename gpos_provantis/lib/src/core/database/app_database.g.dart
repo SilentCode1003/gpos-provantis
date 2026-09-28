@@ -7831,6 +7831,1448 @@ class SalesTableCompanion extends UpdateCompanion<SalesTableData> {
   }
 }
 
+class $EndShiftTableTable extends EndShiftTable
+    with TableInfo<$EndShiftTableTable, EndShiftTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EndShiftTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _posMeta = const VerificationMeta('pos');
+  @override
+  late final GeneratedColumn<int> pos = GeneratedColumn<int>(
+    'pos',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _shiftMeta = const VerificationMeta('shift');
+  @override
+  late final GeneratedColumn<int> shift = GeneratedColumn<int>(
+    'shift',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cashierMeta = const VerificationMeta(
+    'cashier',
+  );
+  @override
+  late final GeneratedColumn<String> cashier = GeneratedColumn<String>(
+    'cashier',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _floatingMeta = const VerificationMeta(
+    'floating',
+  );
+  @override
+  late final GeneratedColumn<String> floating = GeneratedColumn<String>(
+    'floating',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cashfloatMeta = const VerificationMeta(
+    'cashfloat',
+  );
+  @override
+  late final GeneratedColumn<String> cashfloat = GeneratedColumn<String>(
+    'cashfloat',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _salesBeginningMeta = const VerificationMeta(
+    'salesBeginning',
+  );
+  @override
+  late final GeneratedColumn<double> salesBeginning = GeneratedColumn<double>(
+    'sales_beginning',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _salesEndingMeta = const VerificationMeta(
+    'salesEnding',
+  );
+  @override
+  late final GeneratedColumn<double> salesEnding = GeneratedColumn<double>(
+    'sales_ending',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _totalSalesMeta = const VerificationMeta(
+    'totalSales',
+  );
+  @override
+  late final GeneratedColumn<double> totalSales = GeneratedColumn<double>(
+    'total_sales',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _receiptBeginningMeta = const VerificationMeta(
+    'receiptBeginning',
+  );
+  @override
+  late final GeneratedColumn<int> receiptBeginning = GeneratedColumn<int>(
+    'receipt_beginning',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _receiptEndingMeta = const VerificationMeta(
+    'receiptEnding',
+  );
+  @override
+  late final GeneratedColumn<int> receiptEnding = GeneratedColumn<int>(
+    'receipt_ending',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _approvedByMeta = const VerificationMeta(
+    'approvedBy',
+  );
+  @override
+  late final GeneratedColumn<String> approvedBy = GeneratedColumn<String>(
+    'approved_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _approvedDateMeta = const VerificationMeta(
+    'approvedDate',
+  );
+  @override
+  late final GeneratedColumn<String> approvedDate = GeneratedColumn<String>(
+    'approved_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    date,
+    pos,
+    shift,
+    cashier,
+    floating,
+    cashfloat,
+    salesBeginning,
+    salesEnding,
+    totalSales,
+    receiptBeginning,
+    receiptEnding,
+    status,
+    approvedBy,
+    approvedDate,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'end_shift_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EndShiftTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('pos')) {
+      context.handle(
+        _posMeta,
+        pos.isAcceptableOrUnknown(data['pos']!, _posMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_posMeta);
+    }
+    if (data.containsKey('shift')) {
+      context.handle(
+        _shiftMeta,
+        shift.isAcceptableOrUnknown(data['shift']!, _shiftMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_shiftMeta);
+    }
+    if (data.containsKey('cashier')) {
+      context.handle(
+        _cashierMeta,
+        cashier.isAcceptableOrUnknown(data['cashier']!, _cashierMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cashierMeta);
+    }
+    if (data.containsKey('floating')) {
+      context.handle(
+        _floatingMeta,
+        floating.isAcceptableOrUnknown(data['floating']!, _floatingMeta),
+      );
+    }
+    if (data.containsKey('cashfloat')) {
+      context.handle(
+        _cashfloatMeta,
+        cashfloat.isAcceptableOrUnknown(data['cashfloat']!, _cashfloatMeta),
+      );
+    }
+    if (data.containsKey('sales_beginning')) {
+      context.handle(
+        _salesBeginningMeta,
+        salesBeginning.isAcceptableOrUnknown(
+          data['sales_beginning']!,
+          _salesBeginningMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_salesBeginningMeta);
+    }
+    if (data.containsKey('sales_ending')) {
+      context.handle(
+        _salesEndingMeta,
+        salesEnding.isAcceptableOrUnknown(
+          data['sales_ending']!,
+          _salesEndingMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_salesEndingMeta);
+    }
+    if (data.containsKey('total_sales')) {
+      context.handle(
+        _totalSalesMeta,
+        totalSales.isAcceptableOrUnknown(data['total_sales']!, _totalSalesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_totalSalesMeta);
+    }
+    if (data.containsKey('receipt_beginning')) {
+      context.handle(
+        _receiptBeginningMeta,
+        receiptBeginning.isAcceptableOrUnknown(
+          data['receipt_beginning']!,
+          _receiptBeginningMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_receiptBeginningMeta);
+    }
+    if (data.containsKey('receipt_ending')) {
+      context.handle(
+        _receiptEndingMeta,
+        receiptEnding.isAcceptableOrUnknown(
+          data['receipt_ending']!,
+          _receiptEndingMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_receiptEndingMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('approved_by')) {
+      context.handle(
+        _approvedByMeta,
+        approvedBy.isAcceptableOrUnknown(data['approved_by']!, _approvedByMeta),
+      );
+    }
+    if (data.containsKey('approved_date')) {
+      context.handle(
+        _approvedDateMeta,
+        approvedDate.isAcceptableOrUnknown(
+          data['approved_date']!,
+          _approvedDateMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {date, pos, shift},
+  ];
+  @override
+  EndShiftTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EndShiftTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date'],
+      )!,
+      pos: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pos'],
+      )!,
+      shift: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}shift'],
+      )!,
+      cashier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cashier'],
+      )!,
+      floating: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}floating'],
+      ),
+      cashfloat: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cashfloat'],
+      ),
+      salesBeginning: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}sales_beginning'],
+      )!,
+      salesEnding: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}sales_ending'],
+      )!,
+      totalSales: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_sales'],
+      )!,
+      receiptBeginning: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}receipt_beginning'],
+      )!,
+      receiptEnding: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}receipt_ending'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      approvedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}approved_by'],
+      ),
+      approvedDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}approved_date'],
+      ),
+    );
+  }
+
+  @override
+  $EndShiftTableTable createAlias(String alias) {
+    return $EndShiftTableTable(attachedDatabase, alias);
+  }
+}
+
+class EndShiftTableData extends DataClass
+    implements Insertable<EndShiftTableData> {
+  final String id;
+  final String date;
+  final int pos;
+  final int shift;
+  final String cashier;
+  final String? floating;
+  final String? cashfloat;
+  final double salesBeginning;
+  final double salesEnding;
+  final double totalSales;
+  final int receiptBeginning;
+  final int receiptEnding;
+  final String status;
+  final String? approvedBy;
+  final String? approvedDate;
+  const EndShiftTableData({
+    required this.id,
+    required this.date,
+    required this.pos,
+    required this.shift,
+    required this.cashier,
+    this.floating,
+    this.cashfloat,
+    required this.salesBeginning,
+    required this.salesEnding,
+    required this.totalSales,
+    required this.receiptBeginning,
+    required this.receiptEnding,
+    required this.status,
+    this.approvedBy,
+    this.approvedDate,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['date'] = Variable<String>(date);
+    map['pos'] = Variable<int>(pos);
+    map['shift'] = Variable<int>(shift);
+    map['cashier'] = Variable<String>(cashier);
+    if (!nullToAbsent || floating != null) {
+      map['floating'] = Variable<String>(floating);
+    }
+    if (!nullToAbsent || cashfloat != null) {
+      map['cashfloat'] = Variable<String>(cashfloat);
+    }
+    map['sales_beginning'] = Variable<double>(salesBeginning);
+    map['sales_ending'] = Variable<double>(salesEnding);
+    map['total_sales'] = Variable<double>(totalSales);
+    map['receipt_beginning'] = Variable<int>(receiptBeginning);
+    map['receipt_ending'] = Variable<int>(receiptEnding);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || approvedBy != null) {
+      map['approved_by'] = Variable<String>(approvedBy);
+    }
+    if (!nullToAbsent || approvedDate != null) {
+      map['approved_date'] = Variable<String>(approvedDate);
+    }
+    return map;
+  }
+
+  EndShiftTableCompanion toCompanion(bool nullToAbsent) {
+    return EndShiftTableCompanion(
+      id: Value(id),
+      date: Value(date),
+      pos: Value(pos),
+      shift: Value(shift),
+      cashier: Value(cashier),
+      floating: floating == null && nullToAbsent
+          ? const Value.absent()
+          : Value(floating),
+      cashfloat: cashfloat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cashfloat),
+      salesBeginning: Value(salesBeginning),
+      salesEnding: Value(salesEnding),
+      totalSales: Value(totalSales),
+      receiptBeginning: Value(receiptBeginning),
+      receiptEnding: Value(receiptEnding),
+      status: Value(status),
+      approvedBy: approvedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(approvedBy),
+      approvedDate: approvedDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(approvedDate),
+    );
+  }
+
+  factory EndShiftTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EndShiftTableData(
+      id: serializer.fromJson<String>(json['id']),
+      date: serializer.fromJson<String>(json['date']),
+      pos: serializer.fromJson<int>(json['pos']),
+      shift: serializer.fromJson<int>(json['shift']),
+      cashier: serializer.fromJson<String>(json['cashier']),
+      floating: serializer.fromJson<String?>(json['floating']),
+      cashfloat: serializer.fromJson<String?>(json['cashfloat']),
+      salesBeginning: serializer.fromJson<double>(json['salesBeginning']),
+      salesEnding: serializer.fromJson<double>(json['salesEnding']),
+      totalSales: serializer.fromJson<double>(json['totalSales']),
+      receiptBeginning: serializer.fromJson<int>(json['receiptBeginning']),
+      receiptEnding: serializer.fromJson<int>(json['receiptEnding']),
+      status: serializer.fromJson<String>(json['status']),
+      approvedBy: serializer.fromJson<String?>(json['approvedBy']),
+      approvedDate: serializer.fromJson<String?>(json['approvedDate']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'date': serializer.toJson<String>(date),
+      'pos': serializer.toJson<int>(pos),
+      'shift': serializer.toJson<int>(shift),
+      'cashier': serializer.toJson<String>(cashier),
+      'floating': serializer.toJson<String?>(floating),
+      'cashfloat': serializer.toJson<String?>(cashfloat),
+      'salesBeginning': serializer.toJson<double>(salesBeginning),
+      'salesEnding': serializer.toJson<double>(salesEnding),
+      'totalSales': serializer.toJson<double>(totalSales),
+      'receiptBeginning': serializer.toJson<int>(receiptBeginning),
+      'receiptEnding': serializer.toJson<int>(receiptEnding),
+      'status': serializer.toJson<String>(status),
+      'approvedBy': serializer.toJson<String?>(approvedBy),
+      'approvedDate': serializer.toJson<String?>(approvedDate),
+    };
+  }
+
+  EndShiftTableData copyWith({
+    String? id,
+    String? date,
+    int? pos,
+    int? shift,
+    String? cashier,
+    Value<String?> floating = const Value.absent(),
+    Value<String?> cashfloat = const Value.absent(),
+    double? salesBeginning,
+    double? salesEnding,
+    double? totalSales,
+    int? receiptBeginning,
+    int? receiptEnding,
+    String? status,
+    Value<String?> approvedBy = const Value.absent(),
+    Value<String?> approvedDate = const Value.absent(),
+  }) => EndShiftTableData(
+    id: id ?? this.id,
+    date: date ?? this.date,
+    pos: pos ?? this.pos,
+    shift: shift ?? this.shift,
+    cashier: cashier ?? this.cashier,
+    floating: floating.present ? floating.value : this.floating,
+    cashfloat: cashfloat.present ? cashfloat.value : this.cashfloat,
+    salesBeginning: salesBeginning ?? this.salesBeginning,
+    salesEnding: salesEnding ?? this.salesEnding,
+    totalSales: totalSales ?? this.totalSales,
+    receiptBeginning: receiptBeginning ?? this.receiptBeginning,
+    receiptEnding: receiptEnding ?? this.receiptEnding,
+    status: status ?? this.status,
+    approvedBy: approvedBy.present ? approvedBy.value : this.approvedBy,
+    approvedDate: approvedDate.present ? approvedDate.value : this.approvedDate,
+  );
+  EndShiftTableData copyWithCompanion(EndShiftTableCompanion data) {
+    return EndShiftTableData(
+      id: data.id.present ? data.id.value : this.id,
+      date: data.date.present ? data.date.value : this.date,
+      pos: data.pos.present ? data.pos.value : this.pos,
+      shift: data.shift.present ? data.shift.value : this.shift,
+      cashier: data.cashier.present ? data.cashier.value : this.cashier,
+      floating: data.floating.present ? data.floating.value : this.floating,
+      cashfloat: data.cashfloat.present ? data.cashfloat.value : this.cashfloat,
+      salesBeginning: data.salesBeginning.present
+          ? data.salesBeginning.value
+          : this.salesBeginning,
+      salesEnding: data.salesEnding.present
+          ? data.salesEnding.value
+          : this.salesEnding,
+      totalSales: data.totalSales.present
+          ? data.totalSales.value
+          : this.totalSales,
+      receiptBeginning: data.receiptBeginning.present
+          ? data.receiptBeginning.value
+          : this.receiptBeginning,
+      receiptEnding: data.receiptEnding.present
+          ? data.receiptEnding.value
+          : this.receiptEnding,
+      status: data.status.present ? data.status.value : this.status,
+      approvedBy: data.approvedBy.present
+          ? data.approvedBy.value
+          : this.approvedBy,
+      approvedDate: data.approvedDate.present
+          ? data.approvedDate.value
+          : this.approvedDate,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EndShiftTableData(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('pos: $pos, ')
+          ..write('shift: $shift, ')
+          ..write('cashier: $cashier, ')
+          ..write('floating: $floating, ')
+          ..write('cashfloat: $cashfloat, ')
+          ..write('salesBeginning: $salesBeginning, ')
+          ..write('salesEnding: $salesEnding, ')
+          ..write('totalSales: $totalSales, ')
+          ..write('receiptBeginning: $receiptBeginning, ')
+          ..write('receiptEnding: $receiptEnding, ')
+          ..write('status: $status, ')
+          ..write('approvedBy: $approvedBy, ')
+          ..write('approvedDate: $approvedDate')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    date,
+    pos,
+    shift,
+    cashier,
+    floating,
+    cashfloat,
+    salesBeginning,
+    salesEnding,
+    totalSales,
+    receiptBeginning,
+    receiptEnding,
+    status,
+    approvedBy,
+    approvedDate,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EndShiftTableData &&
+          other.id == this.id &&
+          other.date == this.date &&
+          other.pos == this.pos &&
+          other.shift == this.shift &&
+          other.cashier == this.cashier &&
+          other.floating == this.floating &&
+          other.cashfloat == this.cashfloat &&
+          other.salesBeginning == this.salesBeginning &&
+          other.salesEnding == this.salesEnding &&
+          other.totalSales == this.totalSales &&
+          other.receiptBeginning == this.receiptBeginning &&
+          other.receiptEnding == this.receiptEnding &&
+          other.status == this.status &&
+          other.approvedBy == this.approvedBy &&
+          other.approvedDate == this.approvedDate);
+}
+
+class EndShiftTableCompanion extends UpdateCompanion<EndShiftTableData> {
+  final Value<String> id;
+  final Value<String> date;
+  final Value<int> pos;
+  final Value<int> shift;
+  final Value<String> cashier;
+  final Value<String?> floating;
+  final Value<String?> cashfloat;
+  final Value<double> salesBeginning;
+  final Value<double> salesEnding;
+  final Value<double> totalSales;
+  final Value<int> receiptBeginning;
+  final Value<int> receiptEnding;
+  final Value<String> status;
+  final Value<String?> approvedBy;
+  final Value<String?> approvedDate;
+  final Value<int> rowid;
+  const EndShiftTableCompanion({
+    this.id = const Value.absent(),
+    this.date = const Value.absent(),
+    this.pos = const Value.absent(),
+    this.shift = const Value.absent(),
+    this.cashier = const Value.absent(),
+    this.floating = const Value.absent(),
+    this.cashfloat = const Value.absent(),
+    this.salesBeginning = const Value.absent(),
+    this.salesEnding = const Value.absent(),
+    this.totalSales = const Value.absent(),
+    this.receiptBeginning = const Value.absent(),
+    this.receiptEnding = const Value.absent(),
+    this.status = const Value.absent(),
+    this.approvedBy = const Value.absent(),
+    this.approvedDate = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EndShiftTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String date,
+    required int pos,
+    required int shift,
+    required String cashier,
+    this.floating = const Value.absent(),
+    this.cashfloat = const Value.absent(),
+    required double salesBeginning,
+    required double salesEnding,
+    required double totalSales,
+    required int receiptBeginning,
+    required int receiptEnding,
+    required String status,
+    this.approvedBy = const Value.absent(),
+    this.approvedDate = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : date = Value(date),
+       pos = Value(pos),
+       shift = Value(shift),
+       cashier = Value(cashier),
+       salesBeginning = Value(salesBeginning),
+       salesEnding = Value(salesEnding),
+       totalSales = Value(totalSales),
+       receiptBeginning = Value(receiptBeginning),
+       receiptEnding = Value(receiptEnding),
+       status = Value(status);
+  static Insertable<EndShiftTableData> custom({
+    Expression<String>? id,
+    Expression<String>? date,
+    Expression<int>? pos,
+    Expression<int>? shift,
+    Expression<String>? cashier,
+    Expression<String>? floating,
+    Expression<String>? cashfloat,
+    Expression<double>? salesBeginning,
+    Expression<double>? salesEnding,
+    Expression<double>? totalSales,
+    Expression<int>? receiptBeginning,
+    Expression<int>? receiptEnding,
+    Expression<String>? status,
+    Expression<String>? approvedBy,
+    Expression<String>? approvedDate,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (date != null) 'date': date,
+      if (pos != null) 'pos': pos,
+      if (shift != null) 'shift': shift,
+      if (cashier != null) 'cashier': cashier,
+      if (floating != null) 'floating': floating,
+      if (cashfloat != null) 'cashfloat': cashfloat,
+      if (salesBeginning != null) 'sales_beginning': salesBeginning,
+      if (salesEnding != null) 'sales_ending': salesEnding,
+      if (totalSales != null) 'total_sales': totalSales,
+      if (receiptBeginning != null) 'receipt_beginning': receiptBeginning,
+      if (receiptEnding != null) 'receipt_ending': receiptEnding,
+      if (status != null) 'status': status,
+      if (approvedBy != null) 'approved_by': approvedBy,
+      if (approvedDate != null) 'approved_date': approvedDate,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EndShiftTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? date,
+    Value<int>? pos,
+    Value<int>? shift,
+    Value<String>? cashier,
+    Value<String?>? floating,
+    Value<String?>? cashfloat,
+    Value<double>? salesBeginning,
+    Value<double>? salesEnding,
+    Value<double>? totalSales,
+    Value<int>? receiptBeginning,
+    Value<int>? receiptEnding,
+    Value<String>? status,
+    Value<String?>? approvedBy,
+    Value<String?>? approvedDate,
+    Value<int>? rowid,
+  }) {
+    return EndShiftTableCompanion(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      pos: pos ?? this.pos,
+      shift: shift ?? this.shift,
+      cashier: cashier ?? this.cashier,
+      floating: floating ?? this.floating,
+      cashfloat: cashfloat ?? this.cashfloat,
+      salesBeginning: salesBeginning ?? this.salesBeginning,
+      salesEnding: salesEnding ?? this.salesEnding,
+      totalSales: totalSales ?? this.totalSales,
+      receiptBeginning: receiptBeginning ?? this.receiptBeginning,
+      receiptEnding: receiptEnding ?? this.receiptEnding,
+      status: status ?? this.status,
+      approvedBy: approvedBy ?? this.approvedBy,
+      approvedDate: approvedDate ?? this.approvedDate,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (pos.present) {
+      map['pos'] = Variable<int>(pos.value);
+    }
+    if (shift.present) {
+      map['shift'] = Variable<int>(shift.value);
+    }
+    if (cashier.present) {
+      map['cashier'] = Variable<String>(cashier.value);
+    }
+    if (floating.present) {
+      map['floating'] = Variable<String>(floating.value);
+    }
+    if (cashfloat.present) {
+      map['cashfloat'] = Variable<String>(cashfloat.value);
+    }
+    if (salesBeginning.present) {
+      map['sales_beginning'] = Variable<double>(salesBeginning.value);
+    }
+    if (salesEnding.present) {
+      map['sales_ending'] = Variable<double>(salesEnding.value);
+    }
+    if (totalSales.present) {
+      map['total_sales'] = Variable<double>(totalSales.value);
+    }
+    if (receiptBeginning.present) {
+      map['receipt_beginning'] = Variable<int>(receiptBeginning.value);
+    }
+    if (receiptEnding.present) {
+      map['receipt_ending'] = Variable<int>(receiptEnding.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (approvedBy.present) {
+      map['approved_by'] = Variable<String>(approvedBy.value);
+    }
+    if (approvedDate.present) {
+      map['approved_date'] = Variable<String>(approvedDate.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EndShiftTableCompanion(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('pos: $pos, ')
+          ..write('shift: $shift, ')
+          ..write('cashier: $cashier, ')
+          ..write('floating: $floating, ')
+          ..write('cashfloat: $cashfloat, ')
+          ..write('salesBeginning: $salesBeginning, ')
+          ..write('salesEnding: $salesEnding, ')
+          ..write('totalSales: $totalSales, ')
+          ..write('receiptBeginning: $receiptBeginning, ')
+          ..write('receiptEnding: $receiptEnding, ')
+          ..write('status: $status, ')
+          ..write('approvedBy: $approvedBy, ')
+          ..write('approvedDate: $approvedDate, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SoldItemsTableTable extends SoldItemsTable
+    with TableInfo<$SoldItemsTableTable, SoldItemsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SoldItemsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
+  static const VerificationMeta _dateRangeMeta = const VerificationMeta(
+    'dateRange',
+  );
+  @override
+  late final GeneratedColumn<String> dateRange = GeneratedColumn<String>(
+    'date_range',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryFilterMeta = const VerificationMeta(
+    'categoryFilter',
+  );
+  @override
+  late final GeneratedColumn<String> categoryFilter = GeneratedColumn<String>(
+    'category_filter',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('ALL'),
+  );
+  static const VerificationMeta _productFilterMeta = const VerificationMeta(
+    'productFilter',
+  );
+  @override
+  late final GeneratedColumn<String> productFilter = GeneratedColumn<String>(
+    'product_filter',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('ALL'),
+  );
+  static const VerificationMeta _fetchedAtMeta = const VerificationMeta(
+    'fetchedAt',
+  );
+  @override
+  late final GeneratedColumn<int> fetchedAt = GeneratedColumn<int>(
+    'fetched_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _branchMeta = const VerificationMeta('branch');
+  @override
+  late final GeneratedColumn<String> branch = GeneratedColumn<String>(
+    'branch',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    dateRange,
+    categoryFilter,
+    productFilter,
+    fetchedAt,
+    branch,
+    category,
+    name,
+    quantity,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sold_items_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SoldItemsTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('date_range')) {
+      context.handle(
+        _dateRangeMeta,
+        dateRange.isAcceptableOrUnknown(data['date_range']!, _dateRangeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateRangeMeta);
+    }
+    if (data.containsKey('category_filter')) {
+      context.handle(
+        _categoryFilterMeta,
+        categoryFilter.isAcceptableOrUnknown(
+          data['category_filter']!,
+          _categoryFilterMeta,
+        ),
+      );
+    }
+    if (data.containsKey('product_filter')) {
+      context.handle(
+        _productFilterMeta,
+        productFilter.isAcceptableOrUnknown(
+          data['product_filter']!,
+          _productFilterMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fetched_at')) {
+      context.handle(
+        _fetchedAtMeta,
+        fetchedAt.isAcceptableOrUnknown(data['fetched_at']!, _fetchedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fetchedAtMeta);
+    }
+    if (data.containsKey('branch')) {
+      context.handle(
+        _branchMeta,
+        branch.isAcceptableOrUnknown(data['branch']!, _branchMeta),
+      );
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {dateRange, categoryFilter, productFilter, branch, category, name},
+  ];
+  @override
+  SoldItemsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SoldItemsTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      dateRange: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date_range'],
+      )!,
+      categoryFilter: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_filter'],
+      )!,
+      productFilter: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}product_filter'],
+      )!,
+      fetchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}fetched_at'],
+      )!,
+      branch: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch'],
+      )!,
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quantity'],
+      )!,
+    );
+  }
+
+  @override
+  $SoldItemsTableTable createAlias(String alias) {
+    return $SoldItemsTableTable(attachedDatabase, alias);
+  }
+}
+
+class SoldItemsTableData extends DataClass
+    implements Insertable<SoldItemsTableData> {
+  final String id;
+
+  /// "2026-09-28" for a single day, "2026-09-21 - 2026-09-28" for a range.
+  final String dateRange;
+
+  /// Category filter as sent to the API. 'ALL' means no filter.
+  final String categoryFilter;
+
+  /// Product filter as sent to the API. 'ALL' means no filter.
+  final String productFilter;
+
+  /// When this row was fetched (epoch millis). Lets the UI say
+  /// "Last updated ..." when showing offline data.
+  final int fetchedAt;
+  final String branch;
+  final String category;
+  final String name;
+  final int quantity;
+  const SoldItemsTableData({
+    required this.id,
+    required this.dateRange,
+    required this.categoryFilter,
+    required this.productFilter,
+    required this.fetchedAt,
+    required this.branch,
+    required this.category,
+    required this.name,
+    required this.quantity,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['date_range'] = Variable<String>(dateRange);
+    map['category_filter'] = Variable<String>(categoryFilter);
+    map['product_filter'] = Variable<String>(productFilter);
+    map['fetched_at'] = Variable<int>(fetchedAt);
+    map['branch'] = Variable<String>(branch);
+    map['category'] = Variable<String>(category);
+    map['name'] = Variable<String>(name);
+    map['quantity'] = Variable<int>(quantity);
+    return map;
+  }
+
+  SoldItemsTableCompanion toCompanion(bool nullToAbsent) {
+    return SoldItemsTableCompanion(
+      id: Value(id),
+      dateRange: Value(dateRange),
+      categoryFilter: Value(categoryFilter),
+      productFilter: Value(productFilter),
+      fetchedAt: Value(fetchedAt),
+      branch: Value(branch),
+      category: Value(category),
+      name: Value(name),
+      quantity: Value(quantity),
+    );
+  }
+
+  factory SoldItemsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SoldItemsTableData(
+      id: serializer.fromJson<String>(json['id']),
+      dateRange: serializer.fromJson<String>(json['dateRange']),
+      categoryFilter: serializer.fromJson<String>(json['categoryFilter']),
+      productFilter: serializer.fromJson<String>(json['productFilter']),
+      fetchedAt: serializer.fromJson<int>(json['fetchedAt']),
+      branch: serializer.fromJson<String>(json['branch']),
+      category: serializer.fromJson<String>(json['category']),
+      name: serializer.fromJson<String>(json['name']),
+      quantity: serializer.fromJson<int>(json['quantity']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'dateRange': serializer.toJson<String>(dateRange),
+      'categoryFilter': serializer.toJson<String>(categoryFilter),
+      'productFilter': serializer.toJson<String>(productFilter),
+      'fetchedAt': serializer.toJson<int>(fetchedAt),
+      'branch': serializer.toJson<String>(branch),
+      'category': serializer.toJson<String>(category),
+      'name': serializer.toJson<String>(name),
+      'quantity': serializer.toJson<int>(quantity),
+    };
+  }
+
+  SoldItemsTableData copyWith({
+    String? id,
+    String? dateRange,
+    String? categoryFilter,
+    String? productFilter,
+    int? fetchedAt,
+    String? branch,
+    String? category,
+    String? name,
+    int? quantity,
+  }) => SoldItemsTableData(
+    id: id ?? this.id,
+    dateRange: dateRange ?? this.dateRange,
+    categoryFilter: categoryFilter ?? this.categoryFilter,
+    productFilter: productFilter ?? this.productFilter,
+    fetchedAt: fetchedAt ?? this.fetchedAt,
+    branch: branch ?? this.branch,
+    category: category ?? this.category,
+    name: name ?? this.name,
+    quantity: quantity ?? this.quantity,
+  );
+  SoldItemsTableData copyWithCompanion(SoldItemsTableCompanion data) {
+    return SoldItemsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      dateRange: data.dateRange.present ? data.dateRange.value : this.dateRange,
+      categoryFilter: data.categoryFilter.present
+          ? data.categoryFilter.value
+          : this.categoryFilter,
+      productFilter: data.productFilter.present
+          ? data.productFilter.value
+          : this.productFilter,
+      fetchedAt: data.fetchedAt.present ? data.fetchedAt.value : this.fetchedAt,
+      branch: data.branch.present ? data.branch.value : this.branch,
+      category: data.category.present ? data.category.value : this.category,
+      name: data.name.present ? data.name.value : this.name,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SoldItemsTableData(')
+          ..write('id: $id, ')
+          ..write('dateRange: $dateRange, ')
+          ..write('categoryFilter: $categoryFilter, ')
+          ..write('productFilter: $productFilter, ')
+          ..write('fetchedAt: $fetchedAt, ')
+          ..write('branch: $branch, ')
+          ..write('category: $category, ')
+          ..write('name: $name, ')
+          ..write('quantity: $quantity')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    dateRange,
+    categoryFilter,
+    productFilter,
+    fetchedAt,
+    branch,
+    category,
+    name,
+    quantity,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SoldItemsTableData &&
+          other.id == this.id &&
+          other.dateRange == this.dateRange &&
+          other.categoryFilter == this.categoryFilter &&
+          other.productFilter == this.productFilter &&
+          other.fetchedAt == this.fetchedAt &&
+          other.branch == this.branch &&
+          other.category == this.category &&
+          other.name == this.name &&
+          other.quantity == this.quantity);
+}
+
+class SoldItemsTableCompanion extends UpdateCompanion<SoldItemsTableData> {
+  final Value<String> id;
+  final Value<String> dateRange;
+  final Value<String> categoryFilter;
+  final Value<String> productFilter;
+  final Value<int> fetchedAt;
+  final Value<String> branch;
+  final Value<String> category;
+  final Value<String> name;
+  final Value<int> quantity;
+  final Value<int> rowid;
+  const SoldItemsTableCompanion({
+    this.id = const Value.absent(),
+    this.dateRange = const Value.absent(),
+    this.categoryFilter = const Value.absent(),
+    this.productFilter = const Value.absent(),
+    this.fetchedAt = const Value.absent(),
+    this.branch = const Value.absent(),
+    this.category = const Value.absent(),
+    this.name = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SoldItemsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String dateRange,
+    this.categoryFilter = const Value.absent(),
+    this.productFilter = const Value.absent(),
+    required int fetchedAt,
+    this.branch = const Value.absent(),
+    this.category = const Value.absent(),
+    this.name = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : dateRange = Value(dateRange),
+       fetchedAt = Value(fetchedAt);
+  static Insertable<SoldItemsTableData> custom({
+    Expression<String>? id,
+    Expression<String>? dateRange,
+    Expression<String>? categoryFilter,
+    Expression<String>? productFilter,
+    Expression<int>? fetchedAt,
+    Expression<String>? branch,
+    Expression<String>? category,
+    Expression<String>? name,
+    Expression<int>? quantity,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (dateRange != null) 'date_range': dateRange,
+      if (categoryFilter != null) 'category_filter': categoryFilter,
+      if (productFilter != null) 'product_filter': productFilter,
+      if (fetchedAt != null) 'fetched_at': fetchedAt,
+      if (branch != null) 'branch': branch,
+      if (category != null) 'category': category,
+      if (name != null) 'name': name,
+      if (quantity != null) 'quantity': quantity,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SoldItemsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? dateRange,
+    Value<String>? categoryFilter,
+    Value<String>? productFilter,
+    Value<int>? fetchedAt,
+    Value<String>? branch,
+    Value<String>? category,
+    Value<String>? name,
+    Value<int>? quantity,
+    Value<int>? rowid,
+  }) {
+    return SoldItemsTableCompanion(
+      id: id ?? this.id,
+      dateRange: dateRange ?? this.dateRange,
+      categoryFilter: categoryFilter ?? this.categoryFilter,
+      productFilter: productFilter ?? this.productFilter,
+      fetchedAt: fetchedAt ?? this.fetchedAt,
+      branch: branch ?? this.branch,
+      category: category ?? this.category,
+      name: name ?? this.name,
+      quantity: quantity ?? this.quantity,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (dateRange.present) {
+      map['date_range'] = Variable<String>(dateRange.value);
+    }
+    if (categoryFilter.present) {
+      map['category_filter'] = Variable<String>(categoryFilter.value);
+    }
+    if (productFilter.present) {
+      map['product_filter'] = Variable<String>(productFilter.value);
+    }
+    if (fetchedAt.present) {
+      map['fetched_at'] = Variable<int>(fetchedAt.value);
+    }
+    if (branch.present) {
+      map['branch'] = Variable<String>(branch.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SoldItemsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('dateRange: $dateRange, ')
+          ..write('categoryFilter: $categoryFilter, ')
+          ..write('productFilter: $productFilter, ')
+          ..write('fetchedAt: $fetchedAt, ')
+          ..write('branch: $branch, ')
+          ..write('category: $category, ')
+          ..write('name: $name, ')
+          ..write('quantity: $quantity, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -7858,6 +9300,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PrintersTableTable printersTable = $PrintersTableTable(this);
   late final $SettingsTableTable settingsTable = $SettingsTableTable(this);
   late final $SalesTableTable salesTable = $SalesTableTable(this);
+  late final $EndShiftTableTable endShiftTable = $EndShiftTableTable(this);
+  late final $SoldItemsTableTable soldItemsTable = $SoldItemsTableTable(this);
   late final DomainConfigDao domainConfigDao = DomainConfigDao(
     this as AppDatabase,
   );
@@ -7886,6 +9330,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     printersTable,
     settingsTable,
     salesTable,
+    endShiftTable,
+    soldItemsTable,
   ];
 }
 
@@ -12069,6 +13515,700 @@ typedef $$SalesTableTableProcessedTableManager =
       SalesTableData,
       PrefetchHooks Function()
     >;
+typedef $$EndShiftTableTableCreateCompanionBuilder =
+    EndShiftTableCompanion Function({
+      Value<String> id,
+      required String date,
+      required int pos,
+      required int shift,
+      required String cashier,
+      Value<String?> floating,
+      Value<String?> cashfloat,
+      required double salesBeginning,
+      required double salesEnding,
+      required double totalSales,
+      required int receiptBeginning,
+      required int receiptEnding,
+      required String status,
+      Value<String?> approvedBy,
+      Value<String?> approvedDate,
+      Value<int> rowid,
+    });
+typedef $$EndShiftTableTableUpdateCompanionBuilder =
+    EndShiftTableCompanion Function({
+      Value<String> id,
+      Value<String> date,
+      Value<int> pos,
+      Value<int> shift,
+      Value<String> cashier,
+      Value<String?> floating,
+      Value<String?> cashfloat,
+      Value<double> salesBeginning,
+      Value<double> salesEnding,
+      Value<double> totalSales,
+      Value<int> receiptBeginning,
+      Value<int> receiptEnding,
+      Value<String> status,
+      Value<String?> approvedBy,
+      Value<String?> approvedDate,
+      Value<int> rowid,
+    });
+
+class $$EndShiftTableTableFilterComposer
+    extends Composer<_$AppDatabase, $EndShiftTableTable> {
+  $$EndShiftTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pos => $composableBuilder(
+    column: $table.pos,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cashier => $composableBuilder(
+    column: $table.cashier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get floating => $composableBuilder(
+    column: $table.floating,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cashfloat => $composableBuilder(
+    column: $table.cashfloat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get salesBeginning => $composableBuilder(
+    column: $table.salesBeginning,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get salesEnding => $composableBuilder(
+    column: $table.salesEnding,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalSales => $composableBuilder(
+    column: $table.totalSales,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get approvedBy => $composableBuilder(
+    column: $table.approvedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get approvedDate => $composableBuilder(
+    column: $table.approvedDate,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$EndShiftTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $EndShiftTableTable> {
+  $$EndShiftTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pos => $composableBuilder(
+    column: $table.pos,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cashier => $composableBuilder(
+    column: $table.cashier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get floating => $composableBuilder(
+    column: $table.floating,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cashfloat => $composableBuilder(
+    column: $table.cashfloat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get salesBeginning => $composableBuilder(
+    column: $table.salesBeginning,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get salesEnding => $composableBuilder(
+    column: $table.salesEnding,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalSales => $composableBuilder(
+    column: $table.totalSales,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get approvedBy => $composableBuilder(
+    column: $table.approvedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get approvedDate => $composableBuilder(
+    column: $table.approvedDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EndShiftTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $EndShiftTableTable> {
+  $$EndShiftTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<int> get pos =>
+      $composableBuilder(column: $table.pos, builder: (column) => column);
+
+  GeneratedColumn<int> get shift =>
+      $composableBuilder(column: $table.shift, builder: (column) => column);
+
+  GeneratedColumn<String> get cashier =>
+      $composableBuilder(column: $table.cashier, builder: (column) => column);
+
+  GeneratedColumn<String> get floating =>
+      $composableBuilder(column: $table.floating, builder: (column) => column);
+
+  GeneratedColumn<String> get cashfloat =>
+      $composableBuilder(column: $table.cashfloat, builder: (column) => column);
+
+  GeneratedColumn<double> get salesBeginning => $composableBuilder(
+    column: $table.salesBeginning,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get salesEnding => $composableBuilder(
+    column: $table.salesEnding,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get totalSales => $composableBuilder(
+    column: $table.totalSales,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get approvedBy => $composableBuilder(
+    column: $table.approvedBy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get approvedDate => $composableBuilder(
+    column: $table.approvedDate,
+    builder: (column) => column,
+  );
+}
+
+class $$EndShiftTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $EndShiftTableTable,
+          EndShiftTableData,
+          $$EndShiftTableTableFilterComposer,
+          $$EndShiftTableTableOrderingComposer,
+          $$EndShiftTableTableAnnotationComposer,
+          $$EndShiftTableTableCreateCompanionBuilder,
+          $$EndShiftTableTableUpdateCompanionBuilder,
+          (
+            EndShiftTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $EndShiftTableTable,
+              EndShiftTableData
+            >,
+          ),
+          EndShiftTableData,
+          PrefetchHooks Function()
+        > {
+  $$EndShiftTableTableTableManager(_$AppDatabase db, $EndShiftTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EndShiftTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EndShiftTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EndShiftTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> date = const Value.absent(),
+                Value<int> pos = const Value.absent(),
+                Value<int> shift = const Value.absent(),
+                Value<String> cashier = const Value.absent(),
+                Value<String?> floating = const Value.absent(),
+                Value<String?> cashfloat = const Value.absent(),
+                Value<double> salesBeginning = const Value.absent(),
+                Value<double> salesEnding = const Value.absent(),
+                Value<double> totalSales = const Value.absent(),
+                Value<int> receiptBeginning = const Value.absent(),
+                Value<int> receiptEnding = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> approvedBy = const Value.absent(),
+                Value<String?> approvedDate = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EndShiftTableCompanion(
+                id: id,
+                date: date,
+                pos: pos,
+                shift: shift,
+                cashier: cashier,
+                floating: floating,
+                cashfloat: cashfloat,
+                salesBeginning: salesBeginning,
+                salesEnding: salesEnding,
+                totalSales: totalSales,
+                receiptBeginning: receiptBeginning,
+                receiptEnding: receiptEnding,
+                status: status,
+                approvedBy: approvedBy,
+                approvedDate: approvedDate,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String date,
+                required int pos,
+                required int shift,
+                required String cashier,
+                Value<String?> floating = const Value.absent(),
+                Value<String?> cashfloat = const Value.absent(),
+                required double salesBeginning,
+                required double salesEnding,
+                required double totalSales,
+                required int receiptBeginning,
+                required int receiptEnding,
+                required String status,
+                Value<String?> approvedBy = const Value.absent(),
+                Value<String?> approvedDate = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EndShiftTableCompanion.insert(
+                id: id,
+                date: date,
+                pos: pos,
+                shift: shift,
+                cashier: cashier,
+                floating: floating,
+                cashfloat: cashfloat,
+                salesBeginning: salesBeginning,
+                salesEnding: salesEnding,
+                totalSales: totalSales,
+                receiptBeginning: receiptBeginning,
+                receiptEnding: receiptEnding,
+                status: status,
+                approvedBy: approvedBy,
+                approvedDate: approvedDate,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$EndShiftTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $EndShiftTableTable,
+      EndShiftTableData,
+      $$EndShiftTableTableFilterComposer,
+      $$EndShiftTableTableOrderingComposer,
+      $$EndShiftTableTableAnnotationComposer,
+      $$EndShiftTableTableCreateCompanionBuilder,
+      $$EndShiftTableTableUpdateCompanionBuilder,
+      (
+        EndShiftTableData,
+        BaseReferences<_$AppDatabase, $EndShiftTableTable, EndShiftTableData>,
+      ),
+      EndShiftTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$SoldItemsTableTableCreateCompanionBuilder =
+    SoldItemsTableCompanion Function({
+      Value<String> id,
+      required String dateRange,
+      Value<String> categoryFilter,
+      Value<String> productFilter,
+      required int fetchedAt,
+      Value<String> branch,
+      Value<String> category,
+      Value<String> name,
+      Value<int> quantity,
+      Value<int> rowid,
+    });
+typedef $$SoldItemsTableTableUpdateCompanionBuilder =
+    SoldItemsTableCompanion Function({
+      Value<String> id,
+      Value<String> dateRange,
+      Value<String> categoryFilter,
+      Value<String> productFilter,
+      Value<int> fetchedAt,
+      Value<String> branch,
+      Value<String> category,
+      Value<String> name,
+      Value<int> quantity,
+      Value<int> rowid,
+    });
+
+class $$SoldItemsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SoldItemsTableTable> {
+  $$SoldItemsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dateRange => $composableBuilder(
+    column: $table.dateRange,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryFilter => $composableBuilder(
+    column: $table.categoryFilter,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get productFilter => $composableBuilder(
+    column: $table.productFilter,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get branch => $composableBuilder(
+    column: $table.branch,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SoldItemsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SoldItemsTableTable> {
+  $$SoldItemsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dateRange => $composableBuilder(
+    column: $table.dateRange,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoryFilter => $composableBuilder(
+    column: $table.categoryFilter,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get productFilter => $composableBuilder(
+    column: $table.productFilter,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get branch => $composableBuilder(
+    column: $table.branch,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SoldItemsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SoldItemsTableTable> {
+  $$SoldItemsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get dateRange =>
+      $composableBuilder(column: $table.dateRange, builder: (column) => column);
+
+  GeneratedColumn<String> get categoryFilter => $composableBuilder(
+    column: $table.categoryFilter,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get productFilter => $composableBuilder(
+    column: $table.productFilter,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get fetchedAt =>
+      $composableBuilder(column: $table.fetchedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get branch =>
+      $composableBuilder(column: $table.branch, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+}
+
+class $$SoldItemsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SoldItemsTableTable,
+          SoldItemsTableData,
+          $$SoldItemsTableTableFilterComposer,
+          $$SoldItemsTableTableOrderingComposer,
+          $$SoldItemsTableTableAnnotationComposer,
+          $$SoldItemsTableTableCreateCompanionBuilder,
+          $$SoldItemsTableTableUpdateCompanionBuilder,
+          (
+            SoldItemsTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $SoldItemsTableTable,
+              SoldItemsTableData
+            >,
+          ),
+          SoldItemsTableData,
+          PrefetchHooks Function()
+        > {
+  $$SoldItemsTableTableTableManager(
+    _$AppDatabase db,
+    $SoldItemsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SoldItemsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SoldItemsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SoldItemsTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> dateRange = const Value.absent(),
+                Value<String> categoryFilter = const Value.absent(),
+                Value<String> productFilter = const Value.absent(),
+                Value<int> fetchedAt = const Value.absent(),
+                Value<String> branch = const Value.absent(),
+                Value<String> category = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SoldItemsTableCompanion(
+                id: id,
+                dateRange: dateRange,
+                categoryFilter: categoryFilter,
+                productFilter: productFilter,
+                fetchedAt: fetchedAt,
+                branch: branch,
+                category: category,
+                name: name,
+                quantity: quantity,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String dateRange,
+                Value<String> categoryFilter = const Value.absent(),
+                Value<String> productFilter = const Value.absent(),
+                required int fetchedAt,
+                Value<String> branch = const Value.absent(),
+                Value<String> category = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SoldItemsTableCompanion.insert(
+                id: id,
+                dateRange: dateRange,
+                categoryFilter: categoryFilter,
+                productFilter: productFilter,
+                fetchedAt: fetchedAt,
+                branch: branch,
+                category: category,
+                name: name,
+                quantity: quantity,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SoldItemsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SoldItemsTableTable,
+      SoldItemsTableData,
+      $$SoldItemsTableTableFilterComposer,
+      $$SoldItemsTableTableOrderingComposer,
+      $$SoldItemsTableTableAnnotationComposer,
+      $$SoldItemsTableTableCreateCompanionBuilder,
+      $$SoldItemsTableTableUpdateCompanionBuilder,
+      (
+        SoldItemsTableData,
+        BaseReferences<_$AppDatabase, $SoldItemsTableTable, SoldItemsTableData>,
+      ),
+      SoldItemsTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -12105,6 +14245,10 @@ class $AppDatabaseManager {
       $$SettingsTableTableTableManager(_db, _db.settingsTable);
   $$SalesTableTableTableManager get salesTable =>
       $$SalesTableTableTableManager(_db, _db.salesTable);
+  $$EndShiftTableTableTableManager get endShiftTable =>
+      $$EndShiftTableTableTableManager(_db, _db.endShiftTable);
+  $$SoldItemsTableTableTableManager get soldItemsTable =>
+      $$SoldItemsTableTableTableManager(_db, _db.soldItemsTable);
 }
 
 // **************************************************************************

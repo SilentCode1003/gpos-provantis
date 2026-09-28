@@ -26,6 +26,8 @@ import 'tables/promo_table.dart';
 import 'tables/printers_table.dart';
 import 'tables/settings_table.dart';
 import 'tables/sales_table.dart';
+import 'tables/end_shift_table.dart';
+import 'tables/sold_items_table.dart';
 
 import 'daos/domain_config_dao.dart';
 import 'daos/branch_config_dao.dart';
@@ -51,6 +53,8 @@ part 'app_database.g.dart';
     PrintersTable,
     SettingsTable,
     SalesTable,
+    EndShiftTable,
+    SoldItemsTable,
   ],
   daos: [DomainConfigDao, BranchConfigDao, PosConfigDao],
 )
