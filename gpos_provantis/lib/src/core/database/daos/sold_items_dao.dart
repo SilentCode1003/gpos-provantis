@@ -79,8 +79,11 @@ class SoldItemsDao extends DatabaseAccessor<AppDatabase>
         .get();
   }
 
-  /// Drops cached snapshots older than [olderThan]. Call occasionally so the
-  /// cache doesn't grow forever (every distinct date range adds rows).
+  /// Drops cached rows fetched before [olderThan]. Every row of a snapshot
+  /// shares one fetch time, so this removes whole snapshots, never part of one.
+  /// [SoldItemsRepository] calls it after each successful fetch with its
+  /// retention window, so the cache doesn't grow forever (every distinct date
+  /// range adds rows).
   Future<int> deleteOlderThan(DateTime olderThan) {
     return (delete(soldItemsTable)..where(
           (t) =>
