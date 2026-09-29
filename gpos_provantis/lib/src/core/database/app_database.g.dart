@@ -9273,6 +9273,614 @@ class SoldItemsTableCompanion extends UpdateCompanion<SoldItemsTableData> {
   }
 }
 
+class $CashDrawerTableTable extends CashDrawerTable
+    with TableInfo<$CashDrawerTableTable, CashDrawerTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CashDrawerTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
+  static const VerificationMeta _shiftMeta = const VerificationMeta('shift');
+  @override
+  late final GeneratedColumn<String> shift = GeneratedColumn<String>(
+    'shift',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _cashierMeta = const VerificationMeta(
+    'cashier',
+  );
+  @override
+  late final GeneratedColumn<String> cashier = GeneratedColumn<String>(
+    'cashier',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _shiftDateMeta = const VerificationMeta(
+    'shiftDate',
+  );
+  @override
+  late final GeneratedColumn<String> shiftDate = GeneratedColumn<String>(
+    'shift_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
+  @override
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _posIdMeta = const VerificationMeta('posId');
+  @override
+  late final GeneratedColumn<String> posId = GeneratedColumn<String>(
+    'pos_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _denominationMeta = const VerificationMeta(
+    'denomination',
+  );
+  @override
+  late final GeneratedColumn<String> denomination = GeneratedColumn<String>(
+    'denomination',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _activityMeta = const VerificationMeta(
+    'activity',
+  );
+  @override
+  late final GeneratedColumn<String> activity = GeneratedColumn<String>(
+    'activity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _queuedAtMeta = const VerificationMeta(
+    'queuedAt',
+  );
+  @override
+  late final GeneratedColumn<int> queuedAt = GeneratedColumn<int>(
+    'queued_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncedMeta = const VerificationMeta('synced');
+  @override
+  late final GeneratedColumn<bool> synced = GeneratedColumn<bool>(
+    'synced',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("synced" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    shift,
+    cashier,
+    shiftDate,
+    branchId,
+    posId,
+    denomination,
+    activity,
+    queuedAt,
+    synced,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cash_drawer_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CashDrawerTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('shift')) {
+      context.handle(
+        _shiftMeta,
+        shift.isAcceptableOrUnknown(data['shift']!, _shiftMeta),
+      );
+    }
+    if (data.containsKey('cashier')) {
+      context.handle(
+        _cashierMeta,
+        cashier.isAcceptableOrUnknown(data['cashier']!, _cashierMeta),
+      );
+    }
+    if (data.containsKey('shift_date')) {
+      context.handle(
+        _shiftDateMeta,
+        shiftDate.isAcceptableOrUnknown(data['shift_date']!, _shiftDateMeta),
+      );
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
+      );
+    }
+    if (data.containsKey('pos_id')) {
+      context.handle(
+        _posIdMeta,
+        posId.isAcceptableOrUnknown(data['pos_id']!, _posIdMeta),
+      );
+    }
+    if (data.containsKey('denomination')) {
+      context.handle(
+        _denominationMeta,
+        denomination.isAcceptableOrUnknown(
+          data['denomination']!,
+          _denominationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('activity')) {
+      context.handle(
+        _activityMeta,
+        activity.isAcceptableOrUnknown(data['activity']!, _activityMeta),
+      );
+    }
+    if (data.containsKey('queued_at')) {
+      context.handle(
+        _queuedAtMeta,
+        queuedAt.isAcceptableOrUnknown(data['queued_at']!, _queuedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_queuedAtMeta);
+    }
+    if (data.containsKey('synced')) {
+      context.handle(
+        _syncedMeta,
+        synced.isAcceptableOrUnknown(data['synced']!, _syncedMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CashDrawerTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CashDrawerTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      shift: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shift'],
+      )!,
+      cashier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cashier'],
+      )!,
+      shiftDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shift_date'],
+      )!,
+      branchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_id'],
+      )!,
+      posId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pos_id'],
+      )!,
+      denomination: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}denomination'],
+      )!,
+      activity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}activity'],
+      )!,
+      queuedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}queued_at'],
+      )!,
+      synced: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}synced'],
+      )!,
+    );
+  }
+
+  @override
+  $CashDrawerTableTable createAlias(String alias) {
+    return $CashDrawerTableTable(attachedDatabase, alias);
+  }
+}
+
+class CashDrawerTableData extends DataClass
+    implements Insertable<CashDrawerTableData> {
+  final String id;
+  final String shift;
+  final String cashier;
+  final String shiftDate;
+  final String branchId;
+  final String posId;
+
+  /// The exact JSON string the server expects for the `denomination` field
+  /// (already `jsonEncode`d — the API takes a JSON-encoded STRING, not a
+  /// nested array). Stored pre-encoded so what gets sent is byte-for-byte
+  /// what was queued, with no re-serialization step that could drift from it.
+  final String denomination;
+
+  /// 'endshift' or 'transaction'. Named `activity` to match the API's own
+  /// field name, even though it also fires at start shift (the server calls
+  /// both open-shift and close-shift traffic 'endshift').
+  final String activity;
+
+  /// When this row was queued (epoch millis). Used to send activities to the
+  /// server in the order they happened.
+  final int queuedAt;
+
+  /// True once the server has confirmed this activity. Unsynced rows are what
+  /// gets retried; synced rows are kept as a local audit trail.
+  final bool synced;
+  const CashDrawerTableData({
+    required this.id,
+    required this.shift,
+    required this.cashier,
+    required this.shiftDate,
+    required this.branchId,
+    required this.posId,
+    required this.denomination,
+    required this.activity,
+    required this.queuedAt,
+    required this.synced,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['shift'] = Variable<String>(shift);
+    map['cashier'] = Variable<String>(cashier);
+    map['shift_date'] = Variable<String>(shiftDate);
+    map['branch_id'] = Variable<String>(branchId);
+    map['pos_id'] = Variable<String>(posId);
+    map['denomination'] = Variable<String>(denomination);
+    map['activity'] = Variable<String>(activity);
+    map['queued_at'] = Variable<int>(queuedAt);
+    map['synced'] = Variable<bool>(synced);
+    return map;
+  }
+
+  CashDrawerTableCompanion toCompanion(bool nullToAbsent) {
+    return CashDrawerTableCompanion(
+      id: Value(id),
+      shift: Value(shift),
+      cashier: Value(cashier),
+      shiftDate: Value(shiftDate),
+      branchId: Value(branchId),
+      posId: Value(posId),
+      denomination: Value(denomination),
+      activity: Value(activity),
+      queuedAt: Value(queuedAt),
+      synced: Value(synced),
+    );
+  }
+
+  factory CashDrawerTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CashDrawerTableData(
+      id: serializer.fromJson<String>(json['id']),
+      shift: serializer.fromJson<String>(json['shift']),
+      cashier: serializer.fromJson<String>(json['cashier']),
+      shiftDate: serializer.fromJson<String>(json['shiftDate']),
+      branchId: serializer.fromJson<String>(json['branchId']),
+      posId: serializer.fromJson<String>(json['posId']),
+      denomination: serializer.fromJson<String>(json['denomination']),
+      activity: serializer.fromJson<String>(json['activity']),
+      queuedAt: serializer.fromJson<int>(json['queuedAt']),
+      synced: serializer.fromJson<bool>(json['synced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'shift': serializer.toJson<String>(shift),
+      'cashier': serializer.toJson<String>(cashier),
+      'shiftDate': serializer.toJson<String>(shiftDate),
+      'branchId': serializer.toJson<String>(branchId),
+      'posId': serializer.toJson<String>(posId),
+      'denomination': serializer.toJson<String>(denomination),
+      'activity': serializer.toJson<String>(activity),
+      'queuedAt': serializer.toJson<int>(queuedAt),
+      'synced': serializer.toJson<bool>(synced),
+    };
+  }
+
+  CashDrawerTableData copyWith({
+    String? id,
+    String? shift,
+    String? cashier,
+    String? shiftDate,
+    String? branchId,
+    String? posId,
+    String? denomination,
+    String? activity,
+    int? queuedAt,
+    bool? synced,
+  }) => CashDrawerTableData(
+    id: id ?? this.id,
+    shift: shift ?? this.shift,
+    cashier: cashier ?? this.cashier,
+    shiftDate: shiftDate ?? this.shiftDate,
+    branchId: branchId ?? this.branchId,
+    posId: posId ?? this.posId,
+    denomination: denomination ?? this.denomination,
+    activity: activity ?? this.activity,
+    queuedAt: queuedAt ?? this.queuedAt,
+    synced: synced ?? this.synced,
+  );
+  CashDrawerTableData copyWithCompanion(CashDrawerTableCompanion data) {
+    return CashDrawerTableData(
+      id: data.id.present ? data.id.value : this.id,
+      shift: data.shift.present ? data.shift.value : this.shift,
+      cashier: data.cashier.present ? data.cashier.value : this.cashier,
+      shiftDate: data.shiftDate.present ? data.shiftDate.value : this.shiftDate,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      posId: data.posId.present ? data.posId.value : this.posId,
+      denomination: data.denomination.present
+          ? data.denomination.value
+          : this.denomination,
+      activity: data.activity.present ? data.activity.value : this.activity,
+      queuedAt: data.queuedAt.present ? data.queuedAt.value : this.queuedAt,
+      synced: data.synced.present ? data.synced.value : this.synced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CashDrawerTableData(')
+          ..write('id: $id, ')
+          ..write('shift: $shift, ')
+          ..write('cashier: $cashier, ')
+          ..write('shiftDate: $shiftDate, ')
+          ..write('branchId: $branchId, ')
+          ..write('posId: $posId, ')
+          ..write('denomination: $denomination, ')
+          ..write('activity: $activity, ')
+          ..write('queuedAt: $queuedAt, ')
+          ..write('synced: $synced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    shift,
+    cashier,
+    shiftDate,
+    branchId,
+    posId,
+    denomination,
+    activity,
+    queuedAt,
+    synced,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CashDrawerTableData &&
+          other.id == this.id &&
+          other.shift == this.shift &&
+          other.cashier == this.cashier &&
+          other.shiftDate == this.shiftDate &&
+          other.branchId == this.branchId &&
+          other.posId == this.posId &&
+          other.denomination == this.denomination &&
+          other.activity == this.activity &&
+          other.queuedAt == this.queuedAt &&
+          other.synced == this.synced);
+}
+
+class CashDrawerTableCompanion extends UpdateCompanion<CashDrawerTableData> {
+  final Value<String> id;
+  final Value<String> shift;
+  final Value<String> cashier;
+  final Value<String> shiftDate;
+  final Value<String> branchId;
+  final Value<String> posId;
+  final Value<String> denomination;
+  final Value<String> activity;
+  final Value<int> queuedAt;
+  final Value<bool> synced;
+  final Value<int> rowid;
+  const CashDrawerTableCompanion({
+    this.id = const Value.absent(),
+    this.shift = const Value.absent(),
+    this.cashier = const Value.absent(),
+    this.shiftDate = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.posId = const Value.absent(),
+    this.denomination = const Value.absent(),
+    this.activity = const Value.absent(),
+    this.queuedAt = const Value.absent(),
+    this.synced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CashDrawerTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.shift = const Value.absent(),
+    this.cashier = const Value.absent(),
+    this.shiftDate = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.posId = const Value.absent(),
+    this.denomination = const Value.absent(),
+    this.activity = const Value.absent(),
+    required int queuedAt,
+    this.synced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : queuedAt = Value(queuedAt);
+  static Insertable<CashDrawerTableData> custom({
+    Expression<String>? id,
+    Expression<String>? shift,
+    Expression<String>? cashier,
+    Expression<String>? shiftDate,
+    Expression<String>? branchId,
+    Expression<String>? posId,
+    Expression<String>? denomination,
+    Expression<String>? activity,
+    Expression<int>? queuedAt,
+    Expression<bool>? synced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (shift != null) 'shift': shift,
+      if (cashier != null) 'cashier': cashier,
+      if (shiftDate != null) 'shift_date': shiftDate,
+      if (branchId != null) 'branch_id': branchId,
+      if (posId != null) 'pos_id': posId,
+      if (denomination != null) 'denomination': denomination,
+      if (activity != null) 'activity': activity,
+      if (queuedAt != null) 'queued_at': queuedAt,
+      if (synced != null) 'synced': synced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CashDrawerTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? shift,
+    Value<String>? cashier,
+    Value<String>? shiftDate,
+    Value<String>? branchId,
+    Value<String>? posId,
+    Value<String>? denomination,
+    Value<String>? activity,
+    Value<int>? queuedAt,
+    Value<bool>? synced,
+    Value<int>? rowid,
+  }) {
+    return CashDrawerTableCompanion(
+      id: id ?? this.id,
+      shift: shift ?? this.shift,
+      cashier: cashier ?? this.cashier,
+      shiftDate: shiftDate ?? this.shiftDate,
+      branchId: branchId ?? this.branchId,
+      posId: posId ?? this.posId,
+      denomination: denomination ?? this.denomination,
+      activity: activity ?? this.activity,
+      queuedAt: queuedAt ?? this.queuedAt,
+      synced: synced ?? this.synced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (shift.present) {
+      map['shift'] = Variable<String>(shift.value);
+    }
+    if (cashier.present) {
+      map['cashier'] = Variable<String>(cashier.value);
+    }
+    if (shiftDate.present) {
+      map['shift_date'] = Variable<String>(shiftDate.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
+    }
+    if (posId.present) {
+      map['pos_id'] = Variable<String>(posId.value);
+    }
+    if (denomination.present) {
+      map['denomination'] = Variable<String>(denomination.value);
+    }
+    if (activity.present) {
+      map['activity'] = Variable<String>(activity.value);
+    }
+    if (queuedAt.present) {
+      map['queued_at'] = Variable<int>(queuedAt.value);
+    }
+    if (synced.present) {
+      map['synced'] = Variable<bool>(synced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CashDrawerTableCompanion(')
+          ..write('id: $id, ')
+          ..write('shift: $shift, ')
+          ..write('cashier: $cashier, ')
+          ..write('shiftDate: $shiftDate, ')
+          ..write('branchId: $branchId, ')
+          ..write('posId: $posId, ')
+          ..write('denomination: $denomination, ')
+          ..write('activity: $activity, ')
+          ..write('queuedAt: $queuedAt, ')
+          ..write('synced: $synced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -9302,6 +9910,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SalesTableTable salesTable = $SalesTableTable(this);
   late final $EndShiftTableTable endShiftTable = $EndShiftTableTable(this);
   late final $SoldItemsTableTable soldItemsTable = $SoldItemsTableTable(this);
+  late final $CashDrawerTableTable cashDrawerTable = $CashDrawerTableTable(
+    this,
+  );
   late final DomainConfigDao domainConfigDao = DomainConfigDao(
     this as AppDatabase,
   );
@@ -9332,6 +9943,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     salesTable,
     endShiftTable,
     soldItemsTable,
+    cashDrawerTable,
   ];
 }
 
@@ -14209,6 +14821,313 @@ typedef $$SoldItemsTableTableProcessedTableManager =
       SoldItemsTableData,
       PrefetchHooks Function()
     >;
+typedef $$CashDrawerTableTableCreateCompanionBuilder =
+    CashDrawerTableCompanion Function({
+      Value<String> id,
+      Value<String> shift,
+      Value<String> cashier,
+      Value<String> shiftDate,
+      Value<String> branchId,
+      Value<String> posId,
+      Value<String> denomination,
+      Value<String> activity,
+      required int queuedAt,
+      Value<bool> synced,
+      Value<int> rowid,
+    });
+typedef $$CashDrawerTableTableUpdateCompanionBuilder =
+    CashDrawerTableCompanion Function({
+      Value<String> id,
+      Value<String> shift,
+      Value<String> cashier,
+      Value<String> shiftDate,
+      Value<String> branchId,
+      Value<String> posId,
+      Value<String> denomination,
+      Value<String> activity,
+      Value<int> queuedAt,
+      Value<bool> synced,
+      Value<int> rowid,
+    });
+
+class $$CashDrawerTableTableFilterComposer
+    extends Composer<_$AppDatabase, $CashDrawerTableTable> {
+  $$CashDrawerTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cashier => $composableBuilder(
+    column: $table.cashier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shiftDate => $composableBuilder(
+    column: $table.shiftDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get branchId => $composableBuilder(
+    column: $table.branchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get posId => $composableBuilder(
+    column: $table.posId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get denomination => $composableBuilder(
+    column: $table.denomination,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get activity => $composableBuilder(
+    column: $table.activity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get queuedAt => $composableBuilder(
+    column: $table.queuedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get synced => $composableBuilder(
+    column: $table.synced,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CashDrawerTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $CashDrawerTableTable> {
+  $$CashDrawerTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cashier => $composableBuilder(
+    column: $table.cashier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get shiftDate => $composableBuilder(
+    column: $table.shiftDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get branchId => $composableBuilder(
+    column: $table.branchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get posId => $composableBuilder(
+    column: $table.posId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get denomination => $composableBuilder(
+    column: $table.denomination,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get activity => $composableBuilder(
+    column: $table.activity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get queuedAt => $composableBuilder(
+    column: $table.queuedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get synced => $composableBuilder(
+    column: $table.synced,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CashDrawerTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CashDrawerTableTable> {
+  $$CashDrawerTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get shift =>
+      $composableBuilder(column: $table.shift, builder: (column) => column);
+
+  GeneratedColumn<String> get cashier =>
+      $composableBuilder(column: $table.cashier, builder: (column) => column);
+
+  GeneratedColumn<String> get shiftDate =>
+      $composableBuilder(column: $table.shiftDate, builder: (column) => column);
+
+  GeneratedColumn<String> get branchId =>
+      $composableBuilder(column: $table.branchId, builder: (column) => column);
+
+  GeneratedColumn<String> get posId =>
+      $composableBuilder(column: $table.posId, builder: (column) => column);
+
+  GeneratedColumn<String> get denomination => $composableBuilder(
+    column: $table.denomination,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get activity =>
+      $composableBuilder(column: $table.activity, builder: (column) => column);
+
+  GeneratedColumn<int> get queuedAt =>
+      $composableBuilder(column: $table.queuedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get synced =>
+      $composableBuilder(column: $table.synced, builder: (column) => column);
+}
+
+class $$CashDrawerTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CashDrawerTableTable,
+          CashDrawerTableData,
+          $$CashDrawerTableTableFilterComposer,
+          $$CashDrawerTableTableOrderingComposer,
+          $$CashDrawerTableTableAnnotationComposer,
+          $$CashDrawerTableTableCreateCompanionBuilder,
+          $$CashDrawerTableTableUpdateCompanionBuilder,
+          (
+            CashDrawerTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $CashDrawerTableTable,
+              CashDrawerTableData
+            >,
+          ),
+          CashDrawerTableData,
+          PrefetchHooks Function()
+        > {
+  $$CashDrawerTableTableTableManager(
+    _$AppDatabase db,
+    $CashDrawerTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CashDrawerTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CashDrawerTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CashDrawerTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> shift = const Value.absent(),
+                Value<String> cashier = const Value.absent(),
+                Value<String> shiftDate = const Value.absent(),
+                Value<String> branchId = const Value.absent(),
+                Value<String> posId = const Value.absent(),
+                Value<String> denomination = const Value.absent(),
+                Value<String> activity = const Value.absent(),
+                Value<int> queuedAt = const Value.absent(),
+                Value<bool> synced = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CashDrawerTableCompanion(
+                id: id,
+                shift: shift,
+                cashier: cashier,
+                shiftDate: shiftDate,
+                branchId: branchId,
+                posId: posId,
+                denomination: denomination,
+                activity: activity,
+                queuedAt: queuedAt,
+                synced: synced,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> shift = const Value.absent(),
+                Value<String> cashier = const Value.absent(),
+                Value<String> shiftDate = const Value.absent(),
+                Value<String> branchId = const Value.absent(),
+                Value<String> posId = const Value.absent(),
+                Value<String> denomination = const Value.absent(),
+                Value<String> activity = const Value.absent(),
+                required int queuedAt,
+                Value<bool> synced = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CashDrawerTableCompanion.insert(
+                id: id,
+                shift: shift,
+                cashier: cashier,
+                shiftDate: shiftDate,
+                branchId: branchId,
+                posId: posId,
+                denomination: denomination,
+                activity: activity,
+                queuedAt: queuedAt,
+                synced: synced,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CashDrawerTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CashDrawerTableTable,
+      CashDrawerTableData,
+      $$CashDrawerTableTableFilterComposer,
+      $$CashDrawerTableTableOrderingComposer,
+      $$CashDrawerTableTableAnnotationComposer,
+      $$CashDrawerTableTableCreateCompanionBuilder,
+      $$CashDrawerTableTableUpdateCompanionBuilder,
+      (
+        CashDrawerTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $CashDrawerTableTable,
+          CashDrawerTableData
+        >,
+      ),
+      CashDrawerTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -14249,6 +15168,8 @@ class $AppDatabaseManager {
       $$EndShiftTableTableTableManager(_db, _db.endShiftTable);
   $$SoldItemsTableTableTableManager get soldItemsTable =>
       $$SoldItemsTableTableTableManager(_db, _db.soldItemsTable);
+  $$CashDrawerTableTableTableManager get cashDrawerTable =>
+      $$CashDrawerTableTableTableManager(_db, _db.cashDrawerTable);
 }
 
 // **************************************************************************

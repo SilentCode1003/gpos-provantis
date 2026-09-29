@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
@@ -17,14 +18,19 @@ import 'package:gpos_provantis/src/core/database/providers/pos_shift_dao_provide
 import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/user_data_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/repository/pos_shift_repository.dart';
+import 'package:gpos_provantis/src/core/database/domain/cash_drawer_dto.dart'
+    show DenominationCountLine;
 import 'payments_controller.dart';
 import 'package:gpos_provantis/src/services/end_shift_service.dart';
+import 'package:gpos_provantis/src/services/cash_drawer_service.dart';
 import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
     show
         ReceiptGenerator,
         ReceiptSaleData,
         ReceiptLineItem,
         receiptGeneratorProvider;
+import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/denomination_count_sheet.dart'
+    show DenominationCountResult;
 
 part 'dashboard_controller.g.dart';
 
@@ -93,8 +99,21 @@ enum ShiftStatus { closed, open }
 /// Z-reading. The shift being closed is what matters, so a printing problem is
 /// reported here instead of thrown, letting the UI say "Shift ended, but the
 /// report could not be printed" rather than a misleading failure.
+///
+/// This also carries the identity of the shift that was just opened or
+/// closed ([shiftKey]), because the caller needs it a second time right
+/// after this returns: to show the drawer-count sheet and pass the result to
+/// [DashboardController.recordShiftDrawerCount]. Re-resolving identity at
+/// that point instead of reusing this would be wrong for an ending shift —
+/// toggleShift() has already refreshed pos_shift by the time it returns, so a
+/// fresh resolve would find the NEXT shift's identity, not the one that was
+/// just closed.
 class ToggleShiftResult {
-  const ToggleShiftResult({required this.wasEnding, this.printError});
+  const ToggleShiftResult({
+    required this.wasEnding,
+    this.printError,
+    this.shiftKey,
+  });
 
   /// True if this call ended a shift; false if it started one.
   final bool wasEnding;
@@ -102,7 +121,31 @@ class ToggleShiftResult {
   /// Set only when the shift ended fine but the Z-reading did not print.
   final Object? printError;
 
+  /// The shift this call opened or closed. Null only on the double-tap guard
+  /// path, which does nothing and returns immediately.
+  final ShiftKey? shiftKey;
+
   bool get reportPrinted => wasEnding && printError == null;
+}
+
+/// Identifies one shift for cash-drawer reporting: which POS, which shift
+/// number, whose shift, and what business date it falls under.
+class ShiftKey {
+  const ShiftKey({
+    required this.posId,
+    required this.shift,
+    required this.cashier,
+    required this.branchId,
+    required this.businessDate,
+  });
+
+  final String posId;
+  final String shift;
+  final String cashier;
+  final String branchId;
+
+  /// "yyyy-MM-dd", matching what the cash-drawer and shift-report APIs want.
+  final String businessDate;
 }
 
 enum CatalogLoadStatus { loading, error, data }
@@ -267,6 +310,23 @@ class _PosIdentity {
 
     return _PosIdentity(posId: posId, shift: shift);
   }
+}
+
+/// Resolves everything [ShiftKey] needs in one call: POS/shift identity,
+/// cashier, branch, and today's business date. Used wherever the cash-drawer
+/// or shift-report APIs need a full identity, so those four separate
+/// resolves aren't repeated at every call site.
+Future<ShiftKey> _resolveShiftKey(Ref ref) async {
+  final identity = await _PosIdentity.resolve(ref);
+  final cashier = await _resolveCashier(ref);
+  final branch = await _resolveBranch(ref);
+  return ShiftKey(
+    posId: identity.posId,
+    shift: identity.shift,
+    cashier: cashier,
+    branchId: branch,
+    businessDate: _formatBusinessDate(DateTime.now()),
+  );
 }
 
 Map<String, dynamic> _cartLineToItemJson(CartLine line) {
@@ -459,6 +519,18 @@ class DashboardController extends _$DashboardController {
         ? syncedCategories.first.categoryCode.toString()
         : '';
 
+    // Retries anything left in the cash-drawer outbox from a previous
+    // session (e.g. the device was offline when a shift ended, or the app
+    // was killed mid-send). Fire-and-forget: build() is synchronous and
+    // runs on every rebuild of this provider, not just once per app launch,
+    // so this is a proxy for "app start", not the real thing — a drain
+    // that's already in flight or a fully-synced outbox both return quickly,
+    // so calling this more than once per session is harmless, just not
+    // needed. If a genuine single "app started" or "connectivity restored"
+    // hook exists elsewhere (main.dart, a connectivity listener), retrying
+    // from there instead would be more precise than this.
+    unawaited(ref.read(cashDrawerServiceProvider).retryPending());
+
     return DashboardState(
       selectedCategoryId: firstCategoryId,
       cartLines: const [],
@@ -560,17 +632,21 @@ class DashboardController extends _$DashboardController {
       if (!wasOpen) {
         await repository.startShift();
         await repository.fetchAndSavePosShifts();
-        return const ToggleShiftResult(wasEnding: false);
+
+        // Resolved AFTER the refresh above, on purpose: starting a shift
+        // means this now IS the identity we want (the shift that was just
+        // opened), unlike the ending branch below.
+        final shiftKey = await _resolveShiftKey(ref);
+        return ToggleShiftResult(wasEnding: false, shiftKey: shiftKey);
       }
 
       // Capture which POS/shift/date we are closing BEFORE ending it:
       // fetchAndSavePosShifts() below refreshes pos_shift and would otherwise
       // change what _PosIdentity.resolve() returns. Resolving first also means
       // that if the identity is unavailable we fail before touching the server.
-      final identity = await _PosIdentity.resolve(ref);
-      final posId = int.parse(identity.posId);
-      final shiftId = int.parse(identity.shift);
-      final businessDate = _formatBusinessDate(DateTime.now());
+      final shiftKey = await _resolveShiftKey(ref);
+      final posId = int.parse(shiftKey.posId);
+      final shiftId = int.parse(shiftKey.shift);
 
       await repository.endShift();
 
@@ -585,18 +661,69 @@ class DashboardController extends _$DashboardController {
         await ref
             .read(endShiftServiceProvider)
             .printEndShiftReport(
-              date: businessDate,
+              date: shiftKey.businessDate,
               posId: posId,
               shiftId: shiftId,
             );
-        return const ToggleShiftResult(wasEnding: true);
+        return ToggleShiftResult(wasEnding: true, shiftKey: shiftKey);
       } catch (e, st) {
         debugPrint('toggleShift: shift ended but report failed: $e\n$st');
-        return ToggleShiftResult(wasEnding: true, printError: e);
+        return ToggleShiftResult(
+          wasEnding: true,
+          printError: e,
+          shiftKey: shiftKey,
+        );
       }
     } finally {
       state = state.copyWith(isTogglingShift: false);
     }
+  }
+
+  /// Records a drawer count (start- or end-of-shift) taken via
+  /// [DenominationCountSheet] and queues it for sending.
+  ///
+  /// Called by the UI right after showing the sheet, using the [shiftKey]
+  /// from the [ToggleShiftResult] that [toggleShift] just returned — NOT a
+  /// freshly resolved identity, since by the time the sheet closes,
+  /// pos_shift may already reflect a different shift.
+  ///
+  /// This is a one-line adapter between two deliberately separate types:
+  /// [DenominationCountResult] (what the sheet returns, with UI-facing
+  /// fields like `label`) and [DenominationCountLine] (what the cash-drawer
+  /// API payload needs). [allActiveLines] is used rather than [lines]
+  /// because the server's sample payload lists every active denomination,
+  /// including ones counted as zero — not just the nonzero ones.
+  ///
+  /// Queuing happens offline-first (see [CashDrawerService]), so this
+  /// completes even with no connectivity; the actual send is retried
+  /// automatically later.
+  Future<void> recordShiftDrawerCount({
+    required ShiftKey shiftKey,
+    required bool isStartOfShift,
+    required DenominationCountResult count,
+  }) async {
+    final lines = [
+      for (final entry in count.allActiveLines)
+        DenominationCountLine(
+          denominationId: entry.denominationId,
+          value: entry.value,
+          quantity: entry.quantity,
+        ),
+    ];
+
+    final service = ref.read(cashDrawerServiceProvider);
+    final record = isStartOfShift
+        ? service.recordStartShiftCount
+        : service.recordEndShiftCount;
+
+    await record(
+      shift: shiftKey.shift,
+      cashier: shiftKey.cashier,
+      shiftDate: shiftKey.businessDate,
+      branchId: shiftKey.branchId,
+      posId: shiftKey.posId,
+      lines: lines,
+    );
   }
 
   void applyDiscount(
@@ -713,6 +840,33 @@ class DashboardController extends _$DashboardController {
 
     await ref.read(salesDaoProvider).saveSale(sale);
 
+    // Records the cash tendered for this sale to the cash-drawer outbox.
+    // Awaited (not fire-and-forget) so a failure to even QUEUE it locally is
+    // visible in the log, rather than silently lost — but caught, not
+    // rethrown, since the sale itself already succeeded and must not be
+    // rolled back or blocked from printing over a cash-drawer reporting
+    // problem. Network failures never reach here at all: CashDrawerService
+    // queues to the local DB first and treats connectivity failures as
+    // "retry later", not as errors.
+    try {
+      await ref
+          .read(cashDrawerServiceProvider)
+          .recordTransaction(
+            shift: identity.shift,
+            cashier: cashier,
+            shiftDate: _formatBusinessDate(DateTime.now()),
+            branchId: branch,
+            posId: identity.posId,
+            detailId: detailId,
+            cash: total,
+            total: total,
+          );
+    } catch (e, st) {
+      debugPrint(
+        'createSaleFromCash: could not queue cash-drawer entry: $e\n$st',
+      );
+    }
+
     clearCart();
     clearDiscount();
 
@@ -774,6 +928,10 @@ class DashboardController extends _$DashboardController {
     );
 
     await ref.read(salesDaoProvider).saveSale(sale);
+
+    // No cash-drawer send here: this sale has zero cash tendered (fully
+    // e-payment), and the cash-drawer API only records cash amounts — see
+    // CashDrawerActivityPayload.transaction. Nothing to report.
 
     clearCart();
     clearDiscount();
@@ -850,6 +1008,32 @@ class DashboardController extends _$DashboardController {
     );
 
     await ref.read(salesDaoProvider).saveSale(sale);
+
+    // Records only the CASH portion of this split sale to the cash-drawer
+    // outbox — the e-payment portion never touches the physical drawer.
+    // Skipped entirely if the cash slot was zero, matching createSaleFromEPayment.
+    // See createSaleFromCash for why this is awaited-but-caught.
+    if (cashAmount > 0) {
+      try {
+        await ref
+            .read(cashDrawerServiceProvider)
+            .recordTransaction(
+              shift: identity.shift,
+              cashier: cashier,
+              shiftDate: _formatBusinessDate(DateTime.now()),
+              branchId: branch,
+              posId: identity.posId,
+              detailId: detailId,
+              cash: cashAmount,
+              total: total,
+            );
+      } catch (e, st) {
+        debugPrint(
+          'createSaleFromCashEPaymentSplit: could not queue cash-drawer '
+          'entry: $e\n$st',
+        );
+      }
+    }
 
     clearCart();
     clearDiscount();

@@ -17,6 +17,11 @@ part 'sold_items_repository.g.dart';
 /// The value the API (and the local cache) uses for "no filter".
 const String kSoldItemsAll = 'ALL';
 
+/// How long a cached sold-items snapshot is kept, counted from when it was
+/// last fetched. Older snapshots are deleted after the next successful fetch
+/// to keep the device's storage small.
+const Duration kSoldItemsRetention = Duration(days: 7);
+
 /// Thrown when this device has no registered branch, so sold items can't be
 /// requested (the API is scoped by branch).
 class BranchNotConfiguredException implements Exception {
@@ -167,7 +172,33 @@ class SoldItemsRepository {
 
     await _dao.replaceSnapshot(dateRange: query.dateRange, rows: rows);
 
+    await _pruneOldSnapshots();
+
     return rows.length;
+  }
+
+  /// Deletes snapshots last fetched more than [kSoldItemsRetention] ago.
+  ///
+  /// Runs only after a successful fetch-and-save, which means:
+  ///  - the snapshot just written (fetched "now") can never be removed, and
+  ///  - it never runs while offline, so a device without connectivity keeps
+  ///    whatever it has instead of losing its only copy.
+  ///
+  /// A failure here is logged and ignored: the fetch itself already succeeded,
+  /// and pruning will simply be retried after the next one.
+  Future<void> _pruneOldSnapshots() async {
+    try {
+      final cutoff = DateTime.now().subtract(kSoldItemsRetention);
+      final removed = await _dao.deleteOlderThan(cutoff);
+      if (removed > 0) {
+        debugPrint(
+          'SoldItems: pruned $removed cached rows older than '
+          '${kSoldItemsRetention.inDays} days',
+        );
+      }
+    } catch (e, st) {
+      debugPrint('SoldItems: cache pruning failed: $e\n$st');
+    }
   }
 
   /// The branch this device is registered to (from local config).

@@ -4,6 +4,8 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
+import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/denomination_count_sheet.dart';
+import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/cash_drop_sheet.dart';
 import 'category_visibility.dart';
 import 'others_sheet.dart';
 import 'top_bar.dart';
@@ -40,6 +42,11 @@ class _ActionsRail extends ConsumerWidget {
     final isShiftOpen = notifier.shiftStatus == ShiftStatus.open;
     final isToggling = state.isTogglingShift;
 
+    // Ending a shift counts the drawer BEFORE it closes on the server (the
+    // cashier counts what's in the drawer, then the shift ends); starting a
+    // shift counts it AFTER opening (there's no shift to attach the count to
+    // until it exists). Both paths end with the same call: recording the
+    // count via the controller, which queues it to send in the background.
     Future<void> handleShiftTap() async {
       final confirmed = await showConfirmDialog(
         context,
@@ -53,20 +60,79 @@ class _ActionsRail extends ConsumerWidget {
 
       if (confirmed != true || !context.mounted) return;
 
+      if (isShiftOpen) {
+        // Count the drawer FIRST, while the shift is still open and its
+        // identity can still be resolved normally.
+        final count = await DenominationCountSheet.show(
+          context,
+          title: 'End-of-shift count',
+          subtitle: 'Count the cash left in the drawer before closing out',
+          totalLabel: 'Total counted',
+          submitLabel: 'CONFIRM COUNT',
+          allowZeroTotal: true,
+        );
+        if (count == null || !context.mounted) return; // cancelled
+
+        try {
+          final result = await notifier.toggleShift();
+          if (!context.mounted) return;
+          final shiftKey = result.shiftKey;
+          if (shiftKey != null) {
+            await notifier.recordShiftDrawerCount(
+              shiftKey: shiftKey,
+              isStartOfShift: false,
+              count: count,
+            );
+          }
+        } catch (error) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to end shift: $error')),
+          );
+        }
+        return;
+      }
+
+      // Starting a shift: open it first, THEN count, since the count needs
+      // the new shift's identity (shiftKey) to attach to.
       try {
-        await notifier.toggleShift();
+        final result = await notifier.toggleShift();
+        if (!context.mounted) return;
+
+        final shiftKey = result.shiftKey;
+        if (shiftKey == null) return; // shouldn't happen on this path
+
+        final count = await DenominationCountSheet.show(
+          context,
+          title: 'Start-of-shift count',
+          subtitle: 'Count the float in the drawer before you begin',
+          totalLabel: 'Total counted',
+          submitLabel: 'CONFIRM COUNT',
+          allowZeroTotal: true,
+        );
+        if (count == null || !context.mounted) return; // skipped
+
+        await notifier.recordShiftDrawerCount(
+          shiftKey: shiftKey,
+          isStartOfShift: true,
+          count: count,
+        );
       } catch (error) {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isShiftOpen
-                  ? 'Failed to end shift: $error'
-                  : 'Failed to start shift: $error',
-            ),
-          ),
+          SnackBar(content: Text('Failed to start shift: $error')),
         );
       }
+    }
+
+    Future<void> handleCashDropTap() async {
+      final result = await CashDropSheet.show(context);
+      if (result == null) return; // cancelled
+      // CashDropSheet only returns a counted breakdown; sending it to the
+      // server (or wherever a cash drop is recorded) is not part of this
+      // wiring — the cash-drawer API's 'activity' values are only
+      // 'endshift' and 'transaction', with no cash-drop shape sampled, so
+      // there is nothing confirmed to send it as yet.
     }
 
     return Container(
@@ -93,7 +159,7 @@ class _ActionsRail extends ConsumerWidget {
               icon: PhosphorIcons.cashRegister,
               label: 'Cash drop',
               enabled: isShiftOpen,
-              onTap: () {},
+              onTap: handleCashDropTap,
             ),
             const SizedBox(width: 10),
             _ActionButton(

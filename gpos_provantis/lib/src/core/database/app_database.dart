@@ -28,6 +28,7 @@ import 'tables/settings_table.dart';
 import 'tables/sales_table.dart';
 import 'tables/end_shift_table.dart';
 import 'tables/sold_items_table.dart';
+import 'tables/cash_drawer_table.dart';
 
 import 'daos/domain_config_dao.dart';
 import 'daos/branch_config_dao.dart';
@@ -55,6 +56,7 @@ part 'app_database.g.dart';
     SalesTable,
     EndShiftTable,
     SoldItemsTable,
+    CashDrawerTable,
   ],
   daos: [DomainConfigDao, BranchConfigDao, PosConfigDao],
 )
@@ -62,7 +64,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
