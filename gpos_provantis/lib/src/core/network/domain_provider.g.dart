@@ -1,0 +1,85 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'domain_provider.dart';
+
+// **************************************************************************
+// RiverpodGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
+@ProviderFor(domainConfigDao)
+final domainConfigDaoProvider = DomainConfigDaoProvider._();
+
+final class DomainConfigDaoProvider
+    extends
+        $FunctionalProvider<DomainConfigDao, DomainConfigDao, DomainConfigDao>
+    with $Provider<DomainConfigDao> {
+  DomainConfigDaoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'domainConfigDaoProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$domainConfigDaoHash();
+
+  @$internal
+  @override
+  $ProviderElement<DomainConfigDao> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  DomainConfigDao create(Ref ref) {
+    return domainConfigDao(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DomainConfigDao value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DomainConfigDao>(value),
+    );
+  }
+}
+
+String _$domainConfigDaoHash() => r'515dc34eff124926f3e0e26e3a69744efcb65500';
+
+@ProviderFor(activeDomain)
+final activeDomainProvider = ActiveDomainProvider._();
+
+final class ActiveDomainProvider
+    extends $FunctionalProvider<AsyncValue<String?>, String?, Stream<String?>>
+    with $FutureModifier<String?>, $StreamProvider<String?> {
+  ActiveDomainProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'activeDomainProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$activeDomainHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<String?> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
+
+  @override
+  Stream<String?> create(Ref ref) {
+    return activeDomain(ref);
+  }
+}
+
+String _$activeDomainHash() => r'cf93489c1296031aab428b6184a5d533c399b50e';

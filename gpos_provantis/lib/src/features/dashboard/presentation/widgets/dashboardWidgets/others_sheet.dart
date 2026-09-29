@@ -1,0 +1,180 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:gpos_provantis/src/core/theme/theme.dart';
+import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:gpos_provantis/src/services/sync/catalog_sync.dart';
+import 'package:gpos_provantis/src/services/sync/controller/catalog_sync_controller.dart';
+import 'package:gpos_provantis/src/services/pos_restart_service.dart';
+import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/refund_sheet.dart';
+import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/reprint_sheet.dart';
+import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/send_ereceipt_sheet.dart';
+import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/cash_drop_sheet.dart';
+
+class OthersSheet extends ConsumerWidget {
+  const OthersSheet({super.key});
+
+  static void show(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const OthersSheet(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final controller = ref.watch(dashboardControllerProvider.notifier);
+    final actions = controller.otherActions;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: colors.border,
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+          Text(
+            'Other actions',
+            style: AppTypography.display(
+              color: colors.textPrimary,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 16),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 160,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1,
+            ),
+            itemCount: actions.length,
+            itemBuilder: (context, index) {
+              return _OtherActionTile(action: actions[index]);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OtherActionTile extends ConsumerWidget {
+  const _OtherActionTile({required this.action});
+
+  final OtherAction action;
+
+  static const _syncActionId = 'sync_data';
+
+  static const _restartPosActionId = 'restart_pos';
+
+  static const _cashDropActionId = 'cash_drop';
+
+  static const _iconMap = {
+    'receipt_long_rounded': Icons.receipt_long_rounded,
+    'summarize_rounded': Icons.summarize_rounded,
+    'account_balance_wallet_rounded': Icons.account_balance_wallet_rounded,
+    'shopping_bag_rounded': Icons.shopping_bag_rounded,
+    'print_rounded': Icons.print_rounded,
+    'assignment_return_rounded': Icons.assignment_return_rounded,
+    'forward_to_inbox_rounded': Icons.forward_to_inbox_rounded,
+    'payments_rounded': Icons.payments_rounded,
+    'inbox_rounded': Icons.inbox_rounded,
+    'sync_rounded': Icons.sync_rounded,
+    'restart_alt_rounded': Icons.restart_alt_rounded,
+
+    'point_of_sale_rounded': Icons.point_of_sale_rounded,
+  };
+
+  static final Map<String, Future<void> Function(BuildContext)> _sheetMap = {
+    're_print': ReprintSheet.show,
+    'refund': RefundSheet.show,
+    'send_e-receipt': SendEReceiptSheet.show,
+
+    'cash_drop': (context) => CashDropSheet.show(context),
+  };
+
+  static const _routeMap = {
+    'receipt': '/receipts',
+    'reports': '/reports',
+    'cash_report': '/cash-reports',
+    'sold_items': '/sold-items',
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final icon = _iconMap[action.icon] ?? Icons.touch_app_rounded;
+    final route = _routeMap[action.id];
+
+    return Material(
+      color: colors.surfaceVariant,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: () {
+          final rootContext = Navigator.of(
+            context,
+            rootNavigator: true,
+          ).context;
+          final openSheet = _sheetMap[action.id];
+          Navigator.of(context).pop();
+          if (openSheet != null) {
+            openSheet(rootContext);
+          } else if (action.id == _syncActionId) {
+            ref
+                .read(catalogSyncControllerProvider.notifier)
+                .runSync(ref.read(catalogSyncServiceProvider));
+          } else if (action.id == _restartPosActionId) {
+            showRestartPosFlow(ref);
+          } else if (route != null) {
+            context.push(route);
+          }
+        },
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 26, color: colors.textPrimary),
+              const SizedBox(height: 8),
+              Text(
+                action.label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.ui(
+                  color: colors.textPrimary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
