@@ -241,9 +241,7 @@ class DashboardState {
 
 const Object _unset = Object();
 
-Future<String> _resolveCashier(Ref ref) async {
-  final user = await ref.read(userDataDaoProvider).getUser();
-  final fullName = user?.fullName;
+String _cashierFromName(String? fullName) {
   if (fullName == null || fullName.isEmpty || fullName == 'INVALID USER') {
     throw const PosIdentityUnavailableException(
       'No user is logged in — cannot resolve a cashier name for this sale.',
@@ -252,9 +250,13 @@ Future<String> _resolveCashier(Ref ref) async {
   return fullName;
 }
 
-Future<String> _resolveBranch(Ref ref) async {
-  final branch = await ref.read(branchConfigDaoProvider).getBranch();
-  final branchId = branch?.branchId;
+Future<String> _resolveCashier(Ref ref) async {
+  final userDao = ref.read(userDataDaoProvider);
+  final user = await userDao.getUser();
+  return _cashierFromName(user?.fullName);
+}
+
+String _branchFromId(String? branchId) {
   if (branchId == null || branchId.isEmpty || branchId == 'UNREGISTERED') {
     throw const PosIdentityUnavailableException(
       'No branch is configured — cannot create a sale until branch '
@@ -262,6 +264,12 @@ Future<String> _resolveBranch(Ref ref) async {
     );
   }
   return branchId;
+}
+
+Future<String> _resolveBranch(Ref ref) async {
+  final branchDao = ref.read(branchConfigDaoProvider);
+  final branch = await branchDao.getBranch();
+  return _branchFromId(branch?.branchId);
 }
 
 class PosIdentityUnavailableException implements Exception {
@@ -278,12 +286,10 @@ class _PosIdentity {
   final String posId;
   final String shift;
 
-  static Future<_PosIdentity> resolve(Ref ref) async {
-    final config = await ref.read(posConfigDaoProvider).getPos();
-    final shiftRows = await ref.read(posShiftDaoProvider).getAllPosShifts();
-    final shiftRow = shiftRows.isNotEmpty ? shiftRows.first : null;
-
-    final configPosId = config?.posId;
+  static _PosIdentity fromRows({
+    required int? configPosId,
+    required PosShiftTableData? shiftRow,
+  }) {
     final shiftPosId = shiftRow?.posId;
 
     final String posId;
@@ -310,6 +316,20 @@ class _PosIdentity {
 
     return _PosIdentity(posId: posId, shift: shift);
   }
+
+  static Future<_PosIdentity> resolve(Ref ref) async {
+    // Both ref.read calls happen before the first await, so a provider
+    // rebuild during the awaits below can't leave us reading a dead Ref.
+    final posConfigDao = ref.read(posConfigDaoProvider);
+    final posShiftDao = ref.read(posShiftDaoProvider);
+
+    final config = await posConfigDao.getPos();
+    final shiftRows = await posShiftDao.getAllPosShifts();
+    return fromRows(
+      configPosId: config?.posId,
+      shiftRow: shiftRows.isNotEmpty ? shiftRows.first : null,
+    );
+  }
 }
 
 /// Resolves everything [ShiftKey] needs in one call: POS/shift identity,
@@ -317,14 +337,34 @@ class _PosIdentity {
 /// or shift-report APIs need a full identity, so those four separate
 /// resolves aren't repeated at every call site.
 Future<ShiftKey> _resolveShiftKey(Ref ref) async {
-  final identity = await _PosIdentity.resolve(ref);
-  final cashier = await _resolveCashier(ref);
-  final branch = await _resolveBranch(ref);
+  // Every ref.read happens HERE, synchronously, before the first await.
+  // toggleShift() calls this right after fetchAndSavePosShifts(), which
+  // updates pos_shift and makes DashboardController rebuild (build() watches
+  // posShiftProvider). That rebuild can land during any await below and
+  // dispose this Ref, so nothing after this block may touch `ref`.
+  final posConfigDao = ref.read(posConfigDaoProvider);
+  final posShiftDao = ref.read(posShiftDaoProvider);
+  final userDao = ref.read(userDataDaoProvider);
+  final branchDao = ref.read(branchConfigDaoProvider);
+
+  final config = await posConfigDao.getPos();
+  final shiftRows = await posShiftDao.getAllPosShifts();
+  final identity = _PosIdentity.fromRows(
+    configPosId: config?.posId,
+    shiftRow: shiftRows.isNotEmpty ? shiftRows.first : null,
+  );
+
+  final user = await userDao.getUser();
+  final cashier = _cashierFromName(user?.fullName);
+
+  final branch = await branchDao.getBranch();
+  final branchId = _branchFromId(branch?.branchId);
+
   return ShiftKey(
     posId: identity.posId,
     shift: identity.shift,
     cashier: cashier,
-    branchId: branch,
+    branchId: branchId,
     businessDate: _formatBusinessDate(DateTime.now()),
   );
 }
@@ -627,11 +667,43 @@ class DashboardController extends _$DashboardController {
     final repository = ref.read(posShiftRepositoryProvider);
     final wasOpen = shiftStatus == ShiftStatus.open;
 
+    debugPrint('[CashDrawer] toggleShift: starting, wasOpen=$wasOpen');
     state = state.copyWith(isTogglingShift: true);
     try {
       if (!wasOpen) {
         await repository.startShift();
+        debugPrint(
+          '[CashDrawer] toggleShift: startShift done, ref.mounted=${ref.mounted}',
+        );
+        // ref.mounted check per Riverpod's own guidance: an await can let
+        // this controller be rebuilt (and its old Notifier + Ref disposed)
+        // before execution resumes. This is not theoretical — startShift()
+        // specifically has been observed to trigger this (see the "Cannot
+        // use the Ref ... after it has been disposed" crash this guards
+        // against). If it happened, there is nothing safe left to do with
+        // the OLD ref, so bail out here; the NEW controller instance's
+        // build() will reflect the shift having started regardless, since
+        // that write already reached the database.
+        if (!ref.mounted) {
+          debugPrint(
+            '[CashDrawer] toggleShift: ref no longer mounted after '
+            'startShift(), bailing out (shift did start on the server)',
+          );
+          return const ToggleShiftResult(wasEnding: false);
+        }
+
         await repository.fetchAndSavePosShifts();
+        debugPrint(
+          '[CashDrawer] toggleShift: startShift + refresh done, '
+          'ref.mounted=${ref.mounted}, resolving new shift identity',
+        );
+        if (!ref.mounted) {
+          debugPrint(
+            '[CashDrawer] toggleShift: ref no longer mounted after '
+            'fetchAndSavePosShifts(), bailing out',
+          );
+          return const ToggleShiftResult(wasEnding: false);
+        }
 
         // Resolved AFTER the refresh above, on purpose: starting a shift
         // means this now IS the identity we want (the shift that was just
@@ -649,10 +721,28 @@ class DashboardController extends _$DashboardController {
       final shiftId = int.parse(shiftKey.shift);
 
       await repository.endShift();
+      debugPrint(
+        '[CashDrawer] toggleShift: endShift done, ref.mounted=${ref.mounted}',
+      );
+      if (!ref.mounted) {
+        debugPrint(
+          '[CashDrawer] toggleShift: ref no longer mounted after endShift(), '
+          'bailing out (shift did end on the server; drawer count and '
+          'Z-reading print were skipped this call)',
+        );
+        return ToggleShiftResult(wasEnding: true, shiftKey: shiftKey);
+      }
 
       // The shift is now closed on the server. pos_shift must be refreshed no
       // matter what happens next, or the UI keeps showing an open shift.
       await repository.fetchAndSavePosShifts();
+      if (!ref.mounted) {
+        debugPrint(
+          '[CashDrawer] toggleShift: ref no longer mounted after '
+          'fetchAndSavePosShifts() (end-shift), bailing out',
+        );
+        return ToggleShiftResult(wasEnding: true, shiftKey: shiftKey);
+      }
 
       // Fetch + save + print the Z-reading. A failure here (printer offline,
       // no saved copy while offline, ...) must not look like the shift failed
@@ -675,7 +765,24 @@ class DashboardController extends _$DashboardController {
         );
       }
     } finally {
-      state = state.copyWith(isTogglingShift: false);
+      if (ref.mounted) {
+        state = state.copyWith(isTogglingShift: false);
+        debugPrint(
+          '[CashDrawer] toggleShift: isTogglingShift reset to false '
+          '(this is the state change the UI must wait a frame past before '
+          'showing DenominationCountSheet — see _waitForFrame in catalog_panel.dart)',
+        );
+      } else {
+        // The controller was already rebuilt/disposed before this finally
+        // ran, so there is no state on THIS instance left to reset — the new
+        // instance's build() already started fresh. Logged so a future
+        // investigation can see this branch was taken rather than assuming
+        // the finally block silently did nothing.
+        debugPrint(
+          '[CashDrawer] toggleShift: ref unmounted by the time finally ran, '
+          'skipping state reset (a newer controller instance already exists)',
+        );
+      }
     }
   }
 
