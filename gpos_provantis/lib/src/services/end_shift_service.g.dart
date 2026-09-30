@@ -49,4 +49,4 @@ final class EndShiftServiceProvider
   }
 }
 
-String _$endShiftServiceHash() => r'8f9e7aa8121799b51f9ea6260deeb3849bb0eca9';
+String _$endShiftServiceHash() => r'6f82238fdfa0bf43c71b1b92c343f3cd4b171c4e';

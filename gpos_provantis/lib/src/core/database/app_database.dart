@@ -29,6 +29,11 @@ import 'tables/sales_table.dart';
 import 'tables/end_shift_table.dart';
 import 'tables/sold_items_table.dart';
 import 'tables/cash_drawer_table.dart';
+import 'tables/sold_items_report_table.dart';
+import 'tables/payment_summary_report_table.dart';
+import 'tables/staff_sales_report_table.dart';
+import 'tables/sold_services_report_table.dart';
+import 'tables/sold_packages_report_table.dart';
 
 import 'daos/domain_config_dao.dart';
 import 'daos/branch_config_dao.dart';
@@ -57,6 +62,11 @@ part 'app_database.g.dart';
     EndShiftTable,
     SoldItemsTable,
     CashDrawerTable,
+    SoldItemsReportTable,
+    PaymentSummaryReportTable,
+    StaffSalesReportTable,
+    SoldServicesReportTable,
+    SoldPackagesReportTable,
   ],
   daos: [DomainConfigDao, BranchConfigDao, PosConfigDao],
 )

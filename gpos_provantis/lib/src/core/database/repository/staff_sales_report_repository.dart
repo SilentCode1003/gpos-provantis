@@ -5,32 +5,32 @@ import 'package:gpos_provantis/src/core/models/api_response_model.dart';
 import 'package:gpos_provantis/src/core/network/api_client.dart';
 import 'package:gpos_provantis/src/core/network/domain_provider.dart';
 import 'package:gpos_provantis/src/core/database/app_database.dart';
-import 'package:gpos_provantis/src/core/database/daos/sold_items_report_dao.dart';
-import 'package:gpos_provantis/src/core/database/providers/sold_items_report_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/daos/staff_sales_report_dao.dart';
+import 'package:gpos_provantis/src/core/database/providers/staff_sales_report_dao_provider.dart';
 
-import '../domain/sold_items_report_dto.dart';
+import '../domain/staff_sales_report_dto.dart';
 
-part 'sold_items_report_repository.g.dart';
+part 'staff_sales_report_repository.g.dart';
 
 @Riverpod(keepAlive: true)
-SoldItemsReportRepository soldItemsReportRepository(Ref ref) {
-  final dao = ref.watch(soldItemsReportDaoProvider);
-  return SoldItemsReportRepository(ref, dao);
+StaffSalesReportRepository staffSalesReportRepository(Ref ref) {
+  final dao = ref.watch(staffSalesReportDaoProvider);
+  return StaffSalesReportRepository(ref, dao);
 }
 
-class SoldItemsReportRepository {
+class StaffSalesReportRepository {
   final Ref _ref;
-  final SoldItemsReportDao _dao;
+  final StaffSalesReportDao _dao;
 
-  SoldItemsReportRepository(this._ref, this._dao);
+  StaffSalesReportRepository(this._ref, this._dao);
 
-  /// Fetches every sold item for the receipt range, saves them to the local
+  /// Fetches the staff sales for the receipt range, saves it to the local
   /// DB (replacing any earlier copy of that same range) and returns the rows.
   ///
-  /// A shift with no sales is valid: the result is simply an empty list.
-  /// Network failures ([DioException]) propagate so the caller can fall back
-  /// to [getLocalSoldItems].
-  Future<List<SoldItemsReportTableData>> fetchAndSaveSoldItems(
+  /// An empty result is valid (a shift with no sales). Network failures
+  /// ([DioException]) propagate so the caller can fall back to
+  /// [getLocalStaffSales].
+  Future<List<StaffSalesReportTableData>> fetchAndSaveStaffSales(
     int receiptBeginning,
     int receiptEnding,
   ) async {
@@ -38,7 +38,7 @@ class SoldItemsReportRepository {
 
     final dio = _ref.read(apiClientProvider);
     final response = await dio.post(
-      '/salesitems/getshiftitemsold',
+      '/salesitems/getshiftstaffsales',
       data: {
         'beginingreceipt': receiptBeginning.toString(),
         'endingreceipt': receiptEnding.toString(),
@@ -46,25 +46,24 @@ class SoldItemsReportRepository {
     );
 
     final apiResponse =
-        ApiResponseModel<List<SoldItemsReportDto>>.fromDioResponse(
+        ApiResponseModel<List<StaffSalesReportDto>>.fromDioResponse(
           response,
           fromJson: (data) => (data as List)
               .map(
-                (x) => SoldItemsReportDto.fromJson(x as Map<String, dynamic>),
+                (x) => StaffSalesReportDto.fromJson(x as Map<String, dynamic>),
               )
               .toList(),
         );
 
-    final records = apiResponse.responseData ?? const <SoldItemsReportDto>[];
+    final records = apiResponse.responseData ?? const <StaffSalesReportDto>[];
 
     await _dao.replaceForRange(
       receiptBeginning: receiptBeginning,
       receiptEnding: receiptEnding,
       rows: [
         for (final r in records)
-          SoldItemsReportTableCompanion.insert(
-            item: Value(r.item),
-            quantity: Value(r.quantity),
+          StaffSalesReportTableCompanion.insert(
+            salesStaff: Value(r.salesStaff),
             total: Value(r.total),
             receiptBeginning: Value(receiptBeginning),
             receiptEnding: Value(receiptEnding),
@@ -78,8 +77,8 @@ class SoldItemsReportRepository {
     );
   }
 
-  /// Locally stored sold items for this receipt range. No network call.
-  Future<List<SoldItemsReportTableData>> getLocalSoldItems(
+  /// Locally stored staff sales for this receipt range. No network call.
+  Future<List<StaffSalesReportTableData>> getLocalStaffSales(
     int receiptBeginning,
     int receiptEnding,
   ) {

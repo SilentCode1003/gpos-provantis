@@ -9881,6 +9881,2006 @@ class CashDrawerTableCompanion extends UpdateCompanion<CashDrawerTableData> {
   }
 }
 
+class $SoldItemsReportTableTable extends SoldItemsReportTable
+    with TableInfo<$SoldItemsReportTableTable, SoldItemsReportTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SoldItemsReportTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
+  static const VerificationMeta _itemMeta = const VerificationMeta('item');
+  @override
+  late final GeneratedColumn<String> item = GeneratedColumn<String>(
+    'item',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _totalMeta = const VerificationMeta('total');
+  @override
+  late final GeneratedColumn<double> total = GeneratedColumn<double>(
+    'total',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _receiptBeginningMeta = const VerificationMeta(
+    'receiptBeginning',
+  );
+  @override
+  late final GeneratedColumn<int> receiptBeginning = GeneratedColumn<int>(
+    'receipt_beginning',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _receiptEndingMeta = const VerificationMeta(
+    'receiptEnding',
+  );
+  @override
+  late final GeneratedColumn<int> receiptEnding = GeneratedColumn<int>(
+    'receipt_ending',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    item,
+    quantity,
+    total,
+    receiptBeginning,
+    receiptEnding,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sold_items_report_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SoldItemsReportTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('item')) {
+      context.handle(
+        _itemMeta,
+        item.isAcceptableOrUnknown(data['item']!, _itemMeta),
+      );
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    }
+    if (data.containsKey('total')) {
+      context.handle(
+        _totalMeta,
+        total.isAcceptableOrUnknown(data['total']!, _totalMeta),
+      );
+    }
+    if (data.containsKey('receipt_beginning')) {
+      context.handle(
+        _receiptBeginningMeta,
+        receiptBeginning.isAcceptableOrUnknown(
+          data['receipt_beginning']!,
+          _receiptBeginningMeta,
+        ),
+      );
+    }
+    if (data.containsKey('receipt_ending')) {
+      context.handle(
+        _receiptEndingMeta,
+        receiptEnding.isAcceptableOrUnknown(
+          data['receipt_ending']!,
+          _receiptEndingMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SoldItemsReportTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SoldItemsReportTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      item: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quantity'],
+      )!,
+      total: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total'],
+      )!,
+      receiptBeginning: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}receipt_beginning'],
+      )!,
+      receiptEnding: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}receipt_ending'],
+      )!,
+    );
+  }
+
+  @override
+  $SoldItemsReportTableTable createAlias(String alias) {
+    return $SoldItemsReportTableTable(attachedDatabase, alias);
+  }
+}
+
+class SoldItemsReportTableData extends DataClass
+    implements Insertable<SoldItemsReportTableData> {
+  final String id;
+  final String item;
+  final int quantity;
+  final double total;
+
+  /// The receipt range these rows belong to. Together they identify the shift,
+  /// so a reprint can never pick up another shift's items.
+  final int receiptBeginning;
+  final int receiptEnding;
+  const SoldItemsReportTableData({
+    required this.id,
+    required this.item,
+    required this.quantity,
+    required this.total,
+    required this.receiptBeginning,
+    required this.receiptEnding,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['item'] = Variable<String>(item);
+    map['quantity'] = Variable<int>(quantity);
+    map['total'] = Variable<double>(total);
+    map['receipt_beginning'] = Variable<int>(receiptBeginning);
+    map['receipt_ending'] = Variable<int>(receiptEnding);
+    return map;
+  }
+
+  SoldItemsReportTableCompanion toCompanion(bool nullToAbsent) {
+    return SoldItemsReportTableCompanion(
+      id: Value(id),
+      item: Value(item),
+      quantity: Value(quantity),
+      total: Value(total),
+      receiptBeginning: Value(receiptBeginning),
+      receiptEnding: Value(receiptEnding),
+    );
+  }
+
+  factory SoldItemsReportTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SoldItemsReportTableData(
+      id: serializer.fromJson<String>(json['id']),
+      item: serializer.fromJson<String>(json['item']),
+      quantity: serializer.fromJson<int>(json['quantity']),
+      total: serializer.fromJson<double>(json['total']),
+      receiptBeginning: serializer.fromJson<int>(json['receiptBeginning']),
+      receiptEnding: serializer.fromJson<int>(json['receiptEnding']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'item': serializer.toJson<String>(item),
+      'quantity': serializer.toJson<int>(quantity),
+      'total': serializer.toJson<double>(total),
+      'receiptBeginning': serializer.toJson<int>(receiptBeginning),
+      'receiptEnding': serializer.toJson<int>(receiptEnding),
+    };
+  }
+
+  SoldItemsReportTableData copyWith({
+    String? id,
+    String? item,
+    int? quantity,
+    double? total,
+    int? receiptBeginning,
+    int? receiptEnding,
+  }) => SoldItemsReportTableData(
+    id: id ?? this.id,
+    item: item ?? this.item,
+    quantity: quantity ?? this.quantity,
+    total: total ?? this.total,
+    receiptBeginning: receiptBeginning ?? this.receiptBeginning,
+    receiptEnding: receiptEnding ?? this.receiptEnding,
+  );
+  SoldItemsReportTableData copyWithCompanion(
+    SoldItemsReportTableCompanion data,
+  ) {
+    return SoldItemsReportTableData(
+      id: data.id.present ? data.id.value : this.id,
+      item: data.item.present ? data.item.value : this.item,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      total: data.total.present ? data.total.value : this.total,
+      receiptBeginning: data.receiptBeginning.present
+          ? data.receiptBeginning.value
+          : this.receiptBeginning,
+      receiptEnding: data.receiptEnding.present
+          ? data.receiptEnding.value
+          : this.receiptEnding,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SoldItemsReportTableData(')
+          ..write('id: $id, ')
+          ..write('item: $item, ')
+          ..write('quantity: $quantity, ')
+          ..write('total: $total, ')
+          ..write('receiptBeginning: $receiptBeginning, ')
+          ..write('receiptEnding: $receiptEnding')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, item, quantity, total, receiptBeginning, receiptEnding);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SoldItemsReportTableData &&
+          other.id == this.id &&
+          other.item == this.item &&
+          other.quantity == this.quantity &&
+          other.total == this.total &&
+          other.receiptBeginning == this.receiptBeginning &&
+          other.receiptEnding == this.receiptEnding);
+}
+
+class SoldItemsReportTableCompanion
+    extends UpdateCompanion<SoldItemsReportTableData> {
+  final Value<String> id;
+  final Value<String> item;
+  final Value<int> quantity;
+  final Value<double> total;
+  final Value<int> receiptBeginning;
+  final Value<int> receiptEnding;
+  final Value<int> rowid;
+  const SoldItemsReportTableCompanion({
+    this.id = const Value.absent(),
+    this.item = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.total = const Value.absent(),
+    this.receiptBeginning = const Value.absent(),
+    this.receiptEnding = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SoldItemsReportTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.item = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.total = const Value.absent(),
+    this.receiptBeginning = const Value.absent(),
+    this.receiptEnding = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  static Insertable<SoldItemsReportTableData> custom({
+    Expression<String>? id,
+    Expression<String>? item,
+    Expression<int>? quantity,
+    Expression<double>? total,
+    Expression<int>? receiptBeginning,
+    Expression<int>? receiptEnding,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (item != null) 'item': item,
+      if (quantity != null) 'quantity': quantity,
+      if (total != null) 'total': total,
+      if (receiptBeginning != null) 'receipt_beginning': receiptBeginning,
+      if (receiptEnding != null) 'receipt_ending': receiptEnding,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SoldItemsReportTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? item,
+    Value<int>? quantity,
+    Value<double>? total,
+    Value<int>? receiptBeginning,
+    Value<int>? receiptEnding,
+    Value<int>? rowid,
+  }) {
+    return SoldItemsReportTableCompanion(
+      id: id ?? this.id,
+      item: item ?? this.item,
+      quantity: quantity ?? this.quantity,
+      total: total ?? this.total,
+      receiptBeginning: receiptBeginning ?? this.receiptBeginning,
+      receiptEnding: receiptEnding ?? this.receiptEnding,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (item.present) {
+      map['item'] = Variable<String>(item.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    if (total.present) {
+      map['total'] = Variable<double>(total.value);
+    }
+    if (receiptBeginning.present) {
+      map['receipt_beginning'] = Variable<int>(receiptBeginning.value);
+    }
+    if (receiptEnding.present) {
+      map['receipt_ending'] = Variable<int>(receiptEnding.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SoldItemsReportTableCompanion(')
+          ..write('id: $id, ')
+          ..write('item: $item, ')
+          ..write('quantity: $quantity, ')
+          ..write('total: $total, ')
+          ..write('receiptBeginning: $receiptBeginning, ')
+          ..write('receiptEnding: $receiptEnding, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PaymentSummaryReportTableTable extends PaymentSummaryReportTable
+    with
+        TableInfo<
+          $PaymentSummaryReportTableTable,
+          PaymentSummaryReportTableData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PaymentSummaryReportTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
+  static const VerificationMeta _paymentTypeMeta = const VerificationMeta(
+    'paymentType',
+  );
+  @override
+  late final GeneratedColumn<String> paymentType = GeneratedColumn<String>(
+    'payment_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _totalMeta = const VerificationMeta('total');
+  @override
+  late final GeneratedColumn<double> total = GeneratedColumn<double>(
+    'total',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _receiptBeginningMeta = const VerificationMeta(
+    'receiptBeginning',
+  );
+  @override
+  late final GeneratedColumn<int> receiptBeginning = GeneratedColumn<int>(
+    'receipt_beginning',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _receiptEndingMeta = const VerificationMeta(
+    'receiptEnding',
+  );
+  @override
+  late final GeneratedColumn<int> receiptEnding = GeneratedColumn<int>(
+    'receipt_ending',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    paymentType,
+    total,
+    receiptBeginning,
+    receiptEnding,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'payment_summary_report_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PaymentSummaryReportTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('payment_type')) {
+      context.handle(
+        _paymentTypeMeta,
+        paymentType.isAcceptableOrUnknown(
+          data['payment_type']!,
+          _paymentTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total')) {
+      context.handle(
+        _totalMeta,
+        total.isAcceptableOrUnknown(data['total']!, _totalMeta),
+      );
+    }
+    if (data.containsKey('receipt_beginning')) {
+      context.handle(
+        _receiptBeginningMeta,
+        receiptBeginning.isAcceptableOrUnknown(
+          data['receipt_beginning']!,
+          _receiptBeginningMeta,
+        ),
+      );
+    }
+    if (data.containsKey('receipt_ending')) {
+      context.handle(
+        _receiptEndingMeta,
+        receiptEnding.isAcceptableOrUnknown(
+          data['receipt_ending']!,
+          _receiptEndingMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PaymentSummaryReportTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PaymentSummaryReportTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      paymentType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payment_type'],
+      )!,
+      total: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total'],
+      )!,
+      receiptBeginning: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}receipt_beginning'],
+      )!,
+      receiptEnding: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}receipt_ending'],
+      )!,
+    );
+  }
+
+  @override
+  $PaymentSummaryReportTableTable createAlias(String alias) {
+    return $PaymentSummaryReportTableTable(attachedDatabase, alias);
+  }
+}
+
+class PaymentSummaryReportTableData extends DataClass
+    implements Insertable<PaymentSummaryReportTableData> {
+  final String id;
+  final String paymentType;
+  final double total;
+
+  /// The receipt range these rows belong to. Together they identify the shift,
+  /// so a reprint can never pick up another shift's payments.
+  final int receiptBeginning;
+  final int receiptEnding;
+  const PaymentSummaryReportTableData({
+    required this.id,
+    required this.paymentType,
+    required this.total,
+    required this.receiptBeginning,
+    required this.receiptEnding,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['payment_type'] = Variable<String>(paymentType);
+    map['total'] = Variable<double>(total);
+    map['receipt_beginning'] = Variable<int>(receiptBeginning);
+    map['receipt_ending'] = Variable<int>(receiptEnding);
+    return map;
+  }
+
+  PaymentSummaryReportTableCompanion toCompanion(bool nullToAbsent) {
+    return PaymentSummaryReportTableCompanion(
+      id: Value(id),
+      paymentType: Value(paymentType),
+      total: Value(total),
+      receiptBeginning: Value(receiptBeginning),
+      receiptEnding: Value(receiptEnding),
+    );
+  }
+
+  factory PaymentSummaryReportTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PaymentSummaryReportTableData(
+      id: serializer.fromJson<String>(json['id']),
+      paymentType: serializer.fromJson<String>(json['paymentType']),
+      total: serializer.fromJson<double>(json['total']),
+      receiptBeginning: serializer.fromJson<int>(json['receiptBeginning']),
+      receiptEnding: serializer.fromJson<int>(json['receiptEnding']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'paymentType': serializer.toJson<String>(paymentType),
+      'total': serializer.toJson<double>(total),
+      'receiptBeginning': serializer.toJson<int>(receiptBeginning),
+      'receiptEnding': serializer.toJson<int>(receiptEnding),
+    };
+  }
+
+  PaymentSummaryReportTableData copyWith({
+    String? id,
+    String? paymentType,
+    double? total,
+    int? receiptBeginning,
+    int? receiptEnding,
+  }) => PaymentSummaryReportTableData(
+    id: id ?? this.id,
+    paymentType: paymentType ?? this.paymentType,
+    total: total ?? this.total,
+    receiptBeginning: receiptBeginning ?? this.receiptBeginning,
+    receiptEnding: receiptEnding ?? this.receiptEnding,
+  );
+  PaymentSummaryReportTableData copyWithCompanion(
+    PaymentSummaryReportTableCompanion data,
+  ) {
+    return PaymentSummaryReportTableData(
+      id: data.id.present ? data.id.value : this.id,
+      paymentType: data.paymentType.present
+          ? data.paymentType.value
+          : this.paymentType,
+      total: data.total.present ? data.total.value : this.total,
+      receiptBeginning: data.receiptBeginning.present
+          ? data.receiptBeginning.value
+          : this.receiptBeginning,
+      receiptEnding: data.receiptEnding.present
+          ? data.receiptEnding.value
+          : this.receiptEnding,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PaymentSummaryReportTableData(')
+          ..write('id: $id, ')
+          ..write('paymentType: $paymentType, ')
+          ..write('total: $total, ')
+          ..write('receiptBeginning: $receiptBeginning, ')
+          ..write('receiptEnding: $receiptEnding')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, paymentType, total, receiptBeginning, receiptEnding);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PaymentSummaryReportTableData &&
+          other.id == this.id &&
+          other.paymentType == this.paymentType &&
+          other.total == this.total &&
+          other.receiptBeginning == this.receiptBeginning &&
+          other.receiptEnding == this.receiptEnding);
+}
+
+class PaymentSummaryReportTableCompanion
+    extends UpdateCompanion<PaymentSummaryReportTableData> {
+  final Value<String> id;
+  final Value<String> paymentType;
+  final Value<double> total;
+  final Value<int> receiptBeginning;
+  final Value<int> receiptEnding;
+  final Value<int> rowid;
+  const PaymentSummaryReportTableCompanion({
+    this.id = const Value.absent(),
+    this.paymentType = const Value.absent(),
+    this.total = const Value.absent(),
+    this.receiptBeginning = const Value.absent(),
+    this.receiptEnding = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PaymentSummaryReportTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.paymentType = const Value.absent(),
+    this.total = const Value.absent(),
+    this.receiptBeginning = const Value.absent(),
+    this.receiptEnding = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  static Insertable<PaymentSummaryReportTableData> custom({
+    Expression<String>? id,
+    Expression<String>? paymentType,
+    Expression<double>? total,
+    Expression<int>? receiptBeginning,
+    Expression<int>? receiptEnding,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (paymentType != null) 'payment_type': paymentType,
+      if (total != null) 'total': total,
+      if (receiptBeginning != null) 'receipt_beginning': receiptBeginning,
+      if (receiptEnding != null) 'receipt_ending': receiptEnding,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PaymentSummaryReportTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? paymentType,
+    Value<double>? total,
+    Value<int>? receiptBeginning,
+    Value<int>? receiptEnding,
+    Value<int>? rowid,
+  }) {
+    return PaymentSummaryReportTableCompanion(
+      id: id ?? this.id,
+      paymentType: paymentType ?? this.paymentType,
+      total: total ?? this.total,
+      receiptBeginning: receiptBeginning ?? this.receiptBeginning,
+      receiptEnding: receiptEnding ?? this.receiptEnding,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (paymentType.present) {
+      map['payment_type'] = Variable<String>(paymentType.value);
+    }
+    if (total.present) {
+      map['total'] = Variable<double>(total.value);
+    }
+    if (receiptBeginning.present) {
+      map['receipt_beginning'] = Variable<int>(receiptBeginning.value);
+    }
+    if (receiptEnding.present) {
+      map['receipt_ending'] = Variable<int>(receiptEnding.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PaymentSummaryReportTableCompanion(')
+          ..write('id: $id, ')
+          ..write('paymentType: $paymentType, ')
+          ..write('total: $total, ')
+          ..write('receiptBeginning: $receiptBeginning, ')
+          ..write('receiptEnding: $receiptEnding, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $StaffSalesReportTableTable extends StaffSalesReportTable
+    with TableInfo<$StaffSalesReportTableTable, StaffSalesReportTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StaffSalesReportTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
+  static const VerificationMeta _salesStaffMeta = const VerificationMeta(
+    'salesStaff',
+  );
+  @override
+  late final GeneratedColumn<String> salesStaff = GeneratedColumn<String>(
+    'sales_staff',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _totalMeta = const VerificationMeta('total');
+  @override
+  late final GeneratedColumn<double> total = GeneratedColumn<double>(
+    'total',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _receiptBeginningMeta = const VerificationMeta(
+    'receiptBeginning',
+  );
+  @override
+  late final GeneratedColumn<int> receiptBeginning = GeneratedColumn<int>(
+    'receipt_beginning',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _receiptEndingMeta = const VerificationMeta(
+    'receiptEnding',
+  );
+  @override
+  late final GeneratedColumn<int> receiptEnding = GeneratedColumn<int>(
+    'receipt_ending',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    salesStaff,
+    total,
+    receiptBeginning,
+    receiptEnding,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'staff_sales_report_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StaffSalesReportTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('sales_staff')) {
+      context.handle(
+        _salesStaffMeta,
+        salesStaff.isAcceptableOrUnknown(data['sales_staff']!, _salesStaffMeta),
+      );
+    }
+    if (data.containsKey('total')) {
+      context.handle(
+        _totalMeta,
+        total.isAcceptableOrUnknown(data['total']!, _totalMeta),
+      );
+    }
+    if (data.containsKey('receipt_beginning')) {
+      context.handle(
+        _receiptBeginningMeta,
+        receiptBeginning.isAcceptableOrUnknown(
+          data['receipt_beginning']!,
+          _receiptBeginningMeta,
+        ),
+      );
+    }
+    if (data.containsKey('receipt_ending')) {
+      context.handle(
+        _receiptEndingMeta,
+        receiptEnding.isAcceptableOrUnknown(
+          data['receipt_ending']!,
+          _receiptEndingMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StaffSalesReportTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StaffSalesReportTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      salesStaff: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sales_staff'],
+      )!,
+      total: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total'],
+      )!,
+      receiptBeginning: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}receipt_beginning'],
+      )!,
+      receiptEnding: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}receipt_ending'],
+      )!,
+    );
+  }
+
+  @override
+  $StaffSalesReportTableTable createAlias(String alias) {
+    return $StaffSalesReportTableTable(attachedDatabase, alias);
+  }
+}
+
+class StaffSalesReportTableData extends DataClass
+    implements Insertable<StaffSalesReportTableData> {
+  final String id;
+  final String salesStaff;
+  final double total;
+
+  /// The receipt range these rows belong to. Together they identify the shift,
+  /// so a reprint can never pick up another shift's staff sales.
+  final int receiptBeginning;
+  final int receiptEnding;
+  const StaffSalesReportTableData({
+    required this.id,
+    required this.salesStaff,
+    required this.total,
+    required this.receiptBeginning,
+    required this.receiptEnding,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['sales_staff'] = Variable<String>(salesStaff);
+    map['total'] = Variable<double>(total);
+    map['receipt_beginning'] = Variable<int>(receiptBeginning);
+    map['receipt_ending'] = Variable<int>(receiptEnding);
+    return map;
+  }
+
+  StaffSalesReportTableCompanion toCompanion(bool nullToAbsent) {
+    return StaffSalesReportTableCompanion(
+      id: Value(id),
+      salesStaff: Value(salesStaff),
+      total: Value(total),
+      receiptBeginning: Value(receiptBeginning),
+      receiptEnding: Value(receiptEnding),
+    );
+  }
+
+  factory StaffSalesReportTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StaffSalesReportTableData(
+      id: serializer.fromJson<String>(json['id']),
+      salesStaff: serializer.fromJson<String>(json['salesStaff']),
+      total: serializer.fromJson<double>(json['total']),
+      receiptBeginning: serializer.fromJson<int>(json['receiptBeginning']),
+      receiptEnding: serializer.fromJson<int>(json['receiptEnding']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'salesStaff': serializer.toJson<String>(salesStaff),
+      'total': serializer.toJson<double>(total),
+      'receiptBeginning': serializer.toJson<int>(receiptBeginning),
+      'receiptEnding': serializer.toJson<int>(receiptEnding),
+    };
+  }
+
+  StaffSalesReportTableData copyWith({
+    String? id,
+    String? salesStaff,
+    double? total,
+    int? receiptBeginning,
+    int? receiptEnding,
+  }) => StaffSalesReportTableData(
+    id: id ?? this.id,
+    salesStaff: salesStaff ?? this.salesStaff,
+    total: total ?? this.total,
+    receiptBeginning: receiptBeginning ?? this.receiptBeginning,
+    receiptEnding: receiptEnding ?? this.receiptEnding,
+  );
+  StaffSalesReportTableData copyWithCompanion(
+    StaffSalesReportTableCompanion data,
+  ) {
+    return StaffSalesReportTableData(
+      id: data.id.present ? data.id.value : this.id,
+      salesStaff: data.salesStaff.present
+          ? data.salesStaff.value
+          : this.salesStaff,
+      total: data.total.present ? data.total.value : this.total,
+      receiptBeginning: data.receiptBeginning.present
+          ? data.receiptBeginning.value
+          : this.receiptBeginning,
+      receiptEnding: data.receiptEnding.present
+          ? data.receiptEnding.value
+          : this.receiptEnding,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StaffSalesReportTableData(')
+          ..write('id: $id, ')
+          ..write('salesStaff: $salesStaff, ')
+          ..write('total: $total, ')
+          ..write('receiptBeginning: $receiptBeginning, ')
+          ..write('receiptEnding: $receiptEnding')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, salesStaff, total, receiptBeginning, receiptEnding);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StaffSalesReportTableData &&
+          other.id == this.id &&
+          other.salesStaff == this.salesStaff &&
+          other.total == this.total &&
+          other.receiptBeginning == this.receiptBeginning &&
+          other.receiptEnding == this.receiptEnding);
+}
+
+class StaffSalesReportTableCompanion
+    extends UpdateCompanion<StaffSalesReportTableData> {
+  final Value<String> id;
+  final Value<String> salesStaff;
+  final Value<double> total;
+  final Value<int> receiptBeginning;
+  final Value<int> receiptEnding;
+  final Value<int> rowid;
+  const StaffSalesReportTableCompanion({
+    this.id = const Value.absent(),
+    this.salesStaff = const Value.absent(),
+    this.total = const Value.absent(),
+    this.receiptBeginning = const Value.absent(),
+    this.receiptEnding = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StaffSalesReportTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.salesStaff = const Value.absent(),
+    this.total = const Value.absent(),
+    this.receiptBeginning = const Value.absent(),
+    this.receiptEnding = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  static Insertable<StaffSalesReportTableData> custom({
+    Expression<String>? id,
+    Expression<String>? salesStaff,
+    Expression<double>? total,
+    Expression<int>? receiptBeginning,
+    Expression<int>? receiptEnding,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (salesStaff != null) 'sales_staff': salesStaff,
+      if (total != null) 'total': total,
+      if (receiptBeginning != null) 'receipt_beginning': receiptBeginning,
+      if (receiptEnding != null) 'receipt_ending': receiptEnding,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StaffSalesReportTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? salesStaff,
+    Value<double>? total,
+    Value<int>? receiptBeginning,
+    Value<int>? receiptEnding,
+    Value<int>? rowid,
+  }) {
+    return StaffSalesReportTableCompanion(
+      id: id ?? this.id,
+      salesStaff: salesStaff ?? this.salesStaff,
+      total: total ?? this.total,
+      receiptBeginning: receiptBeginning ?? this.receiptBeginning,
+      receiptEnding: receiptEnding ?? this.receiptEnding,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (salesStaff.present) {
+      map['sales_staff'] = Variable<String>(salesStaff.value);
+    }
+    if (total.present) {
+      map['total'] = Variable<double>(total.value);
+    }
+    if (receiptBeginning.present) {
+      map['receipt_beginning'] = Variable<int>(receiptBeginning.value);
+    }
+    if (receiptEnding.present) {
+      map['receipt_ending'] = Variable<int>(receiptEnding.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StaffSalesReportTableCompanion(')
+          ..write('id: $id, ')
+          ..write('salesStaff: $salesStaff, ')
+          ..write('total: $total, ')
+          ..write('receiptBeginning: $receiptBeginning, ')
+          ..write('receiptEnding: $receiptEnding, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SoldServicesReportTableTable extends SoldServicesReportTable
+    with TableInfo<$SoldServicesReportTableTable, SoldServicesReportTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SoldServicesReportTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
+  static const VerificationMeta _itemMeta = const VerificationMeta('item');
+  @override
+  late final GeneratedColumn<String> item = GeneratedColumn<String>(
+    'item',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _totalMeta = const VerificationMeta('total');
+  @override
+  late final GeneratedColumn<double> total = GeneratedColumn<double>(
+    'total',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _receiptBeginningMeta = const VerificationMeta(
+    'receiptBeginning',
+  );
+  @override
+  late final GeneratedColumn<int> receiptBeginning = GeneratedColumn<int>(
+    'receipt_beginning',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _receiptEndingMeta = const VerificationMeta(
+    'receiptEnding',
+  );
+  @override
+  late final GeneratedColumn<int> receiptEnding = GeneratedColumn<int>(
+    'receipt_ending',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    item,
+    quantity,
+    total,
+    receiptBeginning,
+    receiptEnding,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sold_services_report_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SoldServicesReportTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('item')) {
+      context.handle(
+        _itemMeta,
+        item.isAcceptableOrUnknown(data['item']!, _itemMeta),
+      );
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    }
+    if (data.containsKey('total')) {
+      context.handle(
+        _totalMeta,
+        total.isAcceptableOrUnknown(data['total']!, _totalMeta),
+      );
+    }
+    if (data.containsKey('receipt_beginning')) {
+      context.handle(
+        _receiptBeginningMeta,
+        receiptBeginning.isAcceptableOrUnknown(
+          data['receipt_beginning']!,
+          _receiptBeginningMeta,
+        ),
+      );
+    }
+    if (data.containsKey('receipt_ending')) {
+      context.handle(
+        _receiptEndingMeta,
+        receiptEnding.isAcceptableOrUnknown(
+          data['receipt_ending']!,
+          _receiptEndingMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SoldServicesReportTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SoldServicesReportTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      item: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quantity'],
+      )!,
+      total: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total'],
+      )!,
+      receiptBeginning: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}receipt_beginning'],
+      )!,
+      receiptEnding: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}receipt_ending'],
+      )!,
+    );
+  }
+
+  @override
+  $SoldServicesReportTableTable createAlias(String alias) {
+    return $SoldServicesReportTableTable(attachedDatabase, alias);
+  }
+}
+
+class SoldServicesReportTableData extends DataClass
+    implements Insertable<SoldServicesReportTableData> {
+  final String id;
+  final String item;
+  final int quantity;
+  final double total;
+
+  /// The receipt range these rows belong to. Together they identify the shift,
+  /// so a reprint can never pick up another shift's services.
+  final int receiptBeginning;
+  final int receiptEnding;
+  const SoldServicesReportTableData({
+    required this.id,
+    required this.item,
+    required this.quantity,
+    required this.total,
+    required this.receiptBeginning,
+    required this.receiptEnding,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['item'] = Variable<String>(item);
+    map['quantity'] = Variable<int>(quantity);
+    map['total'] = Variable<double>(total);
+    map['receipt_beginning'] = Variable<int>(receiptBeginning);
+    map['receipt_ending'] = Variable<int>(receiptEnding);
+    return map;
+  }
+
+  SoldServicesReportTableCompanion toCompanion(bool nullToAbsent) {
+    return SoldServicesReportTableCompanion(
+      id: Value(id),
+      item: Value(item),
+      quantity: Value(quantity),
+      total: Value(total),
+      receiptBeginning: Value(receiptBeginning),
+      receiptEnding: Value(receiptEnding),
+    );
+  }
+
+  factory SoldServicesReportTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SoldServicesReportTableData(
+      id: serializer.fromJson<String>(json['id']),
+      item: serializer.fromJson<String>(json['item']),
+      quantity: serializer.fromJson<int>(json['quantity']),
+      total: serializer.fromJson<double>(json['total']),
+      receiptBeginning: serializer.fromJson<int>(json['receiptBeginning']),
+      receiptEnding: serializer.fromJson<int>(json['receiptEnding']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'item': serializer.toJson<String>(item),
+      'quantity': serializer.toJson<int>(quantity),
+      'total': serializer.toJson<double>(total),
+      'receiptBeginning': serializer.toJson<int>(receiptBeginning),
+      'receiptEnding': serializer.toJson<int>(receiptEnding),
+    };
+  }
+
+  SoldServicesReportTableData copyWith({
+    String? id,
+    String? item,
+    int? quantity,
+    double? total,
+    int? receiptBeginning,
+    int? receiptEnding,
+  }) => SoldServicesReportTableData(
+    id: id ?? this.id,
+    item: item ?? this.item,
+    quantity: quantity ?? this.quantity,
+    total: total ?? this.total,
+    receiptBeginning: receiptBeginning ?? this.receiptBeginning,
+    receiptEnding: receiptEnding ?? this.receiptEnding,
+  );
+  SoldServicesReportTableData copyWithCompanion(
+    SoldServicesReportTableCompanion data,
+  ) {
+    return SoldServicesReportTableData(
+      id: data.id.present ? data.id.value : this.id,
+      item: data.item.present ? data.item.value : this.item,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      total: data.total.present ? data.total.value : this.total,
+      receiptBeginning: data.receiptBeginning.present
+          ? data.receiptBeginning.value
+          : this.receiptBeginning,
+      receiptEnding: data.receiptEnding.present
+          ? data.receiptEnding.value
+          : this.receiptEnding,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SoldServicesReportTableData(')
+          ..write('id: $id, ')
+          ..write('item: $item, ')
+          ..write('quantity: $quantity, ')
+          ..write('total: $total, ')
+          ..write('receiptBeginning: $receiptBeginning, ')
+          ..write('receiptEnding: $receiptEnding')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, item, quantity, total, receiptBeginning, receiptEnding);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SoldServicesReportTableData &&
+          other.id == this.id &&
+          other.item == this.item &&
+          other.quantity == this.quantity &&
+          other.total == this.total &&
+          other.receiptBeginning == this.receiptBeginning &&
+          other.receiptEnding == this.receiptEnding);
+}
+
+class SoldServicesReportTableCompanion
+    extends UpdateCompanion<SoldServicesReportTableData> {
+  final Value<String> id;
+  final Value<String> item;
+  final Value<int> quantity;
+  final Value<double> total;
+  final Value<int> receiptBeginning;
+  final Value<int> receiptEnding;
+  final Value<int> rowid;
+  const SoldServicesReportTableCompanion({
+    this.id = const Value.absent(),
+    this.item = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.total = const Value.absent(),
+    this.receiptBeginning = const Value.absent(),
+    this.receiptEnding = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SoldServicesReportTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.item = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.total = const Value.absent(),
+    this.receiptBeginning = const Value.absent(),
+    this.receiptEnding = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  static Insertable<SoldServicesReportTableData> custom({
+    Expression<String>? id,
+    Expression<String>? item,
+    Expression<int>? quantity,
+    Expression<double>? total,
+    Expression<int>? receiptBeginning,
+    Expression<int>? receiptEnding,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (item != null) 'item': item,
+      if (quantity != null) 'quantity': quantity,
+      if (total != null) 'total': total,
+      if (receiptBeginning != null) 'receipt_beginning': receiptBeginning,
+      if (receiptEnding != null) 'receipt_ending': receiptEnding,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SoldServicesReportTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? item,
+    Value<int>? quantity,
+    Value<double>? total,
+    Value<int>? receiptBeginning,
+    Value<int>? receiptEnding,
+    Value<int>? rowid,
+  }) {
+    return SoldServicesReportTableCompanion(
+      id: id ?? this.id,
+      item: item ?? this.item,
+      quantity: quantity ?? this.quantity,
+      total: total ?? this.total,
+      receiptBeginning: receiptBeginning ?? this.receiptBeginning,
+      receiptEnding: receiptEnding ?? this.receiptEnding,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (item.present) {
+      map['item'] = Variable<String>(item.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    if (total.present) {
+      map['total'] = Variable<double>(total.value);
+    }
+    if (receiptBeginning.present) {
+      map['receipt_beginning'] = Variable<int>(receiptBeginning.value);
+    }
+    if (receiptEnding.present) {
+      map['receipt_ending'] = Variable<int>(receiptEnding.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SoldServicesReportTableCompanion(')
+          ..write('id: $id, ')
+          ..write('item: $item, ')
+          ..write('quantity: $quantity, ')
+          ..write('total: $total, ')
+          ..write('receiptBeginning: $receiptBeginning, ')
+          ..write('receiptEnding: $receiptEnding, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SoldPackagesReportTableTable extends SoldPackagesReportTable
+    with TableInfo<$SoldPackagesReportTableTable, SoldPackagesReportTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SoldPackagesReportTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
+  static const VerificationMeta _itemMeta = const VerificationMeta('item');
+  @override
+  late final GeneratedColumn<String> item = GeneratedColumn<String>(
+    'item',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UNREGISTERED'),
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _totalMeta = const VerificationMeta('total');
+  @override
+  late final GeneratedColumn<double> total = GeneratedColumn<double>(
+    'total',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _receiptBeginningMeta = const VerificationMeta(
+    'receiptBeginning',
+  );
+  @override
+  late final GeneratedColumn<int> receiptBeginning = GeneratedColumn<int>(
+    'receipt_beginning',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _receiptEndingMeta = const VerificationMeta(
+    'receiptEnding',
+  );
+  @override
+  late final GeneratedColumn<int> receiptEnding = GeneratedColumn<int>(
+    'receipt_ending',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    item,
+    quantity,
+    total,
+    receiptBeginning,
+    receiptEnding,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sold_packages_report_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SoldPackagesReportTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('item')) {
+      context.handle(
+        _itemMeta,
+        item.isAcceptableOrUnknown(data['item']!, _itemMeta),
+      );
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    }
+    if (data.containsKey('total')) {
+      context.handle(
+        _totalMeta,
+        total.isAcceptableOrUnknown(data['total']!, _totalMeta),
+      );
+    }
+    if (data.containsKey('receipt_beginning')) {
+      context.handle(
+        _receiptBeginningMeta,
+        receiptBeginning.isAcceptableOrUnknown(
+          data['receipt_beginning']!,
+          _receiptBeginningMeta,
+        ),
+      );
+    }
+    if (data.containsKey('receipt_ending')) {
+      context.handle(
+        _receiptEndingMeta,
+        receiptEnding.isAcceptableOrUnknown(
+          data['receipt_ending']!,
+          _receiptEndingMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SoldPackagesReportTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SoldPackagesReportTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      item: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quantity'],
+      )!,
+      total: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total'],
+      )!,
+      receiptBeginning: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}receipt_beginning'],
+      )!,
+      receiptEnding: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}receipt_ending'],
+      )!,
+    );
+  }
+
+  @override
+  $SoldPackagesReportTableTable createAlias(String alias) {
+    return $SoldPackagesReportTableTable(attachedDatabase, alias);
+  }
+}
+
+class SoldPackagesReportTableData extends DataClass
+    implements Insertable<SoldPackagesReportTableData> {
+  final String id;
+  final String item;
+  final int quantity;
+  final double total;
+
+  /// The receipt range these rows belong to. Together they identify the shift,
+  /// so a reprint can never pick up another shift's packages.
+  final int receiptBeginning;
+  final int receiptEnding;
+  const SoldPackagesReportTableData({
+    required this.id,
+    required this.item,
+    required this.quantity,
+    required this.total,
+    required this.receiptBeginning,
+    required this.receiptEnding,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['item'] = Variable<String>(item);
+    map['quantity'] = Variable<int>(quantity);
+    map['total'] = Variable<double>(total);
+    map['receipt_beginning'] = Variable<int>(receiptBeginning);
+    map['receipt_ending'] = Variable<int>(receiptEnding);
+    return map;
+  }
+
+  SoldPackagesReportTableCompanion toCompanion(bool nullToAbsent) {
+    return SoldPackagesReportTableCompanion(
+      id: Value(id),
+      item: Value(item),
+      quantity: Value(quantity),
+      total: Value(total),
+      receiptBeginning: Value(receiptBeginning),
+      receiptEnding: Value(receiptEnding),
+    );
+  }
+
+  factory SoldPackagesReportTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SoldPackagesReportTableData(
+      id: serializer.fromJson<String>(json['id']),
+      item: serializer.fromJson<String>(json['item']),
+      quantity: serializer.fromJson<int>(json['quantity']),
+      total: serializer.fromJson<double>(json['total']),
+      receiptBeginning: serializer.fromJson<int>(json['receiptBeginning']),
+      receiptEnding: serializer.fromJson<int>(json['receiptEnding']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'item': serializer.toJson<String>(item),
+      'quantity': serializer.toJson<int>(quantity),
+      'total': serializer.toJson<double>(total),
+      'receiptBeginning': serializer.toJson<int>(receiptBeginning),
+      'receiptEnding': serializer.toJson<int>(receiptEnding),
+    };
+  }
+
+  SoldPackagesReportTableData copyWith({
+    String? id,
+    String? item,
+    int? quantity,
+    double? total,
+    int? receiptBeginning,
+    int? receiptEnding,
+  }) => SoldPackagesReportTableData(
+    id: id ?? this.id,
+    item: item ?? this.item,
+    quantity: quantity ?? this.quantity,
+    total: total ?? this.total,
+    receiptBeginning: receiptBeginning ?? this.receiptBeginning,
+    receiptEnding: receiptEnding ?? this.receiptEnding,
+  );
+  SoldPackagesReportTableData copyWithCompanion(
+    SoldPackagesReportTableCompanion data,
+  ) {
+    return SoldPackagesReportTableData(
+      id: data.id.present ? data.id.value : this.id,
+      item: data.item.present ? data.item.value : this.item,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      total: data.total.present ? data.total.value : this.total,
+      receiptBeginning: data.receiptBeginning.present
+          ? data.receiptBeginning.value
+          : this.receiptBeginning,
+      receiptEnding: data.receiptEnding.present
+          ? data.receiptEnding.value
+          : this.receiptEnding,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SoldPackagesReportTableData(')
+          ..write('id: $id, ')
+          ..write('item: $item, ')
+          ..write('quantity: $quantity, ')
+          ..write('total: $total, ')
+          ..write('receiptBeginning: $receiptBeginning, ')
+          ..write('receiptEnding: $receiptEnding')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, item, quantity, total, receiptBeginning, receiptEnding);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SoldPackagesReportTableData &&
+          other.id == this.id &&
+          other.item == this.item &&
+          other.quantity == this.quantity &&
+          other.total == this.total &&
+          other.receiptBeginning == this.receiptBeginning &&
+          other.receiptEnding == this.receiptEnding);
+}
+
+class SoldPackagesReportTableCompanion
+    extends UpdateCompanion<SoldPackagesReportTableData> {
+  final Value<String> id;
+  final Value<String> item;
+  final Value<int> quantity;
+  final Value<double> total;
+  final Value<int> receiptBeginning;
+  final Value<int> receiptEnding;
+  final Value<int> rowid;
+  const SoldPackagesReportTableCompanion({
+    this.id = const Value.absent(),
+    this.item = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.total = const Value.absent(),
+    this.receiptBeginning = const Value.absent(),
+    this.receiptEnding = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SoldPackagesReportTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.item = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.total = const Value.absent(),
+    this.receiptBeginning = const Value.absent(),
+    this.receiptEnding = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  static Insertable<SoldPackagesReportTableData> custom({
+    Expression<String>? id,
+    Expression<String>? item,
+    Expression<int>? quantity,
+    Expression<double>? total,
+    Expression<int>? receiptBeginning,
+    Expression<int>? receiptEnding,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (item != null) 'item': item,
+      if (quantity != null) 'quantity': quantity,
+      if (total != null) 'total': total,
+      if (receiptBeginning != null) 'receipt_beginning': receiptBeginning,
+      if (receiptEnding != null) 'receipt_ending': receiptEnding,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SoldPackagesReportTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? item,
+    Value<int>? quantity,
+    Value<double>? total,
+    Value<int>? receiptBeginning,
+    Value<int>? receiptEnding,
+    Value<int>? rowid,
+  }) {
+    return SoldPackagesReportTableCompanion(
+      id: id ?? this.id,
+      item: item ?? this.item,
+      quantity: quantity ?? this.quantity,
+      total: total ?? this.total,
+      receiptBeginning: receiptBeginning ?? this.receiptBeginning,
+      receiptEnding: receiptEnding ?? this.receiptEnding,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (item.present) {
+      map['item'] = Variable<String>(item.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    if (total.present) {
+      map['total'] = Variable<double>(total.value);
+    }
+    if (receiptBeginning.present) {
+      map['receipt_beginning'] = Variable<int>(receiptBeginning.value);
+    }
+    if (receiptEnding.present) {
+      map['receipt_ending'] = Variable<int>(receiptEnding.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SoldPackagesReportTableCompanion(')
+          ..write('id: $id, ')
+          ..write('item: $item, ')
+          ..write('quantity: $quantity, ')
+          ..write('total: $total, ')
+          ..write('receiptBeginning: $receiptBeginning, ')
+          ..write('receiptEnding: $receiptEnding, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -9913,6 +11913,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CashDrawerTableTable cashDrawerTable = $CashDrawerTableTable(
     this,
   );
+  late final $SoldItemsReportTableTable soldItemsReportTable =
+      $SoldItemsReportTableTable(this);
+  late final $PaymentSummaryReportTableTable paymentSummaryReportTable =
+      $PaymentSummaryReportTableTable(this);
+  late final $StaffSalesReportTableTable staffSalesReportTable =
+      $StaffSalesReportTableTable(this);
+  late final $SoldServicesReportTableTable soldServicesReportTable =
+      $SoldServicesReportTableTable(this);
+  late final $SoldPackagesReportTableTable soldPackagesReportTable =
+      $SoldPackagesReportTableTable(this);
   late final DomainConfigDao domainConfigDao = DomainConfigDao(
     this as AppDatabase,
   );
@@ -9944,6 +11954,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     endShiftTable,
     soldItemsTable,
     cashDrawerTable,
+    soldItemsReportTable,
+    paymentSummaryReportTable,
+    staffSalesReportTable,
+    soldServicesReportTable,
+    soldPackagesReportTable,
   ];
 }
 
@@ -15128,6 +17143,1179 @@ typedef $$CashDrawerTableTableProcessedTableManager =
       CashDrawerTableData,
       PrefetchHooks Function()
     >;
+typedef $$SoldItemsReportTableTableCreateCompanionBuilder =
+    SoldItemsReportTableCompanion Function({
+      Value<String> id,
+      Value<String> item,
+      Value<int> quantity,
+      Value<double> total,
+      Value<int> receiptBeginning,
+      Value<int> receiptEnding,
+      Value<int> rowid,
+    });
+typedef $$SoldItemsReportTableTableUpdateCompanionBuilder =
+    SoldItemsReportTableCompanion Function({
+      Value<String> id,
+      Value<String> item,
+      Value<int> quantity,
+      Value<double> total,
+      Value<int> receiptBeginning,
+      Value<int> receiptEnding,
+      Value<int> rowid,
+    });
+
+class $$SoldItemsReportTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SoldItemsReportTableTable> {
+  $$SoldItemsReportTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get item => $composableBuilder(
+    column: $table.item,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SoldItemsReportTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SoldItemsReportTableTable> {
+  $$SoldItemsReportTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get item => $composableBuilder(
+    column: $table.item,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SoldItemsReportTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SoldItemsReportTableTable> {
+  $$SoldItemsReportTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get item =>
+      $composableBuilder(column: $table.item, builder: (column) => column);
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<double> get total =>
+      $composableBuilder(column: $table.total, builder: (column) => column);
+
+  GeneratedColumn<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => column,
+  );
+}
+
+class $$SoldItemsReportTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SoldItemsReportTableTable,
+          SoldItemsReportTableData,
+          $$SoldItemsReportTableTableFilterComposer,
+          $$SoldItemsReportTableTableOrderingComposer,
+          $$SoldItemsReportTableTableAnnotationComposer,
+          $$SoldItemsReportTableTableCreateCompanionBuilder,
+          $$SoldItemsReportTableTableUpdateCompanionBuilder,
+          (
+            SoldItemsReportTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $SoldItemsReportTableTable,
+              SoldItemsReportTableData
+            >,
+          ),
+          SoldItemsReportTableData,
+          PrefetchHooks Function()
+        > {
+  $$SoldItemsReportTableTableTableManager(
+    _$AppDatabase db,
+    $SoldItemsReportTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SoldItemsReportTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SoldItemsReportTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SoldItemsReportTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> item = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<double> total = const Value.absent(),
+                Value<int> receiptBeginning = const Value.absent(),
+                Value<int> receiptEnding = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SoldItemsReportTableCompanion(
+                id: id,
+                item: item,
+                quantity: quantity,
+                total: total,
+                receiptBeginning: receiptBeginning,
+                receiptEnding: receiptEnding,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> item = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<double> total = const Value.absent(),
+                Value<int> receiptBeginning = const Value.absent(),
+                Value<int> receiptEnding = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SoldItemsReportTableCompanion.insert(
+                id: id,
+                item: item,
+                quantity: quantity,
+                total: total,
+                receiptBeginning: receiptBeginning,
+                receiptEnding: receiptEnding,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SoldItemsReportTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SoldItemsReportTableTable,
+      SoldItemsReportTableData,
+      $$SoldItemsReportTableTableFilterComposer,
+      $$SoldItemsReportTableTableOrderingComposer,
+      $$SoldItemsReportTableTableAnnotationComposer,
+      $$SoldItemsReportTableTableCreateCompanionBuilder,
+      $$SoldItemsReportTableTableUpdateCompanionBuilder,
+      (
+        SoldItemsReportTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $SoldItemsReportTableTable,
+          SoldItemsReportTableData
+        >,
+      ),
+      SoldItemsReportTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$PaymentSummaryReportTableTableCreateCompanionBuilder =
+    PaymentSummaryReportTableCompanion Function({
+      Value<String> id,
+      Value<String> paymentType,
+      Value<double> total,
+      Value<int> receiptBeginning,
+      Value<int> receiptEnding,
+      Value<int> rowid,
+    });
+typedef $$PaymentSummaryReportTableTableUpdateCompanionBuilder =
+    PaymentSummaryReportTableCompanion Function({
+      Value<String> id,
+      Value<String> paymentType,
+      Value<double> total,
+      Value<int> receiptBeginning,
+      Value<int> receiptEnding,
+      Value<int> rowid,
+    });
+
+class $$PaymentSummaryReportTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PaymentSummaryReportTableTable> {
+  $$PaymentSummaryReportTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paymentType => $composableBuilder(
+    column: $table.paymentType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PaymentSummaryReportTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PaymentSummaryReportTableTable> {
+  $$PaymentSummaryReportTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paymentType => $composableBuilder(
+    column: $table.paymentType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PaymentSummaryReportTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PaymentSummaryReportTableTable> {
+  $$PaymentSummaryReportTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get paymentType => $composableBuilder(
+    column: $table.paymentType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get total =>
+      $composableBuilder(column: $table.total, builder: (column) => column);
+
+  GeneratedColumn<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => column,
+  );
+}
+
+class $$PaymentSummaryReportTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PaymentSummaryReportTableTable,
+          PaymentSummaryReportTableData,
+          $$PaymentSummaryReportTableTableFilterComposer,
+          $$PaymentSummaryReportTableTableOrderingComposer,
+          $$PaymentSummaryReportTableTableAnnotationComposer,
+          $$PaymentSummaryReportTableTableCreateCompanionBuilder,
+          $$PaymentSummaryReportTableTableUpdateCompanionBuilder,
+          (
+            PaymentSummaryReportTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $PaymentSummaryReportTableTable,
+              PaymentSummaryReportTableData
+            >,
+          ),
+          PaymentSummaryReportTableData,
+          PrefetchHooks Function()
+        > {
+  $$PaymentSummaryReportTableTableTableManager(
+    _$AppDatabase db,
+    $PaymentSummaryReportTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PaymentSummaryReportTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$PaymentSummaryReportTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PaymentSummaryReportTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> paymentType = const Value.absent(),
+                Value<double> total = const Value.absent(),
+                Value<int> receiptBeginning = const Value.absent(),
+                Value<int> receiptEnding = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PaymentSummaryReportTableCompanion(
+                id: id,
+                paymentType: paymentType,
+                total: total,
+                receiptBeginning: receiptBeginning,
+                receiptEnding: receiptEnding,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> paymentType = const Value.absent(),
+                Value<double> total = const Value.absent(),
+                Value<int> receiptBeginning = const Value.absent(),
+                Value<int> receiptEnding = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PaymentSummaryReportTableCompanion.insert(
+                id: id,
+                paymentType: paymentType,
+                total: total,
+                receiptBeginning: receiptBeginning,
+                receiptEnding: receiptEnding,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PaymentSummaryReportTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PaymentSummaryReportTableTable,
+      PaymentSummaryReportTableData,
+      $$PaymentSummaryReportTableTableFilterComposer,
+      $$PaymentSummaryReportTableTableOrderingComposer,
+      $$PaymentSummaryReportTableTableAnnotationComposer,
+      $$PaymentSummaryReportTableTableCreateCompanionBuilder,
+      $$PaymentSummaryReportTableTableUpdateCompanionBuilder,
+      (
+        PaymentSummaryReportTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $PaymentSummaryReportTableTable,
+          PaymentSummaryReportTableData
+        >,
+      ),
+      PaymentSummaryReportTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$StaffSalesReportTableTableCreateCompanionBuilder =
+    StaffSalesReportTableCompanion Function({
+      Value<String> id,
+      Value<String> salesStaff,
+      Value<double> total,
+      Value<int> receiptBeginning,
+      Value<int> receiptEnding,
+      Value<int> rowid,
+    });
+typedef $$StaffSalesReportTableTableUpdateCompanionBuilder =
+    StaffSalesReportTableCompanion Function({
+      Value<String> id,
+      Value<String> salesStaff,
+      Value<double> total,
+      Value<int> receiptBeginning,
+      Value<int> receiptEnding,
+      Value<int> rowid,
+    });
+
+class $$StaffSalesReportTableTableFilterComposer
+    extends Composer<_$AppDatabase, $StaffSalesReportTableTable> {
+  $$StaffSalesReportTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get salesStaff => $composableBuilder(
+    column: $table.salesStaff,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$StaffSalesReportTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $StaffSalesReportTableTable> {
+  $$StaffSalesReportTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get salesStaff => $composableBuilder(
+    column: $table.salesStaff,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$StaffSalesReportTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $StaffSalesReportTableTable> {
+  $$StaffSalesReportTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get salesStaff => $composableBuilder(
+    column: $table.salesStaff,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get total =>
+      $composableBuilder(column: $table.total, builder: (column) => column);
+
+  GeneratedColumn<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => column,
+  );
+}
+
+class $$StaffSalesReportTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $StaffSalesReportTableTable,
+          StaffSalesReportTableData,
+          $$StaffSalesReportTableTableFilterComposer,
+          $$StaffSalesReportTableTableOrderingComposer,
+          $$StaffSalesReportTableTableAnnotationComposer,
+          $$StaffSalesReportTableTableCreateCompanionBuilder,
+          $$StaffSalesReportTableTableUpdateCompanionBuilder,
+          (
+            StaffSalesReportTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $StaffSalesReportTableTable,
+              StaffSalesReportTableData
+            >,
+          ),
+          StaffSalesReportTableData,
+          PrefetchHooks Function()
+        > {
+  $$StaffSalesReportTableTableTableManager(
+    _$AppDatabase db,
+    $StaffSalesReportTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StaffSalesReportTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$StaffSalesReportTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$StaffSalesReportTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> salesStaff = const Value.absent(),
+                Value<double> total = const Value.absent(),
+                Value<int> receiptBeginning = const Value.absent(),
+                Value<int> receiptEnding = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StaffSalesReportTableCompanion(
+                id: id,
+                salesStaff: salesStaff,
+                total: total,
+                receiptBeginning: receiptBeginning,
+                receiptEnding: receiptEnding,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> salesStaff = const Value.absent(),
+                Value<double> total = const Value.absent(),
+                Value<int> receiptBeginning = const Value.absent(),
+                Value<int> receiptEnding = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StaffSalesReportTableCompanion.insert(
+                id: id,
+                salesStaff: salesStaff,
+                total: total,
+                receiptBeginning: receiptBeginning,
+                receiptEnding: receiptEnding,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$StaffSalesReportTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $StaffSalesReportTableTable,
+      StaffSalesReportTableData,
+      $$StaffSalesReportTableTableFilterComposer,
+      $$StaffSalesReportTableTableOrderingComposer,
+      $$StaffSalesReportTableTableAnnotationComposer,
+      $$StaffSalesReportTableTableCreateCompanionBuilder,
+      $$StaffSalesReportTableTableUpdateCompanionBuilder,
+      (
+        StaffSalesReportTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $StaffSalesReportTableTable,
+          StaffSalesReportTableData
+        >,
+      ),
+      StaffSalesReportTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$SoldServicesReportTableTableCreateCompanionBuilder =
+    SoldServicesReportTableCompanion Function({
+      Value<String> id,
+      Value<String> item,
+      Value<int> quantity,
+      Value<double> total,
+      Value<int> receiptBeginning,
+      Value<int> receiptEnding,
+      Value<int> rowid,
+    });
+typedef $$SoldServicesReportTableTableUpdateCompanionBuilder =
+    SoldServicesReportTableCompanion Function({
+      Value<String> id,
+      Value<String> item,
+      Value<int> quantity,
+      Value<double> total,
+      Value<int> receiptBeginning,
+      Value<int> receiptEnding,
+      Value<int> rowid,
+    });
+
+class $$SoldServicesReportTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SoldServicesReportTableTable> {
+  $$SoldServicesReportTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get item => $composableBuilder(
+    column: $table.item,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SoldServicesReportTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SoldServicesReportTableTable> {
+  $$SoldServicesReportTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get item => $composableBuilder(
+    column: $table.item,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SoldServicesReportTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SoldServicesReportTableTable> {
+  $$SoldServicesReportTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get item =>
+      $composableBuilder(column: $table.item, builder: (column) => column);
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<double> get total =>
+      $composableBuilder(column: $table.total, builder: (column) => column);
+
+  GeneratedColumn<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => column,
+  );
+}
+
+class $$SoldServicesReportTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SoldServicesReportTableTable,
+          SoldServicesReportTableData,
+          $$SoldServicesReportTableTableFilterComposer,
+          $$SoldServicesReportTableTableOrderingComposer,
+          $$SoldServicesReportTableTableAnnotationComposer,
+          $$SoldServicesReportTableTableCreateCompanionBuilder,
+          $$SoldServicesReportTableTableUpdateCompanionBuilder,
+          (
+            SoldServicesReportTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $SoldServicesReportTableTable,
+              SoldServicesReportTableData
+            >,
+          ),
+          SoldServicesReportTableData,
+          PrefetchHooks Function()
+        > {
+  $$SoldServicesReportTableTableTableManager(
+    _$AppDatabase db,
+    $SoldServicesReportTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SoldServicesReportTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$SoldServicesReportTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SoldServicesReportTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> item = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<double> total = const Value.absent(),
+                Value<int> receiptBeginning = const Value.absent(),
+                Value<int> receiptEnding = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SoldServicesReportTableCompanion(
+                id: id,
+                item: item,
+                quantity: quantity,
+                total: total,
+                receiptBeginning: receiptBeginning,
+                receiptEnding: receiptEnding,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> item = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<double> total = const Value.absent(),
+                Value<int> receiptBeginning = const Value.absent(),
+                Value<int> receiptEnding = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SoldServicesReportTableCompanion.insert(
+                id: id,
+                item: item,
+                quantity: quantity,
+                total: total,
+                receiptBeginning: receiptBeginning,
+                receiptEnding: receiptEnding,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SoldServicesReportTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SoldServicesReportTableTable,
+      SoldServicesReportTableData,
+      $$SoldServicesReportTableTableFilterComposer,
+      $$SoldServicesReportTableTableOrderingComposer,
+      $$SoldServicesReportTableTableAnnotationComposer,
+      $$SoldServicesReportTableTableCreateCompanionBuilder,
+      $$SoldServicesReportTableTableUpdateCompanionBuilder,
+      (
+        SoldServicesReportTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $SoldServicesReportTableTable,
+          SoldServicesReportTableData
+        >,
+      ),
+      SoldServicesReportTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$SoldPackagesReportTableTableCreateCompanionBuilder =
+    SoldPackagesReportTableCompanion Function({
+      Value<String> id,
+      Value<String> item,
+      Value<int> quantity,
+      Value<double> total,
+      Value<int> receiptBeginning,
+      Value<int> receiptEnding,
+      Value<int> rowid,
+    });
+typedef $$SoldPackagesReportTableTableUpdateCompanionBuilder =
+    SoldPackagesReportTableCompanion Function({
+      Value<String> id,
+      Value<String> item,
+      Value<int> quantity,
+      Value<double> total,
+      Value<int> receiptBeginning,
+      Value<int> receiptEnding,
+      Value<int> rowid,
+    });
+
+class $$SoldPackagesReportTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SoldPackagesReportTableTable> {
+  $$SoldPackagesReportTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get item => $composableBuilder(
+    column: $table.item,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SoldPackagesReportTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SoldPackagesReportTableTable> {
+  $$SoldPackagesReportTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get item => $composableBuilder(
+    column: $table.item,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SoldPackagesReportTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SoldPackagesReportTableTable> {
+  $$SoldPackagesReportTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get item =>
+      $composableBuilder(column: $table.item, builder: (column) => column);
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<double> get total =>
+      $composableBuilder(column: $table.total, builder: (column) => column);
+
+  GeneratedColumn<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => column,
+  );
+}
+
+class $$SoldPackagesReportTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SoldPackagesReportTableTable,
+          SoldPackagesReportTableData,
+          $$SoldPackagesReportTableTableFilterComposer,
+          $$SoldPackagesReportTableTableOrderingComposer,
+          $$SoldPackagesReportTableTableAnnotationComposer,
+          $$SoldPackagesReportTableTableCreateCompanionBuilder,
+          $$SoldPackagesReportTableTableUpdateCompanionBuilder,
+          (
+            SoldPackagesReportTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $SoldPackagesReportTableTable,
+              SoldPackagesReportTableData
+            >,
+          ),
+          SoldPackagesReportTableData,
+          PrefetchHooks Function()
+        > {
+  $$SoldPackagesReportTableTableTableManager(
+    _$AppDatabase db,
+    $SoldPackagesReportTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SoldPackagesReportTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$SoldPackagesReportTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SoldPackagesReportTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> item = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<double> total = const Value.absent(),
+                Value<int> receiptBeginning = const Value.absent(),
+                Value<int> receiptEnding = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SoldPackagesReportTableCompanion(
+                id: id,
+                item: item,
+                quantity: quantity,
+                total: total,
+                receiptBeginning: receiptBeginning,
+                receiptEnding: receiptEnding,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> item = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<double> total = const Value.absent(),
+                Value<int> receiptBeginning = const Value.absent(),
+                Value<int> receiptEnding = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SoldPackagesReportTableCompanion.insert(
+                id: id,
+                item: item,
+                quantity: quantity,
+                total: total,
+                receiptBeginning: receiptBeginning,
+                receiptEnding: receiptEnding,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SoldPackagesReportTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SoldPackagesReportTableTable,
+      SoldPackagesReportTableData,
+      $$SoldPackagesReportTableTableFilterComposer,
+      $$SoldPackagesReportTableTableOrderingComposer,
+      $$SoldPackagesReportTableTableAnnotationComposer,
+      $$SoldPackagesReportTableTableCreateCompanionBuilder,
+      $$SoldPackagesReportTableTableUpdateCompanionBuilder,
+      (
+        SoldPackagesReportTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $SoldPackagesReportTableTable,
+          SoldPackagesReportTableData
+        >,
+      ),
+      SoldPackagesReportTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -15170,6 +18358,25 @@ class $AppDatabaseManager {
       $$SoldItemsTableTableTableManager(_db, _db.soldItemsTable);
   $$CashDrawerTableTableTableManager get cashDrawerTable =>
       $$CashDrawerTableTableTableManager(_db, _db.cashDrawerTable);
+  $$SoldItemsReportTableTableTableManager get soldItemsReportTable =>
+      $$SoldItemsReportTableTableTableManager(_db, _db.soldItemsReportTable);
+  $$PaymentSummaryReportTableTableTableManager get paymentSummaryReportTable =>
+      $$PaymentSummaryReportTableTableTableManager(
+        _db,
+        _db.paymentSummaryReportTable,
+      );
+  $$StaffSalesReportTableTableTableManager get staffSalesReportTable =>
+      $$StaffSalesReportTableTableTableManager(_db, _db.staffSalesReportTable);
+  $$SoldServicesReportTableTableTableManager get soldServicesReportTable =>
+      $$SoldServicesReportTableTableTableManager(
+        _db,
+        _db.soldServicesReportTable,
+      );
+  $$SoldPackagesReportTableTableTableManager get soldPackagesReportTable =>
+      $$SoldPackagesReportTableTableTableManager(
+        _db,
+        _db.soldPackagesReportTable,
+      );
 }
 
 // **************************************************************************
