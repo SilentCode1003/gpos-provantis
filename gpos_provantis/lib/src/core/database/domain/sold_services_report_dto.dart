@@ -1,16 +1,16 @@
-class SoldItemsReportDto {
+class SoldServicesReportDto {
   final String item;
   final int quantity;
   final double total;
 
-  const SoldItemsReportDto({
+  const SoldServicesReportDto({
     required this.item,
     required this.quantity,
     required this.total,
   });
 
-  factory SoldItemsReportDto.fromJson(Map<String, dynamic> json) {
-    return SoldItemsReportDto(
+  factory SoldServicesReportDto.fromJson(Map<String, dynamic> json) {
+    return SoldServicesReportDto(
       item: json['item'] as String? ?? '',
       quantity: _toInt(json['quantity']),
       total: _toDouble(json['total']),

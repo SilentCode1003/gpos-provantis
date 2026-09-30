@@ -29,6 +29,13 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
     return select(salesTable).watch();
   }
 
+  Future<SalesTableData?> getSaleByDetailId(String detailId) {
+    return (select(salesTable)
+          ..where((row) => row.detailId.equals(detailId))
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
   Future<List<SalesTableData>> getUnsyncedSales() {
     return (select(salesTable)
           ..where((row) => row.isSync.equals('0'))
