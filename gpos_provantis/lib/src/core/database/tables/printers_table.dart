@@ -8,6 +8,13 @@ class PrintersTable extends Table {
   TextColumn get address => text().withDefault(const Constant(''))();
   TextColumn get paperSize => text().withDefault(const Constant('mm80'))();
 
+  /// Lets the user switch a printer off without deleting it.
+  BoolColumn get isEnabled => boolean().withDefault(const Constant(true))();
+
+  /// True when a cash drawer is plugged into this printer.
+  BoolColumn get hasCashDrawer =>
+      boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
 }

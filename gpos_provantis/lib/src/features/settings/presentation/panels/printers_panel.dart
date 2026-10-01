@@ -132,6 +132,19 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
     }
   }
 
+  Future<void> _toggleEnabled(PrinterDto printer) async {
+    try {
+      await ref
+          .read(settingsControllerProvider.notifier)
+          .updatePrinter(printer.copyWith(isEnabled: !printer.isEnabled));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not update printer: $e')));
+    }
+  }
+
   Future<void> _testPrinter(BuildContext context, PrinterDto printer) async {
     final messenger = ScaffoldMessenger.of(context);
     messenger.showSnackBar(
@@ -212,6 +225,16 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   _openEditPrinterSheet(printer);
+                },
+              ),
+              ActionSheetTile(
+                icon: printer.isEnabled
+                    ? Icons.toggle_on_rounded
+                    : Icons.toggle_off_rounded,
+                label: printer.isEnabled ? 'Disable printer' : 'Enable printer',
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  _toggleEnabled(printer);
                 },
               ),
               ActionSheetTile(
@@ -336,7 +359,10 @@ class _PrinterRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final isOnline = status == _PrinterStatus.online;
-    final statusColor = isOnline ? colors.success : colors.danger;
+    final isDisabled = !printer.isEnabled;
+    final statusColor = isDisabled
+        ? colors.textDisabled
+        : (isOnline ? colors.success : colors.danger);
 
     return Material(
       color: colors.surface,
@@ -382,7 +408,8 @@ class _PrinterRow extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '${_connectionLabel(printer.connectionType)} · '
-                      '${printer.address} · ${printer.paperSize}mm',
+                      '${printer.address} · ${printer.paperSize}mm'
+                      '${printer.hasCashDrawer ? ' · Cash drawer' : ''}',
                       style: AppTypography.ui(
                         fontSize: 13,
                         color: colors.textSecondary,
@@ -395,7 +422,7 @@ class _PrinterRow extends StatelessWidget {
               ),
               const SizedBox(width: Space.md),
               Text(
-                isOnline ? 'ONLINE' : 'OFFLINE',
+                isDisabled ? 'DISABLED' : (isOnline ? 'ONLINE' : 'OFFLINE'),
                 style: AppTypography.ui(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -846,12 +873,16 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
   bool _showPaperSizeError = false;
 
   Printer? _selectedUsbDevice;
+  bool _isEnabled = true;
+  bool _hasCashDrawer = false;
 
   @override
   void initState() {
     super.initState();
     _connectionType = widget.existing?.connectionType;
     _paperSize = widget.existing?.paperSize;
+    _isEnabled = widget.existing?.isEnabled ?? true;
+    _hasCashDrawer = widget.existing?.hasCashDrawer ?? false;
   }
 
   @override
@@ -886,7 +917,9 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
     return _nameController.text.trim() != existing.name ||
         _addressController.text.trim() != existing.address ||
         _connectionType != existing.connectionType ||
-        _paperSize != existing.paperSize;
+        _paperSize != existing.paperSize ||
+        _isEnabled != existing.isEnabled ||
+        _hasCashDrawer != existing.hasCashDrawer;
   }
 
   Future<void> _confirmDiscardIfNeeded() async {
@@ -941,6 +974,8 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
       connectionType: _connectionType!,
       address: _addressController.text.trim(),
       paperSize: _paperSize!,
+      isEnabled: _isEnabled,
+      hasCashDrawer: _hasCashDrawer,
     );
 
     Navigator.of(context).pop(printer);
@@ -1103,6 +1138,21 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
                       const SizedBox(height: Space.sm),
                       const _ErrorText('Select a paper size'),
                     ],
+                    const SizedBox(height: Space.xxl),
+
+                    _ToggleRow(
+                      title: 'Enabled',
+                      subtitle: 'Disabled printers are skipped when printing',
+                      value: _isEnabled,
+                      onChanged: (v) => setState(() => _isEnabled = v),
+                    ),
+                    const SizedBox(height: Space.md),
+                    _ToggleRow(
+                      title: 'Cash drawer',
+                      subtitle: 'A cash drawer is connected to this printer',
+                      value: _hasCashDrawer,
+                      onChanged: (v) => setState(() => _hasCashDrawer = v),
+                    ),
                     const SizedBox(height: Space.xxxl),
 
                     Row(
@@ -1527,5 +1577,68 @@ class _TouchIconButton extends StatelessWidget {
 
     if (tooltip == null) return button;
     return Tooltip(message: tooltip!, child: button);
+  }
+}
+
+class _ToggleRow extends StatelessWidget {
+  const _ToggleRow({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Material(
+      color: colors.surfaceVariant,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: () => onChanged(!value),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 72),
+          padding: const EdgeInsets.symmetric(
+            horizontal: Space.xl,
+            vertical: Space.md,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.ui(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: AppTypography.ui(
+                        fontSize: 13,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(value: value, onChanged: onChanged),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

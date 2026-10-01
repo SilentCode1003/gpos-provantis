@@ -5570,6 +5570,36 @@ class $PrintersTableTable extends PrintersTable
     requiredDuringInsert: false,
     defaultValue: const Constant('mm80'),
   );
+  static const VerificationMeta _isEnabledMeta = const VerificationMeta(
+    'isEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> isEnabled = GeneratedColumn<bool>(
+    'is_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _hasCashDrawerMeta = const VerificationMeta(
+    'hasCashDrawer',
+  );
+  @override
+  late final GeneratedColumn<bool> hasCashDrawer = GeneratedColumn<bool>(
+    'has_cash_drawer',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("has_cash_drawer" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5577,6 +5607,8 @@ class $PrintersTableTable extends PrintersTable
     connectionType,
     address,
     paperSize,
+    isEnabled,
+    hasCashDrawer,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5620,6 +5652,21 @@ class $PrintersTableTable extends PrintersTable
         paperSize.isAcceptableOrUnknown(data['paper_size']!, _paperSizeMeta),
       );
     }
+    if (data.containsKey('is_enabled')) {
+      context.handle(
+        _isEnabledMeta,
+        isEnabled.isAcceptableOrUnknown(data['is_enabled']!, _isEnabledMeta),
+      );
+    }
+    if (data.containsKey('has_cash_drawer')) {
+      context.handle(
+        _hasCashDrawerMeta,
+        hasCashDrawer.isAcceptableOrUnknown(
+          data['has_cash_drawer']!,
+          _hasCashDrawerMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -5649,6 +5696,14 @@ class $PrintersTableTable extends PrintersTable
         DriftSqlType.string,
         data['${effectivePrefix}paper_size'],
       )!,
+      isEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_enabled'],
+      )!,
+      hasCashDrawer: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}has_cash_drawer'],
+      )!,
     );
   }
 
@@ -5665,12 +5720,20 @@ class PrintersTableData extends DataClass
   final String connectionType;
   final String address;
   final String paperSize;
+
+  /// Lets the user switch a printer off without deleting it.
+  final bool isEnabled;
+
+  /// True when a cash drawer is plugged into this printer.
+  final bool hasCashDrawer;
   const PrintersTableData({
     required this.id,
     required this.name,
     required this.connectionType,
     required this.address,
     required this.paperSize,
+    required this.isEnabled,
+    required this.hasCashDrawer,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5680,6 +5743,8 @@ class PrintersTableData extends DataClass
     map['connection_type'] = Variable<String>(connectionType);
     map['address'] = Variable<String>(address);
     map['paper_size'] = Variable<String>(paperSize);
+    map['is_enabled'] = Variable<bool>(isEnabled);
+    map['has_cash_drawer'] = Variable<bool>(hasCashDrawer);
     return map;
   }
 
@@ -5690,6 +5755,8 @@ class PrintersTableData extends DataClass
       connectionType: Value(connectionType),
       address: Value(address),
       paperSize: Value(paperSize),
+      isEnabled: Value(isEnabled),
+      hasCashDrawer: Value(hasCashDrawer),
     );
   }
 
@@ -5704,6 +5771,8 @@ class PrintersTableData extends DataClass
       connectionType: serializer.fromJson<String>(json['connectionType']),
       address: serializer.fromJson<String>(json['address']),
       paperSize: serializer.fromJson<String>(json['paperSize']),
+      isEnabled: serializer.fromJson<bool>(json['isEnabled']),
+      hasCashDrawer: serializer.fromJson<bool>(json['hasCashDrawer']),
     );
   }
   @override
@@ -5715,6 +5784,8 @@ class PrintersTableData extends DataClass
       'connectionType': serializer.toJson<String>(connectionType),
       'address': serializer.toJson<String>(address),
       'paperSize': serializer.toJson<String>(paperSize),
+      'isEnabled': serializer.toJson<bool>(isEnabled),
+      'hasCashDrawer': serializer.toJson<bool>(hasCashDrawer),
     };
   }
 
@@ -5724,12 +5795,16 @@ class PrintersTableData extends DataClass
     String? connectionType,
     String? address,
     String? paperSize,
+    bool? isEnabled,
+    bool? hasCashDrawer,
   }) => PrintersTableData(
     id: id ?? this.id,
     name: name ?? this.name,
     connectionType: connectionType ?? this.connectionType,
     address: address ?? this.address,
     paperSize: paperSize ?? this.paperSize,
+    isEnabled: isEnabled ?? this.isEnabled,
+    hasCashDrawer: hasCashDrawer ?? this.hasCashDrawer,
   );
   PrintersTableData copyWithCompanion(PrintersTableCompanion data) {
     return PrintersTableData(
@@ -5740,6 +5815,10 @@ class PrintersTableData extends DataClass
           : this.connectionType,
       address: data.address.present ? data.address.value : this.address,
       paperSize: data.paperSize.present ? data.paperSize.value : this.paperSize,
+      isEnabled: data.isEnabled.present ? data.isEnabled.value : this.isEnabled,
+      hasCashDrawer: data.hasCashDrawer.present
+          ? data.hasCashDrawer.value
+          : this.hasCashDrawer,
     );
   }
 
@@ -5750,13 +5829,23 @@ class PrintersTableData extends DataClass
           ..write('name: $name, ')
           ..write('connectionType: $connectionType, ')
           ..write('address: $address, ')
-          ..write('paperSize: $paperSize')
+          ..write('paperSize: $paperSize, ')
+          ..write('isEnabled: $isEnabled, ')
+          ..write('hasCashDrawer: $hasCashDrawer')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, connectionType, address, paperSize);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    connectionType,
+    address,
+    paperSize,
+    isEnabled,
+    hasCashDrawer,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5765,7 +5854,9 @@ class PrintersTableData extends DataClass
           other.name == this.name &&
           other.connectionType == this.connectionType &&
           other.address == this.address &&
-          other.paperSize == this.paperSize);
+          other.paperSize == this.paperSize &&
+          other.isEnabled == this.isEnabled &&
+          other.hasCashDrawer == this.hasCashDrawer);
 }
 
 class PrintersTableCompanion extends UpdateCompanion<PrintersTableData> {
@@ -5774,6 +5865,8 @@ class PrintersTableCompanion extends UpdateCompanion<PrintersTableData> {
   final Value<String> connectionType;
   final Value<String> address;
   final Value<String> paperSize;
+  final Value<bool> isEnabled;
+  final Value<bool> hasCashDrawer;
   final Value<int> rowid;
   const PrintersTableCompanion({
     this.id = const Value.absent(),
@@ -5781,6 +5874,8 @@ class PrintersTableCompanion extends UpdateCompanion<PrintersTableData> {
     this.connectionType = const Value.absent(),
     this.address = const Value.absent(),
     this.paperSize = const Value.absent(),
+    this.isEnabled = const Value.absent(),
+    this.hasCashDrawer = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PrintersTableCompanion.insert({
@@ -5789,6 +5884,8 @@ class PrintersTableCompanion extends UpdateCompanion<PrintersTableData> {
     this.connectionType = const Value.absent(),
     this.address = const Value.absent(),
     this.paperSize = const Value.absent(),
+    this.isEnabled = const Value.absent(),
+    this.hasCashDrawer = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   static Insertable<PrintersTableData> custom({
@@ -5797,6 +5894,8 @@ class PrintersTableCompanion extends UpdateCompanion<PrintersTableData> {
     Expression<String>? connectionType,
     Expression<String>? address,
     Expression<String>? paperSize,
+    Expression<bool>? isEnabled,
+    Expression<bool>? hasCashDrawer,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5805,6 +5904,8 @@ class PrintersTableCompanion extends UpdateCompanion<PrintersTableData> {
       if (connectionType != null) 'connection_type': connectionType,
       if (address != null) 'address': address,
       if (paperSize != null) 'paper_size': paperSize,
+      if (isEnabled != null) 'is_enabled': isEnabled,
+      if (hasCashDrawer != null) 'has_cash_drawer': hasCashDrawer,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5815,6 +5916,8 @@ class PrintersTableCompanion extends UpdateCompanion<PrintersTableData> {
     Value<String>? connectionType,
     Value<String>? address,
     Value<String>? paperSize,
+    Value<bool>? isEnabled,
+    Value<bool>? hasCashDrawer,
     Value<int>? rowid,
   }) {
     return PrintersTableCompanion(
@@ -5823,6 +5926,8 @@ class PrintersTableCompanion extends UpdateCompanion<PrintersTableData> {
       connectionType: connectionType ?? this.connectionType,
       address: address ?? this.address,
       paperSize: paperSize ?? this.paperSize,
+      isEnabled: isEnabled ?? this.isEnabled,
+      hasCashDrawer: hasCashDrawer ?? this.hasCashDrawer,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5845,6 +5950,12 @@ class PrintersTableCompanion extends UpdateCompanion<PrintersTableData> {
     if (paperSize.present) {
       map['paper_size'] = Variable<String>(paperSize.value);
     }
+    if (isEnabled.present) {
+      map['is_enabled'] = Variable<bool>(isEnabled.value);
+    }
+    if (hasCashDrawer.present) {
+      map['has_cash_drawer'] = Variable<bool>(hasCashDrawer.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5859,6 +5970,8 @@ class PrintersTableCompanion extends UpdateCompanion<PrintersTableData> {
           ..write('connectionType: $connectionType, ')
           ..write('address: $address, ')
           ..write('paperSize: $paperSize, ')
+          ..write('isEnabled: $isEnabled, ')
+          ..write('hasCashDrawer: $hasCashDrawer, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -15036,6 +15149,8 @@ typedef $$PrintersTableTableCreateCompanionBuilder =
       Value<String> connectionType,
       Value<String> address,
       Value<String> paperSize,
+      Value<bool> isEnabled,
+      Value<bool> hasCashDrawer,
       Value<int> rowid,
     });
 typedef $$PrintersTableTableUpdateCompanionBuilder =
@@ -15045,6 +15160,8 @@ typedef $$PrintersTableTableUpdateCompanionBuilder =
       Value<String> connectionType,
       Value<String> address,
       Value<String> paperSize,
+      Value<bool> isEnabled,
+      Value<bool> hasCashDrawer,
       Value<int> rowid,
     });
 
@@ -15079,6 +15196,16 @@ class $$PrintersTableTableFilterComposer
 
   ColumnFilters<String> get paperSize => $composableBuilder(
     column: $table.paperSize,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isEnabled => $composableBuilder(
+    column: $table.isEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get hasCashDrawer => $composableBuilder(
+    column: $table.hasCashDrawer,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -15116,6 +15243,16 @@ class $$PrintersTableTableOrderingComposer
     column: $table.paperSize,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get isEnabled => $composableBuilder(
+    column: $table.isEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get hasCashDrawer => $composableBuilder(
+    column: $table.hasCashDrawer,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PrintersTableTableAnnotationComposer
@@ -15143,6 +15280,14 @@ class $$PrintersTableTableAnnotationComposer
 
   GeneratedColumn<String> get paperSize =>
       $composableBuilder(column: $table.paperSize, builder: (column) => column);
+
+  GeneratedColumn<bool> get isEnabled =>
+      $composableBuilder(column: $table.isEnabled, builder: (column) => column);
+
+  GeneratedColumn<bool> get hasCashDrawer => $composableBuilder(
+    column: $table.hasCashDrawer,
+    builder: (column) => column,
+  );
 }
 
 class $$PrintersTableTableTableManager
@@ -15185,6 +15330,8 @@ class $$PrintersTableTableTableManager
                 Value<String> connectionType = const Value.absent(),
                 Value<String> address = const Value.absent(),
                 Value<String> paperSize = const Value.absent(),
+                Value<bool> isEnabled = const Value.absent(),
+                Value<bool> hasCashDrawer = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PrintersTableCompanion(
                 id: id,
@@ -15192,6 +15339,8 @@ class $$PrintersTableTableTableManager
                 connectionType: connectionType,
                 address: address,
                 paperSize: paperSize,
+                isEnabled: isEnabled,
+                hasCashDrawer: hasCashDrawer,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -15201,6 +15350,8 @@ class $$PrintersTableTableTableManager
                 Value<String> connectionType = const Value.absent(),
                 Value<String> address = const Value.absent(),
                 Value<String> paperSize = const Value.absent(),
+                Value<bool> isEnabled = const Value.absent(),
+                Value<bool> hasCashDrawer = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PrintersTableCompanion.insert(
                 id: id,
@@ -15208,6 +15359,8 @@ class $$PrintersTableTableTableManager
                 connectionType: connectionType,
                 address: address,
                 paperSize: paperSize,
+                isEnabled: isEnabled,
+                hasCashDrawer: hasCashDrawer,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:gpos_provantis/src/core/models/api_response_model.dart';
@@ -8,6 +9,7 @@ import 'package:gpos_provantis/src/core/database/repository/discounts_repository
 import 'package:gpos_provantis/src/core/database/repository/employees_repository.dart';
 import 'package:gpos_provantis/src/core/database/repository/payments_repository.dart';
 import 'package:gpos_provantis/src/core/database/repository/pos_detail_id_repository.dart';
+import 'package:gpos_provantis/src/core/database/repository/pos_settings_repository.dart';
 import 'package:gpos_provantis/src/core/database/repository/pos_shift_repository.dart';
 import 'package:gpos_provantis/src/core/database/repository/product_price_repository.dart';
 import 'package:gpos_provantis/src/core/database/repository/promo_repository.dart';
@@ -25,6 +27,7 @@ CatalogSyncService catalogSyncService(Ref ref) {
   final posShiftRepository = ref.watch(posShiftRepositoryProvider);
   final productPriceRepository = ref.watch(productPriceRepositoryProvider);
   final promoRepository = ref.watch(promoRepositoryProvider);
+  final posSettingsRepository = ref.watch(posSettingsRepositoryProvider);
 
   return CatalogSyncService(
     categoriesRepository,
@@ -36,6 +39,7 @@ CatalogSyncService catalogSyncService(Ref ref) {
     posShiftRepository,
     productPriceRepository,
     promoRepository,
+    posSettingsRepository,
   );
 }
 
@@ -43,8 +47,17 @@ class CatalogSyncResult {
   final bool success;
   final String? errorMessage;
 
-  const CatalogSyncResult.ok() : success = true, errorMessage = null;
-  const CatalogSyncResult.failure(this.errorMessage) : success = false;
+  /// Set when the catalog synced but the final printer-settings step didn't.
+  /// The sync still counts as a success; surface this if you want to tell the
+  /// user their printers weren't auto-configured.
+  final String? warning;
+
+  const CatalogSyncResult.ok({this.warning})
+    : success = true,
+      errorMessage = null;
+  const CatalogSyncResult.failure(this.errorMessage)
+    : success = false,
+      warning = null;
 }
 
 class CatalogSyncService {
@@ -57,6 +70,7 @@ class CatalogSyncService {
   final PosShiftRepository _posShiftRepository;
   final ProductPriceRepository _productPriceRepository;
   final PromoRepository _promoRepository;
+  final PosSettingsRepository _posSettingsRepository;
 
   CatalogSyncService(
     this._categoriesRepository,
@@ -68,6 +82,7 @@ class CatalogSyncService {
     this._posShiftRepository,
     this._productPriceRepository,
     this._promoRepository,
+    this._posSettingsRepository,
   );
 
   Future<CatalogSyncResult> syncCatalog({
@@ -112,6 +127,23 @@ class CatalogSyncService {
         ),
         announced('Promos', () => _promoRepository.fetchAndSavePromos()),
       ]);
+
+      // Last on purpose: it needs the POS id saved by the steps above. A
+      // problem here must not fail the whole catalog sync (the till can still
+      // sell), so it is reported as a warning instead.
+      notify('Printer settings');
+      try {
+        await _posSettingsRepository.syncPosSettings();
+      } catch (e) {
+        if (isDuplicateRequestError(e)) rethrow;
+        debugPrint('CatalogSync: printer settings not synced: $e');
+        return CatalogSyncResult.ok(
+          warning:
+              'Printer settings were not updated. '
+              '${e.toString().replaceFirst('Exception: ', '')}',
+        );
+      }
+
       return const CatalogSyncResult.ok();
     } catch (e) {
       if (isDuplicateRequestError(e)) {
