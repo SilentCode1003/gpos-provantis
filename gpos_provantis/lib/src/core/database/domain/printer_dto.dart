@@ -7,6 +7,8 @@ class PrinterDto {
   final String connectionType;
   final String address;
   final String paperSize;
+  final bool isEnabled;
+  final bool hasCashDrawer;
 
   PrinterDto({
     required this.id,
@@ -14,6 +16,8 @@ class PrinterDto {
     required this.connectionType,
     required this.address,
     required this.paperSize,
+    this.isEnabled = true,
+    this.hasCashDrawer = false,
   });
 
   factory PrinterDto.fromTableData(PrintersTableData data) {
@@ -23,6 +27,8 @@ class PrinterDto {
       connectionType: data.connectionType,
       address: data.address,
       paperSize: data.paperSize,
+      isEnabled: data.isEnabled,
+      hasCashDrawer: data.hasCashDrawer,
     );
   }
 
@@ -33,6 +39,8 @@ class PrinterDto {
       connectionType: Value(connectionType),
       address: Value(address),
       paperSize: Value(paperSize),
+      isEnabled: Value(isEnabled),
+      hasCashDrawer: Value(hasCashDrawer),
     );
   }
 
@@ -42,6 +50,8 @@ class PrinterDto {
     String? connectionType,
     String? address,
     String? paperSize,
+    bool? isEnabled,
+    bool? hasCashDrawer,
   }) {
     return PrinterDto(
       id: id ?? this.id,
@@ -49,6 +59,8 @@ class PrinterDto {
       connectionType: connectionType ?? this.connectionType,
       address: address ?? this.address,
       paperSize: paperSize ?? this.paperSize,
+      isEnabled: isEnabled ?? this.isEnabled,
+      hasCashDrawer: hasCashDrawer ?? this.hasCashDrawer,
     );
   }
 }
