@@ -9,7 +9,6 @@ enum AppRoute {
   soldItems,
   sendEreceipt,
   receipts,
-  refunds,
   reprint,
   reports,
 }

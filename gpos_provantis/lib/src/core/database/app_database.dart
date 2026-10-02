@@ -34,6 +34,9 @@ import 'tables/payment_summary_report_table.dart';
 import 'tables/staff_sales_report_table.dart';
 import 'tables/sold_services_report_table.dart';
 import 'tables/sold_packages_report_table.dart';
+import 'tables/service_table.dart';
+import 'tables/service_package_table.dart';
+import 'tables/addon_table.dart';
 
 import 'daos/domain_config_dao.dart';
 import 'daos/branch_config_dao.dart';
@@ -67,6 +70,9 @@ part 'app_database.g.dart';
     StaffSalesReportTable,
     SoldServicesReportTable,
     SoldPackagesReportTable,
+    ServiceTable,
+    ServicePackageTable,
+    AddonTable,
   ],
   daos: [DomainConfigDao, BranchConfigDao, PosConfigDao],
 )
