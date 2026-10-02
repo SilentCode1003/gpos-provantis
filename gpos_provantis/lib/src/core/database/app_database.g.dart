@@ -11994,6 +11994,1184 @@ class SoldPackagesReportTableCompanion
   }
 }
 
+class $ServiceTableTable extends ServiceTable
+    with TableInfo<$ServiceTableTable, ServiceTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ServiceTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _priceMeta = const VerificationMeta('price');
+  @override
+  late final GeneratedColumn<double> price = GeneratedColumn<double>(
+    'price',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('ACTIVE'),
+  );
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _createdDateMeta = const VerificationMeta(
+    'createdDate',
+  );
+  @override
+  late final GeneratedColumn<String> createdDate = GeneratedColumn<String>(
+    'created_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    price,
+    status,
+    createdBy,
+    createdDate,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'service_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ServiceTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('price')) {
+      context.handle(
+        _priceMeta,
+        price.isAcceptableOrUnknown(data['price']!, _priceMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    }
+    if (data.containsKey('created_date')) {
+      context.handle(
+        _createdDateMeta,
+        createdDate.isAcceptableOrUnknown(
+          data['created_date']!,
+          _createdDateMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ServiceTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ServiceTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      price: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}price'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      )!,
+      createdDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_date'],
+      )!,
+    );
+  }
+
+  @override
+  $ServiceTableTable createAlias(String alias) {
+    return $ServiceTableTable(attachedDatabase, alias);
+  }
+}
+
+class ServiceTableData extends DataClass
+    implements Insertable<ServiceTableData> {
+  /// The server's own service id (not a local UUID), so the same service always
+  /// maps to the same row.
+  final int id;
+  final String name;
+  final double price;
+  final String status;
+  final String createdBy;
+
+  /// Kept exactly as the server sends it, e.g. "2026-08-24 11:01".
+  final String createdDate;
+  const ServiceTableData({
+    required this.id,
+    required this.name,
+    required this.price,
+    required this.status,
+    required this.createdBy,
+    required this.createdDate,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['price'] = Variable<double>(price);
+    map['status'] = Variable<String>(status);
+    map['created_by'] = Variable<String>(createdBy);
+    map['created_date'] = Variable<String>(createdDate);
+    return map;
+  }
+
+  ServiceTableCompanion toCompanion(bool nullToAbsent) {
+    return ServiceTableCompanion(
+      id: Value(id),
+      name: Value(name),
+      price: Value(price),
+      status: Value(status),
+      createdBy: Value(createdBy),
+      createdDate: Value(createdDate),
+    );
+  }
+
+  factory ServiceTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ServiceTableData(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      price: serializer.fromJson<double>(json['price']),
+      status: serializer.fromJson<String>(json['status']),
+      createdBy: serializer.fromJson<String>(json['createdBy']),
+      createdDate: serializer.fromJson<String>(json['createdDate']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'price': serializer.toJson<double>(price),
+      'status': serializer.toJson<String>(status),
+      'createdBy': serializer.toJson<String>(createdBy),
+      'createdDate': serializer.toJson<String>(createdDate),
+    };
+  }
+
+  ServiceTableData copyWith({
+    int? id,
+    String? name,
+    double? price,
+    String? status,
+    String? createdBy,
+    String? createdDate,
+  }) => ServiceTableData(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    price: price ?? this.price,
+    status: status ?? this.status,
+    createdBy: createdBy ?? this.createdBy,
+    createdDate: createdDate ?? this.createdDate,
+  );
+  ServiceTableData copyWithCompanion(ServiceTableCompanion data) {
+    return ServiceTableData(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      price: data.price.present ? data.price.value : this.price,
+      status: data.status.present ? data.status.value : this.status,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      createdDate: data.createdDate.present
+          ? data.createdDate.value
+          : this.createdDate,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ServiceTableData(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('price: $price, ')
+          ..write('status: $status, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdDate: $createdDate')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, price, status, createdBy, createdDate);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ServiceTableData &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.price == this.price &&
+          other.status == this.status &&
+          other.createdBy == this.createdBy &&
+          other.createdDate == this.createdDate);
+}
+
+class ServiceTableCompanion extends UpdateCompanion<ServiceTableData> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<double> price;
+  final Value<String> status;
+  final Value<String> createdBy;
+  final Value<String> createdDate;
+  const ServiceTableCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.price = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdDate = const Value.absent(),
+  });
+  ServiceTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.price = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdDate = const Value.absent(),
+  });
+  static Insertable<ServiceTableData> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<double>? price,
+    Expression<String>? status,
+    Expression<String>? createdBy,
+    Expression<String>? createdDate,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (price != null) 'price': price,
+      if (status != null) 'status': status,
+      if (createdBy != null) 'created_by': createdBy,
+      if (createdDate != null) 'created_date': createdDate,
+    });
+  }
+
+  ServiceTableCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<double>? price,
+    Value<String>? status,
+    Value<String>? createdBy,
+    Value<String>? createdDate,
+  }) {
+    return ServiceTableCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      price: price ?? this.price,
+      status: status ?? this.status,
+      createdBy: createdBy ?? this.createdBy,
+      createdDate: createdDate ?? this.createdDate,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (price.present) {
+      map['price'] = Variable<double>(price.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (createdDate.present) {
+      map['created_date'] = Variable<String>(createdDate.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ServiceTableCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('price: $price, ')
+          ..write('status: $status, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdDate: $createdDate')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ServicePackageTableTable extends ServicePackageTable
+    with TableInfo<$ServicePackageTableTable, ServicePackageTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ServicePackageTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _priceMeta = const VerificationMeta('price');
+  @override
+  late final GeneratedColumn<double> price = GeneratedColumn<double>(
+    'price',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, price, quantity];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'service_package_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ServicePackageTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('price')) {
+      context.handle(
+        _priceMeta,
+        price.isAcceptableOrUnknown(data['price']!, _priceMeta),
+      );
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ServicePackageTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ServicePackageTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      price: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}price'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quantity'],
+      )!,
+    );
+  }
+
+  @override
+  $ServicePackageTableTable createAlias(String alias) {
+    return $ServicePackageTableTable(attachedDatabase, alias);
+  }
+}
+
+class ServicePackageTableData extends DataClass
+    implements Insertable<ServicePackageTableData> {
+  /// The server's own package id (not a local UUID), so the same package
+  /// always maps to the same row.
+  final int id;
+  final String name;
+  final double price;
+  final int quantity;
+  const ServicePackageTableData({
+    required this.id,
+    required this.name,
+    required this.price,
+    required this.quantity,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['price'] = Variable<double>(price);
+    map['quantity'] = Variable<int>(quantity);
+    return map;
+  }
+
+  ServicePackageTableCompanion toCompanion(bool nullToAbsent) {
+    return ServicePackageTableCompanion(
+      id: Value(id),
+      name: Value(name),
+      price: Value(price),
+      quantity: Value(quantity),
+    );
+  }
+
+  factory ServicePackageTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ServicePackageTableData(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      price: serializer.fromJson<double>(json['price']),
+      quantity: serializer.fromJson<int>(json['quantity']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'price': serializer.toJson<double>(price),
+      'quantity': serializer.toJson<int>(quantity),
+    };
+  }
+
+  ServicePackageTableData copyWith({
+    int? id,
+    String? name,
+    double? price,
+    int? quantity,
+  }) => ServicePackageTableData(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    price: price ?? this.price,
+    quantity: quantity ?? this.quantity,
+  );
+  ServicePackageTableData copyWithCompanion(ServicePackageTableCompanion data) {
+    return ServicePackageTableData(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      price: data.price.present ? data.price.value : this.price,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ServicePackageTableData(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('price: $price, ')
+          ..write('quantity: $quantity')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, price, quantity);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ServicePackageTableData &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.price == this.price &&
+          other.quantity == this.quantity);
+}
+
+class ServicePackageTableCompanion
+    extends UpdateCompanion<ServicePackageTableData> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<double> price;
+  final Value<int> quantity;
+  const ServicePackageTableCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.price = const Value.absent(),
+    this.quantity = const Value.absent(),
+  });
+  ServicePackageTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.price = const Value.absent(),
+    this.quantity = const Value.absent(),
+  });
+  static Insertable<ServicePackageTableData> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<double>? price,
+    Expression<int>? quantity,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (price != null) 'price': price,
+      if (quantity != null) 'quantity': quantity,
+    });
+  }
+
+  ServicePackageTableCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<double>? price,
+    Value<int>? quantity,
+  }) {
+    return ServicePackageTableCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      price: price ?? this.price,
+      quantity: quantity ?? this.quantity,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (price.present) {
+      map['price'] = Variable<double>(price.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ServicePackageTableCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('price: $price, ')
+          ..write('quantity: $quantity')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AddonTableTable extends AddonTable
+    with TableInfo<$AddonTableTable, AddonTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AddonTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _addonTypeMeta = const VerificationMeta(
+    'addonType',
+  );
+  @override
+  late final GeneratedColumn<String> addonType = GeneratedColumn<String>(
+    'addon_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _priceMeta = const VerificationMeta('price');
+  @override
+  late final GeneratedColumn<double> price = GeneratedColumn<double>(
+    'price',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _isProductMeta = const VerificationMeta(
+    'isProduct',
+  );
+  @override
+  late final GeneratedColumn<bool> isProduct = GeneratedColumn<bool>(
+    'is_product',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_product" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('ACTIVE'),
+  );
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _createdDateMeta = const VerificationMeta(
+    'createdDate',
+  );
+  @override
+  late final GeneratedColumn<String> createdDate = GeneratedColumn<String>(
+    'created_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    addonType,
+    price,
+    isProduct,
+    status,
+    createdBy,
+    createdDate,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'addon_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AddonTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('addon_type')) {
+      context.handle(
+        _addonTypeMeta,
+        addonType.isAcceptableOrUnknown(data['addon_type']!, _addonTypeMeta),
+      );
+    }
+    if (data.containsKey('price')) {
+      context.handle(
+        _priceMeta,
+        price.isAcceptableOrUnknown(data['price']!, _priceMeta),
+      );
+    }
+    if (data.containsKey('is_product')) {
+      context.handle(
+        _isProductMeta,
+        isProduct.isAcceptableOrUnknown(data['is_product']!, _isProductMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    }
+    if (data.containsKey('created_date')) {
+      context.handle(
+        _createdDateMeta,
+        createdDate.isAcceptableOrUnknown(
+          data['created_date']!,
+          _createdDateMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AddonTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AddonTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      addonType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}addon_type'],
+      )!,
+      price: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}price'],
+      )!,
+      isProduct: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_product'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      )!,
+      createdDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_date'],
+      )!,
+    );
+  }
+
+  @override
+  $AddonTableTable createAlias(String alias) {
+    return $AddonTableTable(attachedDatabase, alias);
+  }
+}
+
+class AddonTableData extends DataClass implements Insertable<AddonTableData> {
+  /// The server's own addon id (not a local UUID), so the same addon always
+  /// maps to the same row.
+  final int id;
+  final String name;
+
+  /// The addon type's name, e.g. what the server joins from `addon_type`.
+  final String addonType;
+  final double price;
+  final bool isProduct;
+  final String status;
+  final String createdBy;
+
+  /// Kept exactly as the server sends it.
+  final String createdDate;
+  const AddonTableData({
+    required this.id,
+    required this.name,
+    required this.addonType,
+    required this.price,
+    required this.isProduct,
+    required this.status,
+    required this.createdBy,
+    required this.createdDate,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['addon_type'] = Variable<String>(addonType);
+    map['price'] = Variable<double>(price);
+    map['is_product'] = Variable<bool>(isProduct);
+    map['status'] = Variable<String>(status);
+    map['created_by'] = Variable<String>(createdBy);
+    map['created_date'] = Variable<String>(createdDate);
+    return map;
+  }
+
+  AddonTableCompanion toCompanion(bool nullToAbsent) {
+    return AddonTableCompanion(
+      id: Value(id),
+      name: Value(name),
+      addonType: Value(addonType),
+      price: Value(price),
+      isProduct: Value(isProduct),
+      status: Value(status),
+      createdBy: Value(createdBy),
+      createdDate: Value(createdDate),
+    );
+  }
+
+  factory AddonTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AddonTableData(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      addonType: serializer.fromJson<String>(json['addonType']),
+      price: serializer.fromJson<double>(json['price']),
+      isProduct: serializer.fromJson<bool>(json['isProduct']),
+      status: serializer.fromJson<String>(json['status']),
+      createdBy: serializer.fromJson<String>(json['createdBy']),
+      createdDate: serializer.fromJson<String>(json['createdDate']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'addonType': serializer.toJson<String>(addonType),
+      'price': serializer.toJson<double>(price),
+      'isProduct': serializer.toJson<bool>(isProduct),
+      'status': serializer.toJson<String>(status),
+      'createdBy': serializer.toJson<String>(createdBy),
+      'createdDate': serializer.toJson<String>(createdDate),
+    };
+  }
+
+  AddonTableData copyWith({
+    int? id,
+    String? name,
+    String? addonType,
+    double? price,
+    bool? isProduct,
+    String? status,
+    String? createdBy,
+    String? createdDate,
+  }) => AddonTableData(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    addonType: addonType ?? this.addonType,
+    price: price ?? this.price,
+    isProduct: isProduct ?? this.isProduct,
+    status: status ?? this.status,
+    createdBy: createdBy ?? this.createdBy,
+    createdDate: createdDate ?? this.createdDate,
+  );
+  AddonTableData copyWithCompanion(AddonTableCompanion data) {
+    return AddonTableData(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      addonType: data.addonType.present ? data.addonType.value : this.addonType,
+      price: data.price.present ? data.price.value : this.price,
+      isProduct: data.isProduct.present ? data.isProduct.value : this.isProduct,
+      status: data.status.present ? data.status.value : this.status,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      createdDate: data.createdDate.present
+          ? data.createdDate.value
+          : this.createdDate,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AddonTableData(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('addonType: $addonType, ')
+          ..write('price: $price, ')
+          ..write('isProduct: $isProduct, ')
+          ..write('status: $status, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdDate: $createdDate')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    addonType,
+    price,
+    isProduct,
+    status,
+    createdBy,
+    createdDate,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AddonTableData &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.addonType == this.addonType &&
+          other.price == this.price &&
+          other.isProduct == this.isProduct &&
+          other.status == this.status &&
+          other.createdBy == this.createdBy &&
+          other.createdDate == this.createdDate);
+}
+
+class AddonTableCompanion extends UpdateCompanion<AddonTableData> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String> addonType;
+  final Value<double> price;
+  final Value<bool> isProduct;
+  final Value<String> status;
+  final Value<String> createdBy;
+  final Value<String> createdDate;
+  const AddonTableCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.addonType = const Value.absent(),
+    this.price = const Value.absent(),
+    this.isProduct = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdDate = const Value.absent(),
+  });
+  AddonTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.addonType = const Value.absent(),
+    this.price = const Value.absent(),
+    this.isProduct = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdDate = const Value.absent(),
+  });
+  static Insertable<AddonTableData> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? addonType,
+    Expression<double>? price,
+    Expression<bool>? isProduct,
+    Expression<String>? status,
+    Expression<String>? createdBy,
+    Expression<String>? createdDate,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (addonType != null) 'addon_type': addonType,
+      if (price != null) 'price': price,
+      if (isProduct != null) 'is_product': isProduct,
+      if (status != null) 'status': status,
+      if (createdBy != null) 'created_by': createdBy,
+      if (createdDate != null) 'created_date': createdDate,
+    });
+  }
+
+  AddonTableCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<String>? addonType,
+    Value<double>? price,
+    Value<bool>? isProduct,
+    Value<String>? status,
+    Value<String>? createdBy,
+    Value<String>? createdDate,
+  }) {
+    return AddonTableCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      addonType: addonType ?? this.addonType,
+      price: price ?? this.price,
+      isProduct: isProduct ?? this.isProduct,
+      status: status ?? this.status,
+      createdBy: createdBy ?? this.createdBy,
+      createdDate: createdDate ?? this.createdDate,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (addonType.present) {
+      map['addon_type'] = Variable<String>(addonType.value);
+    }
+    if (price.present) {
+      map['price'] = Variable<double>(price.value);
+    }
+    if (isProduct.present) {
+      map['is_product'] = Variable<bool>(isProduct.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (createdDate.present) {
+      map['created_date'] = Variable<String>(createdDate.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AddonTableCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('addonType: $addonType, ')
+          ..write('price: $price, ')
+          ..write('isProduct: $isProduct, ')
+          ..write('status: $status, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdDate: $createdDate')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -12036,6 +13214,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $SoldServicesReportTableTable(this);
   late final $SoldPackagesReportTableTable soldPackagesReportTable =
       $SoldPackagesReportTableTable(this);
+  late final $ServiceTableTable serviceTable = $ServiceTableTable(this);
+  late final $ServicePackageTableTable servicePackageTable =
+      $ServicePackageTableTable(this);
+  late final $AddonTableTable addonTable = $AddonTableTable(this);
   late final DomainConfigDao domainConfigDao = DomainConfigDao(
     this as AppDatabase,
   );
@@ -12072,6 +13254,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     staffSalesReportTable,
     soldServicesReportTable,
     soldPackagesReportTable,
+    serviceTable,
+    servicePackageTable,
+    addonTable,
   ];
 }
 
@@ -18469,6 +19654,665 @@ typedef $$SoldPackagesReportTableTableProcessedTableManager =
       SoldPackagesReportTableData,
       PrefetchHooks Function()
     >;
+typedef $$ServiceTableTableCreateCompanionBuilder =
+    ServiceTableCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<double> price,
+      Value<String> status,
+      Value<String> createdBy,
+      Value<String> createdDate,
+    });
+typedef $$ServiceTableTableUpdateCompanionBuilder =
+    ServiceTableCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<double> price,
+      Value<String> status,
+      Value<String> createdBy,
+      Value<String> createdDate,
+    });
+
+class $$ServiceTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ServiceTableTable> {
+  $$ServiceTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get price => $composableBuilder(
+    column: $table.price,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdDate => $composableBuilder(
+    column: $table.createdDate,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ServiceTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ServiceTableTable> {
+  $$ServiceTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get price => $composableBuilder(
+    column: $table.price,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdDate => $composableBuilder(
+    column: $table.createdDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ServiceTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ServiceTableTable> {
+  $$ServiceTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<double> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<String> get createdDate => $composableBuilder(
+    column: $table.createdDate,
+    builder: (column) => column,
+  );
+}
+
+class $$ServiceTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ServiceTableTable,
+          ServiceTableData,
+          $$ServiceTableTableFilterComposer,
+          $$ServiceTableTableOrderingComposer,
+          $$ServiceTableTableAnnotationComposer,
+          $$ServiceTableTableCreateCompanionBuilder,
+          $$ServiceTableTableUpdateCompanionBuilder,
+          (
+            ServiceTableData,
+            BaseReferences<_$AppDatabase, $ServiceTableTable, ServiceTableData>,
+          ),
+          ServiceTableData,
+          PrefetchHooks Function()
+        > {
+  $$ServiceTableTableTableManager(_$AppDatabase db, $ServiceTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ServiceTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ServiceTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ServiceTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<double> price = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> createdBy = const Value.absent(),
+                Value<String> createdDate = const Value.absent(),
+              }) => ServiceTableCompanion(
+                id: id,
+                name: name,
+                price: price,
+                status: status,
+                createdBy: createdBy,
+                createdDate: createdDate,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<double> price = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> createdBy = const Value.absent(),
+                Value<String> createdDate = const Value.absent(),
+              }) => ServiceTableCompanion.insert(
+                id: id,
+                name: name,
+                price: price,
+                status: status,
+                createdBy: createdBy,
+                createdDate: createdDate,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ServiceTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ServiceTableTable,
+      ServiceTableData,
+      $$ServiceTableTableFilterComposer,
+      $$ServiceTableTableOrderingComposer,
+      $$ServiceTableTableAnnotationComposer,
+      $$ServiceTableTableCreateCompanionBuilder,
+      $$ServiceTableTableUpdateCompanionBuilder,
+      (
+        ServiceTableData,
+        BaseReferences<_$AppDatabase, $ServiceTableTable, ServiceTableData>,
+      ),
+      ServiceTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$ServicePackageTableTableCreateCompanionBuilder =
+    ServicePackageTableCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<double> price,
+      Value<int> quantity,
+    });
+typedef $$ServicePackageTableTableUpdateCompanionBuilder =
+    ServicePackageTableCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<double> price,
+      Value<int> quantity,
+    });
+
+class $$ServicePackageTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ServicePackageTableTable> {
+  $$ServicePackageTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get price => $composableBuilder(
+    column: $table.price,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ServicePackageTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ServicePackageTableTable> {
+  $$ServicePackageTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get price => $composableBuilder(
+    column: $table.price,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ServicePackageTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ServicePackageTableTable> {
+  $$ServicePackageTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<double> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => column);
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+}
+
+class $$ServicePackageTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ServicePackageTableTable,
+          ServicePackageTableData,
+          $$ServicePackageTableTableFilterComposer,
+          $$ServicePackageTableTableOrderingComposer,
+          $$ServicePackageTableTableAnnotationComposer,
+          $$ServicePackageTableTableCreateCompanionBuilder,
+          $$ServicePackageTableTableUpdateCompanionBuilder,
+          (
+            ServicePackageTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $ServicePackageTableTable,
+              ServicePackageTableData
+            >,
+          ),
+          ServicePackageTableData,
+          PrefetchHooks Function()
+        > {
+  $$ServicePackageTableTableTableManager(
+    _$AppDatabase db,
+    $ServicePackageTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ServicePackageTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ServicePackageTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ServicePackageTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<double> price = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+              }) => ServicePackageTableCompanion(
+                id: id,
+                name: name,
+                price: price,
+                quantity: quantity,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<double> price = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+              }) => ServicePackageTableCompanion.insert(
+                id: id,
+                name: name,
+                price: price,
+                quantity: quantity,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ServicePackageTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ServicePackageTableTable,
+      ServicePackageTableData,
+      $$ServicePackageTableTableFilterComposer,
+      $$ServicePackageTableTableOrderingComposer,
+      $$ServicePackageTableTableAnnotationComposer,
+      $$ServicePackageTableTableCreateCompanionBuilder,
+      $$ServicePackageTableTableUpdateCompanionBuilder,
+      (
+        ServicePackageTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $ServicePackageTableTable,
+          ServicePackageTableData
+        >,
+      ),
+      ServicePackageTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$AddonTableTableCreateCompanionBuilder =
+    AddonTableCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String> addonType,
+      Value<double> price,
+      Value<bool> isProduct,
+      Value<String> status,
+      Value<String> createdBy,
+      Value<String> createdDate,
+    });
+typedef $$AddonTableTableUpdateCompanionBuilder =
+    AddonTableCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String> addonType,
+      Value<double> price,
+      Value<bool> isProduct,
+      Value<String> status,
+      Value<String> createdBy,
+      Value<String> createdDate,
+    });
+
+class $$AddonTableTableFilterComposer
+    extends Composer<_$AppDatabase, $AddonTableTable> {
+  $$AddonTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get addonType => $composableBuilder(
+    column: $table.addonType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get price => $composableBuilder(
+    column: $table.price,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isProduct => $composableBuilder(
+    column: $table.isProduct,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdDate => $composableBuilder(
+    column: $table.createdDate,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AddonTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $AddonTableTable> {
+  $$AddonTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get addonType => $composableBuilder(
+    column: $table.addonType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get price => $composableBuilder(
+    column: $table.price,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isProduct => $composableBuilder(
+    column: $table.isProduct,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdDate => $composableBuilder(
+    column: $table.createdDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AddonTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AddonTableTable> {
+  $$AddonTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get addonType =>
+      $composableBuilder(column: $table.addonType, builder: (column) => column);
+
+  GeneratedColumn<double> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => column);
+
+  GeneratedColumn<bool> get isProduct =>
+      $composableBuilder(column: $table.isProduct, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<String> get createdDate => $composableBuilder(
+    column: $table.createdDate,
+    builder: (column) => column,
+  );
+}
+
+class $$AddonTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AddonTableTable,
+          AddonTableData,
+          $$AddonTableTableFilterComposer,
+          $$AddonTableTableOrderingComposer,
+          $$AddonTableTableAnnotationComposer,
+          $$AddonTableTableCreateCompanionBuilder,
+          $$AddonTableTableUpdateCompanionBuilder,
+          (
+            AddonTableData,
+            BaseReferences<_$AppDatabase, $AddonTableTable, AddonTableData>,
+          ),
+          AddonTableData,
+          PrefetchHooks Function()
+        > {
+  $$AddonTableTableTableManager(_$AppDatabase db, $AddonTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AddonTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AddonTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AddonTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> addonType = const Value.absent(),
+                Value<double> price = const Value.absent(),
+                Value<bool> isProduct = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> createdBy = const Value.absent(),
+                Value<String> createdDate = const Value.absent(),
+              }) => AddonTableCompanion(
+                id: id,
+                name: name,
+                addonType: addonType,
+                price: price,
+                isProduct: isProduct,
+                status: status,
+                createdBy: createdBy,
+                createdDate: createdDate,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> addonType = const Value.absent(),
+                Value<double> price = const Value.absent(),
+                Value<bool> isProduct = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> createdBy = const Value.absent(),
+                Value<String> createdDate = const Value.absent(),
+              }) => AddonTableCompanion.insert(
+                id: id,
+                name: name,
+                addonType: addonType,
+                price: price,
+                isProduct: isProduct,
+                status: status,
+                createdBy: createdBy,
+                createdDate: createdDate,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AddonTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AddonTableTable,
+      AddonTableData,
+      $$AddonTableTableFilterComposer,
+      $$AddonTableTableOrderingComposer,
+      $$AddonTableTableAnnotationComposer,
+      $$AddonTableTableCreateCompanionBuilder,
+      $$AddonTableTableUpdateCompanionBuilder,
+      (
+        AddonTableData,
+        BaseReferences<_$AppDatabase, $AddonTableTable, AddonTableData>,
+      ),
+      AddonTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -18530,6 +20374,12 @@ class $AppDatabaseManager {
         _db,
         _db.soldPackagesReportTable,
       );
+  $$ServiceTableTableTableManager get serviceTable =>
+      $$ServiceTableTableTableManager(_db, _db.serviceTable);
+  $$ServicePackageTableTableTableManager get servicePackageTable =>
+      $$ServicePackageTableTableTableManager(_db, _db.servicePackageTable);
+  $$AddonTableTableTableManager get addonTable =>
+      $$AddonTableTableTableManager(_db, _db.addonTable);
 }
 
 // **************************************************************************

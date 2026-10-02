@@ -63,12 +63,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             _buildPageWithTransition(context, state, const ReceiptsScreen()),
       ),
       GoRoute(
-        path: '/refunds',
-        name: AppRoute.refunds.name,
-        pageBuilder: (context, state) =>
-            _buildPageWithTransition(context, state, const RefundsScreen()),
-      ),
-      GoRoute(
         path: '/reports',
         name: AppRoute.reports.name,
         pageBuilder: (context, state) =>
