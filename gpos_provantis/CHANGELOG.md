@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.4.0](https://github.com/SilentCode1003/gpos-provantis/compare/gpos_provantis-v0.3.0...gpos_provantis-v0.4.0) (2026-10-03)
+
+
+### Features
+
+* Added API checklist for future references on what's already completed. ([87ca117](https://github.com/SilentCode1003/gpos-provantis/commit/87ca117cf9e86ee445c082fa82e7102a8500524c))
+* Added missing report sections. ([45dfc6c](https://github.com/SilentCode1003/gpos-provantis/commit/45dfc6c49dc4e06b51102084a973b67ea482f8c8))
+* Added Payments Summary. ([45dfc6c](https://github.com/SilentCode1003/gpos-provantis/commit/45dfc6c49dc4e06b51102084a973b67ea482f8c8))
+* Added Sold Items. ([45dfc6c](https://github.com/SilentCode1003/gpos-provantis/commit/45dfc6c49dc4e06b51102084a973b67ea482f8c8))
+* Added Sold Packages. ([45dfc6c](https://github.com/SilentCode1003/gpos-provantis/commit/45dfc6c49dc4e06b51102084a973b67ea482f8c8))
+* Added Sold Services. ([45dfc6c](https://github.com/SilentCode1003/gpos-provantis/commit/45dfc6c49dc4e06b51102084a973b67ea482f8c8))
+* Added Staff Sales. ([45dfc6c](https://github.com/SilentCode1003/gpos-provantis/commit/45dfc6c49dc4e06b51102084a973b67ea482f8c8))
+* Barcode, Reports, Receipt. ([9292dc4](https://github.com/SilentCode1003/gpos-provantis/commit/9292dc473f5d898a159a1e0930a8cfe22fb9af21))
+* Barcode, Reports, Receipt. ([41ec26c](https://github.com/SilentCode1003/gpos-provantis/commit/41ec26c4a1346e0a9c77f31dad3be6f04717983d))
+* New preview sheet for receipt for users to view before printing. ([859c468](https://github.com/SilentCode1003/gpos-provantis/commit/859c468bd4fe176b463cb513c2db10c0705e3c2a))
+* Services, Packages, Addon, and Refunds. ([23b8219](https://github.com/SilentCode1003/gpos-provantis/commit/23b8219f92b6285c152d82de72a2bb5ef3d376ab))
+* Services, Packages, Addon, and Refunds. ([0edf1fc](https://github.com/SilentCode1003/gpos-provantis/commit/0edf1fc44721ff02a23cbe400e1b95d79782fdea))
+
+
+### Bug Fixes
+
+* Fixed the open shift cash denomination input. ([bb91f6f](https://github.com/SilentCode1003/gpos-provantis/commit/bb91f6f05e9562f0c801c548400d988851a4c399))
+* Manual Reprint now working. ([859c468](https://github.com/SilentCode1003/gpos-provantis/commit/859c468bd4fe176b463cb513c2db10c0705e3c2a))
+* Only main printers can enable cash drawer. ([87ca117](https://github.com/SilentCode1003/gpos-provantis/commit/87ca117cf9e86ee445c082fa82e7102a8500524c))
+
 ## [0.3.0](https://github.com/SilentCode1003/gpos-provantis/compare/gpos_provantis-v0.2.0...gpos_provantis-v0.3.0) (2026-09-29)
 
 
