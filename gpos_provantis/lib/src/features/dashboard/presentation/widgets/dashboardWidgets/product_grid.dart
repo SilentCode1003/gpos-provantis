@@ -178,7 +178,7 @@ class _ProductCard extends ConsumerWidget {
     final colors = context.colors;
     final notifier = ref.read(dashboardControllerProvider.notifier);
 
-    final isOutOfStock = product.stock <= 0;
+    final isOutOfStock = !product.isAvailable;
 
     final isDark = colors.isDark;
 

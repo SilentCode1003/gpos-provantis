@@ -13,6 +13,9 @@ import 'package:gpos_provantis/src/core/database/repository/pos_settings_reposit
 import 'package:gpos_provantis/src/core/database/repository/pos_shift_repository.dart';
 import 'package:gpos_provantis/src/core/database/repository/product_price_repository.dart';
 import 'package:gpos_provantis/src/core/database/repository/promo_repository.dart';
+import 'package:gpos_provantis/src/core/database/repository/service_repository.dart';
+import 'package:gpos_provantis/src/core/database/repository/service_package_repository.dart';
+import 'package:gpos_provantis/src/core/database/repository/addon_repository.dart';
 
 part 'catalog_sync.g.dart';
 
@@ -28,6 +31,9 @@ CatalogSyncService catalogSyncService(Ref ref) {
   final productPriceRepository = ref.watch(productPriceRepositoryProvider);
   final promoRepository = ref.watch(promoRepositoryProvider);
   final posSettingsRepository = ref.watch(posSettingsRepositoryProvider);
+  final serviceRepository = ref.watch(serviceRepositoryProvider);
+  final servicePackageRepository = ref.watch(servicePackageRepositoryProvider);
+  final addonRepository = ref.watch(addonRepositoryProvider);
 
   return CatalogSyncService(
     categoriesRepository,
@@ -40,6 +46,9 @@ CatalogSyncService catalogSyncService(Ref ref) {
     productPriceRepository,
     promoRepository,
     posSettingsRepository,
+    serviceRepository,
+    servicePackageRepository,
+    addonRepository,
   );
 }
 
@@ -71,6 +80,9 @@ class CatalogSyncService {
   final ProductPriceRepository _productPriceRepository;
   final PromoRepository _promoRepository;
   final PosSettingsRepository _posSettingsRepository;
+  final ServiceRepository _serviceRepository;
+  final ServicePackageRepository _servicePackageRepository;
+  final AddonRepository _addonRepository;
 
   CatalogSyncService(
     this._categoriesRepository,
@@ -83,6 +95,9 @@ class CatalogSyncService {
     this._productPriceRepository,
     this._promoRepository,
     this._posSettingsRepository,
+    this._serviceRepository,
+    this._servicePackageRepository,
+    this._addonRepository,
   );
 
   Future<CatalogSyncResult> syncCatalog({
@@ -126,6 +141,12 @@ class CatalogSyncService {
           () => _productPriceRepository.fetchAndSaveProductPrices(),
         ),
         announced('Promos', () => _promoRepository.fetchAndSavePromos()),
+        announced('Services', () => _serviceRepository.fetchAndSaveServices()),
+        announced(
+          'Service packages',
+          () => _servicePackageRepository.fetchAndSaveServicePackages(),
+        ),
+        announced('Addons', () => _addonRepository.fetchAndSaveAddons()),
       ]);
 
       // Last on purpose: it needs the POS id saved by the steps above. A
