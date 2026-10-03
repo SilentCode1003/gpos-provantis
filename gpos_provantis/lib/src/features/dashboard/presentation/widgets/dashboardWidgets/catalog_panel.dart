@@ -419,8 +419,11 @@ class _CategoryGrid extends ConsumerWidget {
 
     final paintCategories = <Category>[];
     final productCategories = <Category>[];
+    final serviceCategories = <Category>[];
     for (final category in categories) {
-      if (category.name.toLowerCase().contains('paint')) {
+      if (isServiceCategoryId(category.id)) {
+        serviceCategories.add(category);
+      } else if (category.name.toLowerCase().contains('paint')) {
         paintCategories.add(category);
       } else {
         productCategories.add(category);
@@ -440,6 +443,13 @@ class _CategoryGrid extends ConsumerWidget {
           _GroupHeader(label: 'Products'),
           _CategorySliverGrid(
             categories: productCategories,
+            onTap: controller.selectCategory,
+          ),
+        ],
+        if (serviceCategories.isNotEmpty) ...[
+          _GroupHeader(label: 'Services'),
+          _CategorySliverGrid(
+            categories: serviceCategories,
             onTap: controller.selectCategory,
           ),
         ],
@@ -643,6 +653,9 @@ class _CategoryTile extends StatelessWidget {
     'yard_rounded': PhosphorIcons.park,
     'park_rounded': PhosphorIcons.park,
     'format_paint_rounded': PhosphorIcons.paintBrush,
+    'services_rounded': PhosphorIcons.wrench,
+    'service_package_rounded': PhosphorIcons.package,
+    'addon_rounded': PhosphorIcons.plusCircle,
   };
 
   @override

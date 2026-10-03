@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'barcode_scan_bar.dart';
 import 'cart_panel.dart';
 import 'catalog_panel.dart';
 import 'catalog_sheet.dart';
@@ -40,7 +41,11 @@ class _CatalogPanelWithSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Stack(
       fit: StackFit.expand,
-      children: [CatalogPanel(), CatalogSheet()],
+      children: [
+        CatalogPanel(),
+        Positioned(left: 16, right: 16, bottom: 16, child: BarcodeScanBar()),
+        CatalogSheet(),
+      ],
     );
   }
 }

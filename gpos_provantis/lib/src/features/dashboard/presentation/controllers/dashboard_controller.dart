@@ -10,6 +10,9 @@ import 'package:gpos_provantis/src/core/database/providers/categories_dao_provid
 import 'package:gpos_provantis/src/core/database/providers/product_price_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/discounts_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/sales_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/providers/service_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/providers/service_package_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/providers/addon_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/tables/sales_table.dart';
 import 'package:gpos_provantis/src/core/database/daos/pos_detail_id_dao.dart';
 import 'package:gpos_provantis/src/core/database/providers/pos_detail_id_dao_provider.dart';
@@ -53,6 +56,34 @@ bool _discountRequiresCustomerInfo(DiscountsTableData discount) {
   return isSenior || isPwd;
 }
 
+/// Reserved category id for the virtual "Services" category. Real category
+/// ids are numeric codes, so this can never collide with one.
+const servicesCategoryId = 'services';
+
+/// Reserved category id for the virtual "Service Packages" category.
+const servicePackagesCategoryId = 'service-packages';
+
+/// Reserved category id for the virtual "Add-ons" category.
+const addonsCategoryId = 'addons';
+
+/// True for any of the virtual service categories (no stock, always
+/// sellable, sent to the server with the "Srv" marker).
+bool isServiceCategoryId(String? id) =>
+    id == servicesCategoryId ||
+    id == servicePackagesCategoryId ||
+    id == addonsCategoryId;
+
+/// Service rows get this prefix on their cart id so they can't merge with a
+/// product that happens to share the same numeric id.
+const _serviceIdPrefix = 'svc-';
+const _servicePackageIdPrefix = 'spkg-';
+const _addonIdPrefix = 'addon-';
+
+/// The server skips sale lines whose name contains this marker (no inventory
+/// lookup or deduction). A line without it is treated as a product, and the
+/// server crashes looking it up, which would block every later sale upload.
+const _serverServiceMarker = 'Srv';
+
 class Product {
   const Product({
     required this.id,
@@ -60,6 +91,7 @@ class Product {
     required this.categoryId,
     required this.price,
     required this.stock,
+    this.isService = false,
   });
 
   final String id;
@@ -68,6 +100,11 @@ class Product {
   final double price;
 
   final int stock;
+
+  /// Services have no stock and are always sellable.
+  final bool isService;
+
+  bool get isAvailable => isService || stock > 0;
 }
 
 class Category {
@@ -369,13 +406,23 @@ Future<ShiftKey> _resolveShiftKey(Ref ref) async {
   );
 }
 
+/// Name sent to the server. Services are guaranteed to carry the server's
+/// "Srv" marker; the on-screen and receipt name is unchanged.
+String _serverItemName(Product product) {
+  if (!product.isService) return product.name;
+  return product.name.contains(_serverServiceMarker)
+      ? product.name
+      : '$_serverServiceMarker - ${product.name}';
+}
+
 Map<String, dynamic> _cartLineToItemJson(CartLine line) {
+  final product = line.product;
   return {
-    'id': line.product.id,
-    'name': line.product.name,
-    'price': line.product.price,
+    'id': product.id,
+    'name': _serverItemName(product),
+    'price': product.price,
     'quantity': line.quantity,
-    'stocks': line.product.stock,
+    'stocks': product.isService ? 1 : product.stock,
   };
 }
 
@@ -526,6 +573,15 @@ double _parseMoney(String value) {
   return double.tryParse(sanitized) ?? 0;
 }
 
+enum BarcodeScanStatus { added, notFound, outOfStock, notReady }
+
+class BarcodeScanResult {
+  const BarcodeScanResult(this.status, [this.product]);
+
+  final BarcodeScanStatus status;
+  final Product? product;
+}
+
 @riverpod
 class DashboardController extends _$DashboardController {
   AsyncValue<List<CategoriesTableData>> _categoriesAsync() =>
@@ -533,6 +589,30 @@ class DashboardController extends _$DashboardController {
 
   AsyncValue<List<ProductPriceTableData>> _productsAsync() =>
       ref.watch(productPriceProvider);
+
+  AsyncValue<List<ServiceTableData>> _servicesAsync() =>
+      ref.watch(servicesProvider);
+
+  List<ServiceTableData> _watchServices() => _servicesAsync().maybeWhen(
+    data: (items) => items,
+    orElse: () => const <ServiceTableData>[],
+  );
+
+  AsyncValue<List<ServicePackageTableData>> _servicePackagesAsync() =>
+      ref.watch(servicePackagesProvider);
+
+  List<ServicePackageTableData> _watchServicePackages() =>
+      _servicePackagesAsync().maybeWhen(
+        data: (items) => items,
+        orElse: () => const <ServicePackageTableData>[],
+      );
+
+  AsyncValue<List<AddonTableData>> _addonsAsync() => ref.watch(addonsProvider);
+
+  List<AddonTableData> _watchAddons() => _addonsAsync().maybeWhen(
+    data: (items) => items,
+    orElse: () => const <AddonTableData>[],
+  );
 
   AsyncValue<List<PosShiftTableData>> _posShiftsAsync() =>
       ref.watch(posShiftProvider);
@@ -583,11 +663,22 @@ class DashboardController extends _$DashboardController {
     loading: () => CatalogLoadStatus.loading,
   );
 
-  CatalogLoadStatus get productsStatus => _productsAsync().when(
-    data: (_) => CatalogLoadStatus.data,
-    error: (_, __) => CatalogLoadStatus.error,
-    loading: () => CatalogLoadStatus.loading,
-  );
+  /// Load status of whatever the open catalog sheet is showing: services for
+  /// the Services category, products for everything else.
+  CatalogLoadStatus get productsStatus {
+    final categoryId = state.catalogSheetCategoryId;
+    final AsyncValue<Object?> async = switch (categoryId) {
+      servicesCategoryId => _servicesAsync(),
+      servicePackagesCategoryId => _servicePackagesAsync(),
+      addonsCategoryId => _addonsAsync(),
+      _ => _productsAsync(),
+    };
+    return async.when(
+      data: (_) => CatalogLoadStatus.data,
+      error: (_, __) => CatalogLoadStatus.error,
+      loading: () => CatalogLoadStatus.loading,
+    );
+  }
 
   ShiftStatus get shiftStatus {
     final rows = _watchPosShifts();
@@ -597,7 +688,7 @@ class DashboardController extends _$DashboardController {
 
   List<Category> get categories {
     final rows = _watchCategories();
-    return rows
+    final list = rows
         .where(
           (row) =>
               row.categoryName.trim().isNotEmpty &&
@@ -611,6 +702,36 @@ class DashboardController extends _$DashboardController {
           ),
         )
         .toList();
+
+    // Only show Services when there is at least one active service.
+    if (_watchServices().isNotEmpty) {
+      list.add(
+        const Category(
+          id: servicesCategoryId,
+          name: 'Services',
+          icon: 'services_rounded', // mapped in catalog_panel.dart
+        ),
+      );
+    }
+    if (_watchServicePackages().isNotEmpty) {
+      list.add(
+        const Category(
+          id: servicePackagesCategoryId,
+          name: 'Service Packages',
+          icon: 'service_package_rounded', // mapped in catalog_panel.dart
+        ),
+      );
+    }
+    if (_watchAddons().isNotEmpty) {
+      list.add(
+        const Category(
+          id: addonsCategoryId,
+          name: 'Add-ons',
+          icon: 'addon_rounded', // mapped in catalog_panel.dart
+        ),
+      );
+    }
+    return list;
   }
 
   List<OtherAction> get otherActions => _placeholderOtherActions;
@@ -620,6 +741,67 @@ class DashboardController extends _$DashboardController {
     if (categoryId == null) return const [];
 
     final query = state.catalogSearchQuery.trim().toLowerCase();
+
+    if (categoryId == servicesCategoryId) {
+      return _watchServices()
+          .where(
+            (row) =>
+                row.name.trim().isNotEmpty &&
+                (query.isEmpty || row.name.toLowerCase().contains(query)),
+          )
+          .map(
+            (row) => Product(
+              id: '$_serviceIdPrefix${row.id}',
+              name: row.name,
+              categoryId: servicesCategoryId,
+              price: row.price,
+              stock: 0,
+              isService: true,
+            ),
+          )
+          .toList();
+    }
+
+    if (categoryId == servicePackagesCategoryId) {
+      return _watchServicePackages()
+          .where(
+            (row) =>
+                row.name.trim().isNotEmpty &&
+                (query.isEmpty || row.name.toLowerCase().contains(query)),
+          )
+          .map(
+            (row) => Product(
+              id: '$_servicePackageIdPrefix${row.id}',
+              name: row.name,
+              categoryId: servicePackagesCategoryId,
+              price: row.price,
+              stock: 0,
+              isService: true,
+            ),
+          )
+          .toList();
+    }
+
+    if (categoryId == addonsCategoryId) {
+      return _watchAddons()
+          .where(
+            (row) =>
+                row.name.trim().isNotEmpty &&
+                (query.isEmpty || row.name.toLowerCase().contains(query)),
+          )
+          .map(
+            (row) => Product(
+              id: '$_addonIdPrefix${row.id}',
+              name: row.name,
+              categoryId: addonsCategoryId,
+              price: row.price,
+              stock: 0,
+              isService: true,
+            ),
+          )
+          .toList();
+    }
+
     final rows = _watchProducts();
     return rows
         .where(
@@ -879,6 +1061,46 @@ class DashboardController extends _$DashboardController {
       quantity: updated[existingIndex].quantity + 1,
     );
     state = state.copyWith(cartLines: updated);
+  }
+
+  /// Looks up [rawBarcode] in the local product table and adds the match to
+  /// the cart. Reads the already-loaded Drift stream, so it is instant and
+  /// works offline.
+  BarcodeScanResult addToCartByBarcode(String rawBarcode) {
+    final code = rawBarcode.trim().toLowerCase();
+    final productsAsync = ref.read(productPriceProvider);
+    if (!productsAsync.hasValue) {
+      return const BarcodeScanResult(BarcodeScanStatus.notReady);
+    }
+
+    ProductPriceTableData? match;
+    for (final row in productsAsync.requireValue) {
+      final barcode = row.barcode.trim().toLowerCase();
+      if (barcode.isNotEmpty && barcode == code) {
+        match = row;
+        break;
+      }
+    }
+    if (match == null) {
+      return const BarcodeScanResult(BarcodeScanStatus.notFound);
+    }
+
+    // Same mapping as productsForCatalogSheet(), so the cart line merges
+    // with one added by tapping the grid.
+    final product = Product(
+      id: match.productId.toString(),
+      name: match.description,
+      categoryId: match.category.toString(),
+      price: _parseMoney(match.price),
+      stock: match.quantity,
+    );
+
+    if (!product.isAvailable) {
+      return BarcodeScanResult(BarcodeScanStatus.outOfStock, product);
+    }
+
+    addToCart(product);
+    return BarcodeScanResult(BarcodeScanStatus.added, product);
   }
 
   void incrementLine(String productId) {

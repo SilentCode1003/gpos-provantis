@@ -55,4 +55,4 @@ final class CatalogSyncServiceProvider
 }
 
 String _$catalogSyncServiceHash() =>
-    r'fd664089899a7b9bf55a2e5d61eb0b30029fbe9e';
+    r'1ae52369e452656d1f7d7ba95e58383b63c63086';

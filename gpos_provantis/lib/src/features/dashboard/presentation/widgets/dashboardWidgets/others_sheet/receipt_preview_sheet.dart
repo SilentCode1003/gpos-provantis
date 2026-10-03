@@ -16,19 +16,29 @@ import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/r
 ///
 /// [show] returns `true` if the receipt was printed, otherwise `null`/`false`.
 class ReceiptPreviewSheet extends ConsumerStatefulWidget {
-  const ReceiptPreviewSheet({super.key, required this.sale});
+  const ReceiptPreviewSheet({super.key, this.sale, this.saleData})
+    : assert(
+        sale != null || saleData != null,
+        'Provide either a local sale row or ready-made receipt data.',
+      );
 
-  final SalesTableData sale;
+  /// A sale saved on this device. Converted with [receiptSaleDataFromSaleRow].
+  final SalesTableData? sale;
+
+  /// Ready-made receipt data, e.g. built from a receipt pulled from the
+  /// server. Takes priority over [sale].
+  final ReceiptSaleData? saleData;
 
   static Future<bool?> show(
     BuildContext context, {
-    required SalesTableData sale,
+    SalesTableData? sale,
+    ReceiptSaleData? saleData,
   }) {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => ReceiptPreviewSheet(sale: sale),
+      builder: (context) => ReceiptPreviewSheet(sale: sale, saleData: saleData),
     );
   }
 
@@ -67,7 +77,8 @@ class _ReceiptPreviewSheetState extends ConsumerState<ReceiptPreviewSheet> {
   Widget build(BuildContext context) {
     final colors = context.colors;
 
-    final saleData = receiptSaleDataFromSaleRow(widget.sale);
+    final saleData =
+        widget.saleData ?? receiptSaleDataFromSaleRow(widget.sale!);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,

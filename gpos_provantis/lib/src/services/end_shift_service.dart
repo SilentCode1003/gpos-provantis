@@ -118,10 +118,16 @@ class EndShiftService {
   /// The extra sections never block the Z-reading: if one can't be loaded the
   /// report still prints and the matching `...Unavailable` flag on
   /// [EndShiftResult] is set.
+  ///
+  /// Pass [isReprint] when printing a shift that was already closed (e.g. from
+  /// the Reports screen) so the receipt carries the **REPRINT** banner. Unlike
+  /// [reprintShiftReport] this still fetches from the server when it can, so it
+  /// also works for shifts this device never printed.
   Future<EndShiftResult> printEndShiftReport({
     required String date,
     required int posId,
     required int shiftId,
+    bool isReprint = false,
   }) async {
     final result = await _loadReport(date, posId, shiftId);
 
@@ -158,6 +164,7 @@ class EndShiftService {
         soldPackages: packages.lines,
         paymentSummary: payments.lines,
         staffSales: staff.lines,
+        isReprint: isReprint,
       ),
     );
 

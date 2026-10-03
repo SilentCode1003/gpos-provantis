@@ -13172,6 +13172,1738 @@ class AddonTableCompanion extends UpdateCompanion<AddonTableData> {
   }
 }
 
+class $ShiftReportTableTable extends ShiftReportTable
+    with TableInfo<$ShiftReportTableTable, ShiftReportTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ShiftReportTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _posMeta = const VerificationMeta('pos');
+  @override
+  late final GeneratedColumn<int> pos = GeneratedColumn<int>(
+    'pos',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _shiftMeta = const VerificationMeta('shift');
+  @override
+  late final GeneratedColumn<int> shift = GeneratedColumn<int>(
+    'shift',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cashierMeta = const VerificationMeta(
+    'cashier',
+  );
+  @override
+  late final GeneratedColumn<String> cashier = GeneratedColumn<String>(
+    'cashier',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _floatingMeta = const VerificationMeta(
+    'floating',
+  );
+  @override
+  late final GeneratedColumn<String> floating = GeneratedColumn<String>(
+    'floating',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cashFloatMeta = const VerificationMeta(
+    'cashFloat',
+  );
+  @override
+  late final GeneratedColumn<double> cashFloat = GeneratedColumn<double>(
+    'cash_float',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _salesBeginningMeta = const VerificationMeta(
+    'salesBeginning',
+  );
+  @override
+  late final GeneratedColumn<double> salesBeginning = GeneratedColumn<double>(
+    'sales_beginning',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _salesEndingMeta = const VerificationMeta(
+    'salesEnding',
+  );
+  @override
+  late final GeneratedColumn<double> salesEnding = GeneratedColumn<double>(
+    'sales_ending',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _totalSalesMeta = const VerificationMeta(
+    'totalSales',
+  );
+  @override
+  late final GeneratedColumn<double> totalSales = GeneratedColumn<double>(
+    'total_sales',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _receiptBeginningMeta = const VerificationMeta(
+    'receiptBeginning',
+  );
+  @override
+  late final GeneratedColumn<int> receiptBeginning = GeneratedColumn<int>(
+    'receipt_beginning',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _receiptEndingMeta = const VerificationMeta(
+    'receiptEnding',
+  );
+  @override
+  late final GeneratedColumn<int> receiptEnding = GeneratedColumn<int>(
+    'receipt_ending',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _approvedByMeta = const VerificationMeta(
+    'approvedBy',
+  );
+  @override
+  late final GeneratedColumn<String> approvedBy = GeneratedColumn<String>(
+    'approved_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _approvedDateMeta = const VerificationMeta(
+    'approvedDate',
+  );
+  @override
+  late final GeneratedColumn<String> approvedDate = GeneratedColumn<String>(
+    'approved_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    date,
+    pos,
+    shift,
+    cashier,
+    floating,
+    cashFloat,
+    salesBeginning,
+    salesEnding,
+    totalSales,
+    receiptBeginning,
+    receiptEnding,
+    status,
+    approvedBy,
+    approvedDate,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'shift_report_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ShiftReportTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('pos')) {
+      context.handle(
+        _posMeta,
+        pos.isAcceptableOrUnknown(data['pos']!, _posMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_posMeta);
+    }
+    if (data.containsKey('shift')) {
+      context.handle(
+        _shiftMeta,
+        shift.isAcceptableOrUnknown(data['shift']!, _shiftMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_shiftMeta);
+    }
+    if (data.containsKey('cashier')) {
+      context.handle(
+        _cashierMeta,
+        cashier.isAcceptableOrUnknown(data['cashier']!, _cashierMeta),
+      );
+    }
+    if (data.containsKey('floating')) {
+      context.handle(
+        _floatingMeta,
+        floating.isAcceptableOrUnknown(data['floating']!, _floatingMeta),
+      );
+    }
+    if (data.containsKey('cash_float')) {
+      context.handle(
+        _cashFloatMeta,
+        cashFloat.isAcceptableOrUnknown(data['cash_float']!, _cashFloatMeta),
+      );
+    }
+    if (data.containsKey('sales_beginning')) {
+      context.handle(
+        _salesBeginningMeta,
+        salesBeginning.isAcceptableOrUnknown(
+          data['sales_beginning']!,
+          _salesBeginningMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sales_ending')) {
+      context.handle(
+        _salesEndingMeta,
+        salesEnding.isAcceptableOrUnknown(
+          data['sales_ending']!,
+          _salesEndingMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_sales')) {
+      context.handle(
+        _totalSalesMeta,
+        totalSales.isAcceptableOrUnknown(data['total_sales']!, _totalSalesMeta),
+      );
+    }
+    if (data.containsKey('receipt_beginning')) {
+      context.handle(
+        _receiptBeginningMeta,
+        receiptBeginning.isAcceptableOrUnknown(
+          data['receipt_beginning']!,
+          _receiptBeginningMeta,
+        ),
+      );
+    }
+    if (data.containsKey('receipt_ending')) {
+      context.handle(
+        _receiptEndingMeta,
+        receiptEnding.isAcceptableOrUnknown(
+          data['receipt_ending']!,
+          _receiptEndingMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('approved_by')) {
+      context.handle(
+        _approvedByMeta,
+        approvedBy.isAcceptableOrUnknown(data['approved_by']!, _approvedByMeta),
+      );
+    }
+    if (data.containsKey('approved_date')) {
+      context.handle(
+        _approvedDateMeta,
+        approvedDate.isAcceptableOrUnknown(
+          data['approved_date']!,
+          _approvedDateMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {date, pos, shift},
+  ];
+  @override
+  ShiftReportTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ShiftReportTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date'],
+      )!,
+      pos: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pos'],
+      )!,
+      shift: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}shift'],
+      )!,
+      cashier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cashier'],
+      )!,
+      floating: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}floating'],
+      ),
+      cashFloat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}cash_float'],
+      ),
+      salesBeginning: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}sales_beginning'],
+      )!,
+      salesEnding: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}sales_ending'],
+      )!,
+      totalSales: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_sales'],
+      )!,
+      receiptBeginning: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}receipt_beginning'],
+      )!,
+      receiptEnding: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}receipt_ending'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      approvedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}approved_by'],
+      ),
+      approvedDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}approved_date'],
+      ),
+    );
+  }
+
+  @override
+  $ShiftReportTableTable createAlias(String alias) {
+    return $ShiftReportTableTable(attachedDatabase, alias);
+  }
+}
+
+class ShiftReportTableData extends DataClass
+    implements Insertable<ShiftReportTableData> {
+  final String id;
+
+  /// `yyyy-MM-dd`.
+  final String date;
+  final int pos;
+  final int shift;
+  final String cashier;
+
+  /// Kept as raw text because the server sends null here and its type isn't
+  /// pinned down.
+  final String? floating;
+  final double? cashFloat;
+  final double salesBeginning;
+  final double salesEnding;
+  final double totalSales;
+  final int receiptBeginning;
+  final int receiptEnding;
+  final String status;
+  final String? approvedBy;
+  final String? approvedDate;
+  const ShiftReportTableData({
+    required this.id,
+    required this.date,
+    required this.pos,
+    required this.shift,
+    required this.cashier,
+    this.floating,
+    this.cashFloat,
+    required this.salesBeginning,
+    required this.salesEnding,
+    required this.totalSales,
+    required this.receiptBeginning,
+    required this.receiptEnding,
+    required this.status,
+    this.approvedBy,
+    this.approvedDate,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['date'] = Variable<String>(date);
+    map['pos'] = Variable<int>(pos);
+    map['shift'] = Variable<int>(shift);
+    map['cashier'] = Variable<String>(cashier);
+    if (!nullToAbsent || floating != null) {
+      map['floating'] = Variable<String>(floating);
+    }
+    if (!nullToAbsent || cashFloat != null) {
+      map['cash_float'] = Variable<double>(cashFloat);
+    }
+    map['sales_beginning'] = Variable<double>(salesBeginning);
+    map['sales_ending'] = Variable<double>(salesEnding);
+    map['total_sales'] = Variable<double>(totalSales);
+    map['receipt_beginning'] = Variable<int>(receiptBeginning);
+    map['receipt_ending'] = Variable<int>(receiptEnding);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || approvedBy != null) {
+      map['approved_by'] = Variable<String>(approvedBy);
+    }
+    if (!nullToAbsent || approvedDate != null) {
+      map['approved_date'] = Variable<String>(approvedDate);
+    }
+    return map;
+  }
+
+  ShiftReportTableCompanion toCompanion(bool nullToAbsent) {
+    return ShiftReportTableCompanion(
+      id: Value(id),
+      date: Value(date),
+      pos: Value(pos),
+      shift: Value(shift),
+      cashier: Value(cashier),
+      floating: floating == null && nullToAbsent
+          ? const Value.absent()
+          : Value(floating),
+      cashFloat: cashFloat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cashFloat),
+      salesBeginning: Value(salesBeginning),
+      salesEnding: Value(salesEnding),
+      totalSales: Value(totalSales),
+      receiptBeginning: Value(receiptBeginning),
+      receiptEnding: Value(receiptEnding),
+      status: Value(status),
+      approvedBy: approvedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(approvedBy),
+      approvedDate: approvedDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(approvedDate),
+    );
+  }
+
+  factory ShiftReportTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ShiftReportTableData(
+      id: serializer.fromJson<String>(json['id']),
+      date: serializer.fromJson<String>(json['date']),
+      pos: serializer.fromJson<int>(json['pos']),
+      shift: serializer.fromJson<int>(json['shift']),
+      cashier: serializer.fromJson<String>(json['cashier']),
+      floating: serializer.fromJson<String?>(json['floating']),
+      cashFloat: serializer.fromJson<double?>(json['cashFloat']),
+      salesBeginning: serializer.fromJson<double>(json['salesBeginning']),
+      salesEnding: serializer.fromJson<double>(json['salesEnding']),
+      totalSales: serializer.fromJson<double>(json['totalSales']),
+      receiptBeginning: serializer.fromJson<int>(json['receiptBeginning']),
+      receiptEnding: serializer.fromJson<int>(json['receiptEnding']),
+      status: serializer.fromJson<String>(json['status']),
+      approvedBy: serializer.fromJson<String?>(json['approvedBy']),
+      approvedDate: serializer.fromJson<String?>(json['approvedDate']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'date': serializer.toJson<String>(date),
+      'pos': serializer.toJson<int>(pos),
+      'shift': serializer.toJson<int>(shift),
+      'cashier': serializer.toJson<String>(cashier),
+      'floating': serializer.toJson<String?>(floating),
+      'cashFloat': serializer.toJson<double?>(cashFloat),
+      'salesBeginning': serializer.toJson<double>(salesBeginning),
+      'salesEnding': serializer.toJson<double>(salesEnding),
+      'totalSales': serializer.toJson<double>(totalSales),
+      'receiptBeginning': serializer.toJson<int>(receiptBeginning),
+      'receiptEnding': serializer.toJson<int>(receiptEnding),
+      'status': serializer.toJson<String>(status),
+      'approvedBy': serializer.toJson<String?>(approvedBy),
+      'approvedDate': serializer.toJson<String?>(approvedDate),
+    };
+  }
+
+  ShiftReportTableData copyWith({
+    String? id,
+    String? date,
+    int? pos,
+    int? shift,
+    String? cashier,
+    Value<String?> floating = const Value.absent(),
+    Value<double?> cashFloat = const Value.absent(),
+    double? salesBeginning,
+    double? salesEnding,
+    double? totalSales,
+    int? receiptBeginning,
+    int? receiptEnding,
+    String? status,
+    Value<String?> approvedBy = const Value.absent(),
+    Value<String?> approvedDate = const Value.absent(),
+  }) => ShiftReportTableData(
+    id: id ?? this.id,
+    date: date ?? this.date,
+    pos: pos ?? this.pos,
+    shift: shift ?? this.shift,
+    cashier: cashier ?? this.cashier,
+    floating: floating.present ? floating.value : this.floating,
+    cashFloat: cashFloat.present ? cashFloat.value : this.cashFloat,
+    salesBeginning: salesBeginning ?? this.salesBeginning,
+    salesEnding: salesEnding ?? this.salesEnding,
+    totalSales: totalSales ?? this.totalSales,
+    receiptBeginning: receiptBeginning ?? this.receiptBeginning,
+    receiptEnding: receiptEnding ?? this.receiptEnding,
+    status: status ?? this.status,
+    approvedBy: approvedBy.present ? approvedBy.value : this.approvedBy,
+    approvedDate: approvedDate.present ? approvedDate.value : this.approvedDate,
+  );
+  ShiftReportTableData copyWithCompanion(ShiftReportTableCompanion data) {
+    return ShiftReportTableData(
+      id: data.id.present ? data.id.value : this.id,
+      date: data.date.present ? data.date.value : this.date,
+      pos: data.pos.present ? data.pos.value : this.pos,
+      shift: data.shift.present ? data.shift.value : this.shift,
+      cashier: data.cashier.present ? data.cashier.value : this.cashier,
+      floating: data.floating.present ? data.floating.value : this.floating,
+      cashFloat: data.cashFloat.present ? data.cashFloat.value : this.cashFloat,
+      salesBeginning: data.salesBeginning.present
+          ? data.salesBeginning.value
+          : this.salesBeginning,
+      salesEnding: data.salesEnding.present
+          ? data.salesEnding.value
+          : this.salesEnding,
+      totalSales: data.totalSales.present
+          ? data.totalSales.value
+          : this.totalSales,
+      receiptBeginning: data.receiptBeginning.present
+          ? data.receiptBeginning.value
+          : this.receiptBeginning,
+      receiptEnding: data.receiptEnding.present
+          ? data.receiptEnding.value
+          : this.receiptEnding,
+      status: data.status.present ? data.status.value : this.status,
+      approvedBy: data.approvedBy.present
+          ? data.approvedBy.value
+          : this.approvedBy,
+      approvedDate: data.approvedDate.present
+          ? data.approvedDate.value
+          : this.approvedDate,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShiftReportTableData(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('pos: $pos, ')
+          ..write('shift: $shift, ')
+          ..write('cashier: $cashier, ')
+          ..write('floating: $floating, ')
+          ..write('cashFloat: $cashFloat, ')
+          ..write('salesBeginning: $salesBeginning, ')
+          ..write('salesEnding: $salesEnding, ')
+          ..write('totalSales: $totalSales, ')
+          ..write('receiptBeginning: $receiptBeginning, ')
+          ..write('receiptEnding: $receiptEnding, ')
+          ..write('status: $status, ')
+          ..write('approvedBy: $approvedBy, ')
+          ..write('approvedDate: $approvedDate')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    date,
+    pos,
+    shift,
+    cashier,
+    floating,
+    cashFloat,
+    salesBeginning,
+    salesEnding,
+    totalSales,
+    receiptBeginning,
+    receiptEnding,
+    status,
+    approvedBy,
+    approvedDate,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ShiftReportTableData &&
+          other.id == this.id &&
+          other.date == this.date &&
+          other.pos == this.pos &&
+          other.shift == this.shift &&
+          other.cashier == this.cashier &&
+          other.floating == this.floating &&
+          other.cashFloat == this.cashFloat &&
+          other.salesBeginning == this.salesBeginning &&
+          other.salesEnding == this.salesEnding &&
+          other.totalSales == this.totalSales &&
+          other.receiptBeginning == this.receiptBeginning &&
+          other.receiptEnding == this.receiptEnding &&
+          other.status == this.status &&
+          other.approvedBy == this.approvedBy &&
+          other.approvedDate == this.approvedDate);
+}
+
+class ShiftReportTableCompanion extends UpdateCompanion<ShiftReportTableData> {
+  final Value<String> id;
+  final Value<String> date;
+  final Value<int> pos;
+  final Value<int> shift;
+  final Value<String> cashier;
+  final Value<String?> floating;
+  final Value<double?> cashFloat;
+  final Value<double> salesBeginning;
+  final Value<double> salesEnding;
+  final Value<double> totalSales;
+  final Value<int> receiptBeginning;
+  final Value<int> receiptEnding;
+  final Value<String> status;
+  final Value<String?> approvedBy;
+  final Value<String?> approvedDate;
+  final Value<int> rowid;
+  const ShiftReportTableCompanion({
+    this.id = const Value.absent(),
+    this.date = const Value.absent(),
+    this.pos = const Value.absent(),
+    this.shift = const Value.absent(),
+    this.cashier = const Value.absent(),
+    this.floating = const Value.absent(),
+    this.cashFloat = const Value.absent(),
+    this.salesBeginning = const Value.absent(),
+    this.salesEnding = const Value.absent(),
+    this.totalSales = const Value.absent(),
+    this.receiptBeginning = const Value.absent(),
+    this.receiptEnding = const Value.absent(),
+    this.status = const Value.absent(),
+    this.approvedBy = const Value.absent(),
+    this.approvedDate = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ShiftReportTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String date,
+    required int pos,
+    required int shift,
+    this.cashier = const Value.absent(),
+    this.floating = const Value.absent(),
+    this.cashFloat = const Value.absent(),
+    this.salesBeginning = const Value.absent(),
+    this.salesEnding = const Value.absent(),
+    this.totalSales = const Value.absent(),
+    this.receiptBeginning = const Value.absent(),
+    this.receiptEnding = const Value.absent(),
+    this.status = const Value.absent(),
+    this.approvedBy = const Value.absent(),
+    this.approvedDate = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : date = Value(date),
+       pos = Value(pos),
+       shift = Value(shift);
+  static Insertable<ShiftReportTableData> custom({
+    Expression<String>? id,
+    Expression<String>? date,
+    Expression<int>? pos,
+    Expression<int>? shift,
+    Expression<String>? cashier,
+    Expression<String>? floating,
+    Expression<double>? cashFloat,
+    Expression<double>? salesBeginning,
+    Expression<double>? salesEnding,
+    Expression<double>? totalSales,
+    Expression<int>? receiptBeginning,
+    Expression<int>? receiptEnding,
+    Expression<String>? status,
+    Expression<String>? approvedBy,
+    Expression<String>? approvedDate,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (date != null) 'date': date,
+      if (pos != null) 'pos': pos,
+      if (shift != null) 'shift': shift,
+      if (cashier != null) 'cashier': cashier,
+      if (floating != null) 'floating': floating,
+      if (cashFloat != null) 'cash_float': cashFloat,
+      if (salesBeginning != null) 'sales_beginning': salesBeginning,
+      if (salesEnding != null) 'sales_ending': salesEnding,
+      if (totalSales != null) 'total_sales': totalSales,
+      if (receiptBeginning != null) 'receipt_beginning': receiptBeginning,
+      if (receiptEnding != null) 'receipt_ending': receiptEnding,
+      if (status != null) 'status': status,
+      if (approvedBy != null) 'approved_by': approvedBy,
+      if (approvedDate != null) 'approved_date': approvedDate,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ShiftReportTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? date,
+    Value<int>? pos,
+    Value<int>? shift,
+    Value<String>? cashier,
+    Value<String?>? floating,
+    Value<double?>? cashFloat,
+    Value<double>? salesBeginning,
+    Value<double>? salesEnding,
+    Value<double>? totalSales,
+    Value<int>? receiptBeginning,
+    Value<int>? receiptEnding,
+    Value<String>? status,
+    Value<String?>? approvedBy,
+    Value<String?>? approvedDate,
+    Value<int>? rowid,
+  }) {
+    return ShiftReportTableCompanion(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      pos: pos ?? this.pos,
+      shift: shift ?? this.shift,
+      cashier: cashier ?? this.cashier,
+      floating: floating ?? this.floating,
+      cashFloat: cashFloat ?? this.cashFloat,
+      salesBeginning: salesBeginning ?? this.salesBeginning,
+      salesEnding: salesEnding ?? this.salesEnding,
+      totalSales: totalSales ?? this.totalSales,
+      receiptBeginning: receiptBeginning ?? this.receiptBeginning,
+      receiptEnding: receiptEnding ?? this.receiptEnding,
+      status: status ?? this.status,
+      approvedBy: approvedBy ?? this.approvedBy,
+      approvedDate: approvedDate ?? this.approvedDate,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (pos.present) {
+      map['pos'] = Variable<int>(pos.value);
+    }
+    if (shift.present) {
+      map['shift'] = Variable<int>(shift.value);
+    }
+    if (cashier.present) {
+      map['cashier'] = Variable<String>(cashier.value);
+    }
+    if (floating.present) {
+      map['floating'] = Variable<String>(floating.value);
+    }
+    if (cashFloat.present) {
+      map['cash_float'] = Variable<double>(cashFloat.value);
+    }
+    if (salesBeginning.present) {
+      map['sales_beginning'] = Variable<double>(salesBeginning.value);
+    }
+    if (salesEnding.present) {
+      map['sales_ending'] = Variable<double>(salesEnding.value);
+    }
+    if (totalSales.present) {
+      map['total_sales'] = Variable<double>(totalSales.value);
+    }
+    if (receiptBeginning.present) {
+      map['receipt_beginning'] = Variable<int>(receiptBeginning.value);
+    }
+    if (receiptEnding.present) {
+      map['receipt_ending'] = Variable<int>(receiptEnding.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (approvedBy.present) {
+      map['approved_by'] = Variable<String>(approvedBy.value);
+    }
+    if (approvedDate.present) {
+      map['approved_date'] = Variable<String>(approvedDate.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShiftReportTableCompanion(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('pos: $pos, ')
+          ..write('shift: $shift, ')
+          ..write('cashier: $cashier, ')
+          ..write('floating: $floating, ')
+          ..write('cashFloat: $cashFloat, ')
+          ..write('salesBeginning: $salesBeginning, ')
+          ..write('salesEnding: $salesEnding, ')
+          ..write('totalSales: $totalSales, ')
+          ..write('receiptBeginning: $receiptBeginning, ')
+          ..write('receiptEnding: $receiptEnding, ')
+          ..write('status: $status, ')
+          ..write('approvedBy: $approvedBy, ')
+          ..write('approvedDate: $approvedDate, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ReceiptHistoryTableTable extends ReceiptHistoryTable
+    with TableInfo<$ReceiptHistoryTableTable, ReceiptHistoryTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ReceiptHistoryTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
+  static const VerificationMeta _detailIdMeta = const VerificationMeta(
+    'detailId',
+  );
+  @override
+  late final GeneratedColumn<String> detailId = GeneratedColumn<String>(
+    'detail_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _posIdMeta = const VerificationMeta('posId');
+  @override
+  late final GeneratedColumn<int> posId = GeneratedColumn<int>(
+    'pos_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _shiftMeta = const VerificationMeta('shift');
+  @override
+  late final GeneratedColumn<int> shift = GeneratedColumn<int>(
+    'shift',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _receiptDateMeta = const VerificationMeta(
+    'receiptDate',
+  );
+  @override
+  late final GeneratedColumn<String> receiptDate = GeneratedColumn<String>(
+    'receipt_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _paymentTypeMeta = const VerificationMeta(
+    'paymentType',
+  );
+  @override
+  late final GeneratedColumn<String> paymentType = GeneratedColumn<String>(
+    'payment_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _totalMeta = const VerificationMeta('total');
+  @override
+  late final GeneratedColumn<double> total = GeneratedColumn<double>(
+    'total',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _cashierMeta = const VerificationMeta(
+    'cashier',
+  );
+  @override
+  late final GeneratedColumn<String> cashier = GeneratedColumn<String>(
+    'cashier',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _ePaymentTypeMeta = const VerificationMeta(
+    'ePaymentType',
+  );
+  @override
+  late final GeneratedColumn<String> ePaymentType = GeneratedColumn<String>(
+    'e_payment_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _referenceIdMeta = const VerificationMeta(
+    'referenceId',
+  );
+  @override
+  late final GeneratedColumn<String> referenceId = GeneratedColumn<String>(
+    'reference_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _tendersJsonMeta = const VerificationMeta(
+    'tendersJson',
+  );
+  @override
+  late final GeneratedColumn<String> tendersJson = GeneratedColumn<String>(
+    'tenders_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _fetchedAtMeta = const VerificationMeta(
+    'fetchedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> fetchedAt = GeneratedColumn<DateTime>(
+    'fetched_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    clientDefault: () => DateTime.now(),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    detailId,
+    posId,
+    shift,
+    receiptDate,
+    createdAt,
+    paymentType,
+    description,
+    total,
+    cashier,
+    status,
+    ePaymentType,
+    referenceId,
+    tendersJson,
+    fetchedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'receipt_history_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ReceiptHistoryTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('detail_id')) {
+      context.handle(
+        _detailIdMeta,
+        detailId.isAcceptableOrUnknown(data['detail_id']!, _detailIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_detailIdMeta);
+    }
+    if (data.containsKey('pos_id')) {
+      context.handle(
+        _posIdMeta,
+        posId.isAcceptableOrUnknown(data['pos_id']!, _posIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_posIdMeta);
+    }
+    if (data.containsKey('shift')) {
+      context.handle(
+        _shiftMeta,
+        shift.isAcceptableOrUnknown(data['shift']!, _shiftMeta),
+      );
+    }
+    if (data.containsKey('receipt_date')) {
+      context.handle(
+        _receiptDateMeta,
+        receiptDate.isAcceptableOrUnknown(
+          data['receipt_date']!,
+          _receiptDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_receiptDateMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('payment_type')) {
+      context.handle(
+        _paymentTypeMeta,
+        paymentType.isAcceptableOrUnknown(
+          data['payment_type']!,
+          _paymentTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total')) {
+      context.handle(
+        _totalMeta,
+        total.isAcceptableOrUnknown(data['total']!, _totalMeta),
+      );
+    }
+    if (data.containsKey('cashier')) {
+      context.handle(
+        _cashierMeta,
+        cashier.isAcceptableOrUnknown(data['cashier']!, _cashierMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('e_payment_type')) {
+      context.handle(
+        _ePaymentTypeMeta,
+        ePaymentType.isAcceptableOrUnknown(
+          data['e_payment_type']!,
+          _ePaymentTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reference_id')) {
+      context.handle(
+        _referenceIdMeta,
+        referenceId.isAcceptableOrUnknown(
+          data['reference_id']!,
+          _referenceIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tenders_json')) {
+      context.handle(
+        _tendersJsonMeta,
+        tendersJson.isAcceptableOrUnknown(
+          data['tenders_json']!,
+          _tendersJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fetched_at')) {
+      context.handle(
+        _fetchedAtMeta,
+        fetchedAt.isAcceptableOrUnknown(data['fetched_at']!, _fetchedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {detailId, posId},
+  ];
+  @override
+  ReceiptHistoryTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReceiptHistoryTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      detailId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}detail_id'],
+      )!,
+      posId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pos_id'],
+      )!,
+      shift: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}shift'],
+      )!,
+      receiptDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}receipt_date'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      paymentType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payment_type'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
+      total: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total'],
+      )!,
+      cashier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cashier'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      ePaymentType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}e_payment_type'],
+      )!,
+      referenceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference_id'],
+      )!,
+      tendersJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tenders_json'],
+      )!,
+      fetchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}fetched_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ReceiptHistoryTableTable createAlias(String alias) {
+    return $ReceiptHistoryTableTable(attachedDatabase, alias);
+  }
+}
+
+class ReceiptHistoryTableData extends DataClass
+    implements Insertable<ReceiptHistoryTableData> {
+  final String id;
+  final String detailId;
+  final int posId;
+  final int shift;
+
+  /// `yyyy-MM-dd`, for looking a day up directly.
+  final String receiptDate;
+  final DateTime createdAt;
+  final String paymentType;
+
+  /// Raw JSON array of the receipt's items.
+  final String description;
+  final double total;
+  final String cashier;
+  final String status;
+  final String ePaymentType;
+  final String referenceId;
+
+  /// JSON array of `{type, amount}`, one per payment taken.
+  final String tendersJson;
+
+  /// When this copy was pulled; the cache is pruned by this.
+  final DateTime fetchedAt;
+  const ReceiptHistoryTableData({
+    required this.id,
+    required this.detailId,
+    required this.posId,
+    required this.shift,
+    required this.receiptDate,
+    required this.createdAt,
+    required this.paymentType,
+    required this.description,
+    required this.total,
+    required this.cashier,
+    required this.status,
+    required this.ePaymentType,
+    required this.referenceId,
+    required this.tendersJson,
+    required this.fetchedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['detail_id'] = Variable<String>(detailId);
+    map['pos_id'] = Variable<int>(posId);
+    map['shift'] = Variable<int>(shift);
+    map['receipt_date'] = Variable<String>(receiptDate);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['payment_type'] = Variable<String>(paymentType);
+    map['description'] = Variable<String>(description);
+    map['total'] = Variable<double>(total);
+    map['cashier'] = Variable<String>(cashier);
+    map['status'] = Variable<String>(status);
+    map['e_payment_type'] = Variable<String>(ePaymentType);
+    map['reference_id'] = Variable<String>(referenceId);
+    map['tenders_json'] = Variable<String>(tendersJson);
+    map['fetched_at'] = Variable<DateTime>(fetchedAt);
+    return map;
+  }
+
+  ReceiptHistoryTableCompanion toCompanion(bool nullToAbsent) {
+    return ReceiptHistoryTableCompanion(
+      id: Value(id),
+      detailId: Value(detailId),
+      posId: Value(posId),
+      shift: Value(shift),
+      receiptDate: Value(receiptDate),
+      createdAt: Value(createdAt),
+      paymentType: Value(paymentType),
+      description: Value(description),
+      total: Value(total),
+      cashier: Value(cashier),
+      status: Value(status),
+      ePaymentType: Value(ePaymentType),
+      referenceId: Value(referenceId),
+      tendersJson: Value(tendersJson),
+      fetchedAt: Value(fetchedAt),
+    );
+  }
+
+  factory ReceiptHistoryTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReceiptHistoryTableData(
+      id: serializer.fromJson<String>(json['id']),
+      detailId: serializer.fromJson<String>(json['detailId']),
+      posId: serializer.fromJson<int>(json['posId']),
+      shift: serializer.fromJson<int>(json['shift']),
+      receiptDate: serializer.fromJson<String>(json['receiptDate']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      paymentType: serializer.fromJson<String>(json['paymentType']),
+      description: serializer.fromJson<String>(json['description']),
+      total: serializer.fromJson<double>(json['total']),
+      cashier: serializer.fromJson<String>(json['cashier']),
+      status: serializer.fromJson<String>(json['status']),
+      ePaymentType: serializer.fromJson<String>(json['ePaymentType']),
+      referenceId: serializer.fromJson<String>(json['referenceId']),
+      tendersJson: serializer.fromJson<String>(json['tendersJson']),
+      fetchedAt: serializer.fromJson<DateTime>(json['fetchedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'detailId': serializer.toJson<String>(detailId),
+      'posId': serializer.toJson<int>(posId),
+      'shift': serializer.toJson<int>(shift),
+      'receiptDate': serializer.toJson<String>(receiptDate),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'paymentType': serializer.toJson<String>(paymentType),
+      'description': serializer.toJson<String>(description),
+      'total': serializer.toJson<double>(total),
+      'cashier': serializer.toJson<String>(cashier),
+      'status': serializer.toJson<String>(status),
+      'ePaymentType': serializer.toJson<String>(ePaymentType),
+      'referenceId': serializer.toJson<String>(referenceId),
+      'tendersJson': serializer.toJson<String>(tendersJson),
+      'fetchedAt': serializer.toJson<DateTime>(fetchedAt),
+    };
+  }
+
+  ReceiptHistoryTableData copyWith({
+    String? id,
+    String? detailId,
+    int? posId,
+    int? shift,
+    String? receiptDate,
+    DateTime? createdAt,
+    String? paymentType,
+    String? description,
+    double? total,
+    String? cashier,
+    String? status,
+    String? ePaymentType,
+    String? referenceId,
+    String? tendersJson,
+    DateTime? fetchedAt,
+  }) => ReceiptHistoryTableData(
+    id: id ?? this.id,
+    detailId: detailId ?? this.detailId,
+    posId: posId ?? this.posId,
+    shift: shift ?? this.shift,
+    receiptDate: receiptDate ?? this.receiptDate,
+    createdAt: createdAt ?? this.createdAt,
+    paymentType: paymentType ?? this.paymentType,
+    description: description ?? this.description,
+    total: total ?? this.total,
+    cashier: cashier ?? this.cashier,
+    status: status ?? this.status,
+    ePaymentType: ePaymentType ?? this.ePaymentType,
+    referenceId: referenceId ?? this.referenceId,
+    tendersJson: tendersJson ?? this.tendersJson,
+    fetchedAt: fetchedAt ?? this.fetchedAt,
+  );
+  ReceiptHistoryTableData copyWithCompanion(ReceiptHistoryTableCompanion data) {
+    return ReceiptHistoryTableData(
+      id: data.id.present ? data.id.value : this.id,
+      detailId: data.detailId.present ? data.detailId.value : this.detailId,
+      posId: data.posId.present ? data.posId.value : this.posId,
+      shift: data.shift.present ? data.shift.value : this.shift,
+      receiptDate: data.receiptDate.present
+          ? data.receiptDate.value
+          : this.receiptDate,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      paymentType: data.paymentType.present
+          ? data.paymentType.value
+          : this.paymentType,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      total: data.total.present ? data.total.value : this.total,
+      cashier: data.cashier.present ? data.cashier.value : this.cashier,
+      status: data.status.present ? data.status.value : this.status,
+      ePaymentType: data.ePaymentType.present
+          ? data.ePaymentType.value
+          : this.ePaymentType,
+      referenceId: data.referenceId.present
+          ? data.referenceId.value
+          : this.referenceId,
+      tendersJson: data.tendersJson.present
+          ? data.tendersJson.value
+          : this.tendersJson,
+      fetchedAt: data.fetchedAt.present ? data.fetchedAt.value : this.fetchedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReceiptHistoryTableData(')
+          ..write('id: $id, ')
+          ..write('detailId: $detailId, ')
+          ..write('posId: $posId, ')
+          ..write('shift: $shift, ')
+          ..write('receiptDate: $receiptDate, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('paymentType: $paymentType, ')
+          ..write('description: $description, ')
+          ..write('total: $total, ')
+          ..write('cashier: $cashier, ')
+          ..write('status: $status, ')
+          ..write('ePaymentType: $ePaymentType, ')
+          ..write('referenceId: $referenceId, ')
+          ..write('tendersJson: $tendersJson, ')
+          ..write('fetchedAt: $fetchedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    detailId,
+    posId,
+    shift,
+    receiptDate,
+    createdAt,
+    paymentType,
+    description,
+    total,
+    cashier,
+    status,
+    ePaymentType,
+    referenceId,
+    tendersJson,
+    fetchedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReceiptHistoryTableData &&
+          other.id == this.id &&
+          other.detailId == this.detailId &&
+          other.posId == this.posId &&
+          other.shift == this.shift &&
+          other.receiptDate == this.receiptDate &&
+          other.createdAt == this.createdAt &&
+          other.paymentType == this.paymentType &&
+          other.description == this.description &&
+          other.total == this.total &&
+          other.cashier == this.cashier &&
+          other.status == this.status &&
+          other.ePaymentType == this.ePaymentType &&
+          other.referenceId == this.referenceId &&
+          other.tendersJson == this.tendersJson &&
+          other.fetchedAt == this.fetchedAt);
+}
+
+class ReceiptHistoryTableCompanion
+    extends UpdateCompanion<ReceiptHistoryTableData> {
+  final Value<String> id;
+  final Value<String> detailId;
+  final Value<int> posId;
+  final Value<int> shift;
+  final Value<String> receiptDate;
+  final Value<DateTime> createdAt;
+  final Value<String> paymentType;
+  final Value<String> description;
+  final Value<double> total;
+  final Value<String> cashier;
+  final Value<String> status;
+  final Value<String> ePaymentType;
+  final Value<String> referenceId;
+  final Value<String> tendersJson;
+  final Value<DateTime> fetchedAt;
+  final Value<int> rowid;
+  const ReceiptHistoryTableCompanion({
+    this.id = const Value.absent(),
+    this.detailId = const Value.absent(),
+    this.posId = const Value.absent(),
+    this.shift = const Value.absent(),
+    this.receiptDate = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.paymentType = const Value.absent(),
+    this.description = const Value.absent(),
+    this.total = const Value.absent(),
+    this.cashier = const Value.absent(),
+    this.status = const Value.absent(),
+    this.ePaymentType = const Value.absent(),
+    this.referenceId = const Value.absent(),
+    this.tendersJson = const Value.absent(),
+    this.fetchedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ReceiptHistoryTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String detailId,
+    required int posId,
+    this.shift = const Value.absent(),
+    required String receiptDate,
+    required DateTime createdAt,
+    this.paymentType = const Value.absent(),
+    this.description = const Value.absent(),
+    this.total = const Value.absent(),
+    this.cashier = const Value.absent(),
+    this.status = const Value.absent(),
+    this.ePaymentType = const Value.absent(),
+    this.referenceId = const Value.absent(),
+    this.tendersJson = const Value.absent(),
+    this.fetchedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : detailId = Value(detailId),
+       posId = Value(posId),
+       receiptDate = Value(receiptDate),
+       createdAt = Value(createdAt);
+  static Insertable<ReceiptHistoryTableData> custom({
+    Expression<String>? id,
+    Expression<String>? detailId,
+    Expression<int>? posId,
+    Expression<int>? shift,
+    Expression<String>? receiptDate,
+    Expression<DateTime>? createdAt,
+    Expression<String>? paymentType,
+    Expression<String>? description,
+    Expression<double>? total,
+    Expression<String>? cashier,
+    Expression<String>? status,
+    Expression<String>? ePaymentType,
+    Expression<String>? referenceId,
+    Expression<String>? tendersJson,
+    Expression<DateTime>? fetchedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (detailId != null) 'detail_id': detailId,
+      if (posId != null) 'pos_id': posId,
+      if (shift != null) 'shift': shift,
+      if (receiptDate != null) 'receipt_date': receiptDate,
+      if (createdAt != null) 'created_at': createdAt,
+      if (paymentType != null) 'payment_type': paymentType,
+      if (description != null) 'description': description,
+      if (total != null) 'total': total,
+      if (cashier != null) 'cashier': cashier,
+      if (status != null) 'status': status,
+      if (ePaymentType != null) 'e_payment_type': ePaymentType,
+      if (referenceId != null) 'reference_id': referenceId,
+      if (tendersJson != null) 'tenders_json': tendersJson,
+      if (fetchedAt != null) 'fetched_at': fetchedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ReceiptHistoryTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? detailId,
+    Value<int>? posId,
+    Value<int>? shift,
+    Value<String>? receiptDate,
+    Value<DateTime>? createdAt,
+    Value<String>? paymentType,
+    Value<String>? description,
+    Value<double>? total,
+    Value<String>? cashier,
+    Value<String>? status,
+    Value<String>? ePaymentType,
+    Value<String>? referenceId,
+    Value<String>? tendersJson,
+    Value<DateTime>? fetchedAt,
+    Value<int>? rowid,
+  }) {
+    return ReceiptHistoryTableCompanion(
+      id: id ?? this.id,
+      detailId: detailId ?? this.detailId,
+      posId: posId ?? this.posId,
+      shift: shift ?? this.shift,
+      receiptDate: receiptDate ?? this.receiptDate,
+      createdAt: createdAt ?? this.createdAt,
+      paymentType: paymentType ?? this.paymentType,
+      description: description ?? this.description,
+      total: total ?? this.total,
+      cashier: cashier ?? this.cashier,
+      status: status ?? this.status,
+      ePaymentType: ePaymentType ?? this.ePaymentType,
+      referenceId: referenceId ?? this.referenceId,
+      tendersJson: tendersJson ?? this.tendersJson,
+      fetchedAt: fetchedAt ?? this.fetchedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (detailId.present) {
+      map['detail_id'] = Variable<String>(detailId.value);
+    }
+    if (posId.present) {
+      map['pos_id'] = Variable<int>(posId.value);
+    }
+    if (shift.present) {
+      map['shift'] = Variable<int>(shift.value);
+    }
+    if (receiptDate.present) {
+      map['receipt_date'] = Variable<String>(receiptDate.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (paymentType.present) {
+      map['payment_type'] = Variable<String>(paymentType.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (total.present) {
+      map['total'] = Variable<double>(total.value);
+    }
+    if (cashier.present) {
+      map['cashier'] = Variable<String>(cashier.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (ePaymentType.present) {
+      map['e_payment_type'] = Variable<String>(ePaymentType.value);
+    }
+    if (referenceId.present) {
+      map['reference_id'] = Variable<String>(referenceId.value);
+    }
+    if (tendersJson.present) {
+      map['tenders_json'] = Variable<String>(tendersJson.value);
+    }
+    if (fetchedAt.present) {
+      map['fetched_at'] = Variable<DateTime>(fetchedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReceiptHistoryTableCompanion(')
+          ..write('id: $id, ')
+          ..write('detailId: $detailId, ')
+          ..write('posId: $posId, ')
+          ..write('shift: $shift, ')
+          ..write('receiptDate: $receiptDate, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('paymentType: $paymentType, ')
+          ..write('description: $description, ')
+          ..write('total: $total, ')
+          ..write('cashier: $cashier, ')
+          ..write('status: $status, ')
+          ..write('ePaymentType: $ePaymentType, ')
+          ..write('referenceId: $referenceId, ')
+          ..write('tendersJson: $tendersJson, ')
+          ..write('fetchedAt: $fetchedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -13218,6 +14950,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ServicePackageTableTable servicePackageTable =
       $ServicePackageTableTable(this);
   late final $AddonTableTable addonTable = $AddonTableTable(this);
+  late final $ShiftReportTableTable shiftReportTable = $ShiftReportTableTable(
+    this,
+  );
+  late final $ReceiptHistoryTableTable receiptHistoryTable =
+      $ReceiptHistoryTableTable(this);
   late final DomainConfigDao domainConfigDao = DomainConfigDao(
     this as AppDatabase,
   );
@@ -13257,6 +14994,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     serviceTable,
     servicePackageTable,
     addonTable,
+    shiftReportTable,
+    receiptHistoryTable,
   ];
 }
 
@@ -20313,6 +22052,838 @@ typedef $$AddonTableTableProcessedTableManager =
       AddonTableData,
       PrefetchHooks Function()
     >;
+typedef $$ShiftReportTableTableCreateCompanionBuilder =
+    ShiftReportTableCompanion Function({
+      Value<String> id,
+      required String date,
+      required int pos,
+      required int shift,
+      Value<String> cashier,
+      Value<String?> floating,
+      Value<double?> cashFloat,
+      Value<double> salesBeginning,
+      Value<double> salesEnding,
+      Value<double> totalSales,
+      Value<int> receiptBeginning,
+      Value<int> receiptEnding,
+      Value<String> status,
+      Value<String?> approvedBy,
+      Value<String?> approvedDate,
+      Value<int> rowid,
+    });
+typedef $$ShiftReportTableTableUpdateCompanionBuilder =
+    ShiftReportTableCompanion Function({
+      Value<String> id,
+      Value<String> date,
+      Value<int> pos,
+      Value<int> shift,
+      Value<String> cashier,
+      Value<String?> floating,
+      Value<double?> cashFloat,
+      Value<double> salesBeginning,
+      Value<double> salesEnding,
+      Value<double> totalSales,
+      Value<int> receiptBeginning,
+      Value<int> receiptEnding,
+      Value<String> status,
+      Value<String?> approvedBy,
+      Value<String?> approvedDate,
+      Value<int> rowid,
+    });
+
+class $$ShiftReportTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ShiftReportTableTable> {
+  $$ShiftReportTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pos => $composableBuilder(
+    column: $table.pos,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cashier => $composableBuilder(
+    column: $table.cashier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get floating => $composableBuilder(
+    column: $table.floating,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get cashFloat => $composableBuilder(
+    column: $table.cashFloat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get salesBeginning => $composableBuilder(
+    column: $table.salesBeginning,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get salesEnding => $composableBuilder(
+    column: $table.salesEnding,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalSales => $composableBuilder(
+    column: $table.totalSales,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get approvedBy => $composableBuilder(
+    column: $table.approvedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get approvedDate => $composableBuilder(
+    column: $table.approvedDate,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ShiftReportTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ShiftReportTableTable> {
+  $$ShiftReportTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pos => $composableBuilder(
+    column: $table.pos,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cashier => $composableBuilder(
+    column: $table.cashier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get floating => $composableBuilder(
+    column: $table.floating,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get cashFloat => $composableBuilder(
+    column: $table.cashFloat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get salesBeginning => $composableBuilder(
+    column: $table.salesBeginning,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get salesEnding => $composableBuilder(
+    column: $table.salesEnding,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalSales => $composableBuilder(
+    column: $table.totalSales,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get approvedBy => $composableBuilder(
+    column: $table.approvedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get approvedDate => $composableBuilder(
+    column: $table.approvedDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ShiftReportTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ShiftReportTableTable> {
+  $$ShiftReportTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<int> get pos =>
+      $composableBuilder(column: $table.pos, builder: (column) => column);
+
+  GeneratedColumn<int> get shift =>
+      $composableBuilder(column: $table.shift, builder: (column) => column);
+
+  GeneratedColumn<String> get cashier =>
+      $composableBuilder(column: $table.cashier, builder: (column) => column);
+
+  GeneratedColumn<String> get floating =>
+      $composableBuilder(column: $table.floating, builder: (column) => column);
+
+  GeneratedColumn<double> get cashFloat =>
+      $composableBuilder(column: $table.cashFloat, builder: (column) => column);
+
+  GeneratedColumn<double> get salesBeginning => $composableBuilder(
+    column: $table.salesBeginning,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get salesEnding => $composableBuilder(
+    column: $table.salesEnding,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get totalSales => $composableBuilder(
+    column: $table.totalSales,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get receiptBeginning => $composableBuilder(
+    column: $table.receiptBeginning,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get receiptEnding => $composableBuilder(
+    column: $table.receiptEnding,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get approvedBy => $composableBuilder(
+    column: $table.approvedBy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get approvedDate => $composableBuilder(
+    column: $table.approvedDate,
+    builder: (column) => column,
+  );
+}
+
+class $$ShiftReportTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ShiftReportTableTable,
+          ShiftReportTableData,
+          $$ShiftReportTableTableFilterComposer,
+          $$ShiftReportTableTableOrderingComposer,
+          $$ShiftReportTableTableAnnotationComposer,
+          $$ShiftReportTableTableCreateCompanionBuilder,
+          $$ShiftReportTableTableUpdateCompanionBuilder,
+          (
+            ShiftReportTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $ShiftReportTableTable,
+              ShiftReportTableData
+            >,
+          ),
+          ShiftReportTableData,
+          PrefetchHooks Function()
+        > {
+  $$ShiftReportTableTableTableManager(
+    _$AppDatabase db,
+    $ShiftReportTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ShiftReportTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ShiftReportTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ShiftReportTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> date = const Value.absent(),
+                Value<int> pos = const Value.absent(),
+                Value<int> shift = const Value.absent(),
+                Value<String> cashier = const Value.absent(),
+                Value<String?> floating = const Value.absent(),
+                Value<double?> cashFloat = const Value.absent(),
+                Value<double> salesBeginning = const Value.absent(),
+                Value<double> salesEnding = const Value.absent(),
+                Value<double> totalSales = const Value.absent(),
+                Value<int> receiptBeginning = const Value.absent(),
+                Value<int> receiptEnding = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> approvedBy = const Value.absent(),
+                Value<String?> approvedDate = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ShiftReportTableCompanion(
+                id: id,
+                date: date,
+                pos: pos,
+                shift: shift,
+                cashier: cashier,
+                floating: floating,
+                cashFloat: cashFloat,
+                salesBeginning: salesBeginning,
+                salesEnding: salesEnding,
+                totalSales: totalSales,
+                receiptBeginning: receiptBeginning,
+                receiptEnding: receiptEnding,
+                status: status,
+                approvedBy: approvedBy,
+                approvedDate: approvedDate,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String date,
+                required int pos,
+                required int shift,
+                Value<String> cashier = const Value.absent(),
+                Value<String?> floating = const Value.absent(),
+                Value<double?> cashFloat = const Value.absent(),
+                Value<double> salesBeginning = const Value.absent(),
+                Value<double> salesEnding = const Value.absent(),
+                Value<double> totalSales = const Value.absent(),
+                Value<int> receiptBeginning = const Value.absent(),
+                Value<int> receiptEnding = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> approvedBy = const Value.absent(),
+                Value<String?> approvedDate = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ShiftReportTableCompanion.insert(
+                id: id,
+                date: date,
+                pos: pos,
+                shift: shift,
+                cashier: cashier,
+                floating: floating,
+                cashFloat: cashFloat,
+                salesBeginning: salesBeginning,
+                salesEnding: salesEnding,
+                totalSales: totalSales,
+                receiptBeginning: receiptBeginning,
+                receiptEnding: receiptEnding,
+                status: status,
+                approvedBy: approvedBy,
+                approvedDate: approvedDate,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ShiftReportTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ShiftReportTableTable,
+      ShiftReportTableData,
+      $$ShiftReportTableTableFilterComposer,
+      $$ShiftReportTableTableOrderingComposer,
+      $$ShiftReportTableTableAnnotationComposer,
+      $$ShiftReportTableTableCreateCompanionBuilder,
+      $$ShiftReportTableTableUpdateCompanionBuilder,
+      (
+        ShiftReportTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $ShiftReportTableTable,
+          ShiftReportTableData
+        >,
+      ),
+      ShiftReportTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$ReceiptHistoryTableTableCreateCompanionBuilder =
+    ReceiptHistoryTableCompanion Function({
+      Value<String> id,
+      required String detailId,
+      required int posId,
+      Value<int> shift,
+      required String receiptDate,
+      required DateTime createdAt,
+      Value<String> paymentType,
+      Value<String> description,
+      Value<double> total,
+      Value<String> cashier,
+      Value<String> status,
+      Value<String> ePaymentType,
+      Value<String> referenceId,
+      Value<String> tendersJson,
+      Value<DateTime> fetchedAt,
+      Value<int> rowid,
+    });
+typedef $$ReceiptHistoryTableTableUpdateCompanionBuilder =
+    ReceiptHistoryTableCompanion Function({
+      Value<String> id,
+      Value<String> detailId,
+      Value<int> posId,
+      Value<int> shift,
+      Value<String> receiptDate,
+      Value<DateTime> createdAt,
+      Value<String> paymentType,
+      Value<String> description,
+      Value<double> total,
+      Value<String> cashier,
+      Value<String> status,
+      Value<String> ePaymentType,
+      Value<String> referenceId,
+      Value<String> tendersJson,
+      Value<DateTime> fetchedAt,
+      Value<int> rowid,
+    });
+
+class $$ReceiptHistoryTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ReceiptHistoryTableTable> {
+  $$ReceiptHistoryTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get detailId => $composableBuilder(
+    column: $table.detailId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get posId => $composableBuilder(
+    column: $table.posId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get receiptDate => $composableBuilder(
+    column: $table.receiptDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paymentType => $composableBuilder(
+    column: $table.paymentType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cashier => $composableBuilder(
+    column: $table.cashier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ePaymentType => $composableBuilder(
+    column: $table.ePaymentType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referenceId => $composableBuilder(
+    column: $table.referenceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tendersJson => $composableBuilder(
+    column: $table.tendersJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ReceiptHistoryTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ReceiptHistoryTableTable> {
+  $$ReceiptHistoryTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get detailId => $composableBuilder(
+    column: $table.detailId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get posId => $composableBuilder(
+    column: $table.posId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get receiptDate => $composableBuilder(
+    column: $table.receiptDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paymentType => $composableBuilder(
+    column: $table.paymentType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cashier => $composableBuilder(
+    column: $table.cashier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ePaymentType => $composableBuilder(
+    column: $table.ePaymentType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get referenceId => $composableBuilder(
+    column: $table.referenceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tendersJson => $composableBuilder(
+    column: $table.tendersJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ReceiptHistoryTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ReceiptHistoryTableTable> {
+  $$ReceiptHistoryTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get detailId =>
+      $composableBuilder(column: $table.detailId, builder: (column) => column);
+
+  GeneratedColumn<int> get posId =>
+      $composableBuilder(column: $table.posId, builder: (column) => column);
+
+  GeneratedColumn<int> get shift =>
+      $composableBuilder(column: $table.shift, builder: (column) => column);
+
+  GeneratedColumn<String> get receiptDate => $composableBuilder(
+    column: $table.receiptDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get paymentType => $composableBuilder(
+    column: $table.paymentType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get total =>
+      $composableBuilder(column: $table.total, builder: (column) => column);
+
+  GeneratedColumn<String> get cashier =>
+      $composableBuilder(column: $table.cashier, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get ePaymentType => $composableBuilder(
+    column: $table.ePaymentType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get referenceId => $composableBuilder(
+    column: $table.referenceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get tendersJson => $composableBuilder(
+    column: $table.tendersJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get fetchedAt =>
+      $composableBuilder(column: $table.fetchedAt, builder: (column) => column);
+}
+
+class $$ReceiptHistoryTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ReceiptHistoryTableTable,
+          ReceiptHistoryTableData,
+          $$ReceiptHistoryTableTableFilterComposer,
+          $$ReceiptHistoryTableTableOrderingComposer,
+          $$ReceiptHistoryTableTableAnnotationComposer,
+          $$ReceiptHistoryTableTableCreateCompanionBuilder,
+          $$ReceiptHistoryTableTableUpdateCompanionBuilder,
+          (
+            ReceiptHistoryTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $ReceiptHistoryTableTable,
+              ReceiptHistoryTableData
+            >,
+          ),
+          ReceiptHistoryTableData,
+          PrefetchHooks Function()
+        > {
+  $$ReceiptHistoryTableTableTableManager(
+    _$AppDatabase db,
+    $ReceiptHistoryTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ReceiptHistoryTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ReceiptHistoryTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ReceiptHistoryTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> detailId = const Value.absent(),
+                Value<int> posId = const Value.absent(),
+                Value<int> shift = const Value.absent(),
+                Value<String> receiptDate = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<String> paymentType = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<double> total = const Value.absent(),
+                Value<String> cashier = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> ePaymentType = const Value.absent(),
+                Value<String> referenceId = const Value.absent(),
+                Value<String> tendersJson = const Value.absent(),
+                Value<DateTime> fetchedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReceiptHistoryTableCompanion(
+                id: id,
+                detailId: detailId,
+                posId: posId,
+                shift: shift,
+                receiptDate: receiptDate,
+                createdAt: createdAt,
+                paymentType: paymentType,
+                description: description,
+                total: total,
+                cashier: cashier,
+                status: status,
+                ePaymentType: ePaymentType,
+                referenceId: referenceId,
+                tendersJson: tendersJson,
+                fetchedAt: fetchedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String detailId,
+                required int posId,
+                Value<int> shift = const Value.absent(),
+                required String receiptDate,
+                required DateTime createdAt,
+                Value<String> paymentType = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<double> total = const Value.absent(),
+                Value<String> cashier = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> ePaymentType = const Value.absent(),
+                Value<String> referenceId = const Value.absent(),
+                Value<String> tendersJson = const Value.absent(),
+                Value<DateTime> fetchedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReceiptHistoryTableCompanion.insert(
+                id: id,
+                detailId: detailId,
+                posId: posId,
+                shift: shift,
+                receiptDate: receiptDate,
+                createdAt: createdAt,
+                paymentType: paymentType,
+                description: description,
+                total: total,
+                cashier: cashier,
+                status: status,
+                ePaymentType: ePaymentType,
+                referenceId: referenceId,
+                tendersJson: tendersJson,
+                fetchedAt: fetchedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ReceiptHistoryTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ReceiptHistoryTableTable,
+      ReceiptHistoryTableData,
+      $$ReceiptHistoryTableTableFilterComposer,
+      $$ReceiptHistoryTableTableOrderingComposer,
+      $$ReceiptHistoryTableTableAnnotationComposer,
+      $$ReceiptHistoryTableTableCreateCompanionBuilder,
+      $$ReceiptHistoryTableTableUpdateCompanionBuilder,
+      (
+        ReceiptHistoryTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $ReceiptHistoryTableTable,
+          ReceiptHistoryTableData
+        >,
+      ),
+      ReceiptHistoryTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -20380,6 +22951,10 @@ class $AppDatabaseManager {
       $$ServicePackageTableTableTableManager(_db, _db.servicePackageTable);
   $$AddonTableTableTableManager get addonTable =>
       $$AddonTableTableTableManager(_db, _db.addonTable);
+  $$ShiftReportTableTableTableManager get shiftReportTable =>
+      $$ShiftReportTableTableTableManager(_db, _db.shiftReportTable);
+  $$ReceiptHistoryTableTableTableManager get receiptHistoryTable =>
+      $$ReceiptHistoryTableTableTableManager(_db, _db.receiptHistoryTable);
 }
 
 // **************************************************************************
