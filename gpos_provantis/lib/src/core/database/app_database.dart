@@ -39,6 +39,7 @@ import 'tables/service_package_table.dart';
 import 'tables/addon_table.dart';
 import 'tables/shift_report_table.dart';
 import 'tables/receipt_history_table.dart';
+import 'tables/cash_drop_table.dart';
 
 import 'daos/domain_config_dao.dart';
 import 'daos/branch_config_dao.dart';
@@ -77,6 +78,7 @@ part 'app_database.g.dart';
     AddonTable,
     ShiftReportTable,
     ReceiptHistoryTable,
+    CashDropTable,
   ],
   daos: [DomainConfigDao, BranchConfigDao, PosConfigDao],
 )
