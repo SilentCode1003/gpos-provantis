@@ -11,6 +11,8 @@ import 'package:gpos_provantis/src/core/database/repository/sold_services_report
 import 'package:gpos_provantis/src/core/database/repository/sold_packages_report_repository.dart';
 import 'package:gpos_provantis/src/core/database/repository/payment_summary_report_repository.dart';
 import 'package:gpos_provantis/src/core/database/repository/staff_sales_report_repository.dart';
+import 'package:gpos_provantis/src/core/database/repository/send_cash_report_repository.dart';
+import 'package:gpos_provantis/src/core/database/domain/send_cash_report_dto.dart';
 
 part 'end_shift_service.g.dart';
 
@@ -56,6 +58,25 @@ class EndShiftResult {
       !staffSalesUnavailable;
 }
 
+/// Outcome of filing the end-of-shift cash report. The report is ALWAYS saved
+/// on the device first; [sent] says whether the server has it yet.
+class SendCashReportResult {
+  const SendCashReportResult({
+    required this.record,
+    required this.sent,
+    this.error,
+  });
+
+  final SendCashReportTableData record;
+
+  /// True once the server has accepted it. False means it is safely stored and
+  /// will be sent later.
+  final bool sent;
+
+  /// Why the last send failed, when [sent] is false and a send was tried.
+  final String? error;
+}
+
 class EndShiftReportUnavailableException implements Exception {
   const EndShiftReportUnavailableException(this.message);
   final String message;
@@ -73,6 +94,7 @@ EndShiftService endShiftService(Ref ref) {
     soldPackagesRepository: ref.watch(soldPackagesReportRepositoryProvider),
     paymentSummaryRepository: ref.watch(paymentSummaryReportRepositoryProvider),
     staffSalesRepository: ref.watch(staffSalesReportRepositoryProvider),
+    sendCashReportRepository: ref.watch(sendCashReportRepositoryProvider),
     printer: ref.watch(shiftReportPrinterServiceProvider),
   );
 }
@@ -85,6 +107,7 @@ class EndShiftService {
     required SoldPackagesReportRepository soldPackagesRepository,
     required PaymentSummaryReportRepository paymentSummaryRepository,
     required StaffSalesReportRepository staffSalesRepository,
+    required SendCashReportRepository sendCashReportRepository,
     required ShiftReportPrinterService printer,
   }) : _repository = repository,
        _soldItemsRepository = soldItemsRepository,
@@ -92,6 +115,7 @@ class EndShiftService {
        _soldPackagesRepository = soldPackagesRepository,
        _paymentSummaryRepository = paymentSummaryRepository,
        _staffSalesRepository = staffSalesRepository,
+       _sendCashReportRepository = sendCashReportRepository,
        _printer = printer;
 
   final EndShiftRepository _repository;
@@ -100,6 +124,7 @@ class EndShiftService {
   final SoldPackagesReportRepository _soldPackagesRepository;
   final PaymentSummaryReportRepository _paymentSummaryRepository;
   final StaffSalesReportRepository _staffSalesRepository;
+  final SendCashReportRepository _sendCashReportRepository;
   final ShiftReportPrinterService _printer;
 
   /// Gets the shift report and prints it.
@@ -178,6 +203,63 @@ class EndShiftService {
       staffSalesUnavailable: !staff.available,
     );
   }
+
+  /// Files the end-of-shift cash report: SAVE locally first, THEN upload.
+  ///
+  /// Meant to run right after the shift has ended and the drawer was counted,
+  /// so the order is always end shift > save > send.
+  ///
+  /// 1. The report is written to the local DB. Nothing is sent unless this
+  ///    succeeds, and once it has, the report can't be lost, whatever the
+  ///    network does next. If this step throws, the caller should know.
+  /// 2. Then every pending report (this one and any older ones) is uploaded.
+  ///    This never throws: if the server is unreachable the report simply stays
+  ///    PENDING and goes out on a later [syncPendingCashReports].
+  ///
+  /// The returned [SendCashReportResult] says whether it has reached the server
+  /// yet. Recounting the same shift replaces its earlier report.
+  Future<SendCashReportResult> sendCashReport({
+    required String branchId,
+    required String posId,
+    required String shift,
+    required String shiftDate,
+    required String cashierId,
+    required List<SendCashReportLineDto> lines,
+  }) async {
+    // 1. Always save first.
+    final saved = await _sendCashReportRepository.saveSendCashReport(
+      SendCashReportDto.create(
+        branchId: branchId,
+        posId: posId,
+        shift: shift,
+        shiftDate: shiftDate,
+        cashierId: cashierId,
+        lines: lines,
+      ),
+    );
+
+    // 2. Then upload. Failures are recorded on the row, not thrown.
+    try {
+      await _sendCashReportRepository.syncPending();
+    } catch (e) {
+      debugPrint('EndShiftService: cash report upload failed: $e');
+    }
+
+    final latest =
+        await _sendCashReportRepository.getSendCashReport(saved.id) ?? saved;
+    final sent = latest.syncStatus == SendCashReportSyncStatus.synced;
+
+    return SendCashReportResult(
+      record: latest,
+      sent: sent,
+      error: sent ? null : latest.lastError,
+    );
+  }
+
+  /// Uploads any cash reports still waiting (e.g. the device was offline when
+  /// the shift ended). Safe to call any time; returns how many were sent.
+  Future<int> syncPendingCashReports() =>
+      _sendCashReportRepository.syncPending();
 
   /// Reprints strictly from the local DB. Never touches the network.
   Future<EndShiftTableData> reprintShiftReport({
