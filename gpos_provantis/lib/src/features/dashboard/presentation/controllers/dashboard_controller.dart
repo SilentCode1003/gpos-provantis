@@ -26,6 +26,7 @@ import 'package:gpos_provantis/src/core/database/domain/cash_drawer_dto.dart'
 import 'payments_controller.dart';
 import 'package:gpos_provantis/src/services/end_shift_service.dart';
 import 'package:gpos_provantis/src/services/cash_drawer_service.dart';
+import 'package:gpos_provantis/src/core/database/domain/send_cash_report_dto.dart';
 import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
     show
         ReceiptGenerator,
@@ -651,6 +652,12 @@ class DashboardController extends _$DashboardController {
     // from there instead would be more precise than this.
     unawaited(ref.read(cashDrawerServiceProvider).retryPending());
 
+    // Same idea for the end-of-shift "send cash report": sends any left over
+    // from a session where the device was offline when the shift ended.
+    // Harmless to call repeatedly (an in-flight run or an empty outbox returns
+    // straight away).
+    unawaited(ref.read(endShiftServiceProvider).syncPendingCashReports());
+
     return DashboardState(
       selectedCategoryId: firstCategoryId,
       cartLines: const [],
@@ -1000,7 +1007,13 @@ class DashboardController extends _$DashboardController {
         ),
     ];
 
+    // Everything needed from `ref` is read here, before the first await (see
+    // toggleShift): an await can let this controller be rebuilt and its Ref
+    // disposed.
     final service = ref.read(cashDrawerServiceProvider);
+    final endShiftService = ref.read(endShiftServiceProvider);
+    final userDao = ref.read(userDataDaoProvider);
+
     final record = isStartOfShift
         ? service.recordStartShiftCount
         : service.recordEndShiftCount;
@@ -1013,6 +1026,50 @@ class DashboardController extends _$DashboardController {
       posId: shiftKey.posId,
       lines: lines,
     );
+
+    // Closing a shift also sends the cash report to the server: EndShiftService
+    // saves it on the device first and then uploads it, so it is never lost if
+    // the server is unreachable. It is separate from the drawer count above and
+    // must never undo it: that count is already queued.
+    if (!isStartOfShift) {
+      try {
+        // The server wants the cashier's employee id, not their name.
+        final user = await userDao.getUser();
+        final employeeId = user?.employeeId;
+        if (employeeId == null || employeeId.isEmpty) {
+          debugPrint(
+            '[SendCashReport] no employee id for the logged-in user, '
+            'report not recorded',
+          );
+          return;
+        }
+
+        final result = await endShiftService.sendCashReport(
+          branchId: shiftKey.branchId,
+          posId: shiftKey.posId,
+          shift: shiftKey.shift,
+          // Same date the drawer count above uses.
+          shiftDate: shiftKey.businessDate,
+          cashierId: employeeId,
+          lines: [
+            for (final entry in count.allActiveLines)
+              SendCashReportLineDto(
+                denominationId: entry.denominationId,
+                value: entry.value,
+                quantity: entry.quantity,
+              ),
+          ],
+        );
+        debugPrint(
+          result.sent
+              ? '[SendCashReport] saved and sent to the server'
+              : '[SendCashReport] saved on this device, will send when the '
+                    'server is reachable (${result.error ?? 'not sent yet'})',
+        );
+      } catch (e, st) {
+        debugPrint('[SendCashReport] could not record the report: $e\n$st');
+      }
+    }
   }
 
   void applyDiscount(

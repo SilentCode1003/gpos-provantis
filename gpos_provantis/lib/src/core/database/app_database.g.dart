@@ -15613,6 +15613,766 @@ class CashDropTableCompanion extends UpdateCompanion<CashDropTableData> {
   }
 }
 
+class $SendCashReportTableTable extends SendCashReportTable
+    with TableInfo<$SendCashReportTableTable, SendCashReportTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SendCashReportTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
+  @override
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _posIdMeta = const VerificationMeta('posId');
+  @override
+  late final GeneratedColumn<String> posId = GeneratedColumn<String>(
+    'pos_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _shiftMeta = const VerificationMeta('shift');
+  @override
+  late final GeneratedColumn<String> shift = GeneratedColumn<String>(
+    'shift',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _shiftDateMeta = const VerificationMeta(
+    'shiftDate',
+  );
+  @override
+  late final GeneratedColumn<String> shiftDate = GeneratedColumn<String>(
+    'shift_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cashierIdMeta = const VerificationMeta(
+    'cashierId',
+  );
+  @override
+  late final GeneratedColumn<String> cashierId = GeneratedColumn<String>(
+    'cashier_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _linesJsonMeta = const VerificationMeta(
+    'linesJson',
+  );
+  @override
+  late final GeneratedColumn<String> linesJson = GeneratedColumn<String>(
+    'lines_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    clientDefault: () => DateTime.now(),
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('PENDING'),
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> syncedAt = GeneratedColumn<DateTime>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _attemptsMeta = const VerificationMeta(
+    'attempts',
+  );
+  @override
+  late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
+    'attempts',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    branchId,
+    posId,
+    shift,
+    shiftDate,
+    cashierId,
+    amount,
+    linesJson,
+    createdAt,
+    syncStatus,
+    syncedAt,
+    attempts,
+    lastError,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'send_cash_report_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SendCashReportTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_branchIdMeta);
+    }
+    if (data.containsKey('pos_id')) {
+      context.handle(
+        _posIdMeta,
+        posId.isAcceptableOrUnknown(data['pos_id']!, _posIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_posIdMeta);
+    }
+    if (data.containsKey('shift')) {
+      context.handle(
+        _shiftMeta,
+        shift.isAcceptableOrUnknown(data['shift']!, _shiftMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_shiftMeta);
+    }
+    if (data.containsKey('shift_date')) {
+      context.handle(
+        _shiftDateMeta,
+        shiftDate.isAcceptableOrUnknown(data['shift_date']!, _shiftDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_shiftDateMeta);
+    }
+    if (data.containsKey('cashier_id')) {
+      context.handle(
+        _cashierIdMeta,
+        cashierId.isAcceptableOrUnknown(data['cashier_id']!, _cashierIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cashierIdMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('lines_json')) {
+      context.handle(
+        _linesJsonMeta,
+        linesJson.isAcceptableOrUnknown(data['lines_json']!, _linesJsonMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    if (data.containsKey('attempts')) {
+      context.handle(
+        _attemptsMeta,
+        attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {branchId, posId, shiftDate, shift},
+  ];
+  @override
+  SendCashReportTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SendCashReportTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      branchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_id'],
+      )!,
+      posId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pos_id'],
+      )!,
+      shift: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shift'],
+      )!,
+      shiftDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shift_date'],
+      )!,
+      cashierId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cashier_id'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}amount'],
+      )!,
+      linesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}lines_json'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}synced_at'],
+      ),
+      attempts: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempts'],
+      )!,
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+    );
+  }
+
+  @override
+  $SendCashReportTableTable createAlias(String alias) {
+    return $SendCashReportTableTable(attachedDatabase, alias);
+  }
+}
+
+class SendCashReportTableData extends DataClass
+    implements Insertable<SendCashReportTableData> {
+  final String id;
+  final String branchId;
+  final String posId;
+  final String shift;
+
+  /// `yyyy-MM-dd`.
+  final String shiftDate;
+
+  /// Employee id of the cashier (what the server expects as `cashier`).
+  final String cashierId;
+  final double amount;
+
+  /// JSON array of `{id, value, quantity}` for every active denomination,
+  /// including ones counted as zero.
+  final String linesJson;
+  final DateTime createdAt;
+
+  /// PENDING until the server has accepted it, then SYNCED.
+  final String syncStatus;
+  final DateTime? syncedAt;
+
+  /// How many sends have failed, and why the last one did.
+  final int attempts;
+  final String? lastError;
+  const SendCashReportTableData({
+    required this.id,
+    required this.branchId,
+    required this.posId,
+    required this.shift,
+    required this.shiftDate,
+    required this.cashierId,
+    required this.amount,
+    required this.linesJson,
+    required this.createdAt,
+    required this.syncStatus,
+    this.syncedAt,
+    required this.attempts,
+    this.lastError,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['branch_id'] = Variable<String>(branchId);
+    map['pos_id'] = Variable<String>(posId);
+    map['shift'] = Variable<String>(shift);
+    map['shift_date'] = Variable<String>(shiftDate);
+    map['cashier_id'] = Variable<String>(cashierId);
+    map['amount'] = Variable<double>(amount);
+    map['lines_json'] = Variable<String>(linesJson);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<DateTime>(syncedAt);
+    }
+    map['attempts'] = Variable<int>(attempts);
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    return map;
+  }
+
+  SendCashReportTableCompanion toCompanion(bool nullToAbsent) {
+    return SendCashReportTableCompanion(
+      id: Value(id),
+      branchId: Value(branchId),
+      posId: Value(posId),
+      shift: Value(shift),
+      shiftDate: Value(shiftDate),
+      cashierId: Value(cashierId),
+      amount: Value(amount),
+      linesJson: Value(linesJson),
+      createdAt: Value(createdAt),
+      syncStatus: Value(syncStatus),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+      attempts: Value(attempts),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+    );
+  }
+
+  factory SendCashReportTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SendCashReportTableData(
+      id: serializer.fromJson<String>(json['id']),
+      branchId: serializer.fromJson<String>(json['branchId']),
+      posId: serializer.fromJson<String>(json['posId']),
+      shift: serializer.fromJson<String>(json['shift']),
+      shiftDate: serializer.fromJson<String>(json['shiftDate']),
+      cashierId: serializer.fromJson<String>(json['cashierId']),
+      amount: serializer.fromJson<double>(json['amount']),
+      linesJson: serializer.fromJson<String>(json['linesJson']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      syncedAt: serializer.fromJson<DateTime?>(json['syncedAt']),
+      attempts: serializer.fromJson<int>(json['attempts']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'branchId': serializer.toJson<String>(branchId),
+      'posId': serializer.toJson<String>(posId),
+      'shift': serializer.toJson<String>(shift),
+      'shiftDate': serializer.toJson<String>(shiftDate),
+      'cashierId': serializer.toJson<String>(cashierId),
+      'amount': serializer.toJson<double>(amount),
+      'linesJson': serializer.toJson<String>(linesJson),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'syncedAt': serializer.toJson<DateTime?>(syncedAt),
+      'attempts': serializer.toJson<int>(attempts),
+      'lastError': serializer.toJson<String?>(lastError),
+    };
+  }
+
+  SendCashReportTableData copyWith({
+    String? id,
+    String? branchId,
+    String? posId,
+    String? shift,
+    String? shiftDate,
+    String? cashierId,
+    double? amount,
+    String? linesJson,
+    DateTime? createdAt,
+    String? syncStatus,
+    Value<DateTime?> syncedAt = const Value.absent(),
+    int? attempts,
+    Value<String?> lastError = const Value.absent(),
+  }) => SendCashReportTableData(
+    id: id ?? this.id,
+    branchId: branchId ?? this.branchId,
+    posId: posId ?? this.posId,
+    shift: shift ?? this.shift,
+    shiftDate: shiftDate ?? this.shiftDate,
+    cashierId: cashierId ?? this.cashierId,
+    amount: amount ?? this.amount,
+    linesJson: linesJson ?? this.linesJson,
+    createdAt: createdAt ?? this.createdAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+    attempts: attempts ?? this.attempts,
+    lastError: lastError.present ? lastError.value : this.lastError,
+  );
+  SendCashReportTableData copyWithCompanion(SendCashReportTableCompanion data) {
+    return SendCashReportTableData(
+      id: data.id.present ? data.id.value : this.id,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      posId: data.posId.present ? data.posId.value : this.posId,
+      shift: data.shift.present ? data.shift.value : this.shift,
+      shiftDate: data.shiftDate.present ? data.shiftDate.value : this.shiftDate,
+      cashierId: data.cashierId.present ? data.cashierId.value : this.cashierId,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      linesJson: data.linesJson.present ? data.linesJson.value : this.linesJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+      attempts: data.attempts.present ? data.attempts.value : this.attempts,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SendCashReportTableData(')
+          ..write('id: $id, ')
+          ..write('branchId: $branchId, ')
+          ..write('posId: $posId, ')
+          ..write('shift: $shift, ')
+          ..write('shiftDate: $shiftDate, ')
+          ..write('cashierId: $cashierId, ')
+          ..write('amount: $amount, ')
+          ..write('linesJson: $linesJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('attempts: $attempts, ')
+          ..write('lastError: $lastError')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    branchId,
+    posId,
+    shift,
+    shiftDate,
+    cashierId,
+    amount,
+    linesJson,
+    createdAt,
+    syncStatus,
+    syncedAt,
+    attempts,
+    lastError,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SendCashReportTableData &&
+          other.id == this.id &&
+          other.branchId == this.branchId &&
+          other.posId == this.posId &&
+          other.shift == this.shift &&
+          other.shiftDate == this.shiftDate &&
+          other.cashierId == this.cashierId &&
+          other.amount == this.amount &&
+          other.linesJson == this.linesJson &&
+          other.createdAt == this.createdAt &&
+          other.syncStatus == this.syncStatus &&
+          other.syncedAt == this.syncedAt &&
+          other.attempts == this.attempts &&
+          other.lastError == this.lastError);
+}
+
+class SendCashReportTableCompanion
+    extends UpdateCompanion<SendCashReportTableData> {
+  final Value<String> id;
+  final Value<String> branchId;
+  final Value<String> posId;
+  final Value<String> shift;
+  final Value<String> shiftDate;
+  final Value<String> cashierId;
+  final Value<double> amount;
+  final Value<String> linesJson;
+  final Value<DateTime> createdAt;
+  final Value<String> syncStatus;
+  final Value<DateTime?> syncedAt;
+  final Value<int> attempts;
+  final Value<String?> lastError;
+  final Value<int> rowid;
+  const SendCashReportTableCompanion({
+    this.id = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.posId = const Value.absent(),
+    this.shift = const Value.absent(),
+    this.shiftDate = const Value.absent(),
+    this.cashierId = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.linesJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SendCashReportTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String branchId,
+    required String posId,
+    required String shift,
+    required String shiftDate,
+    required String cashierId,
+    required double amount,
+    this.linesJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : branchId = Value(branchId),
+       posId = Value(posId),
+       shift = Value(shift),
+       shiftDate = Value(shiftDate),
+       cashierId = Value(cashierId),
+       amount = Value(amount);
+  static Insertable<SendCashReportTableData> custom({
+    Expression<String>? id,
+    Expression<String>? branchId,
+    Expression<String>? posId,
+    Expression<String>? shift,
+    Expression<String>? shiftDate,
+    Expression<String>? cashierId,
+    Expression<double>? amount,
+    Expression<String>? linesJson,
+    Expression<DateTime>? createdAt,
+    Expression<String>? syncStatus,
+    Expression<DateTime>? syncedAt,
+    Expression<int>? attempts,
+    Expression<String>? lastError,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (branchId != null) 'branch_id': branchId,
+      if (posId != null) 'pos_id': posId,
+      if (shift != null) 'shift': shift,
+      if (shiftDate != null) 'shift_date': shiftDate,
+      if (cashierId != null) 'cashier_id': cashierId,
+      if (amount != null) 'amount': amount,
+      if (linesJson != null) 'lines_json': linesJson,
+      if (createdAt != null) 'created_at': createdAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (attempts != null) 'attempts': attempts,
+      if (lastError != null) 'last_error': lastError,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SendCashReportTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? branchId,
+    Value<String>? posId,
+    Value<String>? shift,
+    Value<String>? shiftDate,
+    Value<String>? cashierId,
+    Value<double>? amount,
+    Value<String>? linesJson,
+    Value<DateTime>? createdAt,
+    Value<String>? syncStatus,
+    Value<DateTime?>? syncedAt,
+    Value<int>? attempts,
+    Value<String?>? lastError,
+    Value<int>? rowid,
+  }) {
+    return SendCashReportTableCompanion(
+      id: id ?? this.id,
+      branchId: branchId ?? this.branchId,
+      posId: posId ?? this.posId,
+      shift: shift ?? this.shift,
+      shiftDate: shiftDate ?? this.shiftDate,
+      cashierId: cashierId ?? this.cashierId,
+      amount: amount ?? this.amount,
+      linesJson: linesJson ?? this.linesJson,
+      createdAt: createdAt ?? this.createdAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      syncedAt: syncedAt ?? this.syncedAt,
+      attempts: attempts ?? this.attempts,
+      lastError: lastError ?? this.lastError,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
+    }
+    if (posId.present) {
+      map['pos_id'] = Variable<String>(posId.value);
+    }
+    if (shift.present) {
+      map['shift'] = Variable<String>(shift.value);
+    }
+    if (shiftDate.present) {
+      map['shift_date'] = Variable<String>(shiftDate.value);
+    }
+    if (cashierId.present) {
+      map['cashier_id'] = Variable<String>(cashierId.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (linesJson.present) {
+      map['lines_json'] = Variable<String>(linesJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<DateTime>(syncedAt.value);
+    }
+    if (attempts.present) {
+      map['attempts'] = Variable<int>(attempts.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SendCashReportTableCompanion(')
+          ..write('id: $id, ')
+          ..write('branchId: $branchId, ')
+          ..write('posId: $posId, ')
+          ..write('shift: $shift, ')
+          ..write('shiftDate: $shiftDate, ')
+          ..write('cashierId: $cashierId, ')
+          ..write('amount: $amount, ')
+          ..write('linesJson: $linesJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('attempts: $attempts, ')
+          ..write('lastError: $lastError, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -15665,6 +16425,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ReceiptHistoryTableTable receiptHistoryTable =
       $ReceiptHistoryTableTable(this);
   late final $CashDropTableTable cashDropTable = $CashDropTableTable(this);
+  late final $SendCashReportTableTable sendCashReportTable =
+      $SendCashReportTableTable(this);
   late final DomainConfigDao domainConfigDao = DomainConfigDao(
     this as AppDatabase,
   );
@@ -15707,6 +16469,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     shiftReportTable,
     receiptHistoryTable,
     cashDropTable,
+    sendCashReportTable,
   ];
 }
 
@@ -23936,6 +24699,376 @@ typedef $$CashDropTableTableProcessedTableManager =
       CashDropTableData,
       PrefetchHooks Function()
     >;
+typedef $$SendCashReportTableTableCreateCompanionBuilder =
+    SendCashReportTableCompanion Function({
+      Value<String> id,
+      required String branchId,
+      required String posId,
+      required String shift,
+      required String shiftDate,
+      required String cashierId,
+      required double amount,
+      Value<String> linesJson,
+      Value<DateTime> createdAt,
+      Value<String> syncStatus,
+      Value<DateTime?> syncedAt,
+      Value<int> attempts,
+      Value<String?> lastError,
+      Value<int> rowid,
+    });
+typedef $$SendCashReportTableTableUpdateCompanionBuilder =
+    SendCashReportTableCompanion Function({
+      Value<String> id,
+      Value<String> branchId,
+      Value<String> posId,
+      Value<String> shift,
+      Value<String> shiftDate,
+      Value<String> cashierId,
+      Value<double> amount,
+      Value<String> linesJson,
+      Value<DateTime> createdAt,
+      Value<String> syncStatus,
+      Value<DateTime?> syncedAt,
+      Value<int> attempts,
+      Value<String?> lastError,
+      Value<int> rowid,
+    });
+
+class $$SendCashReportTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SendCashReportTableTable> {
+  $$SendCashReportTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get branchId => $composableBuilder(
+    column: $table.branchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get posId => $composableBuilder(
+    column: $table.posId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shiftDate => $composableBuilder(
+    column: $table.shiftDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cashierId => $composableBuilder(
+    column: $table.cashierId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get linesJson => $composableBuilder(
+    column: $table.linesJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SendCashReportTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SendCashReportTableTable> {
+  $$SendCashReportTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get branchId => $composableBuilder(
+    column: $table.branchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get posId => $composableBuilder(
+    column: $table.posId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get shiftDate => $composableBuilder(
+    column: $table.shiftDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cashierId => $composableBuilder(
+    column: $table.cashierId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get linesJson => $composableBuilder(
+    column: $table.linesJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SendCashReportTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SendCashReportTableTable> {
+  $$SendCashReportTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get branchId =>
+      $composableBuilder(column: $table.branchId, builder: (column) => column);
+
+  GeneratedColumn<String> get posId =>
+      $composableBuilder(column: $table.posId, builder: (column) => column);
+
+  GeneratedColumn<String> get shift =>
+      $composableBuilder(column: $table.shift, builder: (column) => column);
+
+  GeneratedColumn<String> get shiftDate =>
+      $composableBuilder(column: $table.shiftDate, builder: (column) => column);
+
+  GeneratedColumn<String> get cashierId =>
+      $composableBuilder(column: $table.cashierId, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get linesJson =>
+      $composableBuilder(column: $table.linesJson, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => column);
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+}
+
+class $$SendCashReportTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SendCashReportTableTable,
+          SendCashReportTableData,
+          $$SendCashReportTableTableFilterComposer,
+          $$SendCashReportTableTableOrderingComposer,
+          $$SendCashReportTableTableAnnotationComposer,
+          $$SendCashReportTableTableCreateCompanionBuilder,
+          $$SendCashReportTableTableUpdateCompanionBuilder,
+          (
+            SendCashReportTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $SendCashReportTableTable,
+              SendCashReportTableData
+            >,
+          ),
+          SendCashReportTableData,
+          PrefetchHooks Function()
+        > {
+  $$SendCashReportTableTableTableManager(
+    _$AppDatabase db,
+    $SendCashReportTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SendCashReportTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SendCashReportTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SendCashReportTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> branchId = const Value.absent(),
+                Value<String> posId = const Value.absent(),
+                Value<String> shift = const Value.absent(),
+                Value<String> shiftDate = const Value.absent(),
+                Value<String> cashierId = const Value.absent(),
+                Value<double> amount = const Value.absent(),
+                Value<String> linesJson = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime?> syncedAt = const Value.absent(),
+                Value<int> attempts = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SendCashReportTableCompanion(
+                id: id,
+                branchId: branchId,
+                posId: posId,
+                shift: shift,
+                shiftDate: shiftDate,
+                cashierId: cashierId,
+                amount: amount,
+                linesJson: linesJson,
+                createdAt: createdAt,
+                syncStatus: syncStatus,
+                syncedAt: syncedAt,
+                attempts: attempts,
+                lastError: lastError,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String branchId,
+                required String posId,
+                required String shift,
+                required String shiftDate,
+                required String cashierId,
+                required double amount,
+                Value<String> linesJson = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime?> syncedAt = const Value.absent(),
+                Value<int> attempts = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SendCashReportTableCompanion.insert(
+                id: id,
+                branchId: branchId,
+                posId: posId,
+                shift: shift,
+                shiftDate: shiftDate,
+                cashierId: cashierId,
+                amount: amount,
+                linesJson: linesJson,
+                createdAt: createdAt,
+                syncStatus: syncStatus,
+                syncedAt: syncedAt,
+                attempts: attempts,
+                lastError: lastError,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SendCashReportTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SendCashReportTableTable,
+      SendCashReportTableData,
+      $$SendCashReportTableTableFilterComposer,
+      $$SendCashReportTableTableOrderingComposer,
+      $$SendCashReportTableTableAnnotationComposer,
+      $$SendCashReportTableTableCreateCompanionBuilder,
+      $$SendCashReportTableTableUpdateCompanionBuilder,
+      (
+        SendCashReportTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $SendCashReportTableTable,
+          SendCashReportTableData
+        >,
+      ),
+      SendCashReportTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -24009,6 +25142,8 @@ class $AppDatabaseManager {
       $$ReceiptHistoryTableTableTableManager(_db, _db.receiptHistoryTable);
   $$CashDropTableTableTableManager get cashDropTable =>
       $$CashDropTableTableTableManager(_db, _db.cashDropTable);
+  $$SendCashReportTableTableTableManager get sendCashReportTable =>
+      $$SendCashReportTableTableTableManager(_db, _db.sendCashReportTable);
 }
 
 // **************************************************************************
