@@ -26,6 +26,7 @@ import 'package:gpos_provantis/src/core/database/domain/cash_drawer_dto.dart'
 import 'payments_controller.dart';
 import 'package:gpos_provantis/src/services/end_shift_service.dart';
 import 'package:gpos_provantis/src/services/cash_drawer_service.dart';
+import 'package:gpos_provantis/src/services/customer_service.dart';
 import 'package:gpos_provantis/src/core/database/domain/send_cash_report_dto.dart';
 import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
     show
@@ -658,6 +659,9 @@ class DashboardController extends _$DashboardController {
     // straight away).
     unawaited(ref.read(endShiftServiceProvider).syncPendingCashReports());
 
+    // And customers attached to sales made while the server was unreachable.
+    unawaited(ref.read(customerServiceProvider).syncPending());
+
     return DashboardState(
       selectedCategoryId: firstCategoryId,
       cartLines: const [],
@@ -1194,6 +1198,35 @@ class DashboardController extends _$DashboardController {
     state = state.copyWith(cartLines: const []);
   }
 
+  /// Attaches the customer entered before payment (if any) to the sale that
+  /// was just saved: the customer service stores it on the device against this
+  /// receipt number and then uploads it. Caught, not rethrown: the sale itself
+  /// already succeeded and must not be blocked from printing over a customer
+  /// problem. An unreachable server is not an error here at all, the customer
+  /// just stays pending and is sent later.
+  Future<void> _recordCustomerForSale({
+    required String detailId,
+    required String posId,
+  }) async {
+    try {
+      final result = await ref
+          .read(customerServiceProvider)
+          .recordForSale(salesId: detailId, posId: posId);
+      if (result == null) return;
+      debugPrint(
+        result.sent
+            ? '[Customer] saved and sent for sale $detailId'
+            : '[Customer] saved for sale $detailId, will send when the '
+                  'server is reachable (${result.error ?? 'not sent yet'})',
+      );
+    } catch (e, st) {
+      debugPrint(
+        '[Customer] could not record the customer for sale $detailId: '
+        '$e\n$st',
+      );
+    }
+  }
+
   Future<void> createSaleFromCash() async {
     final identity = await _PosIdentity.resolve(ref);
     final cashier = await _resolveCashier(ref);
@@ -1225,6 +1258,9 @@ class DashboardController extends _$DashboardController {
     );
 
     await ref.read(salesDaoProvider).saveSale(sale);
+
+    // The sale is complete: attach the customer entered before payment.
+    await _recordCustomerForSale(detailId: detailId, posId: identity.posId);
 
     // Records the cash tendered for this sale to the cash-drawer outbox.
     // Awaited (not fire-and-forget) so a failure to even QUEUE it locally is
@@ -1315,6 +1351,9 @@ class DashboardController extends _$DashboardController {
 
     await ref.read(salesDaoProvider).saveSale(sale);
 
+    // The sale is complete: attach the customer entered before payment.
+    await _recordCustomerForSale(detailId: detailId, posId: identity.posId);
+
     // No cash-drawer send here: this sale has zero cash tendered (fully
     // e-payment), and the cash-drawer API only records cash amounts — see
     // CashDrawerActivityPayload.transaction. Nothing to report.
@@ -1394,6 +1433,9 @@ class DashboardController extends _$DashboardController {
     );
 
     await ref.read(salesDaoProvider).saveSale(sale);
+
+    // The sale is complete: attach the customer entered before payment.
+    await _recordCustomerForSale(detailId: detailId, posId: identity.posId);
 
     // Records only the CASH portion of this split sale to the cash-drawer
     // outbox — the e-payment portion never touches the physical drawer.
