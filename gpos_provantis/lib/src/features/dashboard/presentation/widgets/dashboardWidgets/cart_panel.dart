@@ -9,6 +9,7 @@ import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
 import 'dashboard_constants.dart';
 import 'discount_picker_sheet.dart';
 import 'payments_modal.dart';
+import 'customer_panel.dart';
 
 const Duration _cartScrimAutoFadeDelay = Duration(seconds: 3);
 
@@ -485,7 +486,7 @@ class _ScrollHintArrowState extends State<_ScrollHintArrow>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
- 
+
     final bounceTowards = widget.direction == _ScrollHintDirection.up
         ? -5.0
         : 5.0;
@@ -729,6 +730,15 @@ class _CartFooter extends ConsumerWidget {
 
   final DashboardState state;
 
+  /// Charge: first ask who the customer is (if the store has that switched
+  /// on), then go on to payment. Closing the customer sheet without choosing
+  /// stops here, so nothing is charged by accident.
+  Future<void> _charge(BuildContext context, WidgetRef ref) async {
+    final proceed = await CustomerPanel.promptBeforePayment(context, ref);
+    if (!proceed || !context.mounted) return;
+    showPaymentModal(context);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
@@ -822,9 +832,7 @@ class _CartFooter extends ConsumerWidget {
                 child: SizedBox(
                   height: primaryTapTarget,
                   child: ElevatedButton(
-                    onPressed: hasItems
-                        ? () => showPaymentModal(context)
-                        : null,
+                    onPressed: hasItems ? () => _charge(context, ref) : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppPalette.teal500,
                       foregroundColor: colors.onPrimary,
