@@ -960,16 +960,24 @@ class _SplitLayoutState extends ConsumerState<_SplitLayout> {
                     child: ElevatedButton(
                       onPressed: paymentState.splitIsReadyToConfirm(total)
                           ? () async {
-                              if (paymentState.splitKind ==
-                                  SplitKind.cashAndEPayment) {
+                              // Both kinds of split create a sale; they differ only in which
+                              // payments are involved.
+                              {
                                 try {
-                                  await ref
-                                      .read(
-                                        dashboardControllerProvider.notifier,
-                                      )
-                                      .createSaleFromCashEPaymentSplit(
-                                        paymentState,
-                                      );
+                                  final dashboard = ref.read(
+                                    dashboardControllerProvider.notifier,
+                                  );
+                                  if (paymentState.splitKind ==
+                                      SplitKind.cashAndEPayment) {
+                                    await dashboard
+                                        .createSaleFromCashEPaymentSplit(
+                                          paymentState,
+                                        );
+                                  } else {
+                                    await dashboard.createSaleFromEPaymentSplit(
+                                      paymentState,
+                                    );
+                                  }
                                 } on PosDetailIdUnavailableException catch (e) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(

@@ -27,6 +27,9 @@ import 'payments_controller.dart';
 import 'package:gpos_provantis/src/services/end_shift_service.dart';
 import 'package:gpos_provantis/src/services/cash_drawer_service.dart';
 import 'package:gpos_provantis/src/services/customer_service.dart';
+import 'package:gpos_provantis/src/services/split_payment_service.dart';
+import 'package:gpos_provantis/src/core/database/domain/split_payment_dto.dart'
+    show SplitPaymentLeg;
 import 'package:gpos_provantis/src/core/database/domain/send_cash_report_dto.dart';
 import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
     show
@@ -480,6 +483,10 @@ ReceiptSaleData _receiptDataFromCheckout({
   required double ecash,
   required String referenceId,
   required String paymentName,
+  // Only for a sale paid with two e-payments (E2E): the second payment.
+  String secondPaymentName = '',
+  String secondReferenceId = '',
+  double secondAmount = 0,
 }) {
   return ReceiptSaleData(
     detailId: detailId,
@@ -508,6 +515,9 @@ ReceiptSaleData _receiptDataFromCheckout({
     ecash: ecash,
     referenceId: referenceId,
     paymentName: paymentName,
+    secondPaymentName: secondPaymentName,
+    secondReferenceId: secondReferenceId,
+    secondAmount: secondAmount,
   );
 }
 
@@ -661,6 +671,9 @@ class DashboardController extends _$DashboardController {
 
     // And customers attached to sales made while the server was unreachable.
     unawaited(ref.read(customerServiceProvider).syncPending());
+
+    // And split-payment sales that were saved while the server was unreachable.
+    unawaited(ref.read(splitPaymentServiceProvider).syncPending());
 
     return DashboardState(
       selectedCategoryId: firstCategoryId,
@@ -1481,6 +1494,107 @@ class DashboardController extends _$DashboardController {
             ecash: ePaymentAmount,
             referenceId: referenceId,
             paymentName: paymentName,
+          ),
+        );
+  }
+
+  /// A sale paid with two e-payments (e.g. GCASH + BANK TRANSFER).
+  ///
+  /// Recorded by [SplitPaymentService]: the sale is saved on the device first
+  /// and then uploaded to the server, and kept for a retry if the server can't
+  /// be reached. Unlike the other flows it is not written to the local `sales`
+  /// table, because that table has one payment name and one reference per sale.
+  Future<void> createSaleFromEPaymentSplit(PaymentState paymentState) async {
+    assert(
+      paymentState.splitKind == SplitKind.ePaymentAndEPayment,
+      'createSaleFromEPaymentSplit called with the wrong split kind',
+    );
+    if (paymentState.splitKind != SplitKind.ePaymentAndEPayment) {
+      throw StateError(
+        'createSaleFromEPaymentSplit requires '
+        'SplitKind.ePaymentAndEPayment, got ${paymentState.splitKind}',
+      );
+    }
+
+    final firstSlot = paymentState.splitSlots[0];
+    final secondSlot = paymentState.splitSlots[1];
+    final firstMethod = firstSlot.method;
+    final secondMethod = secondSlot.method;
+    if (firstMethod == null || secondMethod == null) {
+      throw StateError(
+        'createSaleFromEPaymentSplit requires an e-payment method on both '
+        'slots',
+      );
+    }
+
+    final identity = await _PosIdentity.resolve(ref);
+    final cashier = await _resolveCashier(ref);
+    final branch = await _resolveBranch(ref);
+    final detailId = await ref
+        .read(posDetailIdDaoProvider)
+        .consumeAndIncrementDetailId();
+
+    final total = state.total;
+
+    final saleState = state;
+    final firstAmount = firstSlot.amount ?? 0;
+    final secondAmount = secondSlot.amount ?? 0;
+    final firstReference = firstSlot.referenceId ?? '';
+    final secondReference = secondSlot.referenceId ?? '';
+
+    // Saves the sale on the device, then uploads it. It only throws if the
+    // local save itself fails; an unreachable server just leaves it pending.
+    await ref
+        .read(splitPaymentServiceProvider)
+        .recordSplitPayment(
+          detailId: detailId,
+          date: _formatSaleDate(DateTime.now()),
+          posId: identity.posId,
+          shift: identity.shift,
+          items: _buildItemsJson(state),
+          staff: cashier,
+          branchId: branch,
+          discountDetails: _buildDiscountDetailJson(state, detailId),
+          total: total,
+          first: SplitPaymentLeg(
+            type: firstMethod.label,
+            amount: firstAmount,
+            reference: firstReference,
+          ),
+          second: SplitPaymentLeg(
+            type: secondMethod.label,
+            amount: secondAmount,
+            reference: secondReference,
+          ),
+        );
+
+    // The sale is complete: attach the customer entered before payment. Done
+    // after the split payment is sent so the sale exists on the server first.
+    await _recordCustomerForSale(detailId: detailId, posId: identity.posId);
+
+    // No cash-drawer entry: both payments are e-payments, so no cash moved.
+
+    clearCart();
+    clearDiscount();
+
+    await ref
+        .read(receiptGeneratorProvider)
+        .printForSale(
+          _receiptDataFromCheckout(
+            state: saleState,
+            detailId: detailId,
+            posId: identity.posId,
+            shift: identity.shift,
+            cashier: cashier,
+            branchId: branch,
+            paymentType: 'E2E',
+            cash: 0,
+            ecash: firstAmount,
+            referenceId: firstReference,
+            paymentName: firstMethod.label,
+            secondPaymentName: secondMethod.label,
+            secondReferenceId: secondReference,
+            secondAmount: secondAmount,
           ),
         );
   }

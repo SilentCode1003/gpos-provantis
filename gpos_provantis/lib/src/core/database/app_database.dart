@@ -43,6 +43,7 @@ import 'tables/cash_drop_table.dart';
 import 'tables/send_cash_report_table.dart';
 import 'tables/cash_report_table.dart';
 import 'tables/customer_table.dart';
+import 'tables/split_payment_table.dart';
 
 import 'daos/domain_config_dao.dart';
 import 'daos/branch_config_dao.dart';
@@ -85,6 +86,7 @@ part 'app_database.g.dart';
     SendCashReportTable,
     CashReportTable,
     CustomerTable,
+    SplitPaymentTable,
   ],
   daos: [DomainConfigDao, BranchConfigDao, PosConfigDao],
 )
