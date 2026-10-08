@@ -35,6 +35,9 @@ class ReceiptSaleData {
     required this.ecash,
     required this.referenceId,
     required this.paymentName,
+    this.secondPaymentName = '',
+    this.secondReferenceId = '',
+    this.secondAmount = 0,
     this.isReprint = false,
   });
 
@@ -60,6 +63,12 @@ class ReceiptSaleData {
   final String referenceId;
 
   final String paymentName;
+
+  /// Only for a sale paid with two e-payments (paymentType "E2E"). The first
+  /// payment is [paymentName] / [referenceId] / [ecash]; the second is these.
+  final String secondPaymentName;
+  final String secondReferenceId;
+  final double secondAmount;
 
   final bool isReprint;
 
@@ -242,6 +251,25 @@ class ReceiptGenerator {
       );
     }
 
+    if (sale.paymentType == 'E2E') {
+      bytes += _kv(
+        ticket,
+        wide,
+        'REF#',
+        sale.referenceId,
+        'TYPE',
+        sale.paymentName,
+      );
+      bytes += _kv(
+        ticket,
+        wide,
+        'REF#',
+        sale.secondReferenceId,
+        'TYPE',
+        sale.secondPaymentName,
+      );
+    }
+
     bytes += wide
         ? ticket.row([
             PosColumn(
@@ -366,6 +394,15 @@ class ReceiptGenerator {
     }
     if (sale.paymentType == 'SPLIT') {
       bytes += _amountRow(ticket, wide, sale.paymentName, sale.ecash);
+    }
+    if (sale.paymentType == 'E2E') {
+      bytes += _amountRow(ticket, wide, sale.paymentName, sale.ecash);
+      bytes += _amountRow(
+        ticket,
+        wide,
+        sale.secondPaymentName,
+        sale.secondAmount,
+      );
     }
 
     bytes += _amountRow(ticket, wide, 'CHANGE', sale.changeDue);

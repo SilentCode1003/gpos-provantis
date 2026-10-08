@@ -230,6 +230,12 @@ class _ReceiptPreviewTicket extends StatelessWidget {
             _row('REF#', saleData.referenceId, mono),
             _row('TYPE', saleData.paymentName, mono),
           ],
+          if (saleData.paymentType == 'E2E') ...[
+            _row('REF#', saleData.referenceId, mono),
+            _row('TYPE', saleData.paymentName, mono),
+            _row('REF#', saleData.secondReferenceId, mono),
+            _row('TYPE', saleData.secondPaymentName, mono),
+          ],
           _row('PAYMENT TYPE', saleData.paymentType, mono),
           _dashedDivider(colors.border),
           for (final item in saleData.items) _itemRow(item, mono),
@@ -253,6 +259,10 @@ class _ReceiptPreviewTicket extends StatelessWidget {
             _amountRow(saleData.paymentName, saleData.cash, mono),
           if (saleData.paymentType == 'SPLIT')
             _amountRow(saleData.paymentName, saleData.ecash, mono),
+          if (saleData.paymentType == 'E2E') ...[
+            _amountRow(saleData.paymentName, saleData.ecash, mono),
+            _amountRow(saleData.secondPaymentName, saleData.secondAmount, mono),
+          ],
           _amountRow('CHANGE', saleData.changeDue, mono),
         ],
       ),

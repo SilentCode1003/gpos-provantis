@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:gpos_provantis/src/core/database/domain/login_credentials_dto.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
@@ -43,6 +44,8 @@ import 'tables/cash_drop_table.dart';
 import 'tables/send_cash_report_table.dart';
 import 'tables/cash_report_table.dart';
 import 'tables/customer_table.dart';
+import 'tables/split_payment_table.dart';
+import 'tables/login_credentials_table.dart';
 
 import 'daos/domain_config_dao.dart';
 import 'daos/branch_config_dao.dart';
@@ -85,6 +88,8 @@ part 'app_database.g.dart';
     SendCashReportTable,
     CashReportTable,
     CustomerTable,
+    SplitPaymentTable,
+    LoginCredentialsTable,
   ],
   daos: [DomainConfigDao, BranchConfigDao, PosConfigDao],
 )

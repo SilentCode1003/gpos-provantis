@@ -23,3 +23,17 @@ class PrinterNotifier extends StreamNotifier<List<PrintersTableData>> {
     return dao.watchAllPrinters();
   }
 }
+
+/// True when at least one enabled printer has a cash drawer attached.
+///
+/// Watched by the cash-drawer buttons (Cash drop, Open cashdrawer) so they
+/// grey out, and re-enable live, when the setting changes. False while the
+/// printers are still loading (or failed to load), so the buttons stay off
+/// until the answer is known.
+final cashDrawerEnabledProvider = Provider<bool>((ref) {
+  final printers = ref.watch(printerProvider);
+  return printers.maybeWhen(
+    data: (rows) => rows.any((p) => p.isEnabled && p.hasCashDrawer),
+    orElse: () => false,
+  );
+});

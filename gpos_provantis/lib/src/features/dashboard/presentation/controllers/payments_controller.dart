@@ -91,6 +91,7 @@ class PaymentState {
     this.singleEPaymentReferenceId,
     this.splitKind,
     this.splitSlots = const [SplitSlot(), SplitSlot()],
+    this.isSubmitting = false,
   });
 
   final PaymentStep step;
@@ -104,6 +105,10 @@ class PaymentState {
   final SplitKind? splitKind;
 
   final List<SplitSlot> splitSlots;
+
+  /// True while a sale is being saved. The modal shows a spinner and ignores
+  /// input, so a payment can't be submitted twice.
+  final bool isSubmitting;
 
   double? cashChangeDue(double chargeTotal) {
     final tendered = cashAmountTendered;
@@ -126,10 +131,10 @@ class PaymentState {
   double get splitAssignedTotal =>
       splitSlots.fold(0, (sum, slot) => sum + (slot.amount ?? 0));
 
-  bool get isSplitReady {
-    if (!splitSlots.every((slot) => slot.isComplete)) return false;
-    return splitSlots[0].method != splitSlots[1].method;
-  }
+  // Both slots must be complete. The same E-payment method may be used in
+  // both slots (e.g. two separate GCash transfers, each with its own
+  // reference ID).
+  bool get isSplitReady => splitSlots.every((slot) => slot.isComplete);
 
   bool splitIsReadyToConfirm(double chargeTotal) {
     if (!isSplitReady) return false;
@@ -144,6 +149,7 @@ class PaymentState {
     Object? singleEPaymentReferenceId = _unset,
     Object? splitKind = _unset,
     List<SplitSlot>? splitSlots,
+    bool? isSubmitting,
   }) {
     return PaymentState(
       step: step ?? this.step,
@@ -160,6 +166,7 @@ class PaymentState {
           ? this.splitKind
           : splitKind as SplitKind?,
       splitSlots: splitSlots ?? this.splitSlots,
+      isSubmitting: isSubmitting ?? this.isSubmitting,
     );
   }
 }
@@ -275,6 +282,21 @@ class PaymentController extends _$PaymentController {
     final otherAmount = state.splitSlots[otherIndex].amount ?? 0;
     final remaining = chargeTotal - otherAmount;
     setSplitSlotAmount(index, remaining < 0 ? 0 : remaining);
+  }
+
+  /// Claims the "submitting" lock. Returns false if a submit is already
+  /// running, in which case the caller must do nothing. Synchronous, so two
+  /// taps in the same frame can't both succeed.
+  bool beginSubmit() {
+    if (state.isSubmitting) return false;
+    state = state.copyWith(isSubmitting: true);
+    return true;
+  }
+
+  /// Releases the lock after a failed submit so the cashier can retry. After a
+  /// successful one call [reset] instead, which also clears the lock.
+  void endSubmit() {
+    state = state.copyWith(isSubmitting: false);
   }
 
   void reset() {

@@ -17832,6 +17832,1613 @@ class CustomerTableCompanion extends UpdateCompanion<CustomerTableData> {
   }
 }
 
+class $SplitPaymentTableTable extends SplitPaymentTable
+    with TableInfo<$SplitPaymentTableTable, SplitPaymentTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SplitPaymentTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
+  static const VerificationMeta _detailIdMeta = const VerificationMeta(
+    'detailId',
+  );
+  @override
+  late final GeneratedColumn<String> detailId = GeneratedColumn<String>(
+    'detail_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _posIdMeta = const VerificationMeta('posId');
+  @override
+  late final GeneratedColumn<String> posId = GeneratedColumn<String>(
+    'pos_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _shiftMeta = const VerificationMeta('shift');
+  @override
+  late final GeneratedColumn<String> shift = GeneratedColumn<String>(
+    'shift',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemsMeta = const VerificationMeta('items');
+  @override
+  late final GeneratedColumn<String> items = GeneratedColumn<String>(
+    'items',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _staffMeta = const VerificationMeta('staff');
+  @override
+  late final GeneratedColumn<String> staff = GeneratedColumn<String>(
+    'staff',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
+  @override
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _firstPaymentTypeMeta = const VerificationMeta(
+    'firstPaymentType',
+  );
+  @override
+  late final GeneratedColumn<String> firstPaymentType = GeneratedColumn<String>(
+    'first_payment_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _firstPaymentMeta = const VerificationMeta(
+    'firstPayment',
+  );
+  @override
+  late final GeneratedColumn<double> firstPayment = GeneratedColumn<double>(
+    'first_payment',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _firstPaymentReferenceMeta =
+      const VerificationMeta('firstPaymentReference');
+  @override
+  late final GeneratedColumn<String> firstPaymentReference =
+      GeneratedColumn<String>(
+        'first_payment_reference',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(''),
+      );
+  static const VerificationMeta _secondPaymentTypeMeta = const VerificationMeta(
+    'secondPaymentType',
+  );
+  @override
+  late final GeneratedColumn<String> secondPaymentType =
+      GeneratedColumn<String>(
+        'second_payment_type',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _secondPaymentMeta = const VerificationMeta(
+    'secondPayment',
+  );
+  @override
+  late final GeneratedColumn<double> secondPayment = GeneratedColumn<double>(
+    'second_payment',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _secondPaymentReferenceMeta =
+      const VerificationMeta('secondPaymentReference');
+  @override
+  late final GeneratedColumn<String> secondPaymentReference =
+      GeneratedColumn<String>(
+        'second_payment_reference',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(''),
+      );
+  static const VerificationMeta _discountDetailsMeta = const VerificationMeta(
+    'discountDetails',
+  );
+  @override
+  late final GeneratedColumn<String> discountDetails = GeneratedColumn<String>(
+    'discount_details',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _totalMeta = const VerificationMeta('total');
+  @override
+  late final GeneratedColumn<double> total = GeneratedColumn<double>(
+    'total',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _paymentTypeMeta = const VerificationMeta(
+    'paymentType',
+  );
+  @override
+  late final GeneratedColumn<String> paymentType = GeneratedColumn<String>(
+    'payment_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('E2E'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    clientDefault: () => DateTime.now(),
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('PENDING'),
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> syncedAt = GeneratedColumn<DateTime>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _attemptsMeta = const VerificationMeta(
+    'attempts',
+  );
+  @override
+  late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
+    'attempts',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    detailId,
+    date,
+    posId,
+    shift,
+    items,
+    staff,
+    branchId,
+    firstPaymentType,
+    firstPayment,
+    firstPaymentReference,
+    secondPaymentType,
+    secondPayment,
+    secondPaymentReference,
+    discountDetails,
+    total,
+    paymentType,
+    createdAt,
+    syncStatus,
+    syncedAt,
+    attempts,
+    lastError,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'split_payment_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SplitPaymentTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('detail_id')) {
+      context.handle(
+        _detailIdMeta,
+        detailId.isAcceptableOrUnknown(data['detail_id']!, _detailIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_detailIdMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('pos_id')) {
+      context.handle(
+        _posIdMeta,
+        posId.isAcceptableOrUnknown(data['pos_id']!, _posIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_posIdMeta);
+    }
+    if (data.containsKey('shift')) {
+      context.handle(
+        _shiftMeta,
+        shift.isAcceptableOrUnknown(data['shift']!, _shiftMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_shiftMeta);
+    }
+    if (data.containsKey('items')) {
+      context.handle(
+        _itemsMeta,
+        items.isAcceptableOrUnknown(data['items']!, _itemsMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemsMeta);
+    }
+    if (data.containsKey('staff')) {
+      context.handle(
+        _staffMeta,
+        staff.isAcceptableOrUnknown(data['staff']!, _staffMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_staffMeta);
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_branchIdMeta);
+    }
+    if (data.containsKey('first_payment_type')) {
+      context.handle(
+        _firstPaymentTypeMeta,
+        firstPaymentType.isAcceptableOrUnknown(
+          data['first_payment_type']!,
+          _firstPaymentTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_firstPaymentTypeMeta);
+    }
+    if (data.containsKey('first_payment')) {
+      context.handle(
+        _firstPaymentMeta,
+        firstPayment.isAcceptableOrUnknown(
+          data['first_payment']!,
+          _firstPaymentMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_firstPaymentMeta);
+    }
+    if (data.containsKey('first_payment_reference')) {
+      context.handle(
+        _firstPaymentReferenceMeta,
+        firstPaymentReference.isAcceptableOrUnknown(
+          data['first_payment_reference']!,
+          _firstPaymentReferenceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('second_payment_type')) {
+      context.handle(
+        _secondPaymentTypeMeta,
+        secondPaymentType.isAcceptableOrUnknown(
+          data['second_payment_type']!,
+          _secondPaymentTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_secondPaymentTypeMeta);
+    }
+    if (data.containsKey('second_payment')) {
+      context.handle(
+        _secondPaymentMeta,
+        secondPayment.isAcceptableOrUnknown(
+          data['second_payment']!,
+          _secondPaymentMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_secondPaymentMeta);
+    }
+    if (data.containsKey('second_payment_reference')) {
+      context.handle(
+        _secondPaymentReferenceMeta,
+        secondPaymentReference.isAcceptableOrUnknown(
+          data['second_payment_reference']!,
+          _secondPaymentReferenceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discount_details')) {
+      context.handle(
+        _discountDetailsMeta,
+        discountDetails.isAcceptableOrUnknown(
+          data['discount_details']!,
+          _discountDetailsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total')) {
+      context.handle(
+        _totalMeta,
+        total.isAcceptableOrUnknown(data['total']!, _totalMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_totalMeta);
+    }
+    if (data.containsKey('payment_type')) {
+      context.handle(
+        _paymentTypeMeta,
+        paymentType.isAcceptableOrUnknown(
+          data['payment_type']!,
+          _paymentTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    if (data.containsKey('attempts')) {
+      context.handle(
+        _attemptsMeta,
+        attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {detailId},
+  ];
+  @override
+  SplitPaymentTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SplitPaymentTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      detailId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}detail_id'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date'],
+      )!,
+      posId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pos_id'],
+      )!,
+      shift: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shift'],
+      )!,
+      items: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}items'],
+      )!,
+      staff: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}staff'],
+      )!,
+      branchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_id'],
+      )!,
+      firstPaymentType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}first_payment_type'],
+      )!,
+      firstPayment: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}first_payment'],
+      )!,
+      firstPaymentReference: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}first_payment_reference'],
+      )!,
+      secondPaymentType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}second_payment_type'],
+      )!,
+      secondPayment: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}second_payment'],
+      )!,
+      secondPaymentReference: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}second_payment_reference'],
+      )!,
+      discountDetails: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discount_details'],
+      )!,
+      total: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total'],
+      )!,
+      paymentType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payment_type'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}synced_at'],
+      ),
+      attempts: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempts'],
+      )!,
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+    );
+  }
+
+  @override
+  $SplitPaymentTableTable createAlias(String alias) {
+    return $SplitPaymentTableTable(attachedDatabase, alias);
+  }
+}
+
+class SplitPaymentTableData extends DataClass
+    implements Insertable<SplitPaymentTableData> {
+  final String id;
+
+  /// The sale's receipt (detail) id. The server rejects a repeat of it, so a
+  /// sale has at most one row here.
+  final String detailId;
+
+  /// `yyyy-MM-dd HH:mm`.
+  final String date;
+  final String posId;
+  final String shift;
+
+  /// The sale's items, as the JSON string the server stores.
+  final String items;
+
+  /// The cashier's name.
+  final String staff;
+  final String branchId;
+  final String firstPaymentType;
+  final double firstPayment;
+  final String firstPaymentReference;
+  final String secondPaymentType;
+  final double secondPayment;
+  final String secondPaymentReference;
+
+  /// JSON array; "[]" when there is no discount.
+  final String discountDetails;
+  final double total;
+
+  /// "E2E" for two e-payments.
+  final String paymentType;
+  final DateTime createdAt;
+
+  /// PENDING until the server has the sale, then SYNCED.
+  final String syncStatus;
+  final DateTime? syncedAt;
+
+  /// How many sends have failed, and why the last one did.
+  final int attempts;
+  final String? lastError;
+  const SplitPaymentTableData({
+    required this.id,
+    required this.detailId,
+    required this.date,
+    required this.posId,
+    required this.shift,
+    required this.items,
+    required this.staff,
+    required this.branchId,
+    required this.firstPaymentType,
+    required this.firstPayment,
+    required this.firstPaymentReference,
+    required this.secondPaymentType,
+    required this.secondPayment,
+    required this.secondPaymentReference,
+    required this.discountDetails,
+    required this.total,
+    required this.paymentType,
+    required this.createdAt,
+    required this.syncStatus,
+    this.syncedAt,
+    required this.attempts,
+    this.lastError,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['detail_id'] = Variable<String>(detailId);
+    map['date'] = Variable<String>(date);
+    map['pos_id'] = Variable<String>(posId);
+    map['shift'] = Variable<String>(shift);
+    map['items'] = Variable<String>(items);
+    map['staff'] = Variable<String>(staff);
+    map['branch_id'] = Variable<String>(branchId);
+    map['first_payment_type'] = Variable<String>(firstPaymentType);
+    map['first_payment'] = Variable<double>(firstPayment);
+    map['first_payment_reference'] = Variable<String>(firstPaymentReference);
+    map['second_payment_type'] = Variable<String>(secondPaymentType);
+    map['second_payment'] = Variable<double>(secondPayment);
+    map['second_payment_reference'] = Variable<String>(secondPaymentReference);
+    map['discount_details'] = Variable<String>(discountDetails);
+    map['total'] = Variable<double>(total);
+    map['payment_type'] = Variable<String>(paymentType);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<DateTime>(syncedAt);
+    }
+    map['attempts'] = Variable<int>(attempts);
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    return map;
+  }
+
+  SplitPaymentTableCompanion toCompanion(bool nullToAbsent) {
+    return SplitPaymentTableCompanion(
+      id: Value(id),
+      detailId: Value(detailId),
+      date: Value(date),
+      posId: Value(posId),
+      shift: Value(shift),
+      items: Value(items),
+      staff: Value(staff),
+      branchId: Value(branchId),
+      firstPaymentType: Value(firstPaymentType),
+      firstPayment: Value(firstPayment),
+      firstPaymentReference: Value(firstPaymentReference),
+      secondPaymentType: Value(secondPaymentType),
+      secondPayment: Value(secondPayment),
+      secondPaymentReference: Value(secondPaymentReference),
+      discountDetails: Value(discountDetails),
+      total: Value(total),
+      paymentType: Value(paymentType),
+      createdAt: Value(createdAt),
+      syncStatus: Value(syncStatus),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+      attempts: Value(attempts),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+    );
+  }
+
+  factory SplitPaymentTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SplitPaymentTableData(
+      id: serializer.fromJson<String>(json['id']),
+      detailId: serializer.fromJson<String>(json['detailId']),
+      date: serializer.fromJson<String>(json['date']),
+      posId: serializer.fromJson<String>(json['posId']),
+      shift: serializer.fromJson<String>(json['shift']),
+      items: serializer.fromJson<String>(json['items']),
+      staff: serializer.fromJson<String>(json['staff']),
+      branchId: serializer.fromJson<String>(json['branchId']),
+      firstPaymentType: serializer.fromJson<String>(json['firstPaymentType']),
+      firstPayment: serializer.fromJson<double>(json['firstPayment']),
+      firstPaymentReference: serializer.fromJson<String>(
+        json['firstPaymentReference'],
+      ),
+      secondPaymentType: serializer.fromJson<String>(json['secondPaymentType']),
+      secondPayment: serializer.fromJson<double>(json['secondPayment']),
+      secondPaymentReference: serializer.fromJson<String>(
+        json['secondPaymentReference'],
+      ),
+      discountDetails: serializer.fromJson<String>(json['discountDetails']),
+      total: serializer.fromJson<double>(json['total']),
+      paymentType: serializer.fromJson<String>(json['paymentType']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      syncedAt: serializer.fromJson<DateTime?>(json['syncedAt']),
+      attempts: serializer.fromJson<int>(json['attempts']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'detailId': serializer.toJson<String>(detailId),
+      'date': serializer.toJson<String>(date),
+      'posId': serializer.toJson<String>(posId),
+      'shift': serializer.toJson<String>(shift),
+      'items': serializer.toJson<String>(items),
+      'staff': serializer.toJson<String>(staff),
+      'branchId': serializer.toJson<String>(branchId),
+      'firstPaymentType': serializer.toJson<String>(firstPaymentType),
+      'firstPayment': serializer.toJson<double>(firstPayment),
+      'firstPaymentReference': serializer.toJson<String>(firstPaymentReference),
+      'secondPaymentType': serializer.toJson<String>(secondPaymentType),
+      'secondPayment': serializer.toJson<double>(secondPayment),
+      'secondPaymentReference': serializer.toJson<String>(
+        secondPaymentReference,
+      ),
+      'discountDetails': serializer.toJson<String>(discountDetails),
+      'total': serializer.toJson<double>(total),
+      'paymentType': serializer.toJson<String>(paymentType),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'syncedAt': serializer.toJson<DateTime?>(syncedAt),
+      'attempts': serializer.toJson<int>(attempts),
+      'lastError': serializer.toJson<String?>(lastError),
+    };
+  }
+
+  SplitPaymentTableData copyWith({
+    String? id,
+    String? detailId,
+    String? date,
+    String? posId,
+    String? shift,
+    String? items,
+    String? staff,
+    String? branchId,
+    String? firstPaymentType,
+    double? firstPayment,
+    String? firstPaymentReference,
+    String? secondPaymentType,
+    double? secondPayment,
+    String? secondPaymentReference,
+    String? discountDetails,
+    double? total,
+    String? paymentType,
+    DateTime? createdAt,
+    String? syncStatus,
+    Value<DateTime?> syncedAt = const Value.absent(),
+    int? attempts,
+    Value<String?> lastError = const Value.absent(),
+  }) => SplitPaymentTableData(
+    id: id ?? this.id,
+    detailId: detailId ?? this.detailId,
+    date: date ?? this.date,
+    posId: posId ?? this.posId,
+    shift: shift ?? this.shift,
+    items: items ?? this.items,
+    staff: staff ?? this.staff,
+    branchId: branchId ?? this.branchId,
+    firstPaymentType: firstPaymentType ?? this.firstPaymentType,
+    firstPayment: firstPayment ?? this.firstPayment,
+    firstPaymentReference: firstPaymentReference ?? this.firstPaymentReference,
+    secondPaymentType: secondPaymentType ?? this.secondPaymentType,
+    secondPayment: secondPayment ?? this.secondPayment,
+    secondPaymentReference:
+        secondPaymentReference ?? this.secondPaymentReference,
+    discountDetails: discountDetails ?? this.discountDetails,
+    total: total ?? this.total,
+    paymentType: paymentType ?? this.paymentType,
+    createdAt: createdAt ?? this.createdAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+    attempts: attempts ?? this.attempts,
+    lastError: lastError.present ? lastError.value : this.lastError,
+  );
+  SplitPaymentTableData copyWithCompanion(SplitPaymentTableCompanion data) {
+    return SplitPaymentTableData(
+      id: data.id.present ? data.id.value : this.id,
+      detailId: data.detailId.present ? data.detailId.value : this.detailId,
+      date: data.date.present ? data.date.value : this.date,
+      posId: data.posId.present ? data.posId.value : this.posId,
+      shift: data.shift.present ? data.shift.value : this.shift,
+      items: data.items.present ? data.items.value : this.items,
+      staff: data.staff.present ? data.staff.value : this.staff,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      firstPaymentType: data.firstPaymentType.present
+          ? data.firstPaymentType.value
+          : this.firstPaymentType,
+      firstPayment: data.firstPayment.present
+          ? data.firstPayment.value
+          : this.firstPayment,
+      firstPaymentReference: data.firstPaymentReference.present
+          ? data.firstPaymentReference.value
+          : this.firstPaymentReference,
+      secondPaymentType: data.secondPaymentType.present
+          ? data.secondPaymentType.value
+          : this.secondPaymentType,
+      secondPayment: data.secondPayment.present
+          ? data.secondPayment.value
+          : this.secondPayment,
+      secondPaymentReference: data.secondPaymentReference.present
+          ? data.secondPaymentReference.value
+          : this.secondPaymentReference,
+      discountDetails: data.discountDetails.present
+          ? data.discountDetails.value
+          : this.discountDetails,
+      total: data.total.present ? data.total.value : this.total,
+      paymentType: data.paymentType.present
+          ? data.paymentType.value
+          : this.paymentType,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+      attempts: data.attempts.present ? data.attempts.value : this.attempts,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SplitPaymentTableData(')
+          ..write('id: $id, ')
+          ..write('detailId: $detailId, ')
+          ..write('date: $date, ')
+          ..write('posId: $posId, ')
+          ..write('shift: $shift, ')
+          ..write('items: $items, ')
+          ..write('staff: $staff, ')
+          ..write('branchId: $branchId, ')
+          ..write('firstPaymentType: $firstPaymentType, ')
+          ..write('firstPayment: $firstPayment, ')
+          ..write('firstPaymentReference: $firstPaymentReference, ')
+          ..write('secondPaymentType: $secondPaymentType, ')
+          ..write('secondPayment: $secondPayment, ')
+          ..write('secondPaymentReference: $secondPaymentReference, ')
+          ..write('discountDetails: $discountDetails, ')
+          ..write('total: $total, ')
+          ..write('paymentType: $paymentType, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('attempts: $attempts, ')
+          ..write('lastError: $lastError')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    detailId,
+    date,
+    posId,
+    shift,
+    items,
+    staff,
+    branchId,
+    firstPaymentType,
+    firstPayment,
+    firstPaymentReference,
+    secondPaymentType,
+    secondPayment,
+    secondPaymentReference,
+    discountDetails,
+    total,
+    paymentType,
+    createdAt,
+    syncStatus,
+    syncedAt,
+    attempts,
+    lastError,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SplitPaymentTableData &&
+          other.id == this.id &&
+          other.detailId == this.detailId &&
+          other.date == this.date &&
+          other.posId == this.posId &&
+          other.shift == this.shift &&
+          other.items == this.items &&
+          other.staff == this.staff &&
+          other.branchId == this.branchId &&
+          other.firstPaymentType == this.firstPaymentType &&
+          other.firstPayment == this.firstPayment &&
+          other.firstPaymentReference == this.firstPaymentReference &&
+          other.secondPaymentType == this.secondPaymentType &&
+          other.secondPayment == this.secondPayment &&
+          other.secondPaymentReference == this.secondPaymentReference &&
+          other.discountDetails == this.discountDetails &&
+          other.total == this.total &&
+          other.paymentType == this.paymentType &&
+          other.createdAt == this.createdAt &&
+          other.syncStatus == this.syncStatus &&
+          other.syncedAt == this.syncedAt &&
+          other.attempts == this.attempts &&
+          other.lastError == this.lastError);
+}
+
+class SplitPaymentTableCompanion
+    extends UpdateCompanion<SplitPaymentTableData> {
+  final Value<String> id;
+  final Value<String> detailId;
+  final Value<String> date;
+  final Value<String> posId;
+  final Value<String> shift;
+  final Value<String> items;
+  final Value<String> staff;
+  final Value<String> branchId;
+  final Value<String> firstPaymentType;
+  final Value<double> firstPayment;
+  final Value<String> firstPaymentReference;
+  final Value<String> secondPaymentType;
+  final Value<double> secondPayment;
+  final Value<String> secondPaymentReference;
+  final Value<String> discountDetails;
+  final Value<double> total;
+  final Value<String> paymentType;
+  final Value<DateTime> createdAt;
+  final Value<String> syncStatus;
+  final Value<DateTime?> syncedAt;
+  final Value<int> attempts;
+  final Value<String?> lastError;
+  final Value<int> rowid;
+  const SplitPaymentTableCompanion({
+    this.id = const Value.absent(),
+    this.detailId = const Value.absent(),
+    this.date = const Value.absent(),
+    this.posId = const Value.absent(),
+    this.shift = const Value.absent(),
+    this.items = const Value.absent(),
+    this.staff = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.firstPaymentType = const Value.absent(),
+    this.firstPayment = const Value.absent(),
+    this.firstPaymentReference = const Value.absent(),
+    this.secondPaymentType = const Value.absent(),
+    this.secondPayment = const Value.absent(),
+    this.secondPaymentReference = const Value.absent(),
+    this.discountDetails = const Value.absent(),
+    this.total = const Value.absent(),
+    this.paymentType = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SplitPaymentTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String detailId,
+    required String date,
+    required String posId,
+    required String shift,
+    required String items,
+    required String staff,
+    required String branchId,
+    required String firstPaymentType,
+    required double firstPayment,
+    this.firstPaymentReference = const Value.absent(),
+    required String secondPaymentType,
+    required double secondPayment,
+    this.secondPaymentReference = const Value.absent(),
+    this.discountDetails = const Value.absent(),
+    required double total,
+    this.paymentType = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : detailId = Value(detailId),
+       date = Value(date),
+       posId = Value(posId),
+       shift = Value(shift),
+       items = Value(items),
+       staff = Value(staff),
+       branchId = Value(branchId),
+       firstPaymentType = Value(firstPaymentType),
+       firstPayment = Value(firstPayment),
+       secondPaymentType = Value(secondPaymentType),
+       secondPayment = Value(secondPayment),
+       total = Value(total);
+  static Insertable<SplitPaymentTableData> custom({
+    Expression<String>? id,
+    Expression<String>? detailId,
+    Expression<String>? date,
+    Expression<String>? posId,
+    Expression<String>? shift,
+    Expression<String>? items,
+    Expression<String>? staff,
+    Expression<String>? branchId,
+    Expression<String>? firstPaymentType,
+    Expression<double>? firstPayment,
+    Expression<String>? firstPaymentReference,
+    Expression<String>? secondPaymentType,
+    Expression<double>? secondPayment,
+    Expression<String>? secondPaymentReference,
+    Expression<String>? discountDetails,
+    Expression<double>? total,
+    Expression<String>? paymentType,
+    Expression<DateTime>? createdAt,
+    Expression<String>? syncStatus,
+    Expression<DateTime>? syncedAt,
+    Expression<int>? attempts,
+    Expression<String>? lastError,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (detailId != null) 'detail_id': detailId,
+      if (date != null) 'date': date,
+      if (posId != null) 'pos_id': posId,
+      if (shift != null) 'shift': shift,
+      if (items != null) 'items': items,
+      if (staff != null) 'staff': staff,
+      if (branchId != null) 'branch_id': branchId,
+      if (firstPaymentType != null) 'first_payment_type': firstPaymentType,
+      if (firstPayment != null) 'first_payment': firstPayment,
+      if (firstPaymentReference != null)
+        'first_payment_reference': firstPaymentReference,
+      if (secondPaymentType != null) 'second_payment_type': secondPaymentType,
+      if (secondPayment != null) 'second_payment': secondPayment,
+      if (secondPaymentReference != null)
+        'second_payment_reference': secondPaymentReference,
+      if (discountDetails != null) 'discount_details': discountDetails,
+      if (total != null) 'total': total,
+      if (paymentType != null) 'payment_type': paymentType,
+      if (createdAt != null) 'created_at': createdAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (attempts != null) 'attempts': attempts,
+      if (lastError != null) 'last_error': lastError,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SplitPaymentTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? detailId,
+    Value<String>? date,
+    Value<String>? posId,
+    Value<String>? shift,
+    Value<String>? items,
+    Value<String>? staff,
+    Value<String>? branchId,
+    Value<String>? firstPaymentType,
+    Value<double>? firstPayment,
+    Value<String>? firstPaymentReference,
+    Value<String>? secondPaymentType,
+    Value<double>? secondPayment,
+    Value<String>? secondPaymentReference,
+    Value<String>? discountDetails,
+    Value<double>? total,
+    Value<String>? paymentType,
+    Value<DateTime>? createdAt,
+    Value<String>? syncStatus,
+    Value<DateTime?>? syncedAt,
+    Value<int>? attempts,
+    Value<String?>? lastError,
+    Value<int>? rowid,
+  }) {
+    return SplitPaymentTableCompanion(
+      id: id ?? this.id,
+      detailId: detailId ?? this.detailId,
+      date: date ?? this.date,
+      posId: posId ?? this.posId,
+      shift: shift ?? this.shift,
+      items: items ?? this.items,
+      staff: staff ?? this.staff,
+      branchId: branchId ?? this.branchId,
+      firstPaymentType: firstPaymentType ?? this.firstPaymentType,
+      firstPayment: firstPayment ?? this.firstPayment,
+      firstPaymentReference:
+          firstPaymentReference ?? this.firstPaymentReference,
+      secondPaymentType: secondPaymentType ?? this.secondPaymentType,
+      secondPayment: secondPayment ?? this.secondPayment,
+      secondPaymentReference:
+          secondPaymentReference ?? this.secondPaymentReference,
+      discountDetails: discountDetails ?? this.discountDetails,
+      total: total ?? this.total,
+      paymentType: paymentType ?? this.paymentType,
+      createdAt: createdAt ?? this.createdAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      syncedAt: syncedAt ?? this.syncedAt,
+      attempts: attempts ?? this.attempts,
+      lastError: lastError ?? this.lastError,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (detailId.present) {
+      map['detail_id'] = Variable<String>(detailId.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (posId.present) {
+      map['pos_id'] = Variable<String>(posId.value);
+    }
+    if (shift.present) {
+      map['shift'] = Variable<String>(shift.value);
+    }
+    if (items.present) {
+      map['items'] = Variable<String>(items.value);
+    }
+    if (staff.present) {
+      map['staff'] = Variable<String>(staff.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
+    }
+    if (firstPaymentType.present) {
+      map['first_payment_type'] = Variable<String>(firstPaymentType.value);
+    }
+    if (firstPayment.present) {
+      map['first_payment'] = Variable<double>(firstPayment.value);
+    }
+    if (firstPaymentReference.present) {
+      map['first_payment_reference'] = Variable<String>(
+        firstPaymentReference.value,
+      );
+    }
+    if (secondPaymentType.present) {
+      map['second_payment_type'] = Variable<String>(secondPaymentType.value);
+    }
+    if (secondPayment.present) {
+      map['second_payment'] = Variable<double>(secondPayment.value);
+    }
+    if (secondPaymentReference.present) {
+      map['second_payment_reference'] = Variable<String>(
+        secondPaymentReference.value,
+      );
+    }
+    if (discountDetails.present) {
+      map['discount_details'] = Variable<String>(discountDetails.value);
+    }
+    if (total.present) {
+      map['total'] = Variable<double>(total.value);
+    }
+    if (paymentType.present) {
+      map['payment_type'] = Variable<String>(paymentType.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<DateTime>(syncedAt.value);
+    }
+    if (attempts.present) {
+      map['attempts'] = Variable<int>(attempts.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SplitPaymentTableCompanion(')
+          ..write('id: $id, ')
+          ..write('detailId: $detailId, ')
+          ..write('date: $date, ')
+          ..write('posId: $posId, ')
+          ..write('shift: $shift, ')
+          ..write('items: $items, ')
+          ..write('staff: $staff, ')
+          ..write('branchId: $branchId, ')
+          ..write('firstPaymentType: $firstPaymentType, ')
+          ..write('firstPayment: $firstPayment, ')
+          ..write('firstPaymentReference: $firstPaymentReference, ')
+          ..write('secondPaymentType: $secondPaymentType, ')
+          ..write('secondPayment: $secondPayment, ')
+          ..write('secondPaymentReference: $secondPaymentReference, ')
+          ..write('discountDetails: $discountDetails, ')
+          ..write('total: $total, ')
+          ..write('paymentType: $paymentType, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('attempts: $attempts, ')
+          ..write('lastError: $lastError, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $LoginCredentialsTableTable extends LoginCredentialsTable
+    with TableInfo<$LoginCredentialsTableTable, LoginCredentialsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LoginCredentialsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('login_credentials'),
+  );
+  static const VerificationMeta _usernameMeta = const VerificationMeta(
+    'username',
+  );
+  @override
+  late final GeneratedColumn<String> username = GeneratedColumn<String>(
+    'username',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _passwordHashMeta = const VerificationMeta(
+    'passwordHash',
+  );
+  @override
+  late final GeneratedColumn<String> passwordHash = GeneratedColumn<String>(
+    'password_hash',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _saltMeta = const VerificationMeta('salt');
+  @override
+  late final GeneratedColumn<String> salt = GeneratedColumn<String>(
+    'salt',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    username,
+    passwordHash,
+    salt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'login_credentials_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LoginCredentialsTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('username')) {
+      context.handle(
+        _usernameMeta,
+        username.isAcceptableOrUnknown(data['username']!, _usernameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_usernameMeta);
+    }
+    if (data.containsKey('password_hash')) {
+      context.handle(
+        _passwordHashMeta,
+        passwordHash.isAcceptableOrUnknown(
+          data['password_hash']!,
+          _passwordHashMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_passwordHashMeta);
+    }
+    if (data.containsKey('salt')) {
+      context.handle(
+        _saltMeta,
+        salt.isAcceptableOrUnknown(data['salt']!, _saltMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_saltMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LoginCredentialsTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LoginCredentialsTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      username: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}username'],
+      )!,
+      passwordHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}password_hash'],
+      )!,
+      salt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}salt'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $LoginCredentialsTableTable createAlias(String alias) {
+    return $LoginCredentialsTableTable(attachedDatabase, alias);
+  }
+}
+
+class LoginCredentialsTableData extends DataClass
+    implements Insertable<LoginCredentialsTableData> {
+  final String id;
+  final String username;
+  final String passwordHash;
+  final String salt;
+  final DateTime updatedAt;
+  const LoginCredentialsTableData({
+    required this.id,
+    required this.username,
+    required this.passwordHash,
+    required this.salt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['username'] = Variable<String>(username);
+    map['password_hash'] = Variable<String>(passwordHash);
+    map['salt'] = Variable<String>(salt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  LoginCredentialsTableCompanion toCompanion(bool nullToAbsent) {
+    return LoginCredentialsTableCompanion(
+      id: Value(id),
+      username: Value(username),
+      passwordHash: Value(passwordHash),
+      salt: Value(salt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory LoginCredentialsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LoginCredentialsTableData(
+      id: serializer.fromJson<String>(json['id']),
+      username: serializer.fromJson<String>(json['username']),
+      passwordHash: serializer.fromJson<String>(json['passwordHash']),
+      salt: serializer.fromJson<String>(json['salt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'username': serializer.toJson<String>(username),
+      'passwordHash': serializer.toJson<String>(passwordHash),
+      'salt': serializer.toJson<String>(salt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  LoginCredentialsTableData copyWith({
+    String? id,
+    String? username,
+    String? passwordHash,
+    String? salt,
+    DateTime? updatedAt,
+  }) => LoginCredentialsTableData(
+    id: id ?? this.id,
+    username: username ?? this.username,
+    passwordHash: passwordHash ?? this.passwordHash,
+    salt: salt ?? this.salt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  LoginCredentialsTableData copyWithCompanion(
+    LoginCredentialsTableCompanion data,
+  ) {
+    return LoginCredentialsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      username: data.username.present ? data.username.value : this.username,
+      passwordHash: data.passwordHash.present
+          ? data.passwordHash.value
+          : this.passwordHash,
+      salt: data.salt.present ? data.salt.value : this.salt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LoginCredentialsTableData(')
+          ..write('id: $id, ')
+          ..write('username: $username, ')
+          ..write('passwordHash: $passwordHash, ')
+          ..write('salt: $salt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, username, passwordHash, salt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LoginCredentialsTableData &&
+          other.id == this.id &&
+          other.username == this.username &&
+          other.passwordHash == this.passwordHash &&
+          other.salt == this.salt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class LoginCredentialsTableCompanion
+    extends UpdateCompanion<LoginCredentialsTableData> {
+  final Value<String> id;
+  final Value<String> username;
+  final Value<String> passwordHash;
+  final Value<String> salt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const LoginCredentialsTableCompanion({
+    this.id = const Value.absent(),
+    this.username = const Value.absent(),
+    this.passwordHash = const Value.absent(),
+    this.salt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LoginCredentialsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String username,
+    required String passwordHash,
+    required String salt,
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : username = Value(username),
+       passwordHash = Value(passwordHash),
+       salt = Value(salt);
+  static Insertable<LoginCredentialsTableData> custom({
+    Expression<String>? id,
+    Expression<String>? username,
+    Expression<String>? passwordHash,
+    Expression<String>? salt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (username != null) 'username': username,
+      if (passwordHash != null) 'password_hash': passwordHash,
+      if (salt != null) 'salt': salt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LoginCredentialsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? username,
+    Value<String>? passwordHash,
+    Value<String>? salt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return LoginCredentialsTableCompanion(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      passwordHash: passwordHash ?? this.passwordHash,
+      salt: salt ?? this.salt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (username.present) {
+      map['username'] = Variable<String>(username.value);
+    }
+    if (passwordHash.present) {
+      map['password_hash'] = Variable<String>(passwordHash.value);
+    }
+    if (salt.present) {
+      map['salt'] = Variable<String>(salt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LoginCredentialsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('username: $username, ')
+          ..write('passwordHash: $passwordHash, ')
+          ..write('salt: $salt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -17890,6 +19497,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $CustomerTableTable customerTable = $CustomerTableTable(this);
+  late final $SplitPaymentTableTable splitPaymentTable =
+      $SplitPaymentTableTable(this);
+  late final $LoginCredentialsTableTable loginCredentialsTable =
+      $LoginCredentialsTableTable(this);
   late final DomainConfigDao domainConfigDao = DomainConfigDao(
     this as AppDatabase,
   );
@@ -17935,6 +19546,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     sendCashReportTable,
     cashReportTable,
     customerTable,
+    splitPaymentTable,
+    loginCredentialsTable,
   ];
 }
 
@@ -27239,6 +28852,781 @@ typedef $$CustomerTableTableProcessedTableManager =
       CustomerTableData,
       PrefetchHooks Function()
     >;
+typedef $$SplitPaymentTableTableCreateCompanionBuilder =
+    SplitPaymentTableCompanion Function({
+      Value<String> id,
+      required String detailId,
+      required String date,
+      required String posId,
+      required String shift,
+      required String items,
+      required String staff,
+      required String branchId,
+      required String firstPaymentType,
+      required double firstPayment,
+      Value<String> firstPaymentReference,
+      required String secondPaymentType,
+      required double secondPayment,
+      Value<String> secondPaymentReference,
+      Value<String> discountDetails,
+      required double total,
+      Value<String> paymentType,
+      Value<DateTime> createdAt,
+      Value<String> syncStatus,
+      Value<DateTime?> syncedAt,
+      Value<int> attempts,
+      Value<String?> lastError,
+      Value<int> rowid,
+    });
+typedef $$SplitPaymentTableTableUpdateCompanionBuilder =
+    SplitPaymentTableCompanion Function({
+      Value<String> id,
+      Value<String> detailId,
+      Value<String> date,
+      Value<String> posId,
+      Value<String> shift,
+      Value<String> items,
+      Value<String> staff,
+      Value<String> branchId,
+      Value<String> firstPaymentType,
+      Value<double> firstPayment,
+      Value<String> firstPaymentReference,
+      Value<String> secondPaymentType,
+      Value<double> secondPayment,
+      Value<String> secondPaymentReference,
+      Value<String> discountDetails,
+      Value<double> total,
+      Value<String> paymentType,
+      Value<DateTime> createdAt,
+      Value<String> syncStatus,
+      Value<DateTime?> syncedAt,
+      Value<int> attempts,
+      Value<String?> lastError,
+      Value<int> rowid,
+    });
+
+class $$SplitPaymentTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SplitPaymentTableTable> {
+  $$SplitPaymentTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get detailId => $composableBuilder(
+    column: $table.detailId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get posId => $composableBuilder(
+    column: $table.posId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get items => $composableBuilder(
+    column: $table.items,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get staff => $composableBuilder(
+    column: $table.staff,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get branchId => $composableBuilder(
+    column: $table.branchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get firstPaymentType => $composableBuilder(
+    column: $table.firstPaymentType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get firstPayment => $composableBuilder(
+    column: $table.firstPayment,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get firstPaymentReference => $composableBuilder(
+    column: $table.firstPaymentReference,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get secondPaymentType => $composableBuilder(
+    column: $table.secondPaymentType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get secondPayment => $composableBuilder(
+    column: $table.secondPayment,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get secondPaymentReference => $composableBuilder(
+    column: $table.secondPaymentReference,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discountDetails => $composableBuilder(
+    column: $table.discountDetails,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paymentType => $composableBuilder(
+    column: $table.paymentType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SplitPaymentTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SplitPaymentTableTable> {
+  $$SplitPaymentTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get detailId => $composableBuilder(
+    column: $table.detailId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get posId => $composableBuilder(
+    column: $table.posId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get items => $composableBuilder(
+    column: $table.items,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get staff => $composableBuilder(
+    column: $table.staff,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get branchId => $composableBuilder(
+    column: $table.branchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get firstPaymentType => $composableBuilder(
+    column: $table.firstPaymentType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get firstPayment => $composableBuilder(
+    column: $table.firstPayment,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get firstPaymentReference => $composableBuilder(
+    column: $table.firstPaymentReference,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get secondPaymentType => $composableBuilder(
+    column: $table.secondPaymentType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get secondPayment => $composableBuilder(
+    column: $table.secondPayment,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get secondPaymentReference => $composableBuilder(
+    column: $table.secondPaymentReference,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discountDetails => $composableBuilder(
+    column: $table.discountDetails,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paymentType => $composableBuilder(
+    column: $table.paymentType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SplitPaymentTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SplitPaymentTableTable> {
+  $$SplitPaymentTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get detailId =>
+      $composableBuilder(column: $table.detailId, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get posId =>
+      $composableBuilder(column: $table.posId, builder: (column) => column);
+
+  GeneratedColumn<String> get shift =>
+      $composableBuilder(column: $table.shift, builder: (column) => column);
+
+  GeneratedColumn<String> get items =>
+      $composableBuilder(column: $table.items, builder: (column) => column);
+
+  GeneratedColumn<String> get staff =>
+      $composableBuilder(column: $table.staff, builder: (column) => column);
+
+  GeneratedColumn<String> get branchId =>
+      $composableBuilder(column: $table.branchId, builder: (column) => column);
+
+  GeneratedColumn<String> get firstPaymentType => $composableBuilder(
+    column: $table.firstPaymentType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get firstPayment => $composableBuilder(
+    column: $table.firstPayment,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get firstPaymentReference => $composableBuilder(
+    column: $table.firstPaymentReference,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get secondPaymentType => $composableBuilder(
+    column: $table.secondPaymentType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get secondPayment => $composableBuilder(
+    column: $table.secondPayment,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get secondPaymentReference => $composableBuilder(
+    column: $table.secondPaymentReference,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get discountDetails => $composableBuilder(
+    column: $table.discountDetails,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get total =>
+      $composableBuilder(column: $table.total, builder: (column) => column);
+
+  GeneratedColumn<String> get paymentType => $composableBuilder(
+    column: $table.paymentType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => column);
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+}
+
+class $$SplitPaymentTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SplitPaymentTableTable,
+          SplitPaymentTableData,
+          $$SplitPaymentTableTableFilterComposer,
+          $$SplitPaymentTableTableOrderingComposer,
+          $$SplitPaymentTableTableAnnotationComposer,
+          $$SplitPaymentTableTableCreateCompanionBuilder,
+          $$SplitPaymentTableTableUpdateCompanionBuilder,
+          (
+            SplitPaymentTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $SplitPaymentTableTable,
+              SplitPaymentTableData
+            >,
+          ),
+          SplitPaymentTableData,
+          PrefetchHooks Function()
+        > {
+  $$SplitPaymentTableTableTableManager(
+    _$AppDatabase db,
+    $SplitPaymentTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SplitPaymentTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SplitPaymentTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SplitPaymentTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> detailId = const Value.absent(),
+                Value<String> date = const Value.absent(),
+                Value<String> posId = const Value.absent(),
+                Value<String> shift = const Value.absent(),
+                Value<String> items = const Value.absent(),
+                Value<String> staff = const Value.absent(),
+                Value<String> branchId = const Value.absent(),
+                Value<String> firstPaymentType = const Value.absent(),
+                Value<double> firstPayment = const Value.absent(),
+                Value<String> firstPaymentReference = const Value.absent(),
+                Value<String> secondPaymentType = const Value.absent(),
+                Value<double> secondPayment = const Value.absent(),
+                Value<String> secondPaymentReference = const Value.absent(),
+                Value<String> discountDetails = const Value.absent(),
+                Value<double> total = const Value.absent(),
+                Value<String> paymentType = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime?> syncedAt = const Value.absent(),
+                Value<int> attempts = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SplitPaymentTableCompanion(
+                id: id,
+                detailId: detailId,
+                date: date,
+                posId: posId,
+                shift: shift,
+                items: items,
+                staff: staff,
+                branchId: branchId,
+                firstPaymentType: firstPaymentType,
+                firstPayment: firstPayment,
+                firstPaymentReference: firstPaymentReference,
+                secondPaymentType: secondPaymentType,
+                secondPayment: secondPayment,
+                secondPaymentReference: secondPaymentReference,
+                discountDetails: discountDetails,
+                total: total,
+                paymentType: paymentType,
+                createdAt: createdAt,
+                syncStatus: syncStatus,
+                syncedAt: syncedAt,
+                attempts: attempts,
+                lastError: lastError,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String detailId,
+                required String date,
+                required String posId,
+                required String shift,
+                required String items,
+                required String staff,
+                required String branchId,
+                required String firstPaymentType,
+                required double firstPayment,
+                Value<String> firstPaymentReference = const Value.absent(),
+                required String secondPaymentType,
+                required double secondPayment,
+                Value<String> secondPaymentReference = const Value.absent(),
+                Value<String> discountDetails = const Value.absent(),
+                required double total,
+                Value<String> paymentType = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime?> syncedAt = const Value.absent(),
+                Value<int> attempts = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SplitPaymentTableCompanion.insert(
+                id: id,
+                detailId: detailId,
+                date: date,
+                posId: posId,
+                shift: shift,
+                items: items,
+                staff: staff,
+                branchId: branchId,
+                firstPaymentType: firstPaymentType,
+                firstPayment: firstPayment,
+                firstPaymentReference: firstPaymentReference,
+                secondPaymentType: secondPaymentType,
+                secondPayment: secondPayment,
+                secondPaymentReference: secondPaymentReference,
+                discountDetails: discountDetails,
+                total: total,
+                paymentType: paymentType,
+                createdAt: createdAt,
+                syncStatus: syncStatus,
+                syncedAt: syncedAt,
+                attempts: attempts,
+                lastError: lastError,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SplitPaymentTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SplitPaymentTableTable,
+      SplitPaymentTableData,
+      $$SplitPaymentTableTableFilterComposer,
+      $$SplitPaymentTableTableOrderingComposer,
+      $$SplitPaymentTableTableAnnotationComposer,
+      $$SplitPaymentTableTableCreateCompanionBuilder,
+      $$SplitPaymentTableTableUpdateCompanionBuilder,
+      (
+        SplitPaymentTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $SplitPaymentTableTable,
+          SplitPaymentTableData
+        >,
+      ),
+      SplitPaymentTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$LoginCredentialsTableTableCreateCompanionBuilder =
+    LoginCredentialsTableCompanion Function({
+      Value<String> id,
+      required String username,
+      required String passwordHash,
+      required String salt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$LoginCredentialsTableTableUpdateCompanionBuilder =
+    LoginCredentialsTableCompanion Function({
+      Value<String> id,
+      Value<String> username,
+      Value<String> passwordHash,
+      Value<String> salt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$LoginCredentialsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $LoginCredentialsTableTable> {
+  $$LoginCredentialsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get username => $composableBuilder(
+    column: $table.username,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get passwordHash => $composableBuilder(
+    column: $table.passwordHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get salt => $composableBuilder(
+    column: $table.salt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LoginCredentialsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $LoginCredentialsTableTable> {
+  $$LoginCredentialsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get username => $composableBuilder(
+    column: $table.username,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get passwordHash => $composableBuilder(
+    column: $table.passwordHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get salt => $composableBuilder(
+    column: $table.salt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LoginCredentialsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LoginCredentialsTableTable> {
+  $$LoginCredentialsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get username =>
+      $composableBuilder(column: $table.username, builder: (column) => column);
+
+  GeneratedColumn<String> get passwordHash => $composableBuilder(
+    column: $table.passwordHash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get salt =>
+      $composableBuilder(column: $table.salt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$LoginCredentialsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LoginCredentialsTableTable,
+          LoginCredentialsTableData,
+          $$LoginCredentialsTableTableFilterComposer,
+          $$LoginCredentialsTableTableOrderingComposer,
+          $$LoginCredentialsTableTableAnnotationComposer,
+          $$LoginCredentialsTableTableCreateCompanionBuilder,
+          $$LoginCredentialsTableTableUpdateCompanionBuilder,
+          (
+            LoginCredentialsTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $LoginCredentialsTableTable,
+              LoginCredentialsTableData
+            >,
+          ),
+          LoginCredentialsTableData,
+          PrefetchHooks Function()
+        > {
+  $$LoginCredentialsTableTableTableManager(
+    _$AppDatabase db,
+    $LoginCredentialsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LoginCredentialsTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$LoginCredentialsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$LoginCredentialsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> username = const Value.absent(),
+                Value<String> passwordHash = const Value.absent(),
+                Value<String> salt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LoginCredentialsTableCompanion(
+                id: id,
+                username: username,
+                passwordHash: passwordHash,
+                salt: salt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String username,
+                required String passwordHash,
+                required String salt,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LoginCredentialsTableCompanion.insert(
+                id: id,
+                username: username,
+                passwordHash: passwordHash,
+                salt: salt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LoginCredentialsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LoginCredentialsTableTable,
+      LoginCredentialsTableData,
+      $$LoginCredentialsTableTableFilterComposer,
+      $$LoginCredentialsTableTableOrderingComposer,
+      $$LoginCredentialsTableTableAnnotationComposer,
+      $$LoginCredentialsTableTableCreateCompanionBuilder,
+      $$LoginCredentialsTableTableUpdateCompanionBuilder,
+      (
+        LoginCredentialsTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $LoginCredentialsTableTable,
+          LoginCredentialsTableData
+        >,
+      ),
+      LoginCredentialsTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -27318,6 +29706,10 @@ class $AppDatabaseManager {
       $$CashReportTableTableTableManager(_db, _db.cashReportTable);
   $$CustomerTableTableTableManager get customerTable =>
       $$CustomerTableTableTableManager(_db, _db.customerTable);
+  $$SplitPaymentTableTableTableManager get splitPaymentTable =>
+      $$SplitPaymentTableTableTableManager(_db, _db.splitPaymentTable);
+  $$LoginCredentialsTableTableTableManager get loginCredentialsTable =>
+      $$LoginCredentialsTableTableTableManager(_db, _db.loginCredentialsTable);
 }
 
 // **************************************************************************

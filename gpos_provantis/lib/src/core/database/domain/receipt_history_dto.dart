@@ -6,17 +6,29 @@ import 'package:gpos_provantis/src/core/database/app_database.dart'
 /// One payment taken for a receipt. The server sends one row per tender, so a
 /// split sale (e.g. GCASH 120 + CASH 200) arrives as two rows.
 class ReceiptTender {
-  const ReceiptTender({required this.type, required this.amount});
+  const ReceiptTender({
+    required this.type,
+    required this.amount,
+    this.reference = '',
+  });
 
   final String type;
   final double amount;
 
-  Map<String, dynamic> toJson() => {'type': type, 'amount': amount};
+  /// The e-payment reference for this payment, when the server sends one.
+  final String reference;
+
+  Map<String, dynamic> toJson() => {
+    'type': type,
+    'amount': amount,
+    'reference': reference,
+  };
 
   factory ReceiptTender.fromJson(Map<String, dynamic> json) {
     return ReceiptTender(
       type: (json['type'] ?? '').toString(),
       amount: _toDouble(json['amount']),
+      reference: (json['reference'] ?? '').toString(),
     );
   }
 }
@@ -110,6 +122,7 @@ class ReceiptHistoryDto {
               ReceiptTender(
                 type: tenderType,
                 amount: _toDouble(json['tenderamount']),
+                reference: (json['referenceid'] ?? '').toString(),
               ),
             ],
     );

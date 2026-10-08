@@ -57,16 +57,29 @@ ReceiptSaleData receiptHistoryToSaleData(
     case 'SPLIT':
       cash = cashTendered;
       ecash = nonCashTendered;
+    case 'E2E':
+      // Two e-payments: `ecash` is the first one; the second is passed
+      // separately below.
+      cash = 0;
+      ecash = nonCash.isNotEmpty ? nonCash.first.amount : row.total;
     default:
       cash = cashTendered > 0 ? cashTendered : row.total;
       ecash = 0;
   }
 
-  final isCashSale = paymentType != 'EPAYMENT' && paymentType != 'SPLIT';
+  final isE2E = paymentType == 'E2E';
+  final isCashSale =
+      paymentType != 'EPAYMENT' && paymentType != 'SPLIT' && !isE2E;
   final paymentName = isCashSale
       ? 'CASH'
       : (nonCash.isNotEmpty ? nonCash.first.type : '');
-  final referenceId = isCashSale ? 'CASH' : row.referenceId;
+  final referenceId = isCashSale
+      ? 'CASH'
+      : (isE2E && nonCash.isNotEmpty
+            ? nonCash.first.reference
+            : row.referenceId);
+
+  final second = isE2E && nonCash.length > 1 ? nonCash[1] : null;
 
   return ReceiptSaleData(
     detailId: row.detailId,
@@ -90,6 +103,9 @@ ReceiptSaleData receiptHistoryToSaleData(
     ecash: ecash,
     referenceId: referenceId,
     paymentName: paymentName,
+    secondPaymentName: second?.type ?? '',
+    secondReferenceId: second?.reference ?? '',
+    secondAmount: second?.amount ?? 0,
     isReprint: true,
   );
 }
