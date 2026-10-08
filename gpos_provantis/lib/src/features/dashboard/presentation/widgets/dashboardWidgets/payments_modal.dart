@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
@@ -10,6 +11,7 @@ import '../../controllers/dashboard_controller.dart';
 import '../../controllers/payments_controller.dart';
 import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
     show ReceiptGenerator, ReceiptPrintException;
+import 'package:gpos_provantis/src/core/database/daos/duplicate_detail_id_exception.dart';
 import 'amount_input_formatter.dart';
 import 'amount_numpad.dart';
 import 'dashboard_constants.dart';
@@ -22,6 +24,78 @@ Future<void> showPaymentModal(BuildContext context) {
   );
 }
 
+/// Runs a sale for all three confirm buttons: takes the submit lock, shows
+/// the right message if it fails, and closes the modal once the sale is saved.
+Future<void> _submitPayment({
+  required BuildContext context,
+  required WidgetRef ref,
+  required Future<void> Function() createSale,
+}) async {
+  final notifier = ref.read(paymentControllerProvider.notifier);
+  if (!notifier.beginSubmit()) return;
+
+  void toast(String message) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  var saleRecorded = false;
+  try {
+    await createSale();
+    saleRecorded = true;
+  } on ReceiptPrintException catch (e) {
+    // The sale is saved; only the receipt failed to print.
+    saleRecorded = true;
+    toast(e.message);
+  } on SaleAlreadyInProgressException {
+    // Another submit owns the sale; nothing more to do.
+  } on EmptyCartException catch (e) {
+    toast(e.message);
+  } on DuplicateDetailIdException {
+    toast('That receipt number was already used. Please confirm again.');
+  } on PosDetailIdUnavailableException catch (e) {
+    toast(e.message);
+  } on PosIdentityUnavailableException catch (e) {
+    toast(e.message);
+  } catch (e, st) {
+    debugPrint('Payment failed: $e\n$st');
+    toast('Payment could not be completed. Please try again.');
+  }
+
+  if (saleRecorded) {
+    notifier.reset();
+    if (context.mounted) Navigator.of(context).pop();
+  } else {
+    notifier.endSubmit();
+  }
+}
+
+class _ConfirmButtonLabel extends StatelessWidget {
+  const _ConfirmButtonLabel({required this.isSubmitting});
+
+  final bool isSubmitting;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isSubmitting) {
+      return SizedBox(
+        width: 24,
+        height: 24,
+        child: CircularProgressIndicator(
+          strokeWidth: 2.5,
+          color: context.colors.onPrimary,
+        ),
+      );
+    }
+    return Text(
+      'Confirm payment',
+      style: AppTypography.ui(fontSize: 17, fontWeight: FontWeight.w600),
+    );
+  }
+}
+
 class _PaymentModal extends ConsumerWidget {
   const _PaymentModal();
 
@@ -29,6 +103,9 @@ class _PaymentModal extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final step = ref.watch(paymentControllerProvider.select((s) => s.step));
+    final isSubmitting = ref.watch(
+      paymentControllerProvider.select((s) => s.isSubmitting),
+    );
 
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
 
@@ -36,22 +113,33 @@ class _PaymentModal extends ConsumerWidget {
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOut,
       padding: EdgeInsets.only(bottom: keyboardInset),
-      child: Dialog(
-        backgroundColor: colors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        insetPadding: const EdgeInsets.all(32),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: 1160,
-            maxHeight: (MediaQuery.sizeOf(context).height - keyboardInset - 64)
-                .clamp(320, 720),
+      child: PopScope(
+        // Don't let the system back button close the modal mid-payment.
+        canPop: !isSubmitting,
+        child: Dialog(
+          backgroundColor: colors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _ModalHeader(step: step),
-              Flexible(child: _ModalBody(step: step)),
-            ],
+          insetPadding: const EdgeInsets.all(32),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 1160,
+              maxHeight:
+                  (MediaQuery.sizeOf(context).height - keyboardInset - 64)
+                      .clamp(320, 720),
+            ),
+            // Ignore every tap (back, close, fields, numpad) while saving.
+            child: IgnorePointer(
+              ignoring: isSubmitting,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ModalHeader(step: step),
+                  Flexible(child: _ModalBody(step: step)),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -455,35 +543,13 @@ class _EPaymentConfirmScreenState
             height: primaryTapTarget,
             child: ElevatedButton(
               onPressed: paymentState.singleEPaymentIsReadyToConfirm
-                  ? () async {
-                      try {
-                        await ref
-                            .read(dashboardControllerProvider.notifier)
-                            .createSaleFromEPayment(paymentState);
-                      } on PosDetailIdUnavailableException catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text(e.message)));
-                        }
-                        return;
-                      } on PosIdentityUnavailableException catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text(e.message)));
-                        }
-                        return;
-                      } on ReceiptPrintException catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text(e.message)));
-                        }
-                      }
-                      notifier.reset();
-                      if (context.mounted) Navigator.of(context).pop();
-                    }
+                  ? () => _submitPayment(
+                      context: context,
+                      ref: ref,
+                      createSale: () => ref
+                          .read(dashboardControllerProvider.notifier)
+                          .createSaleFromEPayment(paymentState),
+                    )
                   : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppPalette.teal500,
@@ -495,12 +561,8 @@ class _EPaymentConfirmScreenState
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: Text(
-                'Confirm payment',
-                style: AppTypography.ui(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: _ConfirmButtonLabel(
+                isSubmitting: paymentState.isSubmitting,
               ),
             ),
           ),
@@ -730,35 +792,13 @@ class _CashScreenState extends ConsumerState<_CashScreen> {
                     height: primaryTapTarget,
                     child: ElevatedButton(
                       onPressed: paymentState.cashIsReadyToConfirm(total)
-                          ? () async {
-                              try {
-                                await ref
-                                    .read(dashboardControllerProvider.notifier)
-                                    .createSaleFromCash();
-                              } on PosDetailIdUnavailableException catch (e) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(e.message)),
-                                  );
-                                }
-                                return;
-                              } on PosIdentityUnavailableException catch (e) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(e.message)),
-                                  );
-                                }
-                                return;
-                              } on ReceiptPrintException catch (e) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(e.message)),
-                                  );
-                                }
-                              }
-                              notifier.reset();
-                              if (context.mounted) Navigator.of(context).pop();
-                            }
+                          ? () => _submitPayment(
+                              context: context,
+                              ref: ref,
+                              createSale: () => ref
+                                  .read(dashboardControllerProvider.notifier)
+                                  .createSaleFromCash(),
+                            )
                           : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppPalette.teal500,
@@ -770,12 +810,8 @@ class _CashScreenState extends ConsumerState<_CashScreen> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: Text(
-                        'Confirm payment',
-                        style: AppTypography.ui(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: _ConfirmButtonLabel(
+                        isSubmitting: paymentState.isSubmitting,
                       ),
                     ),
                   ),
@@ -885,7 +921,6 @@ class _SplitLayoutState extends ConsumerState<_SplitLayout> {
     final colors = context.colors;
     final total = ref.watch(dashboardControllerProvider).total;
     final paymentState = ref.watch(paymentControllerProvider);
-    final notifier = ref.read(paymentControllerProvider.notifier);
     final remaining = total - paymentState.splitAssignedTotal;
 
     return ConstrainedBox(
@@ -942,67 +977,31 @@ class _SplitLayoutState extends ConsumerState<_SplitLayout> {
                   ),
                   const SizedBox(height: 20),
                   _RemainingBanner(remaining: remaining),
-                  if (!paymentState.isSplitReady &&
-                      paymentState.splitSlots[0].method != null &&
-                      paymentState.splitSlots[1].method != null &&
-                      paymentState.splitSlots[0].method ==
-                          paymentState.splitSlots[1].method) ...[
-                    const SizedBox(height: 14),
-                    _WarningBanner(
-                      text:
-                          'Choose two different E-payment methods for the split.',
-                    ),
-                  ],
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
                     height: primaryTapTarget,
                     child: ElevatedButton(
                       onPressed: paymentState.splitIsReadyToConfirm(total)
-                          ? () async {
-                              // Both kinds of split create a sale; they differ only in which
-                              // payments are involved.
-                              {
-                                try {
-                                  final dashboard = ref.read(
-                                    dashboardControllerProvider.notifier,
-                                  );
-                                  if (paymentState.splitKind ==
-                                      SplitKind.cashAndEPayment) {
-                                    await dashboard
-                                        .createSaleFromCashEPaymentSplit(
-                                          paymentState,
-                                        );
-                                  } else {
-                                    await dashboard.createSaleFromEPaymentSplit(
-                                      paymentState,
-                                    );
-                                  }
-                                } on PosDetailIdUnavailableException catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(e.message)),
-                                    );
-                                  }
-                                  return;
-                                } on PosIdentityUnavailableException catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(e.message)),
-                                    );
-                                  }
-                                  return;
-                                } on ReceiptPrintException catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(e.message)),
-                                    );
-                                  }
-                                }
-                              }
-                              notifier.reset();
-                              if (context.mounted) Navigator.of(context).pop();
-                            }
+                          ? () => _submitPayment(
+                              context: context,
+                              ref: ref,
+                              // Both kinds of split create a sale; they differ
+                              // only in which payments are involved.
+                              createSale: () {
+                                final dashboard = ref.read(
+                                  dashboardControllerProvider.notifier,
+                                );
+                                return paymentState.splitKind ==
+                                        SplitKind.cashAndEPayment
+                                    ? dashboard.createSaleFromCashEPaymentSplit(
+                                        paymentState,
+                                      )
+                                    : dashboard.createSaleFromEPaymentSplit(
+                                        paymentState,
+                                      );
+                              },
+                            )
                           : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppPalette.teal500,
@@ -1014,12 +1013,8 @@ class _SplitLayoutState extends ConsumerState<_SplitLayout> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: Text(
-                        'Confirm payment',
-                        style: AppTypography.ui(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: _ConfirmButtonLabel(
+                        isSubmitting: paymentState.isSubmitting,
                       ),
                     ),
                   ),
@@ -1231,16 +1226,8 @@ class _EPaymentBlockState extends ConsumerState<_EPaymentBlock> {
       paymentControllerProvider.select((s) => s.splitSlots[widget.index]),
     );
 
-    final otherMethod = ref.watch(
-      paymentControllerProvider.select(
-        (s) => s.splitSlots[widget.index == 0 ? 1 : 0].method,
-      ),
-    );
-    final availableMethods = ePaymentMethods
-        .where(
-          (m) => otherMethod == null || otherMethod.isCash || m != otherMethod,
-        )
-        .toList();
+    // Same method is allowed in both slots, so no filtering against the other slot.
+    final availableMethods = ePaymentMethods;
 
     return Container(
       padding: const EdgeInsets.all(20),

@@ -15,6 +15,7 @@ import 'package:gpos_provantis/src/core/database/providers/service_package_dao_p
 import 'package:gpos_provantis/src/core/database/providers/addon_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/tables/sales_table.dart';
 import 'package:gpos_provantis/src/core/database/daos/pos_detail_id_dao.dart';
+import 'package:gpos_provantis/src/core/database/daos/duplicate_detail_id_exception.dart';
 import 'package:gpos_provantis/src/core/database/providers/pos_detail_id_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/pos_config_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/pos_shift_dao_provider.dart';
@@ -320,6 +321,30 @@ class PosIdentityUnavailableException implements Exception {
 
   @override
   String toString() => 'PosIdentityUnavailableException: $message';
+}
+
+/// Thrown when a sale is requested while another one is still being saved.
+class SaleAlreadyInProgressException implements Exception {
+  const SaleAlreadyInProgressException();
+
+  String get message => 'A payment is already being processed.';
+
+  @override
+  String toString() => 'SaleAlreadyInProgressException: $message';
+}
+
+/// Thrown when a sale is requested with an empty cart. After a successful
+/// sale the cart is cleared, so this is also what stops a second tap from
+/// recording a second (zero-peso) sale.
+class EmptyCartException implements Exception {
+  const EmptyCartException();
+
+  String get message =>
+      'The cart is empty. If you just confirmed a payment, the sale may '
+      'already be recorded.';
+
+  @override
+  String toString() => 'EmptyCartException: $message';
 }
 
 class _PosIdentity {
@@ -1240,13 +1265,52 @@ class DashboardController extends _$DashboardController {
     }
   }
 
-  Future<void> createSaleFromCash() async {
+  // ---- Idempotency guards -------------------------------------------------
+
+  /// True while a sale is being saved. Checked and set synchronously (no await
+  /// in between), so two taps in the same frame can never both get through.
+  bool _saleInFlight = false;
+
+  /// The receipt (detail) number reserved for the sale being checked out.
+  /// Reserved once and reused if the save has to be retried, so a retry can
+  /// never produce a second receipt number for the same sale. Cleared as soon
+  /// as the sale is saved.
+  String? _reservedDetailId;
+
+  Future<String> _reserveDetailId() async {
+    return _reservedDetailId ??= await ref
+        .read(posDetailIdDaoProvider)
+        .consumeAndIncrementDetailId();
+  }
+
+  void _releaseDetailId() {
+    _reservedDetailId = null;
+  }
+
+  /// Runs [saveSale] at most once at a time, and only for a non-empty cart.
+  Future<void> _runSaleOnce(Future<void> Function() saveSale) async {
+    if (_saleInFlight) throw const SaleAlreadyInProgressException();
+    if (state.cartLines.isEmpty) throw const EmptyCartException();
+    _saleInFlight = true;
+    try {
+      await saveSale();
+    } on DuplicateDetailIdException {
+      // The reserved receipt number belongs to another sale: drop it so the
+      // next attempt takes a fresh one.
+      _releaseDetailId();
+      rethrow;
+    } finally {
+      _saleInFlight = false;
+    }
+  }
+
+  Future<void> createSaleFromCash() => _runSaleOnce(_createSaleFromCash);
+
+  Future<void> _createSaleFromCash() async {
     final identity = await _PosIdentity.resolve(ref);
     final cashier = await _resolveCashier(ref);
     final branch = await _resolveBranch(ref);
-    final detailId = await ref
-        .read(posDetailIdDaoProvider)
-        .consumeAndIncrementDetailId();
+    final detailId = await _reserveDetailId();
 
     final total = state.total;
 
@@ -1271,6 +1335,7 @@ class DashboardController extends _$DashboardController {
     );
 
     await ref.read(salesDaoProvider).saveSale(sale);
+    _releaseDetailId();
 
     // The sale is complete: attach the customer entered before payment.
     await _recordCustomerForSale(detailId: detailId, posId: identity.posId);
@@ -1324,7 +1389,10 @@ class DashboardController extends _$DashboardController {
         );
   }
 
-  Future<void> createSaleFromEPayment(PaymentState paymentState) async {
+  Future<void> createSaleFromEPayment(PaymentState paymentState) =>
+      _runSaleOnce(() => _createSaleFromEPayment(paymentState));
+
+  Future<void> _createSaleFromEPayment(PaymentState paymentState) async {
     final method = paymentState.selectedMethod;
     if (method == null) {
       throw StateError(
@@ -1335,9 +1403,7 @@ class DashboardController extends _$DashboardController {
     final identity = await _PosIdentity.resolve(ref);
     final cashier = await _resolveCashier(ref);
     final branch = await _resolveBranch(ref);
-    final detailId = await ref
-        .read(posDetailIdDaoProvider)
-        .consumeAndIncrementDetailId();
+    final detailId = await _reserveDetailId();
 
     final total = state.total;
 
@@ -1363,6 +1429,7 @@ class DashboardController extends _$DashboardController {
     );
 
     await ref.read(salesDaoProvider).saveSale(sale);
+    _releaseDetailId();
 
     // The sale is complete: attach the customer entered before payment.
     await _recordCustomerForSale(detailId: detailId, posId: identity.posId);
@@ -1393,7 +1460,10 @@ class DashboardController extends _$DashboardController {
         );
   }
 
-  Future<void> createSaleFromCashEPaymentSplit(
+  Future<void> createSaleFromCashEPaymentSplit(PaymentState paymentState) =>
+      _runSaleOnce(() => _createSaleFromCashEPaymentSplit(paymentState));
+
+  Future<void> _createSaleFromCashEPaymentSplit(
     PaymentState paymentState,
   ) async {
     assert(
@@ -1415,9 +1485,7 @@ class DashboardController extends _$DashboardController {
     final identity = await _PosIdentity.resolve(ref);
     final cashier = await _resolveCashier(ref);
     final branch = await _resolveBranch(ref);
-    final detailId = await ref
-        .read(posDetailIdDaoProvider)
-        .consumeAndIncrementDetailId();
+    final detailId = await _reserveDetailId();
 
     final total = state.total;
 
@@ -1446,6 +1514,7 @@ class DashboardController extends _$DashboardController {
     );
 
     await ref.read(salesDaoProvider).saveSale(sale);
+    _releaseDetailId();
 
     // The sale is complete: attach the customer entered before payment.
     await _recordCustomerForSale(detailId: detailId, posId: identity.posId);
@@ -1504,7 +1573,10 @@ class DashboardController extends _$DashboardController {
   /// and then uploaded to the server, and kept for a retry if the server can't
   /// be reached. Unlike the other flows it is not written to the local `sales`
   /// table, because that table has one payment name and one reference per sale.
-  Future<void> createSaleFromEPaymentSplit(PaymentState paymentState) async {
+  Future<void> createSaleFromEPaymentSplit(PaymentState paymentState) =>
+      _runSaleOnce(() => _createSaleFromEPaymentSplit(paymentState));
+
+  Future<void> _createSaleFromEPaymentSplit(PaymentState paymentState) async {
     assert(
       paymentState.splitKind == SplitKind.ePaymentAndEPayment,
       'createSaleFromEPaymentSplit called with the wrong split kind',
@@ -1530,9 +1602,7 @@ class DashboardController extends _$DashboardController {
     final identity = await _PosIdentity.resolve(ref);
     final cashier = await _resolveCashier(ref);
     final branch = await _resolveBranch(ref);
-    final detailId = await ref
-        .read(posDetailIdDaoProvider)
-        .consumeAndIncrementDetailId();
+    final detailId = await _reserveDetailId();
 
     final total = state.total;
 
@@ -1567,6 +1637,8 @@ class DashboardController extends _$DashboardController {
             reference: secondReference,
           ),
         );
+
+    _releaseDetailId();
 
     // The sale is complete: attach the customer entered before payment. Done
     // after the split payment is sent so the sale exists on the server first.

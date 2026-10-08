@@ -6,6 +6,7 @@ import 'package:gpos_provantis/src/core/network/api_client.dart';
 import 'package:gpos_provantis/src/core/network/domain_provider.dart';
 import 'package:gpos_provantis/src/core/database/app_database.dart';
 import 'package:gpos_provantis/src/core/database/daos/sales_dao.dart';
+import 'package:gpos_provantis/src/core/database/services/local_data_retention.dart';
 import 'package:gpos_provantis/src/core/database/providers/sales_dao_provider.dart';
 
 part 'sales_repository.g.dart';
@@ -24,7 +25,54 @@ class SalesRepository {
 
   SalesRepository(this._ref, this._dao);
 
+  /// True while [uploadSales] is running, so overlapping calls (a timed sync
+  /// and a manual one) can't send the same sale twice.
+  bool _uploading = false;
+
   Future<int> uploadSales() async {
+    if (_uploading) return 0;
+    _uploading = true;
+    try {
+      final confirmed = await _uploadPending();
+      // Housekeeping after each sync; never affects the upload result.
+      await purgeOldSyncedSales();
+      return confirmed;
+    } finally {
+      _uploading = false;
+    }
+  }
+
+  DateTime? _lastPurgeAt;
+
+  /// Removes sales the server already has once they are older than
+  /// [LocalDataRetention.syncedSalesRetention]. Unsynced sales are never
+  /// removed. Runs at most once per [LocalDataRetention.purgeInterval] unless
+  /// [force] is set. Never throws; returns how many rows were removed.
+  Future<int> purgeOldSyncedSales({bool force = false}) async {
+    final now = DateTime.now();
+    final last = _lastPurgeAt;
+    if (!force &&
+        last != null &&
+        now.difference(last) < LocalDataRetention.purgeInterval) {
+      return 0;
+    }
+    _lastPurgeAt = now;
+
+    try {
+      final removed = await _dao.deleteSyncedOlderThan(
+        LocalDataRetention.syncedSalesCutoff(now),
+      );
+      if (removed > 0) {
+        debugPrint('SalesRepository: removed $removed old synced sale(s)');
+      }
+      return removed;
+    } catch (error) {
+      debugPrint('SalesRepository: could not remove old sales: $error');
+      return 0;
+    }
+  }
+
+  Future<int> _uploadPending() async {
     await _ref.read(domainConfigDaoProvider).cacheReady;
 
     final pending = await _dao.getUnsyncedSales();
