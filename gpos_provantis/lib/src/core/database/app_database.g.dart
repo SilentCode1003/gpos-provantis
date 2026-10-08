@@ -19071,6 +19071,374 @@ class SplitPaymentTableCompanion
   }
 }
 
+class $LoginCredentialsTableTable extends LoginCredentialsTable
+    with TableInfo<$LoginCredentialsTableTable, LoginCredentialsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LoginCredentialsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('login_credentials'),
+  );
+  static const VerificationMeta _usernameMeta = const VerificationMeta(
+    'username',
+  );
+  @override
+  late final GeneratedColumn<String> username = GeneratedColumn<String>(
+    'username',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _passwordHashMeta = const VerificationMeta(
+    'passwordHash',
+  );
+  @override
+  late final GeneratedColumn<String> passwordHash = GeneratedColumn<String>(
+    'password_hash',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _saltMeta = const VerificationMeta('salt');
+  @override
+  late final GeneratedColumn<String> salt = GeneratedColumn<String>(
+    'salt',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    username,
+    passwordHash,
+    salt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'login_credentials_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LoginCredentialsTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('username')) {
+      context.handle(
+        _usernameMeta,
+        username.isAcceptableOrUnknown(data['username']!, _usernameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_usernameMeta);
+    }
+    if (data.containsKey('password_hash')) {
+      context.handle(
+        _passwordHashMeta,
+        passwordHash.isAcceptableOrUnknown(
+          data['password_hash']!,
+          _passwordHashMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_passwordHashMeta);
+    }
+    if (data.containsKey('salt')) {
+      context.handle(
+        _saltMeta,
+        salt.isAcceptableOrUnknown(data['salt']!, _saltMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_saltMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LoginCredentialsTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LoginCredentialsTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      username: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}username'],
+      )!,
+      passwordHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}password_hash'],
+      )!,
+      salt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}salt'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $LoginCredentialsTableTable createAlias(String alias) {
+    return $LoginCredentialsTableTable(attachedDatabase, alias);
+  }
+}
+
+class LoginCredentialsTableData extends DataClass
+    implements Insertable<LoginCredentialsTableData> {
+  final String id;
+  final String username;
+  final String passwordHash;
+  final String salt;
+  final DateTime updatedAt;
+  const LoginCredentialsTableData({
+    required this.id,
+    required this.username,
+    required this.passwordHash,
+    required this.salt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['username'] = Variable<String>(username);
+    map['password_hash'] = Variable<String>(passwordHash);
+    map['salt'] = Variable<String>(salt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  LoginCredentialsTableCompanion toCompanion(bool nullToAbsent) {
+    return LoginCredentialsTableCompanion(
+      id: Value(id),
+      username: Value(username),
+      passwordHash: Value(passwordHash),
+      salt: Value(salt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory LoginCredentialsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LoginCredentialsTableData(
+      id: serializer.fromJson<String>(json['id']),
+      username: serializer.fromJson<String>(json['username']),
+      passwordHash: serializer.fromJson<String>(json['passwordHash']),
+      salt: serializer.fromJson<String>(json['salt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'username': serializer.toJson<String>(username),
+      'passwordHash': serializer.toJson<String>(passwordHash),
+      'salt': serializer.toJson<String>(salt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  LoginCredentialsTableData copyWith({
+    String? id,
+    String? username,
+    String? passwordHash,
+    String? salt,
+    DateTime? updatedAt,
+  }) => LoginCredentialsTableData(
+    id: id ?? this.id,
+    username: username ?? this.username,
+    passwordHash: passwordHash ?? this.passwordHash,
+    salt: salt ?? this.salt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  LoginCredentialsTableData copyWithCompanion(
+    LoginCredentialsTableCompanion data,
+  ) {
+    return LoginCredentialsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      username: data.username.present ? data.username.value : this.username,
+      passwordHash: data.passwordHash.present
+          ? data.passwordHash.value
+          : this.passwordHash,
+      salt: data.salt.present ? data.salt.value : this.salt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LoginCredentialsTableData(')
+          ..write('id: $id, ')
+          ..write('username: $username, ')
+          ..write('passwordHash: $passwordHash, ')
+          ..write('salt: $salt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, username, passwordHash, salt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LoginCredentialsTableData &&
+          other.id == this.id &&
+          other.username == this.username &&
+          other.passwordHash == this.passwordHash &&
+          other.salt == this.salt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class LoginCredentialsTableCompanion
+    extends UpdateCompanion<LoginCredentialsTableData> {
+  final Value<String> id;
+  final Value<String> username;
+  final Value<String> passwordHash;
+  final Value<String> salt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const LoginCredentialsTableCompanion({
+    this.id = const Value.absent(),
+    this.username = const Value.absent(),
+    this.passwordHash = const Value.absent(),
+    this.salt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LoginCredentialsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String username,
+    required String passwordHash,
+    required String salt,
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : username = Value(username),
+       passwordHash = Value(passwordHash),
+       salt = Value(salt);
+  static Insertable<LoginCredentialsTableData> custom({
+    Expression<String>? id,
+    Expression<String>? username,
+    Expression<String>? passwordHash,
+    Expression<String>? salt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (username != null) 'username': username,
+      if (passwordHash != null) 'password_hash': passwordHash,
+      if (salt != null) 'salt': salt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LoginCredentialsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? username,
+    Value<String>? passwordHash,
+    Value<String>? salt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return LoginCredentialsTableCompanion(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      passwordHash: passwordHash ?? this.passwordHash,
+      salt: salt ?? this.salt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (username.present) {
+      map['username'] = Variable<String>(username.value);
+    }
+    if (passwordHash.present) {
+      map['password_hash'] = Variable<String>(passwordHash.value);
+    }
+    if (salt.present) {
+      map['salt'] = Variable<String>(salt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LoginCredentialsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('username: $username, ')
+          ..write('passwordHash: $passwordHash, ')
+          ..write('salt: $salt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -19131,6 +19499,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CustomerTableTable customerTable = $CustomerTableTable(this);
   late final $SplitPaymentTableTable splitPaymentTable =
       $SplitPaymentTableTable(this);
+  late final $LoginCredentialsTableTable loginCredentialsTable =
+      $LoginCredentialsTableTable(this);
   late final DomainConfigDao domainConfigDao = DomainConfigDao(
     this as AppDatabase,
   );
@@ -19177,6 +19547,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     cashReportTable,
     customerTable,
     splitPaymentTable,
+    loginCredentialsTable,
   ];
 }
 
@@ -29035,6 +29406,227 @@ typedef $$SplitPaymentTableTableProcessedTableManager =
       SplitPaymentTableData,
       PrefetchHooks Function()
     >;
+typedef $$LoginCredentialsTableTableCreateCompanionBuilder =
+    LoginCredentialsTableCompanion Function({
+      Value<String> id,
+      required String username,
+      required String passwordHash,
+      required String salt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$LoginCredentialsTableTableUpdateCompanionBuilder =
+    LoginCredentialsTableCompanion Function({
+      Value<String> id,
+      Value<String> username,
+      Value<String> passwordHash,
+      Value<String> salt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$LoginCredentialsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $LoginCredentialsTableTable> {
+  $$LoginCredentialsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get username => $composableBuilder(
+    column: $table.username,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get passwordHash => $composableBuilder(
+    column: $table.passwordHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get salt => $composableBuilder(
+    column: $table.salt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LoginCredentialsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $LoginCredentialsTableTable> {
+  $$LoginCredentialsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get username => $composableBuilder(
+    column: $table.username,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get passwordHash => $composableBuilder(
+    column: $table.passwordHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get salt => $composableBuilder(
+    column: $table.salt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LoginCredentialsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LoginCredentialsTableTable> {
+  $$LoginCredentialsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get username =>
+      $composableBuilder(column: $table.username, builder: (column) => column);
+
+  GeneratedColumn<String> get passwordHash => $composableBuilder(
+    column: $table.passwordHash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get salt =>
+      $composableBuilder(column: $table.salt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$LoginCredentialsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LoginCredentialsTableTable,
+          LoginCredentialsTableData,
+          $$LoginCredentialsTableTableFilterComposer,
+          $$LoginCredentialsTableTableOrderingComposer,
+          $$LoginCredentialsTableTableAnnotationComposer,
+          $$LoginCredentialsTableTableCreateCompanionBuilder,
+          $$LoginCredentialsTableTableUpdateCompanionBuilder,
+          (
+            LoginCredentialsTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $LoginCredentialsTableTable,
+              LoginCredentialsTableData
+            >,
+          ),
+          LoginCredentialsTableData,
+          PrefetchHooks Function()
+        > {
+  $$LoginCredentialsTableTableTableManager(
+    _$AppDatabase db,
+    $LoginCredentialsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LoginCredentialsTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$LoginCredentialsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$LoginCredentialsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> username = const Value.absent(),
+                Value<String> passwordHash = const Value.absent(),
+                Value<String> salt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LoginCredentialsTableCompanion(
+                id: id,
+                username: username,
+                passwordHash: passwordHash,
+                salt: salt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String username,
+                required String passwordHash,
+                required String salt,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LoginCredentialsTableCompanion.insert(
+                id: id,
+                username: username,
+                passwordHash: passwordHash,
+                salt: salt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LoginCredentialsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LoginCredentialsTableTable,
+      LoginCredentialsTableData,
+      $$LoginCredentialsTableTableFilterComposer,
+      $$LoginCredentialsTableTableOrderingComposer,
+      $$LoginCredentialsTableTableAnnotationComposer,
+      $$LoginCredentialsTableTableCreateCompanionBuilder,
+      $$LoginCredentialsTableTableUpdateCompanionBuilder,
+      (
+        LoginCredentialsTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $LoginCredentialsTableTable,
+          LoginCredentialsTableData
+        >,
+      ),
+      LoginCredentialsTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -29116,6 +29708,8 @@ class $AppDatabaseManager {
       $$CustomerTableTableTableManager(_db, _db.customerTable);
   $$SplitPaymentTableTableTableManager get splitPaymentTable =>
       $$SplitPaymentTableTableTableManager(_db, _db.splitPaymentTable);
+  $$LoginCredentialsTableTableTableManager get loginCredentialsTable =>
+      $$LoginCredentialsTableTableTableManager(_db, _db.loginCredentialsTable);
 }
 
 // **************************************************************************

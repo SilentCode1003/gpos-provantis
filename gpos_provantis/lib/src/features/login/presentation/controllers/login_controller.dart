@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:gpos_provantis/src/core/database/repository/login_repository.dart';
 import 'package:gpos_provantis/src/services/sync/catalog_sync.dart';
@@ -56,6 +57,12 @@ class LoginController extends _$LoginController {
     state = state.copyWith(obscurePassword: !state.obscurePassword);
   }
 
+  bool _isOffline(DioException e) =>
+      e.type == DioExceptionType.connectionError ||
+      e.type == DioExceptionType.connectionTimeout ||
+      e.type == DioExceptionType.sendTimeout ||
+      e.type == DioExceptionType.receiveTimeout;
+
   Future<bool> submit() async {
     final username = state.username.trim();
     final password = state.password.trim();
@@ -69,10 +76,10 @@ class LoginController extends _$LoginController {
 
     state = state.copyWith(isSubmitting: true, clearError: true);
 
+    final repo = ref.read(userDataRepositoryProvider);
+
     try {
-      await ref
-          .read(userDataRepositoryProvider)
-          .fetchAndSaveUser(username, password);
+      await repo.fetchAndSaveUser(username, password);
       state = state.copyWith(isSubmitting: false);
 
       try {
@@ -85,6 +92,26 @@ class LoginController extends _$LoginController {
       }
 
       return true;
+    } on DioException catch (e) {
+      if (_isOffline(e)) {
+        // No connection: fall back to the login saved on this device.
+        final ok = await repo.verifyOffline(username, password);
+        state = state.copyWith(
+          isSubmitting: false,
+          clearError: ok,
+          errorMessage: ok
+              ? null
+              : 'You are offline, and these details do not match '
+                    'the login saved on this device.',
+        );
+        return ok;
+      }
+
+      state = state.copyWith(
+        isSubmitting: false,
+        errorMessage: 'Invalid username or password.',
+      );
+      return false;
     } catch (e) {
       state = state.copyWith(
         isSubmitting: false,

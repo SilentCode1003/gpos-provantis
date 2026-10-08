@@ -8,7 +8,10 @@ import 'package:gpos_provantis/src/core/network/domain_provider.dart';
 import 'package:gpos_provantis/src/core/database/app_database.dart';
 import 'package:gpos_provantis/src/core/database/daos/user_data_dao.dart';
 import 'package:gpos_provantis/src/core/database/providers/user_data_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/providers/login_credentials_dao_provider.dart';
+import 'package:gpos_provantis/src/core/utils/password_hasher.dart';
 
+import '../domain/login_credentials_dto.dart';
 import '../domain/user_data_dto.dart';
 
 part 'login_repository.g.dart';
@@ -62,5 +65,36 @@ class UserDataRepository {
         apk: Value(user.apk),
       ),
     );
+
+    // Only reached when the server accepted the login.
+    await _saveCredentials(username, password);
+  }
+
+  /// Checks the typed login against the one saved on this device.
+  Future<bool> verifyOffline(String username, String password) async {
+    final row = await _ref.read(loginCredentialsDaoProvider).getCredentials();
+    if (row == null) return false;
+
+    final saved = LoginCredentialsDto.fromRow(row);
+    if (saved.username != username) return false;
+
+    return _ref
+        .read(passwordHasherProvider)
+        .verify(password, saved.salt, saved.passwordHash);
+  }
+
+  Future<void> _saveCredentials(String username, String password) async {
+    final hasher = _ref.read(passwordHasherProvider);
+    final salt = hasher.generateSalt();
+
+    await _ref
+        .read(loginCredentialsDaoProvider)
+        .saveCredentials(
+          LoginCredentialsTableCompanion.insert(
+            username: username,
+            passwordHash: hasher.hash(password, salt),
+            salt: salt,
+          ),
+        );
   }
 }

@@ -19,6 +19,8 @@ import 'package:gpos_provantis/src/core/database/daos/duplicate_detail_id_except
 import 'package:gpos_provantis/src/core/database/providers/pos_detail_id_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/pos_config_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/pos_shift_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/providers/printer_dao_provider.dart'
+    show printerDaoProvider;
 import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/user_data_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/repository/pos_shift_repository.dart';
@@ -143,19 +145,18 @@ enum ShiftStatus { closed, open }
 /// reported here instead of thrown, letting the UI say "Shift ended, but the
 /// report could not be printed" rather than a misleading failure.
 ///
-/// This also carries the identity of the shift that was just opened or
-/// closed ([shiftKey]), because the caller needs it a second time right
-/// after this returns: to show the drawer-count sheet and pass the result to
-/// [DashboardController.recordShiftDrawerCount]. Re-resolving identity at
-/// that point instead of reusing this would be wrong for an ending shift —
-/// toggleShift() has already refreshed pos_shift by the time it returns, so a
-/// fresh resolve would find the NEXT shift's identity, not the one that was
-/// just closed.
+/// The drawer count is now collected INSIDE toggleShift (via the
+/// `requestDrawerCount` callback), BEFORE the shift is started or ended, and
+/// recorded by toggleShift itself. The UI no longer shows the sheet or calls
+/// [DashboardController.recordShiftDrawerCount] after this returns.
 class ToggleShiftResult {
   const ToggleShiftResult({
     required this.wasEnding,
     this.printError,
     this.shiftKey,
+    this.cancelled = false,
+    this.drawerCountError,
+    this.unrecordedCount,
   });
 
   /// True if this call ended a shift; false if it started one.
@@ -164,11 +165,24 @@ class ToggleShiftResult {
   /// Set only when the shift ended fine but the Z-reading did not print.
   final Object? printError;
 
-  /// The shift this call opened or closed. Null only on the double-tap guard
-  /// path, which does nothing and returns immediately.
+  /// The shift this call opened or closed. Null on the double-tap guard path,
+  /// when [cancelled], and if the controller was disposed mid-start.
   final ShiftKey? shiftKey;
 
-  bool get reportPrinted => wasEnding && printError == null;
+  /// True when the cashier backed out of the required drawer count. Nothing
+  /// was started or ended: the shift is exactly as it was before the tap.
+  final bool cancelled;
+
+  /// Set only when the shift changed but queueing the drawer count locally
+  /// failed (a local DB problem, not a network one).
+  final Object? drawerCountError;
+
+  /// A count that was collected but could not be recorded because the
+  /// controller was disposed while the shift was starting. Null otherwise.
+  /// The UI should log/warn if this is non-null.
+  final DenominationCountResult? unrecordedCount;
+
+  bool get reportPrinted => wasEnding && printError == null && !cancelled;
 }
 
 /// Identifies one shift for cash-drawer reporting: which POS, which shift
@@ -889,64 +903,144 @@ class DashboardController extends _$DashboardController {
     state = state.copyWith(catalogSearchQuery: query);
   }
 
-  Future<ToggleShiftResult> toggleShift() async {
-    if (state.isTogglingShift) {
+  /// Plain field (not state) so it can block a second tap while the drawer
+  /// lookup / count sheet is pending, without the state change that
+  /// isTogglingShift would cause before the sheet opens.
+  bool _toggleInFlight = false;
+
+  /// True when at least one enabled printer has a cash drawer attached. When
+  /// false, shifts start/end without asking for a drawer count: there is no
+  /// physical drawer to count.
+  ///
+  /// Reads the DAO's Drift stream directly (first emission) instead of
+  /// `ref.read(printerProvider.future)`: that provider has no listener on the
+  /// dashboard, so its first value may never arrive and the shift button
+  /// would hang silently. A timeout makes any future hang a visible error.
+  Future<bool> isCashDrawerEnabled() async {
+    // ref.read happens before the await (see _resolveShiftKey for why).
+    final dao = ref.read(printerDaoProvider);
+    final printers = await dao.watchAllPrinters().first.timeout(
+      const Duration(seconds: 5),
+    );
+    final enabled = printers.any((p) => p.isEnabled && p.hasCashDrawer);
+    debugPrint(
+      '[CashDrawer] isCashDrawerEnabled=$enabled '
+      '(${printers.length} printer(s) in settings)',
+    );
+    return enabled;
+  }
+
+  /// Starts or ends the shift, but ONLY after a drawer count was entered
+  /// (when a cash drawer is enabled in the printer settings).
+  ///
+  /// [requestDrawerCount] shows the denomination sheet and returns the count,
+  /// or null if the cashier dismissed it. Null means nothing happens: the
+  /// shift is neither started nor ended, so closing the sheet can no longer
+  /// be used to skip the count.
+  Future<ToggleShiftResult> toggleShift({
+    required Future<DenominationCountResult?> Function(bool isStartOfShift)
+    requestDrawerCount,
+  }) async {
+    if (state.isTogglingShift || _toggleInFlight) {
       // guard against double-tap
       return const ToggleShiftResult(wasEnding: false);
     }
+    _toggleInFlight = true;
 
+    // Every ref.read happens HERE, before the first await, so the drawer
+    // count can still be recorded even if this controller is rebuilt (and
+    // its Ref disposed) while the shift is starting/ending.
     final repository = ref.read(posShiftRepositoryProvider);
+    final cashDrawerService = ref.read(cashDrawerServiceProvider);
+    final endShiftService = ref.read(endShiftServiceProvider);
+    final userDao = ref.read(userDataDaoProvider);
+    Future<String?> getEmployeeId() async =>
+        (await userDao.getUser())?.employeeId;
+
     final wasOpen = shiftStatus == ShiftStatus.open;
 
     debugPrint('[CashDrawer] toggleShift: starting, wasOpen=$wasOpen');
-    state = state.copyWith(isTogglingShift: true);
+    // isTogglingShift is NOT set yet: the count sheet must open with no
+    // pending state change (a state change right before showing a sheet can
+    // race the build that change triggers). The sheet is modal, so the shift
+    // button can't be tapped again while the cashier is counting.
+    var markedToggling = false;
     try {
+      // STEP 0: the drawer count comes FIRST, before anything is written.
+      DenominationCountResult? count;
+      if (await isCashDrawerEnabled()) {
+        count = await requestDrawerCount(!wasOpen);
+        if (count == null || !ref.mounted) {
+          debugPrint(
+            '[CashDrawer] toggleShift: no drawer count entered, '
+            'shift left untouched',
+          );
+          return ToggleShiftResult(wasEnding: wasOpen, cancelled: true);
+        }
+      }
+
+      // The count is in (or no drawer is installed): now it is safe to lock
+      // out double-taps and touch the shift.
+      state = state.copyWith(isTogglingShift: true);
+      markedToggling = true;
+
       if (!wasOpen) {
         await repository.startShift();
         debugPrint(
           '[CashDrawer] toggleShift: startShift done, ref.mounted=${ref.mounted}',
         );
-        // ref.mounted check per Riverpod's own guidance: an await can let
-        // this controller be rebuilt (and its old Notifier + Ref disposed)
-        // before execution resumes. This is not theoretical — startShift()
-        // specifically has been observed to trigger this (see the "Cannot
-        // use the Ref ... after it has been disposed" crash this guards
-        // against). If it happened, there is nothing safe left to do with
-        // the OLD ref, so bail out here; the NEW controller instance's
-        // build() will reflect the shift having started regardless, since
-        // that write already reached the database.
+        // See the ref.mounted notes in the original design: an await can let
+        // this controller be rebuilt before execution resumes. The shift DID
+        // start, but the new shift number is not known until pos_shift is
+        // refreshed, so the count is handed back instead of silently lost.
         if (!ref.mounted) {
           debugPrint(
             '[CashDrawer] toggleShift: ref no longer mounted after '
             'startShift(), bailing out (shift did start on the server)',
           );
-          return const ToggleShiftResult(wasEnding: false);
+          return ToggleShiftResult(wasEnding: false, unrecordedCount: count);
         }
 
         await repository.fetchAndSavePosShifts();
-        debugPrint(
-          '[CashDrawer] toggleShift: startShift + refresh done, '
-          'ref.mounted=${ref.mounted}, resolving new shift identity',
-        );
         if (!ref.mounted) {
           debugPrint(
             '[CashDrawer] toggleShift: ref no longer mounted after '
             'fetchAndSavePosShifts(), bailing out',
           );
-          return const ToggleShiftResult(wasEnding: false);
+          return ToggleShiftResult(wasEnding: false, unrecordedCount: count);
         }
 
-        // Resolved AFTER the refresh above, on purpose: starting a shift
-        // means this now IS the identity we want (the shift that was just
-        // opened), unlike the ending branch below.
+        // Resolved AFTER the refresh, on purpose: this is the identity of the
+        // shift that was just opened.
         final shiftKey = await _resolveShiftKey(ref);
-        return ToggleShiftResult(wasEnding: false, shiftKey: shiftKey);
+
+        Object? drawerError;
+        if (count != null) {
+          try {
+            await _recordDrawerCountWith(
+              service: cashDrawerService,
+              endShiftService: endShiftService,
+              getEmployeeId: getEmployeeId,
+              shiftKey: shiftKey,
+              isStartOfShift: true,
+              count: count,
+            );
+          } catch (e, st) {
+            debugPrint('[CashDrawer] start-of-shift count not queued: $e\n$st');
+            drawerError = e;
+          }
+        }
+        return ToggleShiftResult(
+          wasEnding: false,
+          shiftKey: shiftKey,
+          drawerCountError: drawerError,
+        );
       }
 
       // Capture which POS/shift/date we are closing BEFORE ending it:
-      // fetchAndSavePosShifts() below refreshes pos_shift and would otherwise
-      // change what _PosIdentity.resolve() returns. Resolving first also means
-      // that if the identity is unavailable we fail before touching the server.
+      // fetchAndSavePosShifts() below refreshes pos_shift. Resolving first
+      // also means that if the identity is unavailable we fail before
+      // touching the server.
       final shiftKey = await _resolveShiftKey(ref);
       final posId = int.parse(shiftKey.posId);
       final shiftId = int.parse(shiftKey.shift);
@@ -955,13 +1049,38 @@ class DashboardController extends _$DashboardController {
       debugPrint(
         '[CashDrawer] toggleShift: endShift done, ref.mounted=${ref.mounted}',
       );
+
+      // Record the count IMMEDIATELY after the shift closes, before any
+      // ref.mounted bail-out below, so it can't be skipped. Uses only the
+      // services read before the first await, so a disposed Ref is fine.
+      Object? drawerError;
+      if (count != null) {
+        try {
+          await _recordDrawerCountWith(
+            service: cashDrawerService,
+            endShiftService: endShiftService,
+            getEmployeeId: getEmployeeId,
+            shiftKey: shiftKey,
+            isStartOfShift: false,
+            count: count,
+          );
+        } catch (e, st) {
+          debugPrint('[CashDrawer] end-of-shift count not queued: $e\n$st');
+          drawerError = e;
+        }
+      }
+
       if (!ref.mounted) {
         debugPrint(
           '[CashDrawer] toggleShift: ref no longer mounted after endShift(), '
-          'bailing out (shift did end on the server; drawer count and '
-          'Z-reading print were skipped this call)',
+          'bailing out (shift ended and the count was recorded; Z-reading '
+          'print was skipped this call)',
         );
-        return ToggleShiftResult(wasEnding: true, shiftKey: shiftKey);
+        return ToggleShiftResult(
+          wasEnding: true,
+          shiftKey: shiftKey,
+          drawerCountError: drawerError,
+        );
       }
 
       // The shift is now closed on the server. pos_shift must be refreshed no
@@ -972,12 +1091,15 @@ class DashboardController extends _$DashboardController {
           '[CashDrawer] toggleShift: ref no longer mounted after '
           'fetchAndSavePosShifts() (end-shift), bailing out',
         );
-        return ToggleShiftResult(wasEnding: true, shiftKey: shiftKey);
+        return ToggleShiftResult(
+          wasEnding: true,
+          shiftKey: shiftKey,
+          drawerCountError: drawerError,
+        );
       }
 
-      // Fetch + save + print the Z-reading. A failure here (printer offline,
-      // no saved copy while offline, ...) must not look like the shift failed
-      // to end, so it is captured and returned instead of thrown.
+      // Fetch + save + print the Z-reading. A failure here must not look like
+      // the shift failed to end, so it is captured and returned.
       try {
         await ref
             .read(endShiftServiceProvider)
@@ -986,29 +1108,25 @@ class DashboardController extends _$DashboardController {
               posId: posId,
               shiftId: shiftId,
             );
-        return ToggleShiftResult(wasEnding: true, shiftKey: shiftKey);
+        return ToggleShiftResult(
+          wasEnding: true,
+          shiftKey: shiftKey,
+          drawerCountError: drawerError,
+        );
       } catch (e, st) {
         debugPrint('toggleShift: shift ended but report failed: $e\n$st');
         return ToggleShiftResult(
           wasEnding: true,
           printError: e,
           shiftKey: shiftKey,
+          drawerCountError: drawerError,
         );
       }
     } finally {
+      _toggleInFlight = false;
       if (ref.mounted) {
-        state = state.copyWith(isTogglingShift: false);
-        debugPrint(
-          '[CashDrawer] toggleShift: isTogglingShift reset to false '
-          '(this is the state change the UI must wait a frame past before '
-          'showing DenominationCountSheet — see _waitForFrame in catalog_panel.dart)',
-        );
+        if (markedToggling) state = state.copyWith(isTogglingShift: false);
       } else {
-        // The controller was already rebuilt/disposed before this finally
-        // ran, so there is no state on THIS instance left to reset — the new
-        // instance's build() already started fresh. Logged so a future
-        // investigation can see this branch was taken rather than assuming
-        // the finally block silently did nothing.
         debugPrint(
           '[CashDrawer] toggleShift: ref unmounted by the time finally ran, '
           'skipping state reset (a newer controller instance already exists)',
@@ -1020,22 +1138,32 @@ class DashboardController extends _$DashboardController {
   /// Records a drawer count (start- or end-of-shift) taken via
   /// [DenominationCountSheet] and queues it for sending.
   ///
-  /// Called by the UI right after showing the sheet, using the [shiftKey]
-  /// from the [ToggleShiftResult] that [toggleShift] just returned — NOT a
-  /// freshly resolved identity, since by the time the sheet closes,
-  /// pos_shift may already reflect a different shift.
-  ///
-  /// This is a one-line adapter between two deliberately separate types:
-  /// [DenominationCountResult] (what the sheet returns, with UI-facing
-  /// fields like `label`) and [DenominationCountLine] (what the cash-drawer
-  /// API payload needs). [allActiveLines] is used rather than [lines]
-  /// because the server's sample payload lists every active denomination,
-  /// including ones counted as zero — not just the nonzero ones.
-  ///
-  /// Queuing happens offline-first (see [CashDrawerService]), so this
-  /// completes even with no connectivity; the actual send is retried
-  /// automatically later.
+  /// [toggleShift] now calls this flow itself, so the UI normally does NOT
+  /// need to. It stays public for the rare [ToggleShiftResult.unrecordedCount]
+  /// case, using a [ShiftKey] resolved for the right shift.
   Future<void> recordShiftDrawerCount({
+    required ShiftKey shiftKey,
+    required bool isStartOfShift,
+    required DenominationCountResult count,
+  }) {
+    // Everything needed from `ref` is read here, before the first await.
+    final userDao = ref.read(userDataDaoProvider);
+    return _recordDrawerCountWith(
+      service: ref.read(cashDrawerServiceProvider),
+      endShiftService: ref.read(endShiftServiceProvider),
+      getEmployeeId: () async => (await userDao.getUser())?.employeeId,
+      shiftKey: shiftKey,
+      isStartOfShift: isStartOfShift,
+      count: count,
+    );
+  }
+
+  /// The actual recording. Takes its dependencies as arguments (no `ref`) so
+  /// it keeps working after this controller has been disposed.
+  Future<void> _recordDrawerCountWith({
+    required CashDrawerService service,
+    required EndShiftService endShiftService,
+    required Future<String?> Function() getEmployeeId,
     required ShiftKey shiftKey,
     required bool isStartOfShift,
     required DenominationCountResult count,
@@ -1048,13 +1176,6 @@ class DashboardController extends _$DashboardController {
           quantity: entry.quantity,
         ),
     ];
-
-    // Everything needed from `ref` is read here, before the first await (see
-    // toggleShift): an await can let this controller be rebuilt and its Ref
-    // disposed.
-    final service = ref.read(cashDrawerServiceProvider);
-    final endShiftService = ref.read(endShiftServiceProvider);
-    final userDao = ref.read(userDataDaoProvider);
 
     final record = isStartOfShift
         ? service.recordStartShiftCount
@@ -1069,15 +1190,13 @@ class DashboardController extends _$DashboardController {
       lines: lines,
     );
 
-    // Closing a shift also sends the cash report to the server: EndShiftService
-    // saves it on the device first and then uploads it, so it is never lost if
-    // the server is unreachable. It is separate from the drawer count above and
+    // Closing a shift also sends the cash report to the server: saved on the
+    // device first, then uploaded. Separate from the drawer count above and
     // must never undo it: that count is already queued.
     if (!isStartOfShift) {
       try {
         // The server wants the cashier's employee id, not their name.
-        final user = await userDao.getUser();
-        final employeeId = user?.employeeId;
+        final employeeId = await getEmployeeId();
         if (employeeId == null || employeeId.isEmpty) {
           debugPrint(
             '[SendCashReport] no employee id for the logged-in user, '
@@ -1090,7 +1209,6 @@ class DashboardController extends _$DashboardController {
           branchId: shiftKey.branchId,
           posId: shiftKey.posId,
           shift: shiftKey.shift,
-          // Same date the drawer count above uses.
           shiftDate: shiftKey.businessDate,
           cashierId: employeeId,
           lines: [

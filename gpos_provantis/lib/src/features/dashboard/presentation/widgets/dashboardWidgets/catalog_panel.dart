@@ -1,55 +1,17 @@
-import 'dart:async' show Completer;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:gpos_provantis/src/core/database/providers/printer_dao_provider.dart'
+    show cashDrawerEnabledProvider;
 import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/denomination_count_sheet.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/cash_drop_sheet.dart';
 import 'category_visibility.dart';
 import 'others_sheet.dart';
 import 'top_bar.dart';
-
-/// Waits for the current frame to fully finish before returning.
-///
-/// [DenominationCountSheet.show] must never be called in the same
-/// synchronous continuation as a Riverpod state change (e.g. right after
-/// `await notifier.toggleShift()`, whose state = ... call is what the
-/// caller's own ref.watch is subscribed to). If it is, showModalBottomSheet
-/// can try to mark an overlay dirty while the framework is still mid-build
-/// from that state change, and Flutter throws "setState() or
-/// markNeedsBuild() called during build." — a red-screen/toast error, not
-/// something a try/catch around the await can catch, since it's thrown by
-/// the framework outside the async call stack. Awaiting this first pushes
-/// the sheet call to the START of the next frame, after the build the state
-/// change triggered has completely finished.
-///
-/// Falls back to returning after a short delay if no frame arrives:
-/// addPostFrameCallback's own docs say the callback fires "after the next
-/// frame (whenever that may be, if ever)" — with no frame guaranteed, this
-/// could otherwise hang the shift-toggle flow forever on the rare device
-/// where nothing schedules one. A frame is expected here in practice (this
-/// widget's own ref.watch is what makes it dirty), so the timeout should
-/// never actually fire; it exists so a missed frame degrades to "the sheet
-/// appears a beat late" instead of "the screen is stuck".
-Future<void> _waitForFrame() {
-  final completer = Completer<void>();
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (!completer.isCompleted) completer.complete();
-  });
-  return completer.future.timeout(
-    const Duration(milliseconds: 500),
-    onTimeout: () {
-      debugPrint(
-        '[CashDrawer] _waitForFrame: no frame arrived within 500ms, '
-        'proceeding anyway',
-      );
-    },
-  );
-}
 
 class CatalogPanel extends ConsumerWidget {
   const CatalogPanel({super.key});
@@ -82,19 +44,14 @@ class _ActionsRail extends ConsumerWidget {
     final notifier = ref.read(dashboardControllerProvider.notifier);
     final isShiftOpen = notifier.shiftStatus == ShiftStatus.open;
     final isToggling = state.isTogglingShift;
+    // Cash drop needs a physical drawer: off when no enabled printer has one.
+    final hasCashDrawer = ref.watch(cashDrawerEnabledProvider);
 
-    // Ending a shift counts the drawer BEFORE it closes on the server (the
-    // cashier counts what's in the drawer, then the shift ends); starting a
-    // shift counts it AFTER opening (there's no shift to attach the count to
-    // until it exists). Both paths end with the same call: recording the
-    // count via the controller, which queues it to send in the background.
-    //
-    // Every step below logs with debugPrint (visible in `flutter logs` /
-    // `adb logcat`, not just as an on-screen toast) specifically because the
-    // start-shift path previously failed with a framework error thrown
-    // outside any try/catch here — see _waitForFrame's doc comment. If
-    // anything like that recurs, these lines show exactly which step it
-    // happened between.
+    // The drawer count is collected BEFORE the shift starts or ends, and only
+    // when a printer with a cash drawer is enabled. If the sheet is dismissed
+    // (or cancelled) the controller does nothing and returns cancelled=true,
+    // so the count cannot be skipped by closing the sheet. The controller also
+    // records the count itself: no recordShiftDrawerCount call is needed here.
     Future<void> handleShiftTap() async {
       debugPrint(
         '[CashDrawer] handleShiftTap: tapped, isShiftOpen=$isShiftOpen',
@@ -118,135 +75,82 @@ class _ActionsRail extends ConsumerWidget {
         return;
       }
 
-      if (isShiftOpen) {
-        // Count the drawer FIRST, while the shift is still open and its
-        // identity can still be resolved normally. No state change has
-        // happened yet at this point (toggleShift() hasn't been called), so
-        // no frame wait is needed before this particular show() call.
-        debugPrint('[CashDrawer] end-shift: showing DenominationCountSheet');
-        final count = await DenominationCountSheet.show(
+      // Called by the controller only when a cash drawer is enabled.
+      Future<DenominationCountResult?> requestDrawerCount(
+        bool isStartOfShift,
+      ) async {
+        if (!context.mounted) return null;
+        return DenominationCountSheet.show(
           context,
-          title: 'End-of-shift count',
-          subtitle: 'Count the cash left in the drawer before closing out',
+          title: isStartOfShift ? 'Start-of-shift count' : 'End-of-shift count',
+          subtitle: isStartOfShift
+              ? 'Count the float in the drawer before you begin'
+              : 'Count the cash left in the drawer before closing out',
           totalLabel: 'Total counted',
           submitLabel: 'CONFIRM COUNT',
           allowZeroTotal: true,
         );
-        debugPrint(
-          '[CashDrawer] end-shift: count sheet resolved, '
-          'cancelled=${count == null}',
-        );
-        if (count == null || !context.mounted) return; // cancelled
-
-        try {
-          debugPrint('[CashDrawer] end-shift: calling toggleShift()');
-          final result = await notifier.toggleShift();
-          debugPrint(
-            '[CashDrawer] end-shift: toggleShift() returned, '
-            'shiftKey=${result.shiftKey != null}',
-          );
-          if (!context.mounted) return;
-          final shiftKey = result.shiftKey;
-          if (shiftKey != null) {
-            debugPrint('[CashDrawer] end-shift: recording drawer count');
-            await notifier.recordShiftDrawerCount(
-              shiftKey: shiftKey,
-              isStartOfShift: false,
-              count: count,
-            );
-            debugPrint('[CashDrawer] end-shift: drawer count recorded');
-          }
-        } catch (error, stackTrace) {
-          debugPrint('[CashDrawer] end-shift FAILED: $error\n$stackTrace');
-          if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to end shift: $error')),
-          );
-        }
-        return;
       }
 
-      // Starting a shift: open it first, THEN count, since the count needs
-      // the new shift's identity (shiftKey) to attach to.
+      final actionWord = isShiftOpen ? 'end' : 'start';
       try {
-        debugPrint('[CashDrawer] start-shift: calling toggleShift()');
-        final result = await notifier.toggleShift();
+        debugPrint('[CashDrawer] $actionWord-shift: calling toggleShift()');
+        final result = await notifier.toggleShift(
+          requestDrawerCount: requestDrawerCount,
+        );
         debugPrint(
-          '[CashDrawer] start-shift: toggleShift() returned, '
-          'shiftKey=${result.shiftKey != null}',
+          '[CashDrawer] $actionWord-shift: toggleShift() returned, '
+          'cancelled=${result.cancelled}',
         );
         if (!context.mounted) return;
 
-        final shiftKey = result.shiftKey;
-        if (shiftKey == null) {
-          // Can genuinely happen: toggleShift() bails out early if this
-          // controller got rebuilt mid-call (see the ref.mounted checks and
-          // [CashDrawer] logging inside toggleShift() in
-          // dashboard_controller.dart). The shift DID start on the server in
-          // this case — only the drawer-count step was skipped — so this is
-          // surfaced to the cashier rather than failing silently.
-          debugPrint(
-            '[CashDrawer] start-shift: no shiftKey returned (controller was '
-            'rebuilt mid-call); shift opened but drawer count was skipped',
-          );
-          if (!context.mounted) return;
+        if (result.cancelled) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text(
-                'Shift started, but the drawer count could not be shown. '
-                'Please retry from Reprint or contact support if this '
-                'keeps happening.',
+                'Drawer count is required to $actionWord the shift. '
+                'The shift was not ${isShiftOpen ? 'ended' : 'started'}.',
               ),
             ),
           );
           return;
         }
 
-        // toggleShift() above set isTogglingShift true then false via
-        // state = state.copyWith(...), which this widget's own
-        // ref.watch(dashboardControllerProvider) is subscribed to. Showing
-        // the sheet in the SAME synchronous continuation right after that
-        // await can race Riverpod's own rebuild from that state change —
-        // this wait is what fixes it. (The end-shift branch above doesn't
-        // need this: it shows its sheet BEFORE calling toggleShift(), so
-        // there is no state change to race yet.)
-        debugPrint(
-          '[CashDrawer] start-shift: waiting for frame before '
-          'showing count sheet',
-        );
-        await _waitForFrame();
-        if (!context.mounted) {
-          debugPrint('[CashDrawer] start-shift: unmounted after frame wait');
+        if (result.unrecordedCount != null) {
+          // Shift started, but the controller was rebuilt mid-call so the
+          // opening count could not be attached to the new shift.
+          debugPrint(
+            '[CashDrawer] start-shift: controller rebuilt mid-call; '
+            'shift opened but the drawer count was not recorded',
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Shift started, but the opening drawer count could not be '
+                'saved. Please contact support if this keeps happening.',
+              ),
+            ),
+          );
           return;
         }
 
-        debugPrint('[CashDrawer] start-shift: showing DenominationCountSheet');
-        final count = await DenominationCountSheet.show(
-          context,
-          title: 'Start-of-shift count',
-          subtitle: 'Count the float in the drawer before you begin',
-          totalLabel: 'Total counted',
-          submitLabel: 'CONFIRM COUNT',
-          allowZeroTotal: true,
-        );
-        debugPrint(
-          '[CashDrawer] start-shift: count sheet resolved, '
-          'cancelled=${count == null}',
-        );
-        if (count == null || !context.mounted) return; // skipped
-
-        debugPrint('[CashDrawer] start-shift: recording drawer count');
-        await notifier.recordShiftDrawerCount(
-          shiftKey: shiftKey,
-          isStartOfShift: true,
-          count: count,
-        );
-        debugPrint('[CashDrawer] start-shift: drawer count recorded');
+        if (result.drawerCountError != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Shift ${isShiftOpen ? 'ended' : 'started'}, but the drawer '
+                'count could not be saved: ${result.drawerCountError}',
+              ),
+            ),
+          );
+        }
       } catch (error, stackTrace) {
-        debugPrint('[CashDrawer] start-shift FAILED: $error\n$stackTrace');
+        debugPrint(
+          '[CashDrawer] $actionWord-shift FAILED: $error\n$stackTrace',
+        );
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to start shift: $error')),
+          SnackBar(content: Text('Failed to $actionWord shift: $error')),
         );
       }
     }
@@ -284,7 +188,7 @@ class _ActionsRail extends ConsumerWidget {
             _ActionButton(
               icon: PhosphorIcons.cashRegister,
               label: 'Cash drop',
-              enabled: isShiftOpen,
+              enabled: isShiftOpen && hasCashDrawer,
               onTap: handleCashDropTap,
             ),
             const SizedBox(width: 10),
