@@ -8,9 +8,10 @@ import 'package:gpos_provantis/src/core/database/providers/printer_dao_provider.
     show cashDrawerEnabledProvider;
 import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/denomination_count_sheet.dart';
-import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/cash_drop_sheet.dart';
 import 'category_visibility.dart';
+import 'others_action_runner.dart';
 import 'others_sheet.dart';
+import 'others_usage_provider.dart';
 import 'top_bar.dart';
 
 class CatalogPanel extends ConsumerWidget {
@@ -47,6 +48,11 @@ class _ActionsRail extends ConsumerWidget {
     // Cash drop needs a physical drawer: off when no enabled printer has one.
     final hasCashDrawer = ref.watch(cashDrawerEnabledProvider);
 
+    // The 3 most-used actions from the Others sheet, pinned beside the shift
+    // button. Before anything has been tapped they follow the sheet's order.
+    final usage = ref.watch(othersUsageProvider);
+    final pinnedActions = topOtherActions(notifier.otherActions, usage);
+
     // The drawer count is collected BEFORE the shift starts or ends, and only
     // when a printer with a cash drawer is enabled. If the sheet is dismissed
     // (or cancelled) the controller does nothing and returns cancelled=true,
@@ -61,8 +67,8 @@ class _ActionsRail extends ConsumerWidget {
         context,
         title: isShiftOpen ? 'End shift?' : 'Start shift?',
         body: isShiftOpen
-            ? 'This will close the current shift. Cash drop, Reprint and '
-                  'Others will be unavailable until you start a new one.'
+            ? 'This will close the current shift. The quick action buttons '
+                  'and Others will be unavailable until you start a new one.'
             : 'This will open a new shift so you can begin taking sales.',
         confirmLabel: isShiftOpen ? 'END SHIFT' : 'START SHIFT',
       );
@@ -155,16 +161,6 @@ class _ActionsRail extends ConsumerWidget {
       }
     }
 
-    Future<void> handleCashDropTap() async {
-      final result = await CashDropSheet.show(context);
-      if (result == null) return; // cancelled
-      // CashDropSheet only returns a counted breakdown; sending it to the
-      // server (or wherever a cash drop is recorded) is not part of this
-      // wiring — the cash-drawer API's 'activity' values are only
-      // 'endshift' and 'transaction', with no cash-drop shape sampled, so
-      // there is nothing confirmed to send it as yet.
-    }
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
@@ -184,26 +180,17 @@ class _ActionsRail extends ConsumerWidget {
               loading: isToggling,
               onTap: handleShiftTap,
             ),
-            const SizedBox(width: 10),
-            _ActionButton(
-              icon: PhosphorIcons.cashRegister,
-              label: 'Cash drop',
-              enabled: isShiftOpen && hasCashDrawer,
-              onTap: handleCashDropTap,
-            ),
-            const SizedBox(width: 10),
-            _ActionButton(
-              icon: PhosphorIcons.printer,
-              label: 'Reprint',
-              enabled: isShiftOpen,
-              onTap: () {},
-            ),
-            const SizedBox(width: 10),
-            _ActionButton(
-              icon: PhosphorIcons.gear,
-              label: 'Settings',
-              onTap: () {},
-            ),
+            for (final action in pinnedActions) ...[
+              const SizedBox(width: 10),
+              _ActionButton(
+                icon: otherActionIcon(action.icon),
+                label: action.label,
+                enabled:
+                    isShiftOpen &&
+                    !(isCashDrawerAction(action.id) && !hasCashDrawer),
+                onTap: () => runOtherAction(context, ref, action),
+              ),
+            ],
             const SizedBox(width: 10),
             _ActionButton(
               icon: PhosphorIcons.gridNine,

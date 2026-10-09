@@ -4,6 +4,7 @@ import 'package:gpos_provantis/src/core/database/domain/cash_drop_dto.dart';
 import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
     show ReceiptPrintException;
 import 'package:gpos_provantis/src/services/cash_drop_service.dart';
+import 'package:gpos_provantis/src/shared/widgets/toast_emitter.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/cash_drop_sheet.dart'
     show CashDropResult;
 
@@ -44,11 +45,16 @@ class CashDropController extends _$CashDropController {
   ///
   /// Never throws: every outcome comes back as a [CashDropNotice] for the UI.
   Future<CashDropNotice> submit(CashDropResult result) async {
+    final toast = ref.read(toastEmitterProvider);
+
     // Double-tap guard.
     if (state.isSubmitting) {
-      return const CashDropNotice(
-        'A cash drop is already being recorded.',
-        level: CashDropNoticeLevel.warning,
+      return _announce(
+        toast,
+        const CashDropNotice(
+          'A cash drop is already being recorded.',
+          level: CashDropNoticeLevel.warning,
+        ),
       );
     }
 
@@ -86,15 +92,20 @@ class CashDropController extends _$CashDropController {
     }
 
     state = CashDropState(notice: notice);
-    return notice;
+    return _announce(toast, notice);
   }
 
   /// Prints a saved drop again (marked REPRINT).
   Future<CashDropNotice> reprint(String cashDropId) async {
+    final toast = ref.read(toastEmitterProvider);
+
     if (state.isSubmitting) {
-      return const CashDropNotice(
-        'Please wait for the current cash drop to finish.',
-        level: CashDropNoticeLevel.warning,
+      return _announce(
+        toast,
+        const CashDropNotice(
+          'Please wait for the current cash drop to finish.',
+          level: CashDropNoticeLevel.warning,
+        ),
       );
     }
 
@@ -110,6 +121,17 @@ class CashDropController extends _$CashDropController {
     }
 
     state = CashDropState(notice: notice);
+    return _announce(toast, notice);
+  }
+
+  /// Shows [notice] as a toast and hands it back. The toast is raised here so
+  /// the cashier hears the result even if the sheet already closed.
+  CashDropNotice _announce(ToastEmitter toast, CashDropNotice notice) {
+    toast.show(switch (notice.level) {
+      CashDropNoticeLevel.success => ToastKind.success,
+      CashDropNoticeLevel.warning => ToastKind.warning,
+      CashDropNoticeLevel.error => ToastKind.error,
+    }, notice.message);
     return notice;
   }
 

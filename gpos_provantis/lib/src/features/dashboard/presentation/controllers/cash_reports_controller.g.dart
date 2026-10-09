@@ -42,7 +42,7 @@ final class CashReportsControllerProvider
 }
 
 String _$cashReportsControllerHash() =>
-    r'b6c506add3fb66e79b00bf55607be425b851e71a';
+    r'05376638e667301a5fceccc077e05d5a7b40a3ec';
 
 abstract class _$CashReportsController extends $Notifier<CashReportsState> {
   CashReportsState build();

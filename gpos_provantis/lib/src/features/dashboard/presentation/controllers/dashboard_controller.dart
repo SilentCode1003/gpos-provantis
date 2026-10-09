@@ -37,9 +37,11 @@ import 'package:gpos_provantis/src/core/database/domain/send_cash_report_dto.dar
 import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
     show
         ReceiptGenerator,
+        ReceiptPrintException,
         ReceiptSaleData,
         ReceiptLineItem,
         receiptGeneratorProvider;
+import 'package:gpos_provantis/src/shared/widgets/toast_emitter.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/denomination_count_sheet.dart'
     show DenominationCountResult;
 
@@ -624,6 +626,29 @@ double _parseMoney(String value) {
   return double.tryParse(sanitized) ?? 0;
 }
 
+/// Plain-language reason for the cashier. Exception classes in this app carry
+/// a `message`; anything else falls back to its text.
+String _describeError(Object e) {
+  if (e is PosIdentityUnavailableException) return e.message;
+  if (e is ReceiptPrintException) return e.message;
+  final text = e.toString().replaceFirst('Exception: ', '').trim();
+  return text.isEmpty ? 'Unknown error.' : text;
+}
+
+/// [_describeError], guaranteed to end in a full stop so more text can follow.
+String _describeErrorSentence(Object e) {
+  final text = _describeError(e);
+  return RegExp(r'[.!?]$').hasMatch(text) ? text : '$text.';
+}
+
+/// A sale that did not go through. Every throw out of a sale flow means the
+/// sale was NOT recorded: the steps after the local save (customer, cash
+/// drawer, receipt print) are all caught and reported separately.
+String _describeSaleFailure(Object e) {
+  final detail = _describeErrorSentence(e);
+  return 'Payment failed and the sale was not recorded. $detail';
+}
+
 enum BarcodeScanStatus { added, notFound, outOfStock, notReady }
 
 class BarcodeScanResult {
@@ -938,6 +963,54 @@ class DashboardController extends _$DashboardController {
   /// shift is neither started nor ended, so closing the sheet can no longer
   /// be used to skip the count.
   Future<ToggleShiftResult> toggleShift({
+    required Future<DenominationCountResult?> Function(bool isStartOfShift)
+    requestDrawerCount,
+  }) async {
+    // The emitter outlives this controller, so it is safe to use after awaits.
+    final toast = ref.read(toastEmitterProvider);
+    final action = shiftStatus == ShiftStatus.open ? 'end' : 'start';
+
+    try {
+      final result = await _toggleShift(requestDrawerCount: requestDrawerCount);
+      _announceShiftResult(toast, result);
+      return result;
+    } catch (e, st) {
+      debugPrint('toggleShift: failed to $action the shift: $e\n$st');
+      toast.error('Could not $action the shift. ${_describeErrorSentence(e)}');
+      rethrow;
+    }
+  }
+
+  /// Tells the cashier how the shift change went. Says nothing when nothing
+  /// happened (cashier backed out of the count, or a double-tap was ignored).
+  void _announceShiftResult(ToastEmitter toast, ToggleShiftResult r) {
+    if (r.cancelled) return;
+
+    if (r.unrecordedCount != null) {
+      toast.warning(
+        'Shift started, but the drawer count could not be recorded. '
+        'Count the drawer again.',
+      );
+      return;
+    }
+
+    // Double-tap guard path: no shift was opened or closed.
+    if (r.shiftKey == null) return;
+
+    final done = r.wasEnding ? 'ended' : 'started';
+    final problems = <String>[
+      if (r.drawerCountError != null) 'the drawer count could not be saved',
+      if (r.printError != null) 'the end-of-shift report did not print',
+    ];
+
+    if (problems.isEmpty) {
+      toast.success('Shift $done.');
+    } else {
+      toast.warning('Shift $done, but ${problems.join(' and ')}.');
+    }
+  }
+
+  Future<ToggleShiftResult> _toggleShift({
     required Future<DenominationCountResult?> Function(bool isStartOfShift)
     requestDrawerCount,
   }) async {
@@ -1406,9 +1479,25 @@ class DashboardController extends _$DashboardController {
   }
 
   /// Runs [saveSale] at most once at a time, and only for a non-empty cart.
+  ///
+  /// Also the one place a failed sale is announced, so every payment method
+  /// reports failure the same way. (Success is announced by
+  /// [_printReceiptAndAnnounce], because only that step knows whether the
+  /// receipt printed.) The exception is still rethrown so the payment modal
+  /// can release its lock and stay open for a retry.
   Future<void> _runSaleOnce(Future<void> Function() saveSale) async {
-    if (_saleInFlight) throw const SaleAlreadyInProgressException();
-    if (state.cartLines.isEmpty) throw const EmptyCartException();
+    final toast = ref.read(toastEmitterProvider);
+
+    if (_saleInFlight) {
+      const e = SaleAlreadyInProgressException();
+      toast.warning(e.message);
+      throw e;
+    }
+    if (state.cartLines.isEmpty) {
+      const e = EmptyCartException();
+      toast.warning(e.message);
+      throw e;
+    }
     _saleInFlight = true;
     try {
       await saveSale();
@@ -1416,15 +1505,49 @@ class DashboardController extends _$DashboardController {
       // The reserved receipt number belongs to another sale: drop it so the
       // next attempt takes a fresh one.
       _releaseDetailId();
+      toast.error(
+        'That receipt number was already used, so the sale was not recorded. '
+        'Please try the payment again.',
+      );
+      rethrow;
+    } catch (e, st) {
+      debugPrint('Sale failed: $e\n$st');
+      toast.error(_describeSaleFailure(e));
       rethrow;
     } finally {
       _saleInFlight = false;
     }
   }
 
+  /// Prints the receipt of a sale that is ALREADY saved, then tells the
+  /// cashier how it went.
+  ///
+  /// A print problem is reported here instead of thrown: the sale is done and
+  /// the cart is cleared, so surfacing it as a failed payment would invite the
+  /// cashier to ring the same sale up twice.
+  Future<void> _printReceiptAndAnnounce({
+    required ToastEmitter toast,
+    required String detailId,
+    required double total,
+    required Future<void> Function() printReceipt,
+  }) async {
+    final label = 'Sale #$detailId (₱${total.toStringAsFixed(2)})';
+    try {
+      await printReceipt();
+      toast.success('$label completed.');
+    } catch (e, st) {
+      debugPrint('Sale $detailId saved but the receipt did not print: $e\n$st');
+      toast.warning(
+        '$label was recorded, but the receipt did not print: '
+        '${_describeErrorSentence(e)} Do not ring it up again; use RE-PRINT.',
+      );
+    }
+  }
+
   Future<void> createSaleFromCash() => _runSaleOnce(_createSaleFromCash);
 
   Future<void> _createSaleFromCash() async {
+    final toast = ref.read(toastEmitterProvider);
     final identity = await _PosIdentity.resolve(ref);
     final cashier = await _resolveCashier(ref);
     final branch = await _resolveBranch(ref);
@@ -1488,23 +1611,27 @@ class DashboardController extends _$DashboardController {
     clearCart();
     clearDiscount();
 
-    await ref
-        .read(receiptGeneratorProvider)
-        .printForSale(
-          _receiptDataFromCheckout(
-            state: saleState,
-            detailId: detailId,
-            posId: identity.posId,
-            shift: identity.shift,
-            cashier: cashier,
-            branchId: branch,
-            paymentType: 'CASH',
-            cash: total,
-            ecash: 0,
-            referenceId: 'CASH',
-            paymentName: 'CASH',
-          ),
-        );
+    final receipt = _receiptDataFromCheckout(
+      state: saleState,
+      detailId: detailId,
+      posId: identity.posId,
+      shift: identity.shift,
+      cashier: cashier,
+      branchId: branch,
+      paymentType: 'CASH',
+      cash: total,
+      ecash: 0,
+      referenceId: 'CASH',
+      paymentName: 'CASH',
+    );
+
+    await _printReceiptAndAnnounce(
+      toast: toast,
+      detailId: detailId,
+      total: total,
+      printReceipt: () =>
+          ref.read(receiptGeneratorProvider).printForSale(receipt),
+    );
   }
 
   Future<void> createSaleFromEPayment(PaymentState paymentState) =>
@@ -1518,6 +1645,7 @@ class DashboardController extends _$DashboardController {
       );
     }
 
+    final toast = ref.read(toastEmitterProvider);
     final identity = await _PosIdentity.resolve(ref);
     final cashier = await _resolveCashier(ref);
     final branch = await _resolveBranch(ref);
@@ -1559,23 +1687,27 @@ class DashboardController extends _$DashboardController {
     clearCart();
     clearDiscount();
 
-    await ref
-        .read(receiptGeneratorProvider)
-        .printForSale(
-          _receiptDataFromCheckout(
-            state: saleState,
-            detailId: detailId,
-            posId: identity.posId,
-            shift: identity.shift,
-            cashier: cashier,
-            branchId: branch,
-            paymentType: 'EPAYMENT',
-            cash: 0,
-            ecash: total,
-            referenceId: referenceId,
-            paymentName: method.label,
-          ),
-        );
+    final receipt = _receiptDataFromCheckout(
+      state: saleState,
+      detailId: detailId,
+      posId: identity.posId,
+      shift: identity.shift,
+      cashier: cashier,
+      branchId: branch,
+      paymentType: 'EPAYMENT',
+      cash: 0,
+      ecash: total,
+      referenceId: referenceId,
+      paymentName: method.label,
+    );
+
+    await _printReceiptAndAnnounce(
+      toast: toast,
+      detailId: detailId,
+      total: total,
+      printReceipt: () =>
+          ref.read(receiptGeneratorProvider).printForSale(receipt),
+    );
   }
 
   Future<void> createSaleFromCashEPaymentSplit(PaymentState paymentState) =>
@@ -1600,6 +1732,7 @@ class DashboardController extends _$DashboardController {
       (slot) => !slot.isCash,
     );
 
+    final toast = ref.read(toastEmitterProvider);
     final identity = await _PosIdentity.resolve(ref);
     final cashier = await _resolveCashier(ref);
     final branch = await _resolveBranch(ref);
@@ -1666,23 +1799,27 @@ class DashboardController extends _$DashboardController {
     clearCart();
     clearDiscount();
 
-    await ref
-        .read(receiptGeneratorProvider)
-        .printForSale(
-          _receiptDataFromCheckout(
-            state: saleState,
-            detailId: detailId,
-            posId: identity.posId,
-            shift: identity.shift,
-            cashier: cashier,
-            branchId: branch,
-            paymentType: 'SPLIT',
-            cash: cashAmount,
-            ecash: ePaymentAmount,
-            referenceId: referenceId,
-            paymentName: paymentName,
-          ),
-        );
+    final receipt = _receiptDataFromCheckout(
+      state: saleState,
+      detailId: detailId,
+      posId: identity.posId,
+      shift: identity.shift,
+      cashier: cashier,
+      branchId: branch,
+      paymentType: 'SPLIT',
+      cash: cashAmount,
+      ecash: ePaymentAmount,
+      referenceId: referenceId,
+      paymentName: paymentName,
+    );
+
+    await _printReceiptAndAnnounce(
+      toast: toast,
+      detailId: detailId,
+      total: total,
+      printReceipt: () =>
+          ref.read(receiptGeneratorProvider).printForSale(receipt),
+    );
   }
 
   /// A sale paid with two e-payments (e.g. GCASH + BANK TRANSFER).
@@ -1717,6 +1854,7 @@ class DashboardController extends _$DashboardController {
       );
     }
 
+    final toast = ref.read(toastEmitterProvider);
     final identity = await _PosIdentity.resolve(ref);
     final cashier = await _resolveCashier(ref);
     final branch = await _resolveBranch(ref);
@@ -1767,26 +1905,30 @@ class DashboardController extends _$DashboardController {
     clearCart();
     clearDiscount();
 
-    await ref
-        .read(receiptGeneratorProvider)
-        .printForSale(
-          _receiptDataFromCheckout(
-            state: saleState,
-            detailId: detailId,
-            posId: identity.posId,
-            shift: identity.shift,
-            cashier: cashier,
-            branchId: branch,
-            paymentType: 'E2E',
-            cash: 0,
-            ecash: firstAmount,
-            referenceId: firstReference,
-            paymentName: firstMethod.label,
-            secondPaymentName: secondMethod.label,
-            secondReferenceId: secondReference,
-            secondAmount: secondAmount,
-          ),
-        );
+    final receipt = _receiptDataFromCheckout(
+      state: saleState,
+      detailId: detailId,
+      posId: identity.posId,
+      shift: identity.shift,
+      cashier: cashier,
+      branchId: branch,
+      paymentType: 'E2E',
+      cash: 0,
+      ecash: firstAmount,
+      referenceId: firstReference,
+      paymentName: firstMethod.label,
+      secondPaymentName: secondMethod.label,
+      secondReferenceId: secondReference,
+      secondAmount: secondAmount,
+    );
+
+    await _printReceiptAndAnnounce(
+      toast: toast,
+      detailId: detailId,
+      total: total,
+      printReceipt: () =>
+          ref.read(receiptGeneratorProvider).printForSale(receipt),
+    );
   }
 }
 

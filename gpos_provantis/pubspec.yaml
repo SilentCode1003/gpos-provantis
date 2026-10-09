@@ -39,6 +39,9 @@ dependencies:
   # Security
   crypto: ^3.0.7
 
+  # Temporary Storage
+  shared_preferences: ^2.5.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:gpos_provantis/src/core/database/app_database.dart';
 import 'package:gpos_provantis/src/core/database/repository/receipt_history_repository.dart';
+import 'package:gpos_provantis/src/shared/widgets/toast_emitter.dart';
 
 part 'receipts_controller.g.dart';
 
@@ -73,6 +74,7 @@ class ReceiptsController extends _$ReceiptsController {
     state = ReceiptsState(dateFrom: start, dateTo: end, isLoading: true);
 
     final repository = ref.read(receiptHistoryRepositoryProvider);
+    final toast = ref.read(toastEmitterProvider);
 
     ReceiptsState result;
     try {
@@ -107,6 +109,18 @@ class ReceiptsController extends _$ReceiptsController {
     if (requestId != _requestId) return;
     _inFlightKey = null;
     state = result;
+
+    // A normal load is silent. A warning means the server failed: if a saved
+    // copy is on screen it is a warning, if there is nothing to show it is an
+    // error.
+    final warning = result.warning;
+    if (warning != null) {
+      if (result.source == ReceiptsSource.localCache) {
+        toast.warning(warning);
+      } else {
+        toast.error(warning);
+      }
+    }
   }
 
   Future<void> refresh() => load();

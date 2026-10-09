@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:gpos_provantis/src/core/database/app_database.dart';
 import 'package:gpos_provantis/src/core/database/repository/shift_report_repository.dart';
 import 'package:gpos_provantis/src/services/end_shift_service.dart';
+import 'package:gpos_provantis/src/shared/widgets/toast_emitter.dart';
 
 part 'reports_controller.g.dart';
 
@@ -93,6 +94,7 @@ class ReportsController extends _$ReportsController {
     state = ReportsState(date: target, isLoading: true);
 
     final repository = ref.read(shiftReportRepositoryProvider);
+    final toast = ref.read(toastEmitterProvider);
 
     ReportsState result;
     try {
@@ -113,6 +115,15 @@ class ReportsController extends _$ReportsController {
     if (requestId != _requestId) return;
     _inFlightKey = null;
     state = result;
+
+    // A normal load is silent; only tell the cashier when it didn't go well.
+    if (result.errorMessage != null) {
+      toast.error(result.errorMessage!);
+    } else if (result.source == ReportsSource.localCache) {
+      toast.warning(
+        'Could not reach the server. Showing saved reports for $key.',
+      );
+    }
   }
 
   Future<void> refresh() => load();
@@ -123,9 +134,11 @@ class ReportsController extends _$ReportsController {
     if (state.printingKey != null) return;
 
     final service = ref.read(endShiftServiceProvider);
+    final toast = ref.read(toastEmitterProvider);
     state = state.copyWith(printingKey: shiftKey(shift), clearNotice: true);
 
     ReportsNotice notice;
+    var kind = ToastKind.success;
     try {
       final result = await service.printEndShiftReport(
         date: shift.date,
@@ -137,9 +150,11 @@ class ReportsController extends _$ReportsController {
       var message = 'Shift ${shift.shift} sent to the printer.';
       if (result.source == ShiftReportSource.localCache) {
         message += ' Printed from the saved copy.';
+        kind = ToastKind.warning;
       }
       if (!result.isComplete) {
         message += ' Some sections were unavailable.';
+        kind = ToastKind.warning;
       }
       notice = ReportsNotice(message);
     } catch (e) {
@@ -148,8 +163,10 @@ class ReportsController extends _$ReportsController {
         'Could not print shift ${shift.shift}. ${_describe(e)}',
         isError: true,
       );
+      kind = ToastKind.error;
     }
 
+    toast.show(kind, notice.message);
     state = state.copyWith(clearPrinting: true, notice: notice);
   }
 

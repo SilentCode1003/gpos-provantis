@@ -42,7 +42,7 @@ final class ReceiptsControllerProvider
 }
 
 String _$receiptsControllerHash() =>
-    r'9da24582b96156b7d015c17ebf27a4810939af43';
+    r'158bb3928f4055b86c2c0f16b1ed45e5c9949d27';
 
 abstract class _$ReceiptsController extends $Notifier<ReceiptsState> {
   ReceiptsState build();

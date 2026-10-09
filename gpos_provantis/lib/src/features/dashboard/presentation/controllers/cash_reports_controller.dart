@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:gpos_provantis/src/core/database/app_database.dart';
 import 'package:gpos_provantis/src/core/database/repository/cash_report_repository.dart';
+import 'package:gpos_provantis/src/shared/widgets/toast_emitter.dart';
 
 part 'cash_reports_controller.g.dart';
 
@@ -57,6 +58,7 @@ class CashReportsController extends _$CashReportsController {
     state = CashReportsState(date: target, isLoading: true);
 
     final repository = ref.read(cashReportRepositoryProvider);
+    final toast = ref.read(toastEmitterProvider);
 
     CashReportsState result;
     try {
@@ -77,6 +79,13 @@ class CashReportsController extends _$CashReportsController {
     if (requestId != _requestId) return;
     _inFlightKey = null;
     state = result;
+
+    // A normal load is silent; only tell the cashier when it didn't go well.
+    if (result.errorMessage != null) {
+      toast.error(result.errorMessage!);
+    } else if (result.warning != null) {
+      toast.warning(result.warning!);
+    }
   }
 
   Future<void> refresh() => load();

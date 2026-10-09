@@ -72,7 +72,7 @@ final class SoldItemsControllerProvider
 }
 
 String _$soldItemsControllerHash() =>
-    r'c755748aab10e0fbf12bd312ff5b223135f433cb';
+    r'9aa82a846f23572580504359d665fe3b887c154b';
 
 /// Drives the Sold Items screen.
 ///

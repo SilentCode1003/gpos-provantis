@@ -7,6 +7,7 @@ import 'package:gpos_provantis/src/core/database/app_database.dart'
     show SoldItemsTableData;
 
 import 'package:gpos_provantis/src/core/database/repository/sold_items_repository.dart';
+import 'package:gpos_provantis/src/shared/widgets/toast_emitter.dart';
 
 part 'sold_items_controller.g.dart';
 
@@ -112,6 +113,7 @@ class SoldItemsController extends _$SoldItemsController {
   Future<void> _fetch(SoldItemsQuery query) async {
     final requestId = ++_requestId;
     final repository = ref.read(soldItemsRepositoryProvider);
+    final toast = ref.read(toastEmitterProvider);
 
     SoldItemsState next;
     try {
@@ -154,6 +156,29 @@ class SoldItemsController extends _$SoldItemsController {
     // result rather than overwrite the newer state.
     if (requestId != _requestId) return;
     state = next;
+
+    // A normal load is silent; only tell the cashier when it didn't go well.
+    switch (next.status) {
+      case SoldItemsFetchStatus.offlineCached:
+        toast.warning(
+          'Could not reach the server. Showing sold items saved on this '
+          'device.',
+        );
+      case SoldItemsFetchStatus.offlineNoData:
+        toast.error(
+          'Could not reach the server, and no sold items were saved for this '
+          'search.',
+        );
+      case SoldItemsFetchStatus.failed:
+        toast.error(
+          'Could not load sold items: '
+          '${next.error.toString().replaceFirst('Exception: ', '')}',
+        );
+      case SoldItemsFetchStatus.idle:
+      case SoldItemsFetchStatus.loading:
+      case SoldItemsFetchStatus.fresh:
+        break;
+    }
   }
 }
 

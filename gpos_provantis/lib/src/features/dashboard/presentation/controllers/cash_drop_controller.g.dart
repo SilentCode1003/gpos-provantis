@@ -42,7 +42,7 @@ final class CashDropControllerProvider
 }
 
 String _$cashDropControllerHash() =>
-    r'ca396ff6e7e61301a7010b51296b575429675e3a';
+    r'e5f5db8c57d2a9d83285e68a7f381ffe458d5fe2';
 
 abstract class _$CashDropController extends $Notifier<CashDropState> {
   CashDropState build();

@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:gpos_provantis/src/core/database/domain/customer_dto.dart';
 import 'package:gpos_provantis/src/services/customer_service.dart';
+import 'package:gpos_provantis/src/shared/widgets/toast_emitter.dart';
 
 part 'customer_controller.g.dart';
 
@@ -29,13 +30,23 @@ class CustomerController extends _$CustomerController {
   /// be shown at all (a store setting).
   Future<bool> beginCheckout() async {
     final service = ref.read(customerServiceProvider);
+    final toast = ref.read(toastEmitterProvider);
 
     service.clearDraft();
     state = const CustomerUiState();
 
-    final settings = await service.loadSettings();
-    state = CustomerUiState(showPurchaseOrder: settings.purchaseOrderEnabled);
-    return settings.promptEnabled;
+    try {
+      final settings = await service.loadSettings();
+      state = CustomerUiState(showPurchaseOrder: settings.purchaseOrderEnabled);
+      return settings.promptEnabled;
+    } catch (e) {
+      // Without this, tapping Charge would just appear to do nothing.
+      toast.error(
+        'Could not start checkout: '
+        '${e.toString().replaceFirst('Exception: ', '')}',
+      );
+      rethrow;
+    }
   }
 
   /// The cashier filled the customer in. It is held until the sale completes.

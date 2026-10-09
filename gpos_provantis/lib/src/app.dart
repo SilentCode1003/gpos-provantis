@@ -4,6 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:device_preview_plus/device_preview_plus.dart';
 import 'core/theme/theme.dart';
 import 'routing/app_router.dart';
+import 'routing/root_navigator_key.dart';
+import 'shared/widgets/app_toast.dart';
 import 'services/sync/overlay/catalog_sync_overlay.dart';
 import 'services/sync/controller/sales_sync_controller.dart';
 import 'services/check_health_service.dart';
@@ -32,8 +34,14 @@ class GposProvantisApp extends ConsumerWidget {
           debugShowCheckedModeBanner: false,
 
           locale: DevicePreview.locale(context),
-          builder: (context, child) => CatalogSyncOverlay(
-            child: DevicePreview.appBuilder(context, child),
+          // One AppToastHost for the whole app. `builder` sits ABOVE the
+          // Navigator, so the host reaches the overlay through the same root
+          // navigator key GoRouter uses.
+          builder: (context, child) => AppToastHost(
+            navigatorKey: rootNavigatorKey,
+            child: CatalogSyncOverlay(
+              child: DevicePreview.appBuilder(context, child),
+            ),
           ),
 
           routerConfig: goRouter,
