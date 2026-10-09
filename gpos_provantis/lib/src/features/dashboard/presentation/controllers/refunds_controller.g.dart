@@ -41,7 +41,7 @@ final class RefundsControllerProvider
   }
 }
 
-String _$refundsControllerHash() => r'a351557c38fe48a58f659c7189438cbd8984f864';
+String _$refundsControllerHash() => r'bded541b9b5e2fe51a8eae435bb19f0596ea0ea5';
 
 abstract class _$RefundsController extends $Notifier<RefundsState> {
   RefundsState build();
