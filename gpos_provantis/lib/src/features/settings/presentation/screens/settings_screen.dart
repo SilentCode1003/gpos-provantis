@@ -8,6 +8,7 @@ import '../panels/printers_panel.dart';
 import '../panels/theme_panel.dart';
 import '../panels/transactions_panel.dart';
 import '../panels/pos_config_panel.dart';
+import '../panels/email_panel.dart';
 import '../panels/placeholder_panels.dart';
 import '../panels/counter_display_panel.dart';
 
@@ -34,6 +35,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       label: 'POS Config',
       icon: Icons.storefront_rounded,
       builder: PosConfigPanel.new,
+    ),
+    SettingsSection(
+      label: 'Email',
+      icon: Icons.mail_rounded,
+      builder: EmailPanel.new,
     ),
     SettingsSection(
       label: 'Sync',

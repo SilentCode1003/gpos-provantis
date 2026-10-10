@@ -19439,6 +19439,321 @@ class LoginCredentialsTableCompanion
   }
 }
 
+class $EmailTableTable extends EmailTable
+    with TableInfo<$EmailTableTable, EmailTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EmailTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('email_config'),
+  );
+  static const VerificationMeta _emailAddressMeta = const VerificationMeta(
+    'emailAddress',
+  );
+  @override
+  late final GeneratedColumn<String> emailAddress = GeneratedColumn<String>(
+    'email_address',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _passwordMeta = const VerificationMeta(
+    'password',
+  );
+  @override
+  late final GeneratedColumn<String> password = GeneratedColumn<String>(
+    'password',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _smtpServerMeta = const VerificationMeta(
+    'smtpServer',
+  );
+  @override
+  late final GeneratedColumn<String> smtpServer = GeneratedColumn<String>(
+    'smtp_server',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    emailAddress,
+    password,
+    smtpServer,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'email_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EmailTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('email_address')) {
+      context.handle(
+        _emailAddressMeta,
+        emailAddress.isAcceptableOrUnknown(
+          data['email_address']!,
+          _emailAddressMeta,
+        ),
+      );
+    }
+    if (data.containsKey('password')) {
+      context.handle(
+        _passwordMeta,
+        password.isAcceptableOrUnknown(data['password']!, _passwordMeta),
+      );
+    }
+    if (data.containsKey('smtp_server')) {
+      context.handle(
+        _smtpServerMeta,
+        smtpServer.isAcceptableOrUnknown(data['smtp_server']!, _smtpServerMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EmailTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EmailTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      emailAddress: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}email_address'],
+      )!,
+      password: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}password'],
+      )!,
+      smtpServer: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}smtp_server'],
+      )!,
+    );
+  }
+
+  @override
+  $EmailTableTable createAlias(String alias) {
+    return $EmailTableTable(attachedDatabase, alias);
+  }
+}
+
+class EmailTableData extends DataClass implements Insertable<EmailTableData> {
+  final String id;
+  final String emailAddress;
+  final String password;
+  final String smtpServer;
+  const EmailTableData({
+    required this.id,
+    required this.emailAddress,
+    required this.password,
+    required this.smtpServer,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['email_address'] = Variable<String>(emailAddress);
+    map['password'] = Variable<String>(password);
+    map['smtp_server'] = Variable<String>(smtpServer);
+    return map;
+  }
+
+  EmailTableCompanion toCompanion(bool nullToAbsent) {
+    return EmailTableCompanion(
+      id: Value(id),
+      emailAddress: Value(emailAddress),
+      password: Value(password),
+      smtpServer: Value(smtpServer),
+    );
+  }
+
+  factory EmailTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EmailTableData(
+      id: serializer.fromJson<String>(json['id']),
+      emailAddress: serializer.fromJson<String>(json['emailAddress']),
+      password: serializer.fromJson<String>(json['password']),
+      smtpServer: serializer.fromJson<String>(json['smtpServer']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'emailAddress': serializer.toJson<String>(emailAddress),
+      'password': serializer.toJson<String>(password),
+      'smtpServer': serializer.toJson<String>(smtpServer),
+    };
+  }
+
+  EmailTableData copyWith({
+    String? id,
+    String? emailAddress,
+    String? password,
+    String? smtpServer,
+  }) => EmailTableData(
+    id: id ?? this.id,
+    emailAddress: emailAddress ?? this.emailAddress,
+    password: password ?? this.password,
+    smtpServer: smtpServer ?? this.smtpServer,
+  );
+  EmailTableData copyWithCompanion(EmailTableCompanion data) {
+    return EmailTableData(
+      id: data.id.present ? data.id.value : this.id,
+      emailAddress: data.emailAddress.present
+          ? data.emailAddress.value
+          : this.emailAddress,
+      password: data.password.present ? data.password.value : this.password,
+      smtpServer: data.smtpServer.present
+          ? data.smtpServer.value
+          : this.smtpServer,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EmailTableData(')
+          ..write('id: $id, ')
+          ..write('emailAddress: $emailAddress, ')
+          ..write('password: $password, ')
+          ..write('smtpServer: $smtpServer')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, emailAddress, password, smtpServer);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EmailTableData &&
+          other.id == this.id &&
+          other.emailAddress == this.emailAddress &&
+          other.password == this.password &&
+          other.smtpServer == this.smtpServer);
+}
+
+class EmailTableCompanion extends UpdateCompanion<EmailTableData> {
+  final Value<String> id;
+  final Value<String> emailAddress;
+  final Value<String> password;
+  final Value<String> smtpServer;
+  final Value<int> rowid;
+  const EmailTableCompanion({
+    this.id = const Value.absent(),
+    this.emailAddress = const Value.absent(),
+    this.password = const Value.absent(),
+    this.smtpServer = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EmailTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.emailAddress = const Value.absent(),
+    this.password = const Value.absent(),
+    this.smtpServer = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  static Insertable<EmailTableData> custom({
+    Expression<String>? id,
+    Expression<String>? emailAddress,
+    Expression<String>? password,
+    Expression<String>? smtpServer,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (emailAddress != null) 'email_address': emailAddress,
+      if (password != null) 'password': password,
+      if (smtpServer != null) 'smtp_server': smtpServer,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EmailTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? emailAddress,
+    Value<String>? password,
+    Value<String>? smtpServer,
+    Value<int>? rowid,
+  }) {
+    return EmailTableCompanion(
+      id: id ?? this.id,
+      emailAddress: emailAddress ?? this.emailAddress,
+      password: password ?? this.password,
+      smtpServer: smtpServer ?? this.smtpServer,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (emailAddress.present) {
+      map['email_address'] = Variable<String>(emailAddress.value);
+    }
+    if (password.present) {
+      map['password'] = Variable<String>(password.value);
+    }
+    if (smtpServer.present) {
+      map['smtp_server'] = Variable<String>(smtpServer.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EmailTableCompanion(')
+          ..write('id: $id, ')
+          ..write('emailAddress: $emailAddress, ')
+          ..write('password: $password, ')
+          ..write('smtpServer: $smtpServer, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -19501,6 +19816,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $SplitPaymentTableTable(this);
   late final $LoginCredentialsTableTable loginCredentialsTable =
       $LoginCredentialsTableTable(this);
+  late final $EmailTableTable emailTable = $EmailTableTable(this);
   late final DomainConfigDao domainConfigDao = DomainConfigDao(
     this as AppDatabase,
   );
@@ -19548,6 +19864,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     customerTable,
     splitPaymentTable,
     loginCredentialsTable,
+    emailTable,
   ];
 }
 
@@ -29627,6 +29944,191 @@ typedef $$LoginCredentialsTableTableProcessedTableManager =
       LoginCredentialsTableData,
       PrefetchHooks Function()
     >;
+typedef $$EmailTableTableCreateCompanionBuilder =
+    EmailTableCompanion Function({
+      Value<String> id,
+      Value<String> emailAddress,
+      Value<String> password,
+      Value<String> smtpServer,
+      Value<int> rowid,
+    });
+typedef $$EmailTableTableUpdateCompanionBuilder =
+    EmailTableCompanion Function({
+      Value<String> id,
+      Value<String> emailAddress,
+      Value<String> password,
+      Value<String> smtpServer,
+      Value<int> rowid,
+    });
+
+class $$EmailTableTableFilterComposer
+    extends Composer<_$AppDatabase, $EmailTableTable> {
+  $$EmailTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get emailAddress => $composableBuilder(
+    column: $table.emailAddress,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get password => $composableBuilder(
+    column: $table.password,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get smtpServer => $composableBuilder(
+    column: $table.smtpServer,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$EmailTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $EmailTableTable> {
+  $$EmailTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get emailAddress => $composableBuilder(
+    column: $table.emailAddress,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get password => $composableBuilder(
+    column: $table.password,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get smtpServer => $composableBuilder(
+    column: $table.smtpServer,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EmailTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $EmailTableTable> {
+  $$EmailTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get emailAddress => $composableBuilder(
+    column: $table.emailAddress,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get password =>
+      $composableBuilder(column: $table.password, builder: (column) => column);
+
+  GeneratedColumn<String> get smtpServer => $composableBuilder(
+    column: $table.smtpServer,
+    builder: (column) => column,
+  );
+}
+
+class $$EmailTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $EmailTableTable,
+          EmailTableData,
+          $$EmailTableTableFilterComposer,
+          $$EmailTableTableOrderingComposer,
+          $$EmailTableTableAnnotationComposer,
+          $$EmailTableTableCreateCompanionBuilder,
+          $$EmailTableTableUpdateCompanionBuilder,
+          (
+            EmailTableData,
+            BaseReferences<_$AppDatabase, $EmailTableTable, EmailTableData>,
+          ),
+          EmailTableData,
+          PrefetchHooks Function()
+        > {
+  $$EmailTableTableTableManager(_$AppDatabase db, $EmailTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EmailTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EmailTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EmailTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> emailAddress = const Value.absent(),
+                Value<String> password = const Value.absent(),
+                Value<String> smtpServer = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EmailTableCompanion(
+                id: id,
+                emailAddress: emailAddress,
+                password: password,
+                smtpServer: smtpServer,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> emailAddress = const Value.absent(),
+                Value<String> password = const Value.absent(),
+                Value<String> smtpServer = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EmailTableCompanion.insert(
+                id: id,
+                emailAddress: emailAddress,
+                password: password,
+                smtpServer: smtpServer,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$EmailTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $EmailTableTable,
+      EmailTableData,
+      $$EmailTableTableFilterComposer,
+      $$EmailTableTableOrderingComposer,
+      $$EmailTableTableAnnotationComposer,
+      $$EmailTableTableCreateCompanionBuilder,
+      $$EmailTableTableUpdateCompanionBuilder,
+      (
+        EmailTableData,
+        BaseReferences<_$AppDatabase, $EmailTableTable, EmailTableData>,
+      ),
+      EmailTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -29710,6 +30212,8 @@ class $AppDatabaseManager {
       $$SplitPaymentTableTableTableManager(_db, _db.splitPaymentTable);
   $$LoginCredentialsTableTableTableManager get loginCredentialsTable =>
       $$LoginCredentialsTableTableTableManager(_db, _db.loginCredentialsTable);
+  $$EmailTableTableTableManager get emailTable =>
+      $$EmailTableTableTableManager(_db, _db.emailTable);
 }
 
 // **************************************************************************

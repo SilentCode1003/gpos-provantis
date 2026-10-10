@@ -258,21 +258,21 @@ class _AppToastStackState extends State<_AppToastStack> {
     final entries = widget.queue.entries;
 
     return Positioned(
-      left: 16,
+      right: 16,
       bottom: mediaQuery.padding.bottom + 16,
       child: SafeArea(
         top: false,
-        right: false,
+        left: false,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 460),
 
           child: AnimatedSize(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOut,
-            alignment: Alignment.bottomLeft,
+            alignment: Alignment.bottomRight,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.end,
 
               children: [
                 for (final entry in entries.reversed)
@@ -327,7 +327,7 @@ class _AppToastViewState extends State<_AppToastView>
       duration: const Duration(milliseconds: 180),
     );
     _slide = Tween<Offset>(
-      begin: const Offset(-0.08, 0), // Rise from left edge
+      begin: const Offset(0.08, 0), // Rise from right edge
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
     _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);

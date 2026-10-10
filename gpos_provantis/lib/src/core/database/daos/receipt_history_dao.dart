@@ -49,6 +49,16 @@ class ReceiptHistoryDao extends DatabaseAccessor<AppDatabase>
         .get();
   }
 
+  /// The cached receipt with this OR number (`detail_id`), or null if it was
+  /// never pulled. If several days cached the same id, the newest wins.
+  Future<ReceiptHistoryTableData?> getByDetailId(String detailId) {
+    return (select(receiptHistoryTable)
+          ..where((t) => t.detailId.equals(detailId))
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
   /// Drops cached copies pulled before [cutoff]. Returns how many were removed.
   Future<int> deleteFetchedBefore(DateTime cutoff) {
     return (delete(

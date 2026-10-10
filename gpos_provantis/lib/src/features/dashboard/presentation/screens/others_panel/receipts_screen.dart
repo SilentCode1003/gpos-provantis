@@ -109,6 +109,14 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
     final state = ref.watch(receiptsControllerProvider);
     final salesAsync = ref.watch(salesProvider);
 
+    // Diagnostic (safe to delete): prints when the local sales list changes, so
+    // you can see whether this device's sales are reaching the screen.
+    ref.listen(salesProvider, (previous, next) {
+      debugPrint(
+        'Receipts: ${next.value?.length ?? 'no'} local sale(s) available',
+      );
+    });
+
     final items = _mergeReceipts(
       history: state.receipts,
       sales: salesAsync.value ?? const <SalesTableData>[],
@@ -222,6 +230,11 @@ class _ReceiptItem {
 
   /// The copy pulled from the server, if any.
   final ReceiptHistoryTableData? history;
+
+  /// A sale saved on this device that the server doesn't have yet (made
+  /// offline, or not uploaded yet).
+  bool get isNotSynced =>
+      sale != null && history == null && sale!.isSync != '1';
 }
 
 /// Server receipts plus this device's own sales in the range, one row per OR.
@@ -256,12 +269,16 @@ List<_ReceiptItem> _mergeReceipts({
   }
 
   for (final s in sales) {
-    if (!inRange(s.createdAt)) continue;
+    // The sale's own `date` (the moment it was rung up, the same value that is
+    // sent to the server) decides which day it belongs to. `createdAt` is a
+    // database default and is only the fallback.
+    final when = DateTime.tryParse(s.date.toString()) ?? s.createdAt;
+    if (!inRange(when)) continue;
     final id = s.detailId.toString();
     final existing = byId[id];
     byId[id] = _ReceiptItem(
       detailId: id,
-      dateTime: s.createdAt,
+      dateTime: when,
       paymentType: s.paymentType.toString(),
       cashier: s.cashier.toString(),
       total: double.tryParse(s.total.toString()) ?? 0,
@@ -517,6 +534,28 @@ class _ReceiptTile extends StatelessWidget {
                               'REFUNDED',
                               style: AppTypography.ui(
                                 color: colors.onRefund,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                          ),
+                        ],
+                        if (item.isNotSynced) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colors.warningContainer,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              'NOT SYNCED',
+                              style: AppTypography.ui(
+                                color: colors.onWarningContainer,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 0.4,
