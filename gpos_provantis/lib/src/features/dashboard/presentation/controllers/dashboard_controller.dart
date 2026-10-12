@@ -126,6 +126,17 @@ class Category {
   final String icon;
 }
 
+// ── Sectioned catalog ───────────────────────────────────────────────────────
+/// One category and the products currently shown under it. Used by the
+/// catalog sheet's single scrolling grid.
+class CatalogSection {
+  const CatalogSection({required this.category, required this.products});
+
+  final Category category;
+  final List<Product> products;
+}
+// ── end Sectioned catalog ───────────────────────────────────────────────────
+
 class CartLine {
   const CartLine({required this.product, required this.quantity});
 
@@ -909,6 +920,100 @@ class DashboardController extends _$DashboardController {
         )
         .toList();
   }
+
+  // ── Sectioned catalog ─────────────────────────────────────────────────────
+  /// Load status for the sectioned catalog grid. Only the products table
+  /// gates it: services / packages / add-ons simply appear as extra sections
+  /// once they've loaded (the same way their categories do).
+  CatalogLoadStatus get catalogProductsStatus => _productsAsync().when(
+    data: (_) => CatalogLoadStatus.data,
+    error: (_, __) => CatalogLoadStatus.error,
+    loading: () => CatalogLoadStatus.loading,
+  );
+
+  /// Every product, grouped under its category, for the catalog sheet's
+  /// single scrolling grid.
+  ///
+  /// [visibleCategories] decides which categories get a section and in what
+  /// order (pass the same list the category strip shows). The search query is
+  /// applied across ALL categories, and categories with no matching products
+  /// are left out. Products are grouped in ONE pass over the product table,
+  /// so this stays cheap on big catalogs.
+  ///
+  /// [productsForCatalogSheet] is untouched and still works as before.
+  List<CatalogSection> catalogSections(List<Category> visibleCategories) {
+    final query = state.catalogSearchQuery.trim().toLowerCase();
+    bool matches(String name) =>
+        query.isEmpty || name.toLowerCase().contains(query);
+
+    final byCategory = <String, List<Product>>{};
+    for (final row in _watchProducts()) {
+      if (row.description.trim().isEmpty || !matches(row.description)) continue;
+      final categoryId = row.category.toString();
+      (byCategory[categoryId] ??= <Product>[]).add(
+        Product(
+          id: row.productId.toString(),
+          name: row.description,
+          categoryId: categoryId,
+          price: _parseMoney(row.price),
+          stock: row.quantity,
+        ),
+      );
+    }
+
+    List<Product> services() => [
+      for (final row in _watchServices())
+        if (row.name.trim().isNotEmpty && matches(row.name))
+          Product(
+            id: '$_serviceIdPrefix${row.id}',
+            name: row.name,
+            categoryId: servicesCategoryId,
+            price: row.price,
+            stock: 0,
+            isService: true,
+          ),
+    ];
+
+    List<Product> servicePackages() => [
+      for (final row in _watchServicePackages())
+        if (row.name.trim().isNotEmpty && matches(row.name))
+          Product(
+            id: '$_servicePackageIdPrefix${row.id}',
+            name: row.name,
+            categoryId: servicePackagesCategoryId,
+            price: row.price,
+            stock: 0,
+            isService: true,
+          ),
+    ];
+
+    List<Product> addons() => [
+      for (final row in _watchAddons())
+        if (row.name.trim().isNotEmpty && matches(row.name))
+          Product(
+            id: '$_addonIdPrefix${row.id}',
+            name: row.name,
+            categoryId: addonsCategoryId,
+            price: row.price,
+            stock: 0,
+            isService: true,
+          ),
+    ];
+
+    final sections = <CatalogSection>[];
+    for (final category in visibleCategories) {
+      final products = switch (category.id) {
+        servicesCategoryId => services(),
+        servicePackagesCategoryId => servicePackages(),
+        addonsCategoryId => addons(),
+        _ => byCategory[category.id] ?? const <Product>[],
+      };
+      if (products.isEmpty) continue;
+      sections.add(CatalogSection(category: category, products: products));
+    }
+    return sections;
+  }
+  // ── end Sectioned catalog ─────────────────────────────────────────────────
 
   void selectCategory(String categoryId) {
     state = state.copyWith(

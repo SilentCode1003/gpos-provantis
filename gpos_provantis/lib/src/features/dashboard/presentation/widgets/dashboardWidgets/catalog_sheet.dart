@@ -165,7 +165,9 @@ class _ScrimOverlay extends StatelessWidget {
         child: IgnorePointer(
           ignoring: false,
           child: DecoratedBox(
-            decoration: BoxDecoration(color: Colors.black.withOpacity(opacity)),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: opacity),
+            ),
           ),
         ),
       ),
@@ -190,8 +192,10 @@ class _CatalogSheetChrome extends StatelessWidget {
 
     return Material(
       color: colors.surface,
-      elevation: 8,
-      shadowColor: Colors.black.withOpacity(0.2),
+      // Dark surfaces swallow shadows, so there the edge is drawn by the
+      // border in _CatalogSheetContent instead.
+      elevation: colors.isDark ? 0 : 8,
+      shadowColor: colors.shadow,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -240,7 +244,7 @@ class _DragHandle extends StatelessWidget {
             width: 5,
             height: 56,
             decoration: BoxDecoration(
-              color: colors.border,
+              color: colors.textDisabled.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(999),
             ),
           ),
@@ -259,19 +263,39 @@ class _CatalogSheetContent extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
+        color: colors.background,
         border: Border(left: BorderSide(color: colors.borderSubtle)),
       ),
       child: const Column(
         children: [
           _CatalogSheetHeader(),
-          _CompactCategoryStrip(),
-          Expanded(child: ProductGrid()),
+          Expanded(
+            // The grid fills the whole area under the header and the category
+            // notch floats on top of it, so products scroll behind the notch
+            // (clipBehavior.none lets the notch overlap the header's border).
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                ProductGrid(),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _CompactCategoryStrip(),
+                ),
+              ],
+            ),
+          ),
           _CatalogSheetFooter(),
         ],
       ),
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Footer
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _CatalogSheetFooter extends ConsumerWidget {
   const _CatalogSheetFooter();
@@ -284,23 +308,26 @@ class _CatalogSheetFooter extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
+        color: colors.surface,
         border: Border(top: BorderSide(color: colors.borderSubtle)),
       ),
       child: SizedBox(
         width: double.infinity,
         height: primaryTapTarget,
-        child: OutlinedButton.icon(
+        child: ElevatedButton.icon(
           onPressed: notifier.closeCatalogSheet,
-          icon: const Icon(Icons.keyboard_double_arrow_right_rounded, size: 20),
+          icon: const Icon(Icons.keyboard_double_arrow_right_rounded, size: 22),
           label: Text(
             'Close',
-            style: AppTypography.ui(fontSize: 15, fontWeight: FontWeight.w600),
+            style: AppTypography.ui(fontSize: 16, fontWeight: FontWeight.w600),
           ),
-          style: OutlinedButton.styleFrom(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colors.surfaceVariant,
             foregroundColor: colors.textPrimary,
-            side: BorderSide(color: colors.border),
+            elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: colors.border.withValues(alpha: 0.6)),
             ),
           ),
         ),
@@ -309,6 +336,10 @@ class _CatalogSheetFooter extends ConsumerWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Header + search
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _CatalogSheetHeader extends ConsumerWidget {
   const _CatalogSheetHeader();
 
@@ -316,9 +347,12 @@ class _CatalogSheetHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final controller = ref.watch(dashboardControllerProvider.notifier);
-    final categoryId = ref.watch(
+    final openedCategoryId = ref.watch(
       dashboardControllerProvider.select((s) => s.catalogSheetCategoryId),
     );
+    // Follows the section currently at the top of the grid.
+    final categoryId =
+        ref.watch(catalogActiveSectionProvider) ?? openedCategoryId;
     final categoryName = controller.categories
         .firstWhere(
           (c) => c.id == categoryId,
@@ -327,8 +361,9 @@ class _CatalogSheetHeader extends ConsumerWidget {
         .name;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 12, 12),
+      padding: const EdgeInsets.fromLTRB(20, 12, 8, 14),
       decoration: BoxDecoration(
+        color: colors.surface,
         border: Border(bottom: BorderSide(color: colors.borderSubtle)),
       ),
       child: Column(
@@ -343,8 +378,9 @@ class _CatalogSheetHeader extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.display(
                     color: colors.textPrimary,
-                    fontSize: 20,
+                    fontSize: 24,
                     fontWeight: FontWeight.w600,
+                    letterSpacing: -0.3,
                   ),
                 ),
               ),
@@ -357,19 +393,32 @@ class _CatalogSheetHeader extends ConsumerWidget {
                   child: SizedBox(
                     width: minTapTarget,
                     height: minTapTarget,
-                    child: Icon(
-                      Icons.close_rounded,
-                      size: 22,
-
-                      color: colors.textPrimary,
+                    child: Center(
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: colors.surfaceVariant,
+                        ),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 22,
+                          color: colors.textPrimary,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          _CatalogSearchField(),
+          const SizedBox(height: 4),
+          const Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: _CatalogSearchField(),
+          ),
         ],
       ),
     );
@@ -413,6 +462,11 @@ class _CatalogSearchFieldState extends ConsumerState<_CatalogSearchField> {
       _textController.clear();
     }
 
+    const noBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(14)),
+      borderSide: BorderSide.none,
+    );
+
     return SizedBox(
       height: minTapTarget,
       child: TextField(
@@ -420,11 +474,11 @@ class _CatalogSearchFieldState extends ConsumerState<_CatalogSearchField> {
         onChanged: notifier.setCatalogSearchQuery,
         style: AppTypography.ui(color: colors.textPrimary, fontSize: 15),
         decoration: InputDecoration(
-          hintText: 'Search this category…',
+          hintText: 'Search all products…',
           hintStyle: AppTypography.ui(color: colors.textDisabled, fontSize: 15),
           prefixIcon: Icon(
             Icons.search_rounded,
-            color: colors.textDisabled,
+            color: colors.textSecondary,
             size: 22,
           ),
           suffixIcon: query.isEmpty
@@ -432,7 +486,7 @@ class _CatalogSearchFieldState extends ConsumerState<_CatalogSearchField> {
               : IconButton(
                   icon: Icon(
                     Icons.close_rounded,
-                    color: colors.textDisabled,
+                    color: colors.textSecondary,
                     size: 20,
                   ),
                   onPressed: () {
@@ -443,9 +497,11 @@ class _CatalogSearchFieldState extends ConsumerState<_CatalogSearchField> {
           filled: true,
           fillColor: colors.surfaceVariant,
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
+          border: noBorder,
+          enabledBorder: noBorder,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: colors.primary, width: 1.5),
           ),
         ),
       ),
@@ -453,48 +509,220 @@ class _CatalogSearchFieldState extends ConsumerState<_CatalogSearchField> {
   }
 }
 
-class _CompactCategoryStrip extends ConsumerWidget {
+// ─────────────────────────────────────────────────────────────────────────────
+// Category chips
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _CompactCategoryStrip extends ConsumerStatefulWidget {
   const _CompactCategoryStrip();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_CompactCategoryStrip> createState() =>
+      _CompactCategoryStripState();
+}
+
+class _CompactCategoryStripState extends ConsumerState<_CompactCategoryStrip> {
+  final _chipKeys = <String, GlobalKey>{};
+
+  GlobalKey _keyFor(String categoryId) =>
+      _chipKeys.putIfAbsent(categoryId, () => GlobalKey());
+
+  /// Slides the strip so the active chip stays in view (and centered when it
+  /// can be) while the grid is scrolled.
+  void _revealChip(String? categoryId) {
+    if (categoryId == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final chipContext = _chipKeys[categoryId]?.currentContext;
+      if (chipContext == null || !chipContext.mounted) return;
+      Scrollable.ensureVisible(
+        chipContext,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.colors;
     final controller = ref.watch(dashboardControllerProvider.notifier);
-    final categoryId = ref.watch(
+    final openedCategoryId = ref.watch(
       dashboardControllerProvider.select((s) => s.catalogSheetCategoryId),
     );
+    // The chip that's highlighted follows the grid as it scrolls.
+    final activeCategoryId =
+        ref.watch(catalogActiveSectionProvider) ?? openedCategoryId;
+
+    ref.listen<String?>(catalogActiveSectionProvider, (previous, next) {
+      _revealChip(next);
+    });
 
     final hidden = ref.watch(hiddenCategoryCodesProvider);
     final categories = filterVisibleCategories(controller.categories, hidden);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: colors.borderSubtle)),
-      ),
-      child: SizedBox(
-        height: 40,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: categories.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
-          itemBuilder: (context, index) {
-            final category = categories[index];
-            final isSelected = category.id == categoryId;
-            return _CompactCategoryChip(
-              category: category,
-              isSelected: isSelected,
-              onTap: () => controller.selectCategory(category.id),
-            );
-          },
+    // A "notch" hanging from the header: same color as the header, rounded
+    // bottom corners, and little flares where it meets the header's edge.
+    // heightFactor: 1 so it is only as tall as the notch (a plain Center
+    // would stretch to fill the Stack).
+    return Align(
+      alignment: Alignment.topCenter,
+      heightFactor: 1,
+      child: Transform.translate(
+        // Overlaps the header's 1px bottom border so the two read as one piece.
+        offset: const Offset(0, -1),
+        child: CustomPaint(
+          painter: _NotchPainter(
+            fill: colors.surface,
+            stroke: colors.borderSubtle,
+            // Lifts the notch above the products scrolling behind it. A touch
+            // stronger in dark mode, where shadows are harder to see.
+            shadow: Colors.black.withValues(alpha: colors.isDark ? 0.32 : 0.14),
+            flareRadius: _notchFlareRadius,
+            cornerRadius: _notchCornerRadius,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              _notchFlareRadius + 12,
+              7,
+              _notchFlareRadius + 12,
+              12,
+            ),
+            // Rounds off the scrolling area too, so chips slide under curved
+            // ends instead of being cut by a straight edge.
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: SizedBox(
+                height: 40,
+                // A plain scroll view (not a lazy list) so every chip exists
+                // and can be scrolled into view. There are only a handful.
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: [
+                      for (var i = 0; i < categories.length; i++) ...[
+                        if (i > 0) const SizedBox(width: 8),
+                        _CompactCategoryChip(
+                          key: _keyFor(categories[i].id),
+                          category: categories[i],
+                          isSelected: categories[i].id == activeCategoryId,
+                          // Asks the grid to glide to this category's section.
+                          onTap: () => ref
+                              .read(catalogScrollRequestProvider.notifier)
+                              .request(categories[i].id),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
+/// How far the notch flares out where it meets the header, and how round its
+/// bottom corners are. Tweak these two to taste.
+const double _notchFlareRadius = 18;
+const double _notchCornerRadius = 26;
+
+/// Draws the notch: flat on top (where it joins the header), curved flares
+/// out to each side, straight sides, and rounded bottom corners.
+class _NotchPainter extends CustomPainter {
+  const _NotchPainter({
+    required this.fill,
+    required this.stroke,
+    required this.shadow,
+    required this.flareRadius,
+    required this.cornerRadius,
+  });
+
+  final Color fill;
+  final Color stroke;
+  final Color shadow;
+  final double flareRadius;
+  final double cornerRadius;
+
+  /// Outline of the notch, running right flare -> down -> across -> up ->
+  /// left flare. [closed] adds the flat top edge (for the fill only; the
+  /// border is drawn without it so it doesn't cut across the header).
+  Path _outline(Size size, {required bool closed}) {
+    final w = size.width;
+    final h = size.height;
+    final f = flareRadius;
+    final c = cornerRadius;
+
+    final path = Path()
+      ..moveTo(w, 0)
+      // Right flare (concave).
+      ..arcToPoint(
+        Offset(w - f, f),
+        radius: Radius.circular(f),
+        clockwise: false,
+      )
+      ..lineTo(w - f, h - c)
+      // Bottom-right corner (convex).
+      ..arcToPoint(Offset(w - f - c, h), radius: Radius.circular(c))
+      ..lineTo(f + c, h)
+      // Bottom-left corner (convex).
+      ..arcToPoint(Offset(f, h - c), radius: Radius.circular(c))
+      ..lineTo(f, f)
+      // Left flare (concave).
+      ..arcToPoint(Offset.zero, radius: Radius.circular(f), clockwise: false);
+
+    if (closed) path.close();
+    return path;
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final shape = _outline(size, closed: true);
+
+    // Soft shadow, cast downward only. The clip starts just under the top
+    // edge so the shadow never smudges the header the notch hangs from.
+    canvas.save();
+    canvas.clipRect(
+      Rect.fromLTRB(-size.width, 1, size.width * 2, size.height + 80),
+    );
+    canvas.drawPath(
+      shape.shift(const Offset(0, 5)),
+      Paint()
+        ..color = shadow
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9),
+    );
+    canvas.restore();
+
+    canvas.drawPath(
+      shape,
+      Paint()
+        ..color = fill
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawPath(
+      _outline(size, closed: false),
+      Paint()
+        ..color = stroke
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _NotchPainter old) =>
+      old.fill != fill ||
+      old.stroke != stroke ||
+      old.shadow != shadow ||
+      old.flareRadius != flareRadius ||
+      old.cornerRadius != cornerRadius;
+}
+
 class _CompactCategoryChip extends StatelessWidget {
   const _CompactCategoryChip({
+    super.key,
     required this.category,
     required this.isSelected,
     required this.onTap,
@@ -509,21 +737,21 @@ class _CompactCategoryChip extends StatelessWidget {
     final colors = context.colors;
 
     return Material(
-      color: isSelected ? AppPalette.teal500 : colors.surfaceVariant,
+      color: isSelected ? colors.primary : colors.surfaceVariant,
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(999),
         child: Container(
           height: 40,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 18),
           alignment: Alignment.center,
           child: Text(
             category.name,
             style: AppTypography.ui(
               color: isSelected ? colors.onPrimary : colors.textSecondary,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+              fontSize: 13.5,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
             ),
           ),
         ),

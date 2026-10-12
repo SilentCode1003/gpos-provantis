@@ -82,6 +82,12 @@ class SplitPaymentDao extends DatabaseAccessor<AppDatabase>
     )..orderBy([(t) => OrderingTerm.desc(t.createdAt)])).get();
   }
 
+  Stream<List<SplitPaymentTableData>> watchAllSplitPayments() {
+    return (select(
+      splitPaymentTable,
+    )..orderBy([(t) => OrderingTerm.desc(t.createdAt)])).watch();
+  }
+
   /// Sales the server doesn't have yet, oldest first.
   Future<List<SplitPaymentTableData>> getPending() {
     return (select(splitPaymentTable)
