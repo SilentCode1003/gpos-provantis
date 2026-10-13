@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 
+import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'barcode_scan_bar.dart';
 import 'cart_panel.dart';
 import 'catalog_panel.dart';
 import 'catalog_sheet.dart';
+
+/// Thickness of the line separating the cart from the catalog side.
+const double _panelDividerThickness = 2;
 
 class WideLayout extends StatelessWidget {
   const WideLayout({super.key});
@@ -13,6 +17,8 @@ class WideLayout extends StatelessWidget {
     return const Row(
       children: [
         Expanded(flex: 2, child: CartPanel()),
+
+        _PanelDivider(axis: Axis.vertical),
 
         Expanded(flex: 3, child: _CatalogPanelWithSheet()),
       ],
@@ -28,8 +34,32 @@ class NarrowLayout extends StatelessWidget {
     return const Column(
       children: [
         Expanded(flex: 2, child: CartPanel()),
+
+        _PanelDivider(axis: Axis.horizontal),
+
         Expanded(flex: 3, child: _CatalogPanelWithSheet()),
       ],
+    );
+  }
+}
+
+/// A solid line between the cart and everything on the catalog side
+/// (top bar, actions, categories). [axis] is the direction the line runs:
+/// vertical for the side-by-side layout, horizontal for the stacked one.
+class _PanelDivider extends StatelessWidget {
+  const _PanelDivider({required this.axis});
+
+  final Axis axis;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final isVertical = axis == Axis.vertical;
+
+    return Container(
+      width: isVertical ? _panelDividerThickness : null,
+      height: isVertical ? null : _panelDividerThickness,
+      color: colors.border,
     );
   }
 }

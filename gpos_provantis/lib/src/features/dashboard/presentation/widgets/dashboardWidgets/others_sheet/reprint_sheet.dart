@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
-import 'package:gpos_provantis/src/core/database/app_database.dart'
-    show SalesTableData;
 import 'package:gpos_provantis/src/core/database/providers/sales_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/providers/split_payment_dao_provider.dart';
 import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
-    show ReceiptPrintException, receiptGeneratorProvider;
+    show ReceiptPrintException, ReceiptSaleData, receiptGeneratorProvider;
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/receipt_reprint_controller.dart';
 import 'receipt_preview_sheet.dart';
 import 'pos_form_sheet.dart';
@@ -45,12 +44,20 @@ class _ReprintSheetState extends ConsumerState<ReprintSheet> {
 
   bool get _canSubmit => _orController.text.trim().isNotEmpty && !_busy;
 
-  Future<SalesTableData?> _findSale(String orNumber) async {
+  /// Looks the OR number up on this device: the ordinary sales first, then
+  /// sales paid with two e-payments (kept in their own table). Both are local,
+  /// so this works with no connection.
+  Future<ReceiptSaleData?> _findReceipt(String orNumber) async {
     final sale = await ref.read(salesDaoProvider).getSaleByDetailId(orNumber);
-    if (sale == null && mounted) {
-      setState(() => _error = 'OR number not found.');
-    }
-    return sale;
+    if (sale != null) return receiptSaleDataFromSaleRow(sale);
+
+    final split = await ref
+        .read(splitPaymentDaoProvider)
+        .getByDetailId(orNumber);
+    if (split != null) return receiptSaleDataFromSplitPaymentRow(split);
+
+    if (mounted) setState(() => _error = 'OR number not found.');
+    return null;
   }
 
   Future<void> _onPreview() async {
@@ -63,16 +70,16 @@ class _ReprintSheetState extends ConsumerState<ReprintSheet> {
       _error = null;
     });
 
-    SalesTableData? sale;
+    ReceiptSaleData? saleData;
     try {
-      sale = await _findSale(_orController.text.trim());
+      saleData = await _findReceipt(_orController.text.trim());
     } finally {
       if (mounted) setState(() => _busy = false);
     }
 
-    if (sale == null || !mounted) return;
+    if (saleData == null || !mounted) return;
 
-    final printed = await ReceiptPreviewSheet.show(context, sale: sale);
+    final printed = await ReceiptPreviewSheet.show(context, saleData: saleData);
 
     // If they printed from the preview, there's nothing left to do here.
     if (printed == true && mounted) navigator.pop();
@@ -91,10 +98,9 @@ class _ReprintSheetState extends ConsumerState<ReprintSheet> {
     });
 
     try {
-      final sale = await _findSale(_orController.text.trim());
-      if (sale == null) return;
+      final saleData = await _findReceipt(_orController.text.trim());
+      if (saleData == null) return;
 
-      final saleData = receiptSaleDataFromSaleRow(sale);
       await ref.read(receiptGeneratorProvider).printForSale(saleData);
 
       navigator.pop();

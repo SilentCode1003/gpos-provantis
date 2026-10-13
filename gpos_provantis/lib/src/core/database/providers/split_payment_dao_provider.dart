@@ -10,3 +10,17 @@ SplitPaymentDao splitPaymentDao(Ref ref) {
   final db = ref.watch(appDatabaseProvider);
   return SplitPaymentDao(db);
 }
+
+final splitPaymentsProvider =
+    StreamNotifierProvider<SplitPaymentsNotifier, List<SplitPaymentTableData>>(
+      SplitPaymentsNotifier.new,
+    );
+
+class SplitPaymentsNotifier
+    extends StreamNotifier<List<SplitPaymentTableData>> {
+  @override
+  Stream<List<SplitPaymentTableData>> build() {
+    final dao = ref.watch(splitPaymentDaoProvider);
+    return dao.watchAllSplitPayments();
+  }
+}

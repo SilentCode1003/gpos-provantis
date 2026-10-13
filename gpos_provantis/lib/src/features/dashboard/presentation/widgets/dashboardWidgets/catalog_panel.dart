@@ -9,6 +9,7 @@ import 'package:gpos_provantis/src/core/database/providers/printer_dao_provider.
 import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/denomination_count_sheet.dart';
 import 'category_visibility.dart';
+import 'dashboard_constants.dart';
 import 'others_action_runner.dart';
 import 'others_sheet.dart';
 import 'others_usage_provider.dart';
@@ -33,6 +34,10 @@ class CatalogPanel extends ConsumerWidget {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Actions rail
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _ActionsRail extends ConsumerWidget {
   const _ActionsRail();
@@ -163,7 +168,7 @@ class _ActionsRail extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
       decoration: BoxDecoration(
         color: colors.surface,
         border: Border(bottom: BorderSide(color: colors.borderSubtle)),
@@ -172,10 +177,12 @@ class _ActionsRail extends ConsumerWidget {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
+            // Start = the call to action (filled teal). End = a calm red tint,
+            // so the two states can't be confused at a glance.
             _ActionButton(
               icon: isShiftOpen ? PhosphorIcons.stop : PhosphorIcons.play,
               label: isShiftOpen ? 'End shift' : 'Start shift',
-              emphasized: !isShiftOpen,
+              tone: isShiftOpen ? _ActionTone.danger : _ActionTone.primary,
               enabled: !isToggling,
               loading: isToggling,
               onTap: handleShiftTap,
@@ -207,12 +214,14 @@ class _ActionsRail extends ConsumerWidget {
 
 const double _actionsRailTapTarget = 72;
 
+enum _ActionTone { neutral, primary, danger }
+
 class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.icon,
     required this.label,
     required this.onTap,
-    this.emphasized = false,
+    this.tone = _ActionTone.neutral,
     this.enabled = true,
     this.loading = false,
   });
@@ -220,7 +229,7 @@ class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final bool emphasized;
+  final _ActionTone tone;
   final bool enabled;
 
   final bool loading;
@@ -228,42 +237,59 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final fill = emphasized ? AppPalette.teal500 : colors.surfaceVariant;
-    final foreground = emphasized ? colors.onPrimary : colors.textPrimary;
+
+    final Color fill;
+    final Color foreground;
+    final Color iconColor;
+    switch (tone) {
+      case _ActionTone.primary:
+        fill = colors.primary;
+        foreground = colors.onPrimary;
+        iconColor = colors.onPrimary;
+      case _ActionTone.danger:
+        fill = colors.danger.withValues(alpha: 0.12);
+        foreground = colors.danger;
+        iconColor = colors.danger;
+      case _ActionTone.neutral:
+        fill = colors.surfaceVariant;
+        foreground = colors.textPrimary;
+        iconColor = colors.primary;
+    }
+
+    final fg = enabled ? foreground : colors.textDisabled;
+    final ic = enabled ? iconColor : colors.textDisabled;
 
     return Material(
       color: enabled ? fill : colors.disabledFill,
-      borderRadius: BorderRadius.circular(14),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: tone == _ActionTone.neutral && enabled
+            ? BorderSide(color: colors.border.withValues(alpha: 0.5))
+            : BorderSide.none,
+      ),
       child: InkWell(
         onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           height: _actionsRailTapTarget,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 22),
           alignment: Alignment.center,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (loading)
                 SizedBox(
-                  width: 26,
-                  height: 26,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: enabled ? foreground : colors.textDisabled,
-                  ),
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2.5, color: ic),
                 )
               else
-                Icon(
-                  icon,
-                  size: 26,
-                  color: enabled ? foreground : colors.textDisabled,
-                ),
-              const SizedBox(width: 10),
+                Icon(icon, size: 24, color: ic),
+              const SizedBox(width: 12),
               Text(
                 label,
                 style: AppTypography.ui(
-                  color: enabled ? foreground : colors.textDisabled,
+                  color: fg,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -276,13 +302,15 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Categories
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _CategoryGrid extends ConsumerWidget {
   const _CategoryGrid();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
-
     ref.watch(dashboardControllerProvider);
     final controller = ref.watch(dashboardControllerProvider.notifier);
     final status = controller.categoriesStatus;
@@ -295,17 +323,28 @@ class _CategoryGrid extends ConsumerWidget {
     final categories = filterVisibleCategories(allCategories, hidden);
 
     if (status == CatalogLoadStatus.loading || settingsLoading) {
-      return _CatalogLoadingState(colors: colors);
+      return const _StateMessage(loading: true, message: 'Loading categories…');
     }
 
     if (status == CatalogLoadStatus.error) {
-      return _CatalogErrorState(colors: colors);
+      return _StateMessage(
+        icon: PhosphorIcons.exclamationMark,
+        message: 'Couldn\u2019t load categories.',
+      );
     }
 
     if (categories.isEmpty) {
       return allCategories.isEmpty
-          ? _CatalogEmptyState(colors: colors)
-          : _CatalogAllHiddenState(colors: colors);
+          ? _StateMessage(
+              icon: PhosphorIcons.shapes,
+              message: 'No categories yet',
+            )
+          : const _StateMessage(
+              icon: Icons.visibility_off_rounded,
+              message:
+                  'All categories are hidden.\n'
+                  'Turn them on in Settings > Counter Display.',
+            );
     }
 
     final paintCategories = <Category>[];
@@ -324,28 +363,29 @@ class _CategoryGrid extends ConsumerWidget {
     return CustomScrollView(
       slivers: [
         if (paintCategories.isNotEmpty) ...[
-          _GroupHeader(label: 'Paint'),
+          const _GroupHeader(label: 'Paint'),
           _CategorySliverGrid(
             categories: paintCategories,
             onTap: controller.selectCategory,
           ),
         ],
         if (productCategories.isNotEmpty) ...[
-          _GroupHeader(label: 'Products'),
+          const _GroupHeader(label: 'Products'),
           _CategorySliverGrid(
             categories: productCategories,
             onTap: controller.selectCategory,
           ),
         ],
         if (serviceCategories.isNotEmpty) ...[
-          _GroupHeader(label: 'Services'),
+          const _GroupHeader(label: 'Services'),
           _CategorySliverGrid(
             categories: serviceCategories,
             onTap: controller.selectCategory,
           ),
         ],
 
-        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+        // Keeps the last row clear of the floating barcode bar.
+        const SliverToBoxAdapter(child: SizedBox(height: barcodeBarClearance)),
       ],
     );
   }
@@ -362,15 +402,26 @@ class _GroupHeader extends StatelessWidget {
 
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-        child: Text(
-          label,
-          style: AppTypography.ui(
-            color: colors.textSecondary,
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.4,
-          ),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+        child: Row(
+          children: [
+            Text(
+              label.toUpperCase(),
+              style: AppTypography.ui(
+                color: colors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.0,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Divider(
+                height: 1,
+                color: colors.border.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -406,32 +457,52 @@ class _CategorySliverGrid extends StatelessWidget {
   }
 }
 
-class _CatalogLoadingState extends StatelessWidget {
-  const _CatalogLoadingState({required this.colors});
+/// One loading / error / empty message for the whole panel.
+class _StateMessage extends StatelessWidget {
+  const _StateMessage({this.icon, required this.message, this.loading = false});
 
-  final AppColors colors;
+  final IconData? icon;
+  final String message;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: colors.textSecondary,
+            Container(
+              width: 72,
+              height: 72,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: colors.surfaceVariant,
               ),
+              child: loading
+                  ? SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: colors.primary,
+                      ),
+                    )
+                  : Icon(icon, size: 32, color: colors.textSecondary),
             ),
             const SizedBox(height: 16),
             Text(
-              'Loading categories…',
+              message,
               textAlign: TextAlign.center,
-              style: AppTypography.ui(color: colors.textDisabled, fontSize: 14),
+              style: AppTypography.ui(
+                color: colors.textSecondary,
+                fontSize: 14,
+                height: 1.4,
+              ),
             ),
           ],
         ),
@@ -440,95 +511,22 @@ class _CatalogLoadingState extends StatelessWidget {
   }
 }
 
-class _CatalogErrorState extends StatelessWidget {
-  const _CatalogErrorState({required this.colors});
+/// Signature shape: three soft corners and one sharp one (top-left).
+/// To move the point, swap which corner gets `Radius.zero`.
+const BorderRadius _categoryTileRadius = BorderRadius.only(
+  topLeft: Radius.zero,
+  topRight: Radius.circular(24),
+  bottomLeft: Radius.circular(24),
+  bottomRight: Radius.circular(24),
+);
 
-  final AppColors colors;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              PhosphorIcons.exclamationMark,
-              size: 40,
-              color: colors.textDisabled,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Couldn\'t load categories.',
-              textAlign: TextAlign.center,
-              style: AppTypography.ui(color: colors.textDisabled, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CatalogEmptyState extends StatelessWidget {
-  const _CatalogEmptyState({required this.colors});
-
-  final AppColors colors;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(PhosphorIcons.shapes, size: 40, color: colors.textDisabled),
-            const SizedBox(height: 12),
-            Text(
-              'No categories yet',
-              textAlign: TextAlign.center,
-              style: AppTypography.ui(color: colors.textDisabled, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CatalogAllHiddenState extends StatelessWidget {
-  const _CatalogAllHiddenState({required this.colors});
-
-  final AppColors colors;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.visibility_off_rounded,
-              size: 40,
-              color: colors.textDisabled,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'All categories are hidden.\n'
-              'Turn them on in Settings > Counter Display.',
-              textAlign: TextAlign.center,
-              style: AppTypography.ui(color: colors.textDisabled, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+/// The icon badge repeats the same motif at a smaller scale.
+const BorderRadius _categoryBadgeRadius = BorderRadius.only(
+  topLeft: Radius.zero,
+  topRight: Radius.circular(16),
+  bottomLeft: Radius.circular(16),
+  bottomRight: Radius.circular(16),
+);
 
 class _CategoryTile extends StatelessWidget {
   const _CategoryTile({required this.category, required this.onTap});
@@ -555,27 +553,40 @@ class _CategoryTile extends StatelessWidget {
     final icon = _iconMap[category.icon] ?? PhosphorIcons.shapes;
 
     return Material(
-      color: colors.surfaceVariant,
-      borderRadius: BorderRadius.circular(14),
+      color: colors.surfaceRaised,
+      shape: RoundedRectangleBorder(
+        borderRadius: _categoryTileRadius,
+        side: BorderSide(color: colors.border.withValues(alpha: 0.6)),
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          width: 116,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+        borderRadius: _categoryTileRadius,
+        splashColor: colors.primary.withValues(alpha: 0.12),
+        highlightColor: colors.primary.withValues(alpha: 0.06),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 26, color: colors.textSecondary),
-              const SizedBox(height: 8),
+              Container(
+                width: 46,
+                height: 46,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer,
+                  borderRadius: _categoryBadgeRadius,
+                ),
+                child: Icon(icon, size: 24, color: colors.onPrimaryContainer),
+              ),
+              const SizedBox(height: 10),
               Text(
                 category.name,
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.ui(
-                  color: colors.textSecondary,
-                  fontSize: 13,
+                  color: colors.textPrimary,
+                  fontSize: 13.5,
                   fontWeight: FontWeight.w600,
                   height: 1.2,
                 ),

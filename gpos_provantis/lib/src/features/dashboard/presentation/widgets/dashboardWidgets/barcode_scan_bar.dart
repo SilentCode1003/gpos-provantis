@@ -98,6 +98,11 @@ class _BarcodeScanBarState extends ConsumerState<BarcodeScanBar> {
   Widget build(BuildContext context) {
     final colors = context.colors;
 
+    const noBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(14)),
+      borderSide: BorderSide.none,
+    );
+
     return Align(
       alignment: Alignment.bottomCenter,
       heightFactor: 1,
@@ -128,11 +133,15 @@ class _BarcodeScanBarState extends ConsumerState<BarcodeScanBar> {
             ),
             Material(
               color: colors.surface,
-              elevation: 6,
-              shadowColor: Colors.black.withOpacity(0.2),
+              // On dark surfaces a shadow just looks muddy; the border does
+              // the separating there.
+              elevation: colors.isDark ? 0 : 6,
+              shadowColor: colors.shadow,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: colors.borderSubtle),
+                borderRadius: BorderRadius.circular(22),
+                side: BorderSide(
+                  color: colors.isDark ? colors.border : colors.borderSubtle,
+                ),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(8),
@@ -169,15 +178,20 @@ class _BarcodeScanBarState extends ConsumerState<BarcodeScanBar> {
                             ),
                             prefixIcon: Icon(
                               Icons.qr_code_scanner_rounded,
-                              color: colors.textDisabled,
+                              color: colors.primary,
                               size: 22,
                             ),
                             filled: true,
                             fillColor: colors.surfaceVariant,
                             contentPadding: EdgeInsets.zero,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
+                            border: noBorder,
+                            enabledBorder: noBorder,
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide(
+                                color: colors.primary,
+                                width: 1.5,
+                              ),
                             ),
                           ),
                         ),
@@ -199,17 +213,17 @@ class _BarcodeScanBarState extends ConsumerState<BarcodeScanBar> {
                             'Add',
                             style: AppTypography.ui(
                               fontSize: 15,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                           style: FilledButton.styleFrom(
-                            backgroundColor: AppPalette.teal500,
+                            backgroundColor: colors.primary,
+                            foregroundColor: colors.onPrimary,
                             minimumSize: const Size(0, minTapTarget),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            foregroundColor: colors.onPrimary,
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                           ),
                         ),
@@ -244,19 +258,20 @@ class _FeedbackPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = feedback.isError
-        ? Theme.of(context).colorScheme.error
-        : AppPalette.teal500;
+    final colors = context.colors;
+
+    final bg = feedback.isError ? colors.danger : colors.primary;
+    final fg = feedback.isError ? colors.onDanger : colors.onPrimary;
 
     return Align(
       alignment: Alignment.centerLeft,
       child: Material(
         color: bg,
         borderRadius: BorderRadius.circular(999),
-        elevation: 4,
-        shadowColor: Colors.black.withOpacity(0.2),
+        elevation: colors.isDark ? 0 : 3,
+        shadowColor: colors.shadow,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -265,7 +280,7 @@ class _FeedbackPill extends StatelessWidget {
                     ? Icons.error_outline_rounded
                     : Icons.check_circle_outline_rounded,
                 size: 18,
-                color: Colors.white,
+                color: fg,
               ),
               const SizedBox(width: 8),
               Flexible(
@@ -274,7 +289,7 @@ class _FeedbackPill extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.ui(
-                    color: Colors.white,
+                    color: fg,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),

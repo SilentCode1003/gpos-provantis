@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:riverpod/riverpod.dart';
 
 import 'package:gpos_provantis/src/core/database/app_database.dart'
-    show SalesTableData;
+    show SalesTableData, SplitPaymentTableData;
 import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
     show
         ReceiptSaleData,
@@ -64,6 +64,62 @@ ReceiptSaleData receiptSaleDataFromSaleRow(SalesTableData row) {
     ecash: ecash,
     referenceId: row.referenceId,
     paymentName: row.paymentName,
+    isReprint: true,
+  );
+}
+
+/// Rebuilds the receipt of a sale paid with two e-payments (E2E) from the copy
+/// saved on this device, so it can be previewed and reprinted even when the
+/// server can't be reached. Mirrors [receiptSaleDataFromSaleRow]; the first
+/// payment is the usual name / reference / `ecash`, the second goes in the
+/// `second...` fields.
+ReceiptSaleData receiptSaleDataFromSplitPaymentRow(SplitPaymentTableData row) {
+  final total = row.total;
+
+  String? discountLabel;
+  double discountAmount = 0;
+  final lineItems = <ReceiptLineItem>[];
+
+  for (final raw in _decodeItemsJson(row.items)) {
+    final name = raw['name'] as String? ?? '';
+    final price = (raw['price'] as num?)?.toDouble() ?? 0;
+
+    if (name.startsWith(_discountLineNamePrefix) && price < 0) {
+      discountLabel = name;
+      discountAmount = -price;
+      continue;
+    }
+
+    lineItems.add(
+      ReceiptLineItem(
+        name: name,
+        quantity: (raw['quantity'] as num?)?.toInt() ?? 1,
+        price: price,
+      ),
+    );
+  }
+
+  return ReceiptSaleData(
+    detailId: row.detailId,
+    posId: row.posId,
+    shift: row.shift,
+    cashier: row.staff,
+    branchId: row.branchId,
+    // The moment it was rung up, as sent to the server.
+    dateTime: DateTime.tryParse(row.date) ?? row.createdAt,
+    items: lineItems,
+    subtotal: total + discountAmount,
+    discountLabel: discountLabel,
+    discountAmount: discountAmount,
+    total: total,
+    paymentType: row.paymentType,
+    cash: 0,
+    ecash: row.firstPayment,
+    referenceId: row.firstPaymentReference,
+    paymentName: row.firstPaymentType,
+    secondPaymentName: row.secondPaymentType,
+    secondReferenceId: row.secondPaymentReference,
+    secondAmount: row.secondPayment,
     isReprint: true,
   );
 }

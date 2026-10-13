@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/core/database/providers/sales_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/providers/split_payment_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/app_database.dart'
-    show SalesTableData, ReceiptHistoryTableData;
+    show SalesTableData, SplitPaymentTableData, ReceiptHistoryTableData;
 import 'package:gpos_provantis/src/core/database/domain/receipt_history_mapper.dart';
 
+import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/receipt_reprint_controller.dart'
+    show receiptSaleDataFromSplitPaymentRow;
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/receipts_controller.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/receipt_preview_sheet.dart';
 
@@ -81,6 +84,17 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
       return;
     }
 
+    // A sale paid with two e-payments, saved on this device. Rebuilt from the
+    // local copy, so it opens with no connection too.
+    final split = item.splitPayment;
+    if (split != null) {
+      ReceiptPreviewSheet.show(
+        context,
+        saleData: receiptSaleDataFromSplitPaymentRow(split),
+      );
+      return;
+    }
+
     final history = item.history;
     if (history == null) return;
 
@@ -108,6 +122,7 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
     final colors = context.colors;
     final state = ref.watch(receiptsControllerProvider);
     final salesAsync = ref.watch(salesProvider);
+    final splitAsync = ref.watch(splitPaymentsProvider);
 
     // Diagnostic (safe to delete): prints when the local sales list changes, so
     // you can see whether this device's sales are reaching the screen.
@@ -120,6 +135,7 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
     final items = _mergeReceipts(
       history: state.receipts,
       sales: salesAsync.value ?? const <SalesTableData>[],
+      splitPayments: splitAsync.value ?? const <SplitPaymentTableData>[],
       from: state.dateFrom,
       to: state.dateTo,
     );
@@ -212,6 +228,7 @@ class _ReceiptItem {
     required this.total,
     this.status,
     this.sale,
+    this.splitPayment,
     this.history,
   });
 
@@ -228,24 +245,34 @@ class _ReceiptItem {
   /// The sale as saved on this device, if any. Preferred for preview/print.
   final SalesTableData? sale;
 
+  /// A sale paid with two e-payments, as saved on this device, if any. These
+  /// live in their own table, not in the ordinary sales.
+  final SplitPaymentTableData? splitPayment;
+
   /// The copy pulled from the server, if any.
   final ReceiptHistoryTableData? history;
 
   /// A sale saved on this device that the server doesn't have yet (made
   /// offline, or not uploaded yet).
-  bool get isNotSynced =>
-      sale != null && history == null && sale!.isSync != '1';
+  bool get isNotSynced {
+    if (history != null) return false;
+    final local = sale;
+    if (local != null) return local.isSync != '1';
+    final split = splitPayment;
+    return split != null && split.syncStatus != 'SYNCED';
+  }
 }
 
 /// Server receipts plus this device's own sales in the range, one row per OR.
 ///
-/// The device's sales are included so a sale that hasn't reached the server yet
-/// (e.g. made offline) can still be found and reprinted. When a receipt is in
-/// both, the local row is used for preview/print and the server's status
-/// (REFUNDED etc.) is shown.
+/// The device's sales (ordinary ones and those paid with two e-payments) are
+/// included so a sale that hasn't reached the server yet (e.g. made offline)
+/// can still be found and reprinted. When a receipt is in both, the local row
+/// is used for preview/print and the server's status (REFUNDED etc.) is shown.
 List<_ReceiptItem> _mergeReceipts({
   required List<ReceiptHistoryTableData> history,
   required List<SalesTableData> sales,
+  required List<SplitPaymentTableData> splitPayments,
   required DateTime from,
   required DateTime to,
 }) {
@@ -284,6 +311,23 @@ List<_ReceiptItem> _mergeReceipts({
       total: double.tryParse(s.total.toString()) ?? 0,
       status: existing?.status,
       sale: s,
+      history: existing?.history,
+    );
+  }
+
+  for (final p in splitPayments) {
+    final when = DateTime.tryParse(p.date) ?? p.createdAt;
+    if (!inRange(when)) continue;
+    final existing = byId[p.detailId];
+    byId[p.detailId] = _ReceiptItem(
+      detailId: p.detailId,
+      dateTime: when,
+      paymentType: p.paymentType,
+      cashier: p.staff,
+      total: p.total,
+      status: existing?.status,
+      sale: existing?.sale,
+      splitPayment: p,
       history: existing?.history,
     );
   }

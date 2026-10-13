@@ -41,14 +41,13 @@ class TopBar extends ConsumerWidget {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _StatusItem(label: 'Branch', value: branchName),
-                  _StatusDivider(),
+                  _BranchBlock(name: branchName),
+                  const _InfoDivider(),
                   const _ClockStatusItem(),
-                  _StatusDivider(),
-
-                  _StatusItem(label: 'Shift', value: shiftID),
-                  _StatusDivider(),
-                  _StatusItem(label: 'OR number', value: detailID),
+                  const _InfoDivider(),
+                  _InfoItem(label: 'Shift', value: shiftID),
+                  const _InfoDivider(),
+                  _InfoItem(label: 'OR number', value: detailID),
                 ],
               ),
             ),
@@ -113,58 +112,101 @@ String _watchShiftID(WidgetRef ref) {
   );
 }
 
-class _StatusDivider extends StatelessWidget {
-  const _StatusDivider();
+// ─────────────────────────────────────────────────────────────────────────────
+// Status area
+// ─────────────────────────────────────────────────────────────────────────────
 
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Container(
-      width: 1,
-      height: 28,
-      margin: const EdgeInsets.symmetric(horizontal: 18),
-      color: colors.borderSubtle,
-    );
-  }
-}
+/// The branch name is the hero of the bar, set in the display face.
+class _BranchBlock extends StatelessWidget {
+  const _BranchBlock({required this.name});
 
-class _StatusItem extends StatelessWidget {
-  const _StatusItem({
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
-
-  final String label;
-  final String value;
-  final Color? valueColor;
+  final String name;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          label,
+          'BRANCH',
           style: AppTypography.ui(
-            color: colors.textDisabled,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+            color: colors.textSecondary,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.0,
           ),
         ),
         const SizedBox(height: 2),
         Text(
-          value,
-          style: AppTypography.ui(
-            color: valueColor ?? colors.textPrimary,
-            fontSize: 16,
+          name,
+          maxLines: 1,
+          style: AppTypography.display(
+            color: colors.textPrimary,
+            fontSize: 24,
             fontWeight: FontWeight.w600,
+            letterSpacing: -0.3,
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Read-only info: a tiny caps label over a value. Deliberately has no fill,
+/// border or rounded box, so it can't be mistaken for something tappable.
+class _InfoItem extends StatelessWidget {
+  const _InfoItem({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: AppTypography.ui(
+            color: colors.textSecondary,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.0,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          style: AppTypography.ui(
+            color: colors.textPrimary,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+        ),
+      ],
+    );
+  }
+}
+
+/// Thin vertical rule between the info items.
+class _InfoDivider extends StatelessWidget {
+  const _InfoDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Container(
+      width: 1,
+      height: 36,
+      margin: const EdgeInsets.symmetric(horizontal: 22),
+      color: colors.border.withValues(alpha: 0.7),
     );
   }
 }
@@ -178,6 +220,7 @@ class _ClockStatusItem extends StatefulWidget {
 
 class _ClockStatusItemState extends State<_ClockStatusItem> {
   late DateTime _now;
+  Timer? _alignTimer;
   Timer? _timer;
 
   @override
@@ -186,9 +229,10 @@ class _ClockStatusItemState extends State<_ClockStatusItem> {
     _now = DateTime.now();
 
     final msToNextMinute =
-        Duration(minutes: 1) -
+        const Duration(minutes: 1) -
         Duration(seconds: _now.second, milliseconds: _now.millisecond);
-    Timer(msToNextMinute, _tick);
+    // Kept in a field (it used to be fire-and-forget) so dispose can cancel it.
+    _alignTimer = Timer(msToNextMinute, _tick);
   }
 
   void _tick() {
@@ -202,6 +246,7 @@ class _ClockStatusItemState extends State<_ClockStatusItem> {
 
   @override
   void dispose() {
+    _alignTimer?.cancel();
     _timer?.cancel();
     super.dispose();
   }
@@ -216,9 +261,13 @@ class _ClockStatusItemState extends State<_ClockStatusItem> {
 
   @override
   Widget build(BuildContext context) {
-    return _StatusItem(label: 'Time', value: _formatted);
+    return _InfoItem(label: 'Time', value: _formatted);
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Profile menu
+// ─────────────────────────────────────────────────────────────────────────────
 
 enum _ProfileMenuAction { settings, refreshHealth, logout }
 
@@ -403,7 +452,16 @@ class _ProfileMenuOverlay extends ConsumerWidget {
               );
 
               final radius = _lerp(_topBarTapTarget / 2, 20, clampedT);
-              final borderWidth = _lerp(3.5, 0, clampedT);
+
+              // The health ring melts into a hairline border as the panel
+              // opens, so the open menu still reads as a card on dark mode
+              // (where a shadow would be invisible).
+              final borderWidth = _lerp(3.5, 1, clampedT);
+              final ringColor = Color.lerp(
+                borderColor,
+                colors.border,
+                clampedT,
+              )!;
 
               return Container(
                 width: width,
@@ -416,9 +474,18 @@ class _ProfileMenuOverlay extends ConsumerWidget {
                     clampedT,
                   ),
                   borderRadius: BorderRadius.circular(radius),
-                  border: borderWidth > 0.01
-                      ? Border.all(color: borderColor, width: borderWidth)
-                      : null,
+                  border: Border.all(color: ringColor, width: borderWidth),
+                  boxShadow: colors.isDark
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: colors.shadow.withValues(
+                              alpha: colors.shadow.a * 0.6 * clampedT,
+                            ),
+                            blurRadius: 20 * clampedT,
+                            offset: Offset(0, 6 * clampedT),
+                          ),
+                        ],
                 ),
                 child: child,
               );
@@ -602,15 +669,23 @@ _LogoFormat _sniffLogoFormat(Uint8List bytes) {
   return _LogoFormat.raster;
 }
 
+/// Shown when the branch has no (or an unreadable) logo. It used to be a
+/// white icon on a pale grey circle, which vanished in light mode.
 class _BranchLogoFallback extends StatelessWidget {
   const _BranchLogoFallback();
 
   @override
   Widget build(BuildContext context) {
-    return const Icon(
-      Icons.person_rounded,
-      size: 34,
-      color: AppPalette.neutral0,
+    final colors = context.colors;
+
+    return Container(
+      color: colors.primaryContainer,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.storefront_rounded,
+        size: 34,
+        color: colors.onPrimaryContainer,
+      ),
     );
   }
 }
@@ -634,8 +709,9 @@ class _ProfileMenuRow extends StatelessWidget {
     final color = destructive ? colors.danger : colors.textPrimary;
 
     final iconBackdrop = destructive
-        ? colors.danger.withOpacity(0.12)
-        : colors.textPrimary.withOpacity(0.06);
+        ? colors.danger.withValues(alpha: 0.12)
+        : colors.primary.withValues(alpha: 0.12);
+    final iconColor = destructive ? colors.danger : colors.primary;
 
     return Material(
       color: Colors.transparent,
@@ -650,11 +726,11 @@ class _ProfileMenuRow extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(10),
                   color: iconBackdrop,
                 ),
                 alignment: Alignment.center,
-                child: Icon(icon, size: 20, color: color),
+                child: Icon(icon, size: 20, color: iconColor),
               ),
               const SizedBox(width: 12),
               Text(
