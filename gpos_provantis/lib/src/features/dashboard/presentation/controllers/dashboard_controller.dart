@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter_riverpod/flutter_riverpod.dart' show Provider;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:gpos_provantis/src/core/database/app_database.dart';
@@ -136,6 +137,22 @@ class CatalogSection {
   final List<Product> products;
 }
 // ── end Sectioned catalog ───────────────────────────────────────────────────
+
+/// Changes whenever any table the catalog is built from changes (categories,
+/// products, services, service packages, add-ons).
+///
+/// Catalog widgets watch THIS instead of the whole dashboard state, so they
+/// rebuild when the catalog data really changes, and NOT on every cart tap or
+/// when the sheet opens or closes.
+final catalogSourcesProvider = Provider<Object>((ref) {
+  return (
+    ref.watch(categoriesProvider),
+    ref.watch(productPriceProvider),
+    ref.watch(servicesProvider),
+    ref.watch(servicePackagesProvider),
+    ref.watch(addonsProvider),
+  );
+});
 
 class CartLine {
   const CartLine({required this.product, required this.quantity});
@@ -931,23 +948,55 @@ class DashboardController extends _$DashboardController {
     loading: () => CatalogLoadStatus.loading,
   );
 
+  // Remembers the last result of [catalogSections], and what it was built
+  // from. Grouping hundreds of products is real work on a weak device, so it
+  // is only redone when one of these inputs actually changes.
+  List<CatalogSection>? _sectionsCache;
+  Object? _sectionsSrcProducts;
+  Object? _sectionsSrcServices;
+  Object? _sectionsSrcPackages;
+  Object? _sectionsSrcAddons;
+  String? _sectionsSrcQuery;
+  String? _sectionsSrcCategories;
+
   /// Every product, grouped under its category, for the catalog sheet's
   /// single scrolling grid.
   ///
   /// [visibleCategories] decides which categories get a section and in what
   /// order (pass the same list the category strip shows). The search query is
   /// applied across ALL categories, and categories with no matching products
-  /// are left out. Products are grouped in ONE pass over the product table,
-  /// so this stays cheap on big catalogs.
+  /// are left out.
+  ///
+  /// The result is cached: calling this again with the same data, search and
+  /// categories (opening the sheet, adding to the cart...) returns the
+  /// previous list instantly. Products are grouped in ONE pass over the
+  /// product table when it does need rebuilding.
   ///
   /// [productsForCatalogSheet] is untouched and still works as before.
   List<CatalogSection> catalogSections(List<Category> visibleCategories) {
     final query = state.catalogSearchQuery.trim().toLowerCase();
+    final productRows = _watchProducts();
+    final serviceRows = _watchServices();
+    final packageRows = _watchServicePackages();
+    final addonRows = _watchAddons();
+    final categoriesKey = visibleCategories.map((c) => c.id).join(',');
+
+    final cached = _sectionsCache;
+    if (cached != null &&
+        identical(productRows, _sectionsSrcProducts) &&
+        identical(serviceRows, _sectionsSrcServices) &&
+        identical(packageRows, _sectionsSrcPackages) &&
+        identical(addonRows, _sectionsSrcAddons) &&
+        query == _sectionsSrcQuery &&
+        categoriesKey == _sectionsSrcCategories) {
+      return cached;
+    }
+
     bool matches(String name) =>
         query.isEmpty || name.toLowerCase().contains(query);
 
     final byCategory = <String, List<Product>>{};
-    for (final row in _watchProducts()) {
+    for (final row in productRows) {
       if (row.description.trim().isEmpty || !matches(row.description)) continue;
       final categoryId = row.category.toString();
       (byCategory[categoryId] ??= <Product>[]).add(
@@ -962,7 +1011,7 @@ class DashboardController extends _$DashboardController {
     }
 
     List<Product> services() => [
-      for (final row in _watchServices())
+      for (final row in serviceRows)
         if (row.name.trim().isNotEmpty && matches(row.name))
           Product(
             id: '$_serviceIdPrefix${row.id}',
@@ -975,7 +1024,7 @@ class DashboardController extends _$DashboardController {
     ];
 
     List<Product> servicePackages() => [
-      for (final row in _watchServicePackages())
+      for (final row in packageRows)
         if (row.name.trim().isNotEmpty && matches(row.name))
           Product(
             id: '$_servicePackageIdPrefix${row.id}',
@@ -988,7 +1037,7 @@ class DashboardController extends _$DashboardController {
     ];
 
     List<Product> addons() => [
-      for (final row in _watchAddons())
+      for (final row in addonRows)
         if (row.name.trim().isNotEmpty && matches(row.name))
           Product(
             id: '$_addonIdPrefix${row.id}',
@@ -1011,6 +1060,14 @@ class DashboardController extends _$DashboardController {
       if (products.isEmpty) continue;
       sections.add(CatalogSection(category: category, products: products));
     }
+
+    _sectionsCache = sections;
+    _sectionsSrcProducts = productRows;
+    _sectionsSrcServices = serviceRows;
+    _sectionsSrcPackages = packageRows;
+    _sectionsSrcAddons = addonRows;
+    _sectionsSrcQuery = query;
+    _sectionsSrcCategories = categoriesKey;
     return sections;
   }
   // ── end Sectioned catalog ─────────────────────────────────────────────────
