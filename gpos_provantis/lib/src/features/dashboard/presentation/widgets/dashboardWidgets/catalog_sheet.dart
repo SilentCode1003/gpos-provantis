@@ -5,6 +5,7 @@ import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'category_visibility.dart';
 import 'dashboard_constants.dart';
+import 'money_format.dart';
 import 'product_grid.dart';
 
 class CatalogSheet extends ConsumerStatefulWidget {
@@ -340,6 +341,12 @@ class _CatalogSheetFooter extends ConsumerWidget {
 // Header + search
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Built once; AppTypography goes through google_fonts on every call.
+final TextStyle _summaryStyle = AppTypography.ui(
+  fontSize: 13,
+  fontWeight: FontWeight.w500,
+).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
+
 class _CatalogSheetHeader extends ConsumerWidget {
   const _CatalogSheetHeader();
 
@@ -347,6 +354,8 @@ class _CatalogSheetHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final controller = ref.watch(dashboardControllerProvider.notifier);
+    // Refresh if categories / products change (e.g. after a sync).
+    ref.watch(catalogSourcesProvider);
     final openedCategoryId = ref.watch(
       dashboardControllerProvider.select((s) => s.catalogSheetCategoryId),
     );
@@ -360,6 +369,34 @@ class _CatalogSheetHeader extends ConsumerWidget {
         )
         .name;
 
+    // Totals for the indicator under the title. catalogSections is cached, so
+    // this is the list the grid already built, not a second pass over every
+    // product.
+    final hidden = ref.watch(hiddenCategoryCodesProvider);
+    final query = ref
+        .watch(dashboardControllerProvider.select((s) => s.catalogSearchQuery))
+        .trim();
+    final sections = controller.catalogSections(
+      filterVisibleCategories(controller.categories, hidden),
+    );
+    final totalItems = sections.fold<int>(
+      0,
+      (sum, section) => sum + section.products.length,
+    );
+
+    String? summary;
+    if (totalItems > 0) {
+      final noun = query.isEmpty
+          ? (totalItems == 1 ? 'item' : 'items')
+          : (totalItems == 1 ? 'result' : 'results');
+      final categoryCount = sections.length;
+      summary =
+          '${formatCount(totalItems)} $noun \u00b7 '
+          '$categoryCount ${categoryCount == 1 ? 'category' : 'categories'}';
+    } else if (query.isNotEmpty) {
+      summary = 'No results';
+    }
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 8, 14),
       decoration: BoxDecoration(
@@ -372,16 +409,36 @@ class _CatalogSheetHeader extends ConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  categoryName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.display(
-                    color: colors.textPrimary,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.3,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      categoryName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.display(
+                        color: colors.textPrimary,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    // Total items in the whole grid (or matches, while
+                    // searching), across every category.
+                    if (summary != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          summary,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: _summaryStyle.copyWith(
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
               Material(
@@ -547,6 +604,8 @@ class _CompactCategoryStripState extends ConsumerState<_CompactCategoryStrip> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final controller = ref.watch(dashboardControllerProvider.notifier);
+    // Refresh if categories / products change (e.g. after a sync).
+    ref.watch(catalogSourcesProvider);
     final openedCategoryId = ref.watch(
       dashboardControllerProvider.select((s) => s.catalogSheetCategoryId),
     );
@@ -571,49 +630,55 @@ class _CompactCategoryStripState extends ConsumerState<_CompactCategoryStrip> {
       child: Transform.translate(
         // Overlaps the header's 1px bottom border so the two read as one piece.
         offset: const Offset(0, -1),
-        child: CustomPaint(
-          painter: _NotchPainter(
-            fill: colors.surface,
-            stroke: colors.borderSubtle,
-            // Lifts the notch above the products scrolling behind it. A touch
-            // stronger in dark mode, where shadows are harder to see.
-            shadow: Colors.black.withValues(alpha: colors.isDark ? 0.32 : 0.14),
-            flareRadius: _notchFlareRadius,
-            cornerRadius: _notchCornerRadius,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              _notchFlareRadius + 12,
-              7,
-              _notchFlareRadius + 12,
-              12,
+        // Its own paint layer: the blurred shadow isn't re-drawn while the grid
+        // scrolls underneath.
+        child: RepaintBoundary(
+          child: CustomPaint(
+            painter: _NotchPainter(
+              fill: colors.surface,
+              stroke: colors.borderSubtle,
+              // Lifts the notch above the products scrolling behind it. A touch
+              // stronger in dark mode, where shadows are harder to see.
+              shadow: Colors.black.withValues(
+                alpha: colors.isDark ? 0.32 : 0.14,
+              ),
+              flareRadius: _notchFlareRadius,
+              cornerRadius: _notchCornerRadius,
             ),
-            // Rounds off the scrolling area too, so chips slide under curved
-            // ends instead of being cut by a straight edge.
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: SizedBox(
-                height: 40,
-                // A plain scroll view (not a lazy list) so every chip exists
-                // and can be scrolled into view. There are only a handful.
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: Row(
-                    children: [
-                      for (var i = 0; i < categories.length; i++) ...[
-                        if (i > 0) const SizedBox(width: 8),
-                        _CompactCategoryChip(
-                          key: _keyFor(categories[i].id),
-                          category: categories[i],
-                          isSelected: categories[i].id == activeCategoryId,
-                          // Asks the grid to glide to this category's section.
-                          onTap: () => ref
-                              .read(catalogScrollRequestProvider.notifier)
-                              .request(categories[i].id),
-                        ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                _notchFlareRadius + 12,
+                7,
+                _notchFlareRadius + 12,
+                12,
+              ),
+              // Rounds off the scrolling area too, so chips slide under curved
+              // ends instead of being cut by a straight edge.
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: SizedBox(
+                  height: 40,
+                  // A plain scroll view (not a lazy list) so every chip exists
+                  // and can be scrolled into view. There are only a handful.
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: [
+                        for (var i = 0; i < categories.length; i++) ...[
+                          if (i > 0) const SizedBox(width: 8),
+                          _CompactCategoryChip(
+                            key: _keyFor(categories[i].id),
+                            category: categories[i],
+                            isSelected: categories[i].id == activeCategoryId,
+                            // Asks the grid to glide to this category's section.
+                            onTap: () => ref
+                                .read(catalogScrollRequestProvider.notifier)
+                                .request(categories[i].id),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),

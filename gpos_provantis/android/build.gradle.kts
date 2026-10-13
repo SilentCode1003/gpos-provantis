@@ -19,6 +19,16 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
+subprojects {
+    // universal_ble >= 2.0.2 assumes AGP's built-in Kotlin and uses a
+    // `kotlin { }` block without applying a Kotlin plugin. Apply it for them.
+    plugins.withId("com.android.library") {
+        if (!plugins.hasPlugin("org.jetbrains.kotlin.android")) {
+            project.apply(plugin = "org.jetbrains.kotlin.android")
+        }
+    }
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }

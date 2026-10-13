@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'category_visibility.dart';
 import 'dashboard_constants.dart';
+import 'money_format.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared state between the grid and the category strip
@@ -75,6 +77,16 @@ const double _sectionBottomPadding = 20;
 /// of the top edge.
 const double _spyLead = 48;
 
+/// How long the lightweight placeholder cards stay up after the sheet starts
+/// opening: the slide-in animation plus a small margin, so the real cards are
+/// built once the sheet has stopped moving (a heavy frame during the slide is
+/// what shows up as a stutter on a weak device).
+final Duration _skeletonHold =
+    catalogSheetOpenDuration + const Duration(milliseconds: 60);
+
+/// Off-screen build buffer once everything has settled.
+const double _warmCacheExtent = 400;
+
 /// Height of the category "notch" that floats over the top of the grid
 /// (see catalog_sheet.dart). The grid leaves this much empty room at its top
 /// so nothing starts hidden under the notch, then scrolls beneath it.
@@ -82,14 +94,46 @@ const double _spyLead = 48;
 /// 12 (bottom padding) = 59.
 const double catalogNotchHeight = 59;
 
+// Text styles are built ONCE here. AppTypography goes through google_fonts,
+// which does real work on every call, and doing that several times per card on
+// every build adds up on a weak device. Cards just recolor these with
+// copyWith.
+//
+// Weights: the name is medium and the price semibold. With hundreds of
+// products on screen, two heavy weights side by side are tiring to read, and
+// the price is the one thing the cashier must catch at a glance.
+final TextStyle _productNameStyle = AppTypography.ui(
+  fontSize: 16,
+  fontWeight: FontWeight.w500,
+  height: 1.3,
+);
+final TextStyle _priceStyle = AppTypography.ui(
+  fontSize: 18,
+  fontWeight: FontWeight.w600,
+).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
+final TextStyle _badgeCountStyle = AppTypography.ui(
+  fontSize: 14,
+  fontWeight: FontWeight.w600,
+).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
+final TextStyle _outOfStockStyle = AppTypography.ui(
+  fontSize: 12,
+  fontWeight: FontWeight.w600,
+);
+
 class ProductGrid extends ConsumerWidget {
   const ProductGrid({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.watch(dashboardControllerProvider.notifier);
+    final controller = ref.read(dashboardControllerProvider.notifier);
 
-    final state = ref.watch(dashboardControllerProvider);
+    // Rebuild ONLY when the catalog's data or the search text changes. It
+    // used to watch the whole dashboard state, so every cart tap, and the
+    // moment the sheet opened, re-grouped every product. That was the lag.
+    ref.watch(catalogSourcesProvider);
+    final query = ref
+        .watch(dashboardControllerProvider.select((s) => s.catalogSearchQuery))
+        .trim();
     final hidden = ref.watch(hiddenCategoryCodesProvider);
 
     final status = controller.catalogProductsStatus;
@@ -111,7 +155,7 @@ class ProductGrid extends ConsumerWidget {
     final sections = controller.catalogSections(visibleCategories);
 
     if (sections.isEmpty) {
-      final hasQuery = state.catalogSearchQuery.trim().isNotEmpty;
+      final hasQuery = query.isNotEmpty;
       return _StateMessage(
         icon: hasQuery ? Icons.search_off_rounded : PhosphorIcons.shapes,
         message: hasQuery
@@ -120,10 +164,7 @@ class ProductGrid extends ConsumerWidget {
       );
     }
 
-    return _SectionedGrid(
-      sections: sections,
-      query: state.catalogSearchQuery.trim(),
-    );
+    return _SectionedGrid(sections: sections, query: query);
   }
 }
 
@@ -150,6 +191,14 @@ class _SectionedGridState extends ConsumerState<_SectionedGrid> {
   /// doesn't flicker the highlighted chip through every section in between.
   bool _isAnimating = false;
   int _scrollToken = 0;
+
+  // Staged reveal ("buffering") after the sheet is opened:
+  //  1. light placeholder cards while the sheet slides in,
+  //  2. real cards, ONLY the ones on screen,
+  //  3. a frame later, the extra off-screen cards too.
+  bool _showSkeleton = false;
+  bool _warm = true;
+  Timer? _revealTimer;
 
   @override
   void initState() {
@@ -184,9 +233,29 @@ class _SectionedGridState extends ConsumerState<_SectionedGrid> {
 
   @override
   void dispose() {
+    _revealTimer?.cancel();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _beginStagedReveal() {
+    _revealTimer?.cancel();
+    setState(() {
+      _showSkeleton = true;
+      _warm = false;
+    });
+
+    _revealTimer = Timer(_skeletonHold, () {
+      if (!mounted) return;
+      // Real cards, but only those on screen (cache extent is 0 for now).
+      setState(() => _showSkeleton = false);
+      // Next frame: build the extra off-screen cards, spreading the work out
+      // instead of doing it all in one frame.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _warm = true);
+      });
+    });
   }
 
   void _onScroll() {
@@ -241,6 +310,10 @@ class _SectionedGridState extends ConsumerState<_SectionedGrid> {
 
   @override
   Widget build(BuildContext context) {
+    // Read once here and handed to every card as a plain callback, so cards
+    // don't each need their own provider connection.
+    final notifier = ref.read(dashboardControllerProvider.notifier);
+
     // A category chip was tapped: glide to its section.
     ref.listen<CatalogScrollRequest?>(catalogScrollRequestProvider, (
       previous,
@@ -255,72 +328,83 @@ class _SectionedGridState extends ConsumerState<_SectionedGrid> {
       dashboardControllerProvider.select((s) => s.catalogSheetCategoryId),
       (previous, next) {
         if (previous == null && next != null) {
+          _beginStagedReveal();
           _scrollToSection(next, animate: false);
         }
       },
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final layout = _GridLayout.compute(
-          width: constraints.maxWidth,
-          height: constraints.maxHeight,
-          sections: widget.sections,
-        );
-        _layout = layout;
+    return _CartQuantitiesScope(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final layout = _GridLayout.compute(
+            width: constraints.maxWidth,
+            height: constraints.maxHeight,
+            sections: widget.sections,
+          );
+          _layout = layout;
 
-        return CustomScrollView(
-          controller: _scrollController,
-          // Momentum scrolling that glides to a stop and gives a soft bounce
-          // at the very top / bottom, instead of halting dead.
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
-          // Builds a bit beyond the screen so cards are already there when a
-          // fast fling arrives.
-          cacheExtent: 900,
-          slivers: [
-            // Room for the notch that floats over the top of the grid.
-            const SliverToBoxAdapter(
-              child: SizedBox(height: catalogNotchHeight),
+          return CustomScrollView(
+            controller: _scrollController,
+            // Momentum scrolling that glides to a stop and gives a soft bounce
+            // at the very top / bottom, instead of halting dead.
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
             ),
-            for (final section in widget.sections) ...[
-              SliverToBoxAdapter(
-                child: _SectionHeader(
-                  title: section.category.name,
-                  count: section.products.length,
-                ),
+            // Builds a bit beyond the screen so cards are already there when a
+            // fast fling arrives.
+            cacheExtent: _warm ? _warmCacheExtent : 0,
+            slivers: [
+              // Room for the notch that floats over the top of the grid.
+              const SliverToBoxAdapter(
+                child: SizedBox(height: catalogNotchHeight),
               ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  _gridHorizontalPadding,
-                  _gridTopPadding,
-                  _gridHorizontalPadding,
-                  _sectionBottomPadding,
-                ),
-                sliver: SliverGrid(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: layout.columns,
-                    mainAxisSpacing: _gridGap,
-                    crossAxisSpacing: _gridGap,
-                    childAspectRatio: _tileAspectRatio,
+              for (final section in widget.sections) ...[
+                SliverToBoxAdapter(
+                  child: _SectionHeader(
+                    title: section.category.name,
+                    count: section.products.length,
                   ),
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final product = section.products[index];
-                    return _ProductCard(
-                      key: ValueKey(product.id),
-                      product: product,
-                    );
-                  }, childCount: section.products.length),
                 ),
-              ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    _gridHorizontalPadding,
+                    _gridTopPadding,
+                    _gridHorizontalPadding,
+                    _sectionBottomPadding,
+                  ),
+                  sliver: SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: layout.columns,
+                      mainAxisSpacing: _gridGap,
+                      crossAxisSpacing: _gridGap,
+                      childAspectRatio: _tileAspectRatio,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        if (_showSkeleton) return const _SkeletonCard();
+                        final product = section.products[index];
+                        return _ProductCard(
+                          key: ValueKey(product.id),
+                          product: product,
+                          onTap: () => notifier.addToCart(product),
+                        );
+                      },
+                      childCount: section.products.length,
+                      // Cards don't need to stay alive off-screen; skipping the
+                      // keep-alive wrappers is less work per card.
+                      addAutomaticKeepAlives: false,
+                    ),
+                  ),
+                ),
+              ],
+              // Lets even the last (short) section scroll all the way up to the
+              // top, so tapping its chip lands exactly on it.
+              SliverToBoxAdapter(child: SizedBox(height: layout.tail)),
             ],
-            // Lets even the last (short) section scroll all the way up to the
-            // top, so tapping its chip lands exactly on it.
-            SliverToBoxAdapter(child: SizedBox(height: layout.tail)),
-          ],
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
@@ -453,7 +537,7 @@ class _SectionHeader extends StatelessWidget {
                       AppTypography.ui(
                         color: colors.textSecondary,
                         fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                       ).copyWith(
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
@@ -528,100 +612,197 @@ class _StateMessage extends StatelessWidget {
   }
 }
 
-class _ProductCard extends ConsumerWidget {
-  const _ProductCard({super.key, required this.product});
+/// Cheap stand-in for a product card, shown while the sheet slides in. Just a
+/// few plain boxes: no ripple, no text layout, no provider watching.
+class _SkeletonCard extends StatelessWidget {
+  const _SkeletonCard();
 
-  final Product product;
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    Widget bar(double widthFactor, double height) => FractionallySizedBox(
+      widthFactor: widthFactor,
+      alignment: Alignment.centerLeft,
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: colors.surfaceVariant,
+          borderRadius: BorderRadius.circular(6),
+        ),
+      ),
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.surfaceRaised,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.border.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          bar(0.8, 14),
+          const SizedBox(height: 8),
+          bar(0.5, 14),
+          const Spacer(),
+          bar(0.4, 18),
+        ],
+      ),
+    );
+  }
+}
+
+/// How many of each product are in the cart, shared with every card through
+/// ONE inherited widget. A card asks for just its own product, so when the
+/// cart changes only the cards whose count changed rebuild, and no card needs
+/// its own Riverpod subscription (that was a real cost per card on a weak
+/// device, paid every time a card scrolled into view).
+class _CartQuantities extends InheritedModel<String> {
+  const _CartQuantities({required this.quantities, required super.child});
+
+  final Map<String, int> quantities;
+
+  static int of(BuildContext context, String productId) {
+    final model = InheritedModel.inheritFrom<_CartQuantities>(
+      context,
+      aspect: productId,
+    );
+    return model?.quantities[productId] ?? 0;
+  }
+
+  @override
+  bool updateShouldNotify(_CartQuantities oldWidget) =>
+      !identical(quantities, oldWidget.quantities);
+
+  @override
+  bool updateShouldNotifyDependent(
+    _CartQuantities oldWidget,
+    Set<String> dependencies,
+  ) {
+    for (final id in dependencies) {
+      if (quantities[id] != oldWidget.quantities[id]) return true;
+    }
+    return false;
+  }
+}
+
+class _CartQuantitiesScope extends ConsumerWidget {
+  const _CartQuantitiesScope({required this.child});
+
+  final Widget child;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
-    final notifier = ref.read(dashboardControllerProvider.notifier);
-
-    // How many of this product are already in the cart. Selecting just this
-    // number means a card only rebuilds when its own count changes.
-    final inCart = ref.watch(
-      dashboardControllerProvider.select((s) {
-        for (final line in s.cartLines) {
-          if (line.product.id == product.id) return line.quantity;
-        }
-        return 0;
-      }),
+    final lines = ref.watch(
+      dashboardControllerProvider.select((s) => s.cartLines),
     );
+    return _CartQuantities(
+      quantities: {for (final line in lines) line.product.id: line.quantity},
+      child: child,
+    );
+  }
+}
 
+/// A product card, kept deliberately light: no Material / ink-ripple layer, no
+/// provider subscription, no animation controller. Pressing tints the card
+/// instantly instead of rippling, which also feels snappier on slow hardware.
+class _ProductCard extends StatefulWidget {
+  const _ProductCard({super.key, required this.product, required this.onTap});
+
+  final Product product;
+  final VoidCallback onTap;
+
+  @override
+  State<_ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends State<_ProductCard> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (_pressed != value) setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final product = widget.product;
+
+    final inCart = _CartQuantities.of(context, product.id);
     final isOutOfStock = !product.isAvailable;
     final isInCart = inCart > 0 && !isOutOfStock;
 
-    final cardFill = isOutOfStock
+    var fill = isOutOfStock
         ? colors.disabledFill
         : isInCart
-        ? colors.primaryContainer.withValues(alpha: 0.35)
+        ? Color.alphaBlend(
+            colors.primaryContainer.withValues(alpha: 0.35),
+            colors.surfaceRaised,
+          )
         : colors.surfaceRaised;
+    if (_pressed && !isOutOfStock) {
+      fill = Color.alphaBlend(colors.primary.withValues(alpha: 0.12), fill);
+    }
+
     final textColor = isOutOfStock ? colors.textDisabled : colors.textPrimary;
 
-    return Material(
-      color: cardFill,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: isOutOfStock
-            ? BorderSide.none
-            : isInCart
-            ? BorderSide(color: colors.primary, width: 1.5)
-            : BorderSide(color: colors.border.withValues(alpha: 0.6)),
-      ),
-      child: InkWell(
-        onTap: isOutOfStock ? null : () => notifier.addToCart(product),
-        borderRadius: BorderRadius.circular(18),
-        splashColor: colors.primary.withValues(alpha: 0.12),
-        highlightColor: colors.primary.withValues(alpha: 0.06),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: primaryTapTarget),
-          padding: const EdgeInsets.fromLTRB(16, 16, 12, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // The name yields space first: it's clipped (never the price)
-              // if the card is too short for everything.
-              Expanded(
-                child: ClipRect(
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: Text(
-                      product.name,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.ui(
-                        color: textColor,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        height: 1.3,
-                      ),
-                    ),
-                  ),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: isOutOfStock ? null : widget.onTap,
+      onTapDown: isOutOfStock ? null : (_) => _setPressed(true),
+      onTapUp: isOutOfStock ? null : (_) => _setPressed(false),
+      onTapCancel: isOutOfStock ? null : () => _setPressed(false),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: primaryTapTarget),
+        padding: const EdgeInsets.fromLTRB(16, 16, 12, 12),
+        decoration: BoxDecoration(
+          color: fill,
+          borderRadius: BorderRadius.circular(18),
+          border: isOutOfStock
+              ? null
+              : Border.all(
+                  color: isInCart
+                      ? colors.primary
+                      : colors.border.withValues(alpha: 0.6),
+                  width: isInCart ? 1.5 : 1,
+                ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // The name yields space first: it's clipped (never the price) if
+            // the card is too short for everything.
+            Expanded(
+              child: ClipRect(
+                child: Text(
+                  product.name,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: _productNameStyle.copyWith(color: textColor),
                 ),
               ),
-              const SizedBox(height: 8),
-              // Out of stock sits ABOVE the price, so the price always gets
-              // the card's full width.
-              if (isOutOfStock) ...[
-                _OutOfStockTag(colors: colors),
-                const SizedBox(height: 6),
-              ],
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: _PriceText(price: product.price, color: textColor),
-                  ),
-                  if (!isOutOfStock) ...[
-                    const SizedBox(width: 8),
-                    _AddBadge(quantity: inCart, colors: colors),
-                  ],
-                ],
-              ),
+            ),
+            const SizedBox(height: 8),
+            // Out of stock sits ABOVE the price, so the price always gets the
+            // card's full width.
+            if (isOutOfStock) ...[
+              _OutOfStockTag(colors: colors),
+              const SizedBox(height: 6),
             ],
-          ),
+            Row(
+              children: [
+                Expanded(
+                  child: _PriceText(price: product.price, color: textColor),
+                ),
+                if (!isOutOfStock) ...[
+                  const SizedBox(width: 8),
+                  _AddBadge(quantity: inCart, colors: colors),
+                ],
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -643,14 +824,10 @@ class _PriceText extends StatelessWidget {
       fit: BoxFit.scaleDown,
       alignment: Alignment.centerLeft,
       child: Text(
-        '\u20b1${price.toStringAsFixed(2)}',
+        formatPeso(price),
         maxLines: 1,
         softWrap: false,
-        style: AppTypography.ui(
-          color: color,
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-        ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+        style: _priceStyle.copyWith(color: color),
       ),
     );
   }
@@ -668,9 +845,7 @@ class _AddBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final inCart = quantity > 0;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOut,
+    return Container(
       constraints: const BoxConstraints(minWidth: 36),
       height: 36,
       padding: EdgeInsets.symmetric(horizontal: inCart ? 10 : 0),
@@ -682,11 +857,7 @@ class _AddBadge extends StatelessWidget {
       child: inCart
           ? Text(
               '\u00d7$quantity',
-              style: AppTypography.ui(
-                color: colors.onPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+              style: _badgeCountStyle.copyWith(color: colors.onPrimary),
             )
           : Icon(
               PhosphorIcons.plus,
@@ -712,11 +883,7 @@ class _OutOfStockTag extends StatelessWidget {
       ),
       child: Text(
         'Out of stock',
-        style: AppTypography.ui(
-          color: colors.textDisabled,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+        style: _outOfStockStyle.copyWith(color: colors.textDisabled),
       ),
     );
   }

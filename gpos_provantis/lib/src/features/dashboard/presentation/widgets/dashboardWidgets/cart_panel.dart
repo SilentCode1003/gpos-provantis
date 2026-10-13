@@ -7,6 +7,7 @@ import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
 import 'dashboard_constants.dart';
+import 'money_format.dart';
 import 'discount_picker_sheet.dart';
 import 'payments_modal.dart';
 import 'customer_panel.dart';
@@ -15,7 +16,7 @@ const Duration _cartScrimAutoFadeDelay = Duration(seconds: 3);
 
 const double _cardRadius = 16;
 
-String _money(double v) => '\u20b1${v.toStringAsFixed(2)}';
+String _money(double v) => formatPeso(v);
 
 /// Digits that don't jiggle when quantities / totals change.
 TextStyle _amountStyle({
@@ -520,7 +521,10 @@ class _EdgeFade extends StatelessWidget {
               gradient: LinearGradient(
                 begin: isTop ? Alignment.topCenter : Alignment.bottomCenter,
                 end: isTop ? Alignment.bottomCenter : Alignment.topCenter,
-                colors: [colors.surface, colors.surface.withValues(alpha: 0)],
+                colors: [
+                  colors.surface,
+                  colors.surface.withValues(alpha: 0),
+                ],
               ),
             ),
           ),
@@ -743,9 +747,7 @@ class _Monogram extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final trimmed = name.trim();
-    final letter = trimmed.isEmpty
-        ? '?'
-        : trimmed.characters.first.toUpperCase();
+    final letter = trimmed.isEmpty ? '?' : trimmed.characters.first.toUpperCase();
 
     return Container(
       width: size,
@@ -1117,10 +1119,7 @@ class _DiscountTile extends StatelessWidget {
               Container(
                 width: 32,
                 height: 32,
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
                 child: Icon(PhosphorIcons.percent, size: 16, color: iconFg),
               ),
               const SizedBox(width: 12),
