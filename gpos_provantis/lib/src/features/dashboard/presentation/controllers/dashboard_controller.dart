@@ -31,6 +31,7 @@ import 'payments_controller.dart';
 import 'package:gpos_provantis/src/services/end_shift_service.dart';
 import 'package:gpos_provantis/src/services/cash_drawer_service.dart';
 import 'package:gpos_provantis/src/services/customer_service.dart';
+import 'package:gpos_provantis/src/services/sales_purchase_order_service.dart';
 import 'package:gpos_provantis/src/services/split_payment_service.dart';
 import 'package:gpos_provantis/src/core/database/domain/split_payment_dto.dart'
     show SplitPaymentLeg;
@@ -103,6 +104,7 @@ class Product {
     required this.price,
     required this.stock,
     this.isService = false,
+    this.sku = '',
   });
 
   final String id;
@@ -114,6 +116,10 @@ class Product {
 
   /// Services have no stock and are always sellable.
   final bool isService;
+
+  /// Shown under the name on the product card. Comes from the product's
+  /// barcode; empty for services, packages and add-ons (they have none).
+  final String sku;
 
   bool get isAvailable => isService || stock > 0;
 }
@@ -767,6 +773,10 @@ class DashboardController extends _$DashboardController {
     // And split-payment sales that were saved while the server was unreachable.
     unawaited(ref.read(splitPaymentServiceProvider).syncPending());
 
+    // And purchase orders. This one holds each back until its sale and its
+    // customer are on the server, so it is safe to call at any time.
+    unawaited(ref.read(salesPurchaseOrderServiceProvider).syncPending());
+
     return DashboardState(
       selectedCategoryId: firstCategoryId,
       cartLines: const [],
@@ -933,6 +943,7 @@ class DashboardController extends _$DashboardController {
             categoryId: row.category.toString(),
             price: _parseMoney(row.price),
             stock: row.quantity,
+            sku: row.barcode.trim(),
           ),
         )
         .toList();
@@ -1006,6 +1017,7 @@ class DashboardController extends _$DashboardController {
           categoryId: categoryId,
           price: _parseMoney(row.price),
           stock: row.quantity,
+          sku: row.barcode.trim(),
         ),
       );
     }
@@ -1545,6 +1557,7 @@ class DashboardController extends _$DashboardController {
       categoryId: match.category.toString(),
       price: _parseMoney(match.price),
       stock: match.quantity,
+      sku: match.barcode.trim(),
     );
 
     if (!product.isAvailable) {
@@ -1610,6 +1623,23 @@ class DashboardController extends _$DashboardController {
             : '[Customer] saved for sale $detailId, will send when the '
                   'server is reachable (${result.error ?? 'not sent yet'})',
       );
+
+      // The purchase order typed with the customer, if any. It is recorded
+      // only now, after the customer. The service then sends it only once the
+      // sale AND the customer are both on the server, never before.
+      try {
+        await ref
+            .read(salesPurchaseOrderServiceProvider)
+            .recordForSale(
+              salesId: detailId,
+              purchaseOrderId: result.record.purchaseOrder,
+            );
+      } catch (e, st) {
+        debugPrint(
+          '[PurchaseOrder] could not record the purchase order for sale '
+          '$detailId: $e\n$st',
+        );
+      }
     } catch (e, st) {
       debugPrint(
         '[Customer] could not record the customer for sale $detailId: '
