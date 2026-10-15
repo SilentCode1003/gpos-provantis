@@ -47,6 +47,7 @@ import 'tables/customer_table.dart';
 import 'tables/split_payment_table.dart';
 import 'tables/login_credentials_table.dart';
 import 'tables/email_table.dart';
+import 'tables/sales_purchase_order_table.dart';
 
 import 'daos/domain_config_dao.dart';
 import 'daos/branch_config_dao.dart';
@@ -92,6 +93,7 @@ part 'app_database.g.dart';
     SplitPaymentTable,
     LoginCredentialsTable,
     EmailTable,
+    SalesPurchaseOrderTable,
   ],
   daos: [DomainConfigDao, BranchConfigDao, PosConfigDao],
 )

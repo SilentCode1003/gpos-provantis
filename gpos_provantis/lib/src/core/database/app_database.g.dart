@@ -19754,6 +19754,539 @@ class EmailTableCompanion extends UpdateCompanion<EmailTableData> {
   }
 }
 
+class $SalesPurchaseOrderTableTable extends SalesPurchaseOrderTable
+    with TableInfo<$SalesPurchaseOrderTableTable, SalesPurchaseOrderTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SalesPurchaseOrderTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
+  static const VerificationMeta _salesIdMeta = const VerificationMeta(
+    'salesId',
+  );
+  @override
+  late final GeneratedColumn<String> salesId = GeneratedColumn<String>(
+    'sales_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _purchaseOrderIdMeta = const VerificationMeta(
+    'purchaseOrderId',
+  );
+  @override
+  late final GeneratedColumn<String> purchaseOrderId = GeneratedColumn<String>(
+    'purchase_order_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    clientDefault: () => DateTime.now(),
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('PENDING'),
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> syncedAt = GeneratedColumn<DateTime>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _attemptsMeta = const VerificationMeta(
+    'attempts',
+  );
+  @override
+  late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
+    'attempts',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    salesId,
+    purchaseOrderId,
+    createdAt,
+    syncStatus,
+    syncedAt,
+    attempts,
+    lastError,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sales_purchase_order_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SalesPurchaseOrderTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('sales_id')) {
+      context.handle(
+        _salesIdMeta,
+        salesId.isAcceptableOrUnknown(data['sales_id']!, _salesIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_salesIdMeta);
+    }
+    if (data.containsKey('purchase_order_id')) {
+      context.handle(
+        _purchaseOrderIdMeta,
+        purchaseOrderId.isAcceptableOrUnknown(
+          data['purchase_order_id']!,
+          _purchaseOrderIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_purchaseOrderIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    if (data.containsKey('attempts')) {
+      context.handle(
+        _attemptsMeta,
+        attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {salesId},
+  ];
+  @override
+  SalesPurchaseOrderTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SalesPurchaseOrderTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      salesId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sales_id'],
+      )!,
+      purchaseOrderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}purchase_order_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}synced_at'],
+      ),
+      attempts: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempts'],
+      )!,
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+    );
+  }
+
+  @override
+  $SalesPurchaseOrderTableTable createAlias(String alias) {
+    return $SalesPurchaseOrderTableTable(attachedDatabase, alias);
+  }
+}
+
+class SalesPurchaseOrderTableData extends DataClass
+    implements Insertable<SalesPurchaseOrderTableData> {
+  final String id;
+
+  /// The sale's receipt (OR) number. A sale has at most one purchase order.
+  final String salesId;
+
+  /// What the cashier typed in the customer prompt.
+  final String purchaseOrderId;
+  final DateTime createdAt;
+
+  /// PENDING until the server has accepted it, then SYNCED.
+  final String syncStatus;
+  final DateTime? syncedAt;
+
+  /// How many sends have failed, and why the last one did. Waiting for the sale
+  /// or customer to reach the server is not a failure and isn't counted.
+  final int attempts;
+  final String? lastError;
+  const SalesPurchaseOrderTableData({
+    required this.id,
+    required this.salesId,
+    required this.purchaseOrderId,
+    required this.createdAt,
+    required this.syncStatus,
+    this.syncedAt,
+    required this.attempts,
+    this.lastError,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['sales_id'] = Variable<String>(salesId);
+    map['purchase_order_id'] = Variable<String>(purchaseOrderId);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<DateTime>(syncedAt);
+    }
+    map['attempts'] = Variable<int>(attempts);
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    return map;
+  }
+
+  SalesPurchaseOrderTableCompanion toCompanion(bool nullToAbsent) {
+    return SalesPurchaseOrderTableCompanion(
+      id: Value(id),
+      salesId: Value(salesId),
+      purchaseOrderId: Value(purchaseOrderId),
+      createdAt: Value(createdAt),
+      syncStatus: Value(syncStatus),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+      attempts: Value(attempts),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+    );
+  }
+
+  factory SalesPurchaseOrderTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SalesPurchaseOrderTableData(
+      id: serializer.fromJson<String>(json['id']),
+      salesId: serializer.fromJson<String>(json['salesId']),
+      purchaseOrderId: serializer.fromJson<String>(json['purchaseOrderId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      syncedAt: serializer.fromJson<DateTime?>(json['syncedAt']),
+      attempts: serializer.fromJson<int>(json['attempts']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'salesId': serializer.toJson<String>(salesId),
+      'purchaseOrderId': serializer.toJson<String>(purchaseOrderId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'syncedAt': serializer.toJson<DateTime?>(syncedAt),
+      'attempts': serializer.toJson<int>(attempts),
+      'lastError': serializer.toJson<String?>(lastError),
+    };
+  }
+
+  SalesPurchaseOrderTableData copyWith({
+    String? id,
+    String? salesId,
+    String? purchaseOrderId,
+    DateTime? createdAt,
+    String? syncStatus,
+    Value<DateTime?> syncedAt = const Value.absent(),
+    int? attempts,
+    Value<String?> lastError = const Value.absent(),
+  }) => SalesPurchaseOrderTableData(
+    id: id ?? this.id,
+    salesId: salesId ?? this.salesId,
+    purchaseOrderId: purchaseOrderId ?? this.purchaseOrderId,
+    createdAt: createdAt ?? this.createdAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+    attempts: attempts ?? this.attempts,
+    lastError: lastError.present ? lastError.value : this.lastError,
+  );
+  SalesPurchaseOrderTableData copyWithCompanion(
+    SalesPurchaseOrderTableCompanion data,
+  ) {
+    return SalesPurchaseOrderTableData(
+      id: data.id.present ? data.id.value : this.id,
+      salesId: data.salesId.present ? data.salesId.value : this.salesId,
+      purchaseOrderId: data.purchaseOrderId.present
+          ? data.purchaseOrderId.value
+          : this.purchaseOrderId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+      attempts: data.attempts.present ? data.attempts.value : this.attempts,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SalesPurchaseOrderTableData(')
+          ..write('id: $id, ')
+          ..write('salesId: $salesId, ')
+          ..write('purchaseOrderId: $purchaseOrderId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('attempts: $attempts, ')
+          ..write('lastError: $lastError')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    salesId,
+    purchaseOrderId,
+    createdAt,
+    syncStatus,
+    syncedAt,
+    attempts,
+    lastError,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SalesPurchaseOrderTableData &&
+          other.id == this.id &&
+          other.salesId == this.salesId &&
+          other.purchaseOrderId == this.purchaseOrderId &&
+          other.createdAt == this.createdAt &&
+          other.syncStatus == this.syncStatus &&
+          other.syncedAt == this.syncedAt &&
+          other.attempts == this.attempts &&
+          other.lastError == this.lastError);
+}
+
+class SalesPurchaseOrderTableCompanion
+    extends UpdateCompanion<SalesPurchaseOrderTableData> {
+  final Value<String> id;
+  final Value<String> salesId;
+  final Value<String> purchaseOrderId;
+  final Value<DateTime> createdAt;
+  final Value<String> syncStatus;
+  final Value<DateTime?> syncedAt;
+  final Value<int> attempts;
+  final Value<String?> lastError;
+  final Value<int> rowid;
+  const SalesPurchaseOrderTableCompanion({
+    this.id = const Value.absent(),
+    this.salesId = const Value.absent(),
+    this.purchaseOrderId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SalesPurchaseOrderTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String salesId,
+    required String purchaseOrderId,
+    this.createdAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : salesId = Value(salesId),
+       purchaseOrderId = Value(purchaseOrderId);
+  static Insertable<SalesPurchaseOrderTableData> custom({
+    Expression<String>? id,
+    Expression<String>? salesId,
+    Expression<String>? purchaseOrderId,
+    Expression<DateTime>? createdAt,
+    Expression<String>? syncStatus,
+    Expression<DateTime>? syncedAt,
+    Expression<int>? attempts,
+    Expression<String>? lastError,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (salesId != null) 'sales_id': salesId,
+      if (purchaseOrderId != null) 'purchase_order_id': purchaseOrderId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (attempts != null) 'attempts': attempts,
+      if (lastError != null) 'last_error': lastError,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SalesPurchaseOrderTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? salesId,
+    Value<String>? purchaseOrderId,
+    Value<DateTime>? createdAt,
+    Value<String>? syncStatus,
+    Value<DateTime?>? syncedAt,
+    Value<int>? attempts,
+    Value<String?>? lastError,
+    Value<int>? rowid,
+  }) {
+    return SalesPurchaseOrderTableCompanion(
+      id: id ?? this.id,
+      salesId: salesId ?? this.salesId,
+      purchaseOrderId: purchaseOrderId ?? this.purchaseOrderId,
+      createdAt: createdAt ?? this.createdAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      syncedAt: syncedAt ?? this.syncedAt,
+      attempts: attempts ?? this.attempts,
+      lastError: lastError ?? this.lastError,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (salesId.present) {
+      map['sales_id'] = Variable<String>(salesId.value);
+    }
+    if (purchaseOrderId.present) {
+      map['purchase_order_id'] = Variable<String>(purchaseOrderId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<DateTime>(syncedAt.value);
+    }
+    if (attempts.present) {
+      map['attempts'] = Variable<int>(attempts.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SalesPurchaseOrderTableCompanion(')
+          ..write('id: $id, ')
+          ..write('salesId: $salesId, ')
+          ..write('purchaseOrderId: $purchaseOrderId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('attempts: $attempts, ')
+          ..write('lastError: $lastError, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -19817,6 +20350,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $LoginCredentialsTableTable loginCredentialsTable =
       $LoginCredentialsTableTable(this);
   late final $EmailTableTable emailTable = $EmailTableTable(this);
+  late final $SalesPurchaseOrderTableTable salesPurchaseOrderTable =
+      $SalesPurchaseOrderTableTable(this);
   late final DomainConfigDao domainConfigDao = DomainConfigDao(
     this as AppDatabase,
   );
@@ -19865,6 +20400,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     splitPaymentTable,
     loginCredentialsTable,
     emailTable,
+    salesPurchaseOrderTable,
   ];
 }
 
@@ -30129,6 +30665,286 @@ typedef $$EmailTableTableProcessedTableManager =
       EmailTableData,
       PrefetchHooks Function()
     >;
+typedef $$SalesPurchaseOrderTableTableCreateCompanionBuilder =
+    SalesPurchaseOrderTableCompanion Function({
+      Value<String> id,
+      required String salesId,
+      required String purchaseOrderId,
+      Value<DateTime> createdAt,
+      Value<String> syncStatus,
+      Value<DateTime?> syncedAt,
+      Value<int> attempts,
+      Value<String?> lastError,
+      Value<int> rowid,
+    });
+typedef $$SalesPurchaseOrderTableTableUpdateCompanionBuilder =
+    SalesPurchaseOrderTableCompanion Function({
+      Value<String> id,
+      Value<String> salesId,
+      Value<String> purchaseOrderId,
+      Value<DateTime> createdAt,
+      Value<String> syncStatus,
+      Value<DateTime?> syncedAt,
+      Value<int> attempts,
+      Value<String?> lastError,
+      Value<int> rowid,
+    });
+
+class $$SalesPurchaseOrderTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SalesPurchaseOrderTableTable> {
+  $$SalesPurchaseOrderTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get salesId => $composableBuilder(
+    column: $table.salesId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get purchaseOrderId => $composableBuilder(
+    column: $table.purchaseOrderId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SalesPurchaseOrderTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SalesPurchaseOrderTableTable> {
+  $$SalesPurchaseOrderTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get salesId => $composableBuilder(
+    column: $table.salesId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get purchaseOrderId => $composableBuilder(
+    column: $table.purchaseOrderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SalesPurchaseOrderTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SalesPurchaseOrderTableTable> {
+  $$SalesPurchaseOrderTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get salesId =>
+      $composableBuilder(column: $table.salesId, builder: (column) => column);
+
+  GeneratedColumn<String> get purchaseOrderId => $composableBuilder(
+    column: $table.purchaseOrderId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => column);
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+}
+
+class $$SalesPurchaseOrderTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SalesPurchaseOrderTableTable,
+          SalesPurchaseOrderTableData,
+          $$SalesPurchaseOrderTableTableFilterComposer,
+          $$SalesPurchaseOrderTableTableOrderingComposer,
+          $$SalesPurchaseOrderTableTableAnnotationComposer,
+          $$SalesPurchaseOrderTableTableCreateCompanionBuilder,
+          $$SalesPurchaseOrderTableTableUpdateCompanionBuilder,
+          (
+            SalesPurchaseOrderTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $SalesPurchaseOrderTableTable,
+              SalesPurchaseOrderTableData
+            >,
+          ),
+          SalesPurchaseOrderTableData,
+          PrefetchHooks Function()
+        > {
+  $$SalesPurchaseOrderTableTableTableManager(
+    _$AppDatabase db,
+    $SalesPurchaseOrderTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SalesPurchaseOrderTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$SalesPurchaseOrderTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SalesPurchaseOrderTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> salesId = const Value.absent(),
+                Value<String> purchaseOrderId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime?> syncedAt = const Value.absent(),
+                Value<int> attempts = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SalesPurchaseOrderTableCompanion(
+                id: id,
+                salesId: salesId,
+                purchaseOrderId: purchaseOrderId,
+                createdAt: createdAt,
+                syncStatus: syncStatus,
+                syncedAt: syncedAt,
+                attempts: attempts,
+                lastError: lastError,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String salesId,
+                required String purchaseOrderId,
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime?> syncedAt = const Value.absent(),
+                Value<int> attempts = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SalesPurchaseOrderTableCompanion.insert(
+                id: id,
+                salesId: salesId,
+                purchaseOrderId: purchaseOrderId,
+                createdAt: createdAt,
+                syncStatus: syncStatus,
+                syncedAt: syncedAt,
+                attempts: attempts,
+                lastError: lastError,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SalesPurchaseOrderTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SalesPurchaseOrderTableTable,
+      SalesPurchaseOrderTableData,
+      $$SalesPurchaseOrderTableTableFilterComposer,
+      $$SalesPurchaseOrderTableTableOrderingComposer,
+      $$SalesPurchaseOrderTableTableAnnotationComposer,
+      $$SalesPurchaseOrderTableTableCreateCompanionBuilder,
+      $$SalesPurchaseOrderTableTableUpdateCompanionBuilder,
+      (
+        SalesPurchaseOrderTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $SalesPurchaseOrderTableTable,
+          SalesPurchaseOrderTableData
+        >,
+      ),
+      SalesPurchaseOrderTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -30214,6 +31030,11 @@ class $AppDatabaseManager {
       $$LoginCredentialsTableTableTableManager(_db, _db.loginCredentialsTable);
   $$EmailTableTableTableManager get emailTable =>
       $$EmailTableTableTableManager(_db, _db.emailTable);
+  $$SalesPurchaseOrderTableTableTableManager get salesPurchaseOrderTable =>
+      $$SalesPurchaseOrderTableTableTableManager(
+        _db,
+        _db.salesPurchaseOrderTable,
+      );
 }
 
 // **************************************************************************

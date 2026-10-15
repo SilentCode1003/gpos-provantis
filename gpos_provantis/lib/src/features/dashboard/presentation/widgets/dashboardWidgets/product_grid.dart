@@ -107,6 +107,11 @@ final TextStyle _productNameStyle = AppTypography.ui(
   fontWeight: FontWeight.w500,
   height: 1.3,
 );
+final TextStyle _skuStyle = AppTypography.ui(
+  fontSize: 12,
+  fontWeight: FontWeight.w400,
+  height: 1.2,
+);
 final TextStyle _priceStyle = AppTypography.ui(
   fontSize: 18,
   fontWeight: FontWeight.w600,
@@ -774,13 +779,35 @@ class _ProductCardState extends State<_ProductCard> {
           children: [
             // The name yields space first: it's clipped (never the price) if
             // the card is too short for everything.
+            // The SKU is laid out first and always shows; the name takes
+            // whatever height is left and is clipped if it needs more.
             Expanded(
               child: ClipRect(
-                child: Text(
-                  product.name,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: _productNameStyle.copyWith(color: textColor),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        product.name,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: _productNameStyle.copyWith(color: textColor),
+                      ),
+                    ),
+                    if (product.sku.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        product.sku,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: _skuStyle.copyWith(
+                          color: isOutOfStock
+                              ? colors.textDisabled
+                              : colors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
