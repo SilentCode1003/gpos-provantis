@@ -85,6 +85,10 @@ class SoldItemsScreen extends ConsumerStatefulWidget {
 class _SoldItemsScreenState extends ConsumerState<SoldItemsScreen> {
   _SoldItemsFilters _filters = const _SoldItemsFilters();
 
+  /// The filter panel is tall, so it folds into a one-line summary after
+  /// Apply and leaves the screen to the results.
+  bool _filtersExpanded = true;
+
   void _applyFilters() {
     final range = _filters.resolveRange();
 
@@ -92,6 +96,7 @@ class _SoldItemsScreenState extends ConsumerState<SoldItemsScreen> {
     // wants INCLUSIVE calendar days, so step the end back by one day. For a
     // single day, start == end and SoldItemsQuery sends just "2026-09-28".
     final inclusiveEnd = range.end.subtract(const Duration(days: 1));
+    setState(() => _filtersExpanded = false);
 
     ref
         .read(soldItemsControllerProvider.notifier)
@@ -128,6 +133,9 @@ class _SoldItemsScreenState extends ConsumerState<SoldItemsScreen> {
         children: [
           _FiltersPanel(
             filters: _filters,
+            expanded: _filtersExpanded,
+            onToggle: () =>
+                setState(() => _filtersExpanded = !_filtersExpanded),
             onChanged: (next) => setState(() => _filters = next),
             onApply: _applyFilters,
           ),
@@ -138,7 +146,7 @@ class _SoldItemsScreenState extends ConsumerState<SoldItemsScreen> {
                 ? const _SoldItemsMessage(
                     icon: Icons.filter_alt_outlined,
                     text:
-                        'Choose a date range and tap Apply Filters\nto see sold items.',
+                        'Choose a date range and tap Apply Filters to see sold items.',
                   )
                 : const _SoldItemsResults(),
           ),
@@ -151,17 +159,80 @@ class _SoldItemsScreenState extends ConsumerState<SoldItemsScreen> {
 class _FiltersPanel extends StatelessWidget {
   const _FiltersPanel({
     required this.filters,
+    required this.expanded,
+    required this.onToggle,
     required this.onChanged,
     required this.onApply,
   });
 
   final _SoldItemsFilters filters;
+  final bool expanded;
+  final VoidCallback onToggle;
   final ValueChanged<_SoldItemsFilters> onChanged;
   final VoidCallback onApply;
+
+  static const _presetNames = {
+    _DatePreset.today: 'Today',
+    _DatePreset.thisWeek: 'This Week',
+    _DatePreset.thisMonth: 'This Month',
+    _DatePreset.custom: 'Custom',
+  };
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+
+    if (!expanded) {
+      final summary =
+          '${_presetNames[filters.preset]} · '
+          '${filters.category?.categoryName ?? 'All categories'} · '
+          '${filters.product?.description ?? 'All products'}';
+      return Material(
+        color: colors.surface,
+        child: InkWell(
+          onTap: onToggle,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 56),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: colors.border)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.tune_rounded, size: 22, color: colors.textPrimary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    summary,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.ui(
+                      color: colors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'EDIT',
+                  style: AppTypography.ui(
+                    color: colors.primary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Icon(
+                  Icons.expand_more_rounded,
+                  size: 22,
+                  color: colors.textSecondary,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Container(
       width: double.infinity,
@@ -287,31 +358,40 @@ class _DatePresetRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: _DatePreset.values.map((preset) {
-        final isLast = preset == _DatePreset.values.last;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: isLast ? 0 : 8),
-            child: _PresetChip(
-              label: _labels[preset]!,
-              selected: filters.preset == preset,
-              onTap: () async {
-                if (preset == _DatePreset.custom) {
-                  final range = await _pickCustomRange(context, filters);
-                  if (range != null) {
-                    onChanged(
-                      filters.copyWith(preset: preset, customRange: range),
-                    );
-                  }
-                } else {
-                  onChanged(filters.copyWith(preset: preset));
-                }
-              },
-            ),
-          ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const gap = 8.0;
+        // Four across when there's room, otherwise two by two.
+        final perRow = constraints.maxWidth < 340 ? 2 : 4;
+        final width = (constraints.maxWidth - gap * (perRow - 1)) / perRow;
+
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final preset in _DatePreset.values)
+              SizedBox(
+                width: width,
+                child: _PresetChip(
+                  label: _labels[preset]!,
+                  selected: filters.preset == preset,
+                  onTap: () async {
+                    if (preset == _DatePreset.custom) {
+                      final range = await _pickCustomRange(context, filters);
+                      if (range != null) {
+                        onChanged(
+                          filters.copyWith(preset: preset, customRange: range),
+                        );
+                      }
+                    } else {
+                      onChanged(filters.copyWith(preset: preset));
+                    }
+                  },
+                ),
+              ),
+          ],
         );
-      }).toList(),
+      },
     );
   }
 
@@ -501,6 +581,7 @@ class _CategoryPickerSheet extends ConsumerWidget {
     return showModalBottomSheet<_PickerResult<CategoriesTableData>>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const _KeyboardSafe(child: _CategoryPickerSheet()),
     );
@@ -553,6 +634,7 @@ class _ProductPickerSheet extends ConsumerWidget {
     return showModalBottomSheet<_PickerResult<ProductPriceTableData>>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _KeyboardSafe(
         child: _ProductPickerSheet(categoryFilter: categoryFilter),
@@ -605,7 +687,7 @@ class _ProductPickerSheet extends ConsumerWidget {
   }
 }
 
-class _PickerSheetScaffold extends StatelessWidget {
+class _PickerSheetScaffold extends StatefulWidget {
   const _PickerSheetScaffold({required this.title, required this.builder});
 
   final String title;
@@ -613,10 +695,41 @@ class _PickerSheetScaffold extends StatelessWidget {
   builder;
 
   @override
+  State<_PickerSheetScaffold> createState() => _PickerSheetScaffoldState();
+}
+
+class _PickerSheetScaffoldState extends State<_PickerSheetScaffold> {
+  final _sheetController = DraggableScrollableController();
+  bool _keyboardWasOpen = false;
+
+  @override
+  void dispose() {
+    _sheetController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = context.colors;
 
+    // The sheet's height is a fraction of the space left above the keyboard,
+    // so expand it when the keyboard appears or the results get squeezed out.
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    if (keyboardOpen && !_keyboardWasOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _sheetController.isAttached) {
+          _sheetController.animateTo(
+            0.95,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+    _keyboardWasOpen = keyboardOpen;
+
     return DraggableScrollableSheet(
+      controller: _sheetController,
       initialChildSize: 0.75,
       minChildSize: 0.4,
       maxChildSize: 0.95,
@@ -646,7 +759,9 @@ class _PickerSheetScaffold extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        title,
+                        widget.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: AppTypography.display(
                           color: colors.textPrimary,
                           fontSize: 18,
@@ -666,7 +781,7 @@ class _PickerSheetScaffold extends StatelessWidget {
                   ],
                 ),
               ),
-              Expanded(child: builder(context, scrollController)),
+              Expanded(child: widget.builder(context, scrollController)),
             ],
           ),
         );
@@ -838,6 +953,9 @@ class _SearchablePickerState<T> extends State<_SearchablePicker<T>> {
     final colors = context.colors;
     final visible = _visibleItems();
     final hasQuery = _query.isNotEmpty;
+    // While searching, the ALL shortcut is just noise.
+    final showAll = !hasQuery;
+    final rowCount = (showAll ? 1 : 0) + (visible.isEmpty ? 1 : visible.length);
 
     OutlineInputBorder border(Color color, {double width = 1}) {
       return OutlineInputBorder(
@@ -889,42 +1007,51 @@ class _SearchablePickerState<T> extends State<_SearchablePicker<T>> {
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-          child: _PickerTile(
-            title: widget.allTitle,
-            subtitle: widget.allSubtitle,
-            emphasized: true,
-            onTap: () => Navigator.of(context).pop(_PickerResult<T>(null)),
-          ),
-        ),
         Expanded(
-          child: visible.isEmpty
-              ? _SoldItemsMessage(
-                  icon: hasQuery
-                      ? Icons.search_off_rounded
-                      : Icons.inventory_2_outlined,
-                  text: hasQuery
-                      ? 'No matches for "$_query".'
-                      : widget.emptyText,
-                )
-              : ListView.separated(
-                  controller: widget.scrollController,
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-                  itemCount: visible.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final item = visible[index];
-                    return _PickerTile(
-                      title: widget.titleOf(item),
-                      subtitle: widget.subtitleOf?.call(item),
-                      onTap: () =>
-                          Navigator.of(context).pop(_PickerResult<T>(item)),
-                    );
-                  },
-                ),
+          child: ListView.separated(
+            controller: widget.scrollController,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: EdgeInsets.fromLTRB(
+              20,
+              4,
+              20,
+              20 + MediaQuery.viewPaddingOf(context).bottom,
+            ),
+            itemCount: rowCount,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              // The ALL option is the first row, so it scrolls away and
+              // leaves the whole sheet for results while the keyboard is up.
+              if (showAll && index == 0) {
+                return _PickerTile(
+                  title: widget.allTitle,
+                  subtitle: widget.allSubtitle,
+                  emphasized: true,
+                  onTap: () =>
+                      Navigator.of(context).pop(_PickerResult<T>(null)),
+                );
+              }
+              if (visible.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: _SoldItemsMessage(
+                    icon: hasQuery
+                        ? Icons.search_off_rounded
+                        : Icons.inventory_2_outlined,
+                    text: hasQuery
+                        ? 'No matches for "$_query".'
+                        : widget.emptyText,
+                  ),
+                );
+              }
+              final item = visible[index - (showAll ? 1 : 0)];
+              return _PickerTile(
+                title: widget.titleOf(item),
+                subtitle: widget.subtitleOf?.call(item),
+                onTap: () => Navigator.of(context).pop(_PickerResult<T>(item)),
+              );
+            },
+          ),
         ),
       ],
     );
@@ -961,7 +1088,7 @@ class _SoldItemsResults extends ConsumerWidget {
                       : Icons.inventory_2_outlined,
                   text: switch (controller.status) {
                     SoldItemsFetchStatus.offlineNoData =>
-                      'You are offline and this filter has not been\nsaved on this device yet.',
+                      'You are offline and this filter has not been saved on this device yet.',
                     SoldItemsFetchStatus.failed =>
                       'Could not load sold items.\n${controller.error}',
                     _ => 'No sold items found for this filter.',
@@ -974,7 +1101,12 @@ class _SoldItemsResults extends ConsumerWidget {
                     ref.read(soldItemsControllerProvider.notifier).refresh(),
                 child: ListView.separated(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    16,
+                    16,
+                    24 + MediaQuery.paddingOf(context).bottom,
+                  ),
                   itemCount: items.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, index) =>

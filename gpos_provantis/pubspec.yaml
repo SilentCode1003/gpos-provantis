@@ -48,6 +48,7 @@ dependencies:
   # About page (app + device info)
   package_info_plus: ^10.1.0
   device_info_plus: ^13.1.0
+  pdfrx: ^2.4.7
 
 dev_dependencies:
   flutter_test:
@@ -60,3 +61,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/guides/

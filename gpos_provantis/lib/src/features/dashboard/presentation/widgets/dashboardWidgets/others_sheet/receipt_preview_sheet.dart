@@ -37,6 +37,7 @@ class ReceiptPreviewSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => ReceiptPreviewSheet(sale: sale, saleData: saleData),
     );
@@ -345,8 +346,15 @@ class _ReceiptPreviewTicket extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Text(label, style: resolvedStyle),
-          const Spacer(),
+          Expanded(
+            child: Text(
+              label,
+              style: resolvedStyle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 12),
           Text(_formatCurrency(amount), style: resolvedStyle),
         ],
       ),

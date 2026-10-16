@@ -279,12 +279,7 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
           ),
         ),
         data: (printers) => ListView(
-          padding: const EdgeInsets.fromLTRB(
-            Space.xxxl,
-            Space.xxl,
-            Space.xxxl,
-            Space.xxxl,
-          ),
+          padding: settingsPanelPadding(context),
           children: [
             PanelHeader(
               title: 'Printers',
@@ -360,6 +355,7 @@ class _PrinterRow extends StatelessWidget {
     final colors = context.colors;
     final isOnline = status == _PrinterStatus.online;
     final isDisabled = !printer.isEnabled;
+    final compact = isCompactLayout(context);
     final statusColor = isDisabled
         ? colors.textDisabled
         : (isOnline ? colors.success : colors.danger);
@@ -414,7 +410,8 @@ class _PrinterRow extends StatelessWidget {
                         fontSize: 13,
                         color: colors.textSecondary,
                       ),
-                      maxLines: 1,
+                      // Phones are narrow: allow the details a second line.
+                      maxLines: compact ? 2 : 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -430,12 +427,14 @@ class _PrinterRow extends StatelessWidget {
                   letterSpacing: 0.4,
                 ),
               ),
-              const SizedBox(width: Space.sm),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 20,
-                color: colors.textDisabled,
-              ),
+              if (!compact) ...[
+                const SizedBox(width: Space.sm),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: colors.textDisabled,
+                ),
+              ],
             ],
           ),
         ),
@@ -1004,12 +1003,19 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
           child: SafeArea(
             top: false,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                Space.xxxl,
-                Space.lg,
-                Space.xxxl,
-                Space.xxxl,
-              ),
+              padding: isCompactLayout(context)
+                  ? const EdgeInsets.fromLTRB(
+                      Space.xl,
+                      Space.lg,
+                      Space.xl,
+                      Space.xxl,
+                    )
+                  : const EdgeInsets.fromLTRB(
+                      Space.xxxl,
+                      Space.lg,
+                      Space.xxxl,
+                      Space.xxxl,
+                    ),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -1481,18 +1487,28 @@ class _PrimaryTouchButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: Container(
           height: 72,
-          padding: const EdgeInsets.symmetric(horizontal: Space.xxl),
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompactLayout(context) ? Space.md : Space.xxl,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            // Phones: center the content in the narrower button.
+            mainAxisAlignment: isCompactLayout(context)
+                ? MainAxisAlignment.center
+                : MainAxisAlignment.start,
             children: [
               Icon(icon, size: 24, color: colors.onPrimary),
               const SizedBox(width: Space.md),
-              Text(
-                label,
-                style: AppTypography.ui(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: colors.onPrimary,
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.ui(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: colors.onPrimary,
+                  ),
                 ),
               ),
             ],

@@ -61,7 +61,17 @@ class PosFormSheet extends StatelessWidget {
               ),
             ),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              // Clear the home indicator / gesture bar when the keyboard is
+              // closed; when it's open the keyboard inset already lifts us.
+              padding: EdgeInsets.fromLTRB(
+                24,
+                12,
+                24,
+                keyboardInset > 0
+                    ? 16
+                    : 28 + MediaQuery.viewPaddingOf(context).bottom,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,

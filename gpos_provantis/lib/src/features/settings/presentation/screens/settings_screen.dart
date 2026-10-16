@@ -12,6 +12,7 @@ import '../panels/email_panel.dart';
 import '../panels/placeholder_panels.dart';
 import '../panels/about_panel.dart';
 import '../panels/counter_display_panel.dart';
+import '../panels/guides_panel.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -67,6 +68,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       icon: Icons.monitor_rounded,
       builder: CounterDisplayPanel.new,
     ),
+    SettingsSection(
+      label: 'Guides',
+      icon: Icons.menu_book_rounded,
+      builder: GuidesPanel.new,
+    ),
   ];
 
   static const _aboutSection = SettingsSection(
@@ -78,12 +84,83 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   int _selectedIndex = 0;
   bool _aboutSelected = false;
 
+  /// Phone layout only: false shows the list of sections, true shows the
+  /// chosen section's panel.
+  bool _compactDetailOpen = false;
+
   SettingsSection get _active =>
       _aboutSelected ? _aboutSection : _sections[_selectedIndex];
+
+  /// Phone-portrait layout: a list of sections, and tapping one opens its
+  /// panel full screen. Back returns to the list, then to the dashboard.
+  Widget _buildCompact(BuildContext context) {
+    final colors = context.colors;
+    final detailOpen = _compactDetailOpen;
+
+    return Scaffold(
+      backgroundColor: colors.background,
+      body: SafeArea(
+        child: PopScope(
+          canPop: !detailOpen,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) setState(() => _compactDetailOpen = false);
+          },
+          child: Column(
+            children: [
+              _CompactTopBar(
+                title: detailOpen ? _active.label : 'Settings',
+                backTooltip: detailOpen
+                    ? 'Back to settings'
+                    : 'Back to dashboard',
+                onBack: detailOpen
+                    ? () => setState(() => _compactDetailOpen = false)
+                    : () => context.go('/dashboard'),
+              ),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 150),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  transitionBuilder: (child, animation) =>
+                      FadeTransition(opacity: animation, child: child),
+                  child: detailOpen
+                      ? KeyedSubtree(
+                          key: ValueKey(
+                            _aboutSelected ? 'about' : _selectedIndex,
+                          ),
+                          child: ColoredBox(
+                            color: colors.background,
+                            child: _active.builder(),
+                          ),
+                        )
+                      : _CompactSectionList(
+                          key: const ValueKey('sections'),
+                          sections: _sections,
+                          aboutSection: _aboutSection,
+                          onSelect: (index) => setState(() {
+                            _selectedIndex = index;
+                            _aboutSelected = false;
+                            _compactDetailOpen = true;
+                          }),
+                          onSelectAbout: () => setState(() {
+                            _aboutSelected = true;
+                            _compactDetailOpen = true;
+                          }),
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+
+    if (isCompactLayout(context)) return _buildCompact(context);
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -193,6 +270,168 @@ class _TopBar extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CompactTopBar extends StatelessWidget {
+  const _CompactTopBar({
+    required this.title,
+    required this.onBack,
+    required this.backTooltip,
+  });
+
+  final String title;
+  final VoidCallback onBack;
+  final String backTooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Container(
+      height: 60,
+      padding: const EdgeInsets.symmetric(horizontal: Space.md),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border(bottom: BorderSide(color: colors.borderSubtle)),
+      ),
+      child: Row(
+        children: [
+          _TouchIconButton(
+            icon: Icons.arrow_back_rounded,
+            tooltip: backTooltip,
+            onPressed: onBack,
+            size: 52,
+            iconSize: 22,
+          ),
+          const SizedBox(width: Space.sm),
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.display(
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+                color: colors.textPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(width: Space.sm),
+          Text(
+            'REGISTER 1',
+            style: AppTypography.ui(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: colors.textSecondary,
+              letterSpacing: 0.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactSectionList extends StatelessWidget {
+  const _CompactSectionList({
+    super.key,
+    required this.sections,
+    required this.aboutSection,
+    required this.onSelect,
+    required this.onSelectAbout,
+  });
+
+  final List<SettingsSection> sections;
+  final SettingsSection aboutSection;
+  final ValueChanged<int> onSelect;
+  final VoidCallback onSelectAbout;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        Space.lg,
+        Space.lg,
+        Space.lg,
+        Space.xxl,
+      ),
+      children: [
+        for (var i = 0; i < sections.length; i++) ...[
+          _CompactSectionTile(section: sections[i], onTap: () => onSelect(i)),
+          const SizedBox(height: Space.sm),
+        ],
+        const SizedBox(height: Space.md),
+        _CompactSectionTile(section: aboutSection, onTap: onSelectAbout),
+      ],
+    );
+  }
+}
+
+class _CompactSectionTile extends StatelessWidget {
+  const _CompactSectionTile({required this.section, required this.onTap});
+
+  final SettingsSection section;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Material(
+      color: colors.surface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 72),
+          padding: const EdgeInsets.symmetric(
+            horizontal: Space.lg,
+            vertical: Space.md,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.borderSubtle),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  section.icon,
+                  size: 24,
+                  color: colors.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(width: Space.lg),
+              Expanded(
+                child: Text(
+                  section.label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.ui(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 24,
+                color: colors.textDisabled,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

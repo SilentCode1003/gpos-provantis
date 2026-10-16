@@ -18,12 +18,7 @@ class TransactionsPanel extends ConsumerWidget {
     final settings = settingsAsync.value ?? SettingsDto.defaults();
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        Space.xxxl,
-        Space.xxl,
-        Space.xxxl,
-        Space.xxxl,
-      ),
+      padding: settingsPanelPadding(context),
       children: [
         const PanelHeader(
           title: 'Transactions',

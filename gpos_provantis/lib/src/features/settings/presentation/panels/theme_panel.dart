@@ -40,12 +40,7 @@ class ThemePanel extends ConsumerWidget {
     final selected = _themeModeToOption(mode);
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        Space.xxxl,
-        Space.xxl,
-        Space.xxxl,
-        Space.xxxl,
-      ),
+      padding: settingsPanelPadding(context),
       children: [
         const PanelHeader(
           title: 'Theme',

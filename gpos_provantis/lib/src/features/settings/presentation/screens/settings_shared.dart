@@ -12,6 +12,30 @@ abstract class Space {
   static const xxxl = 32.0;
 }
 
+/// Below this screen width (phone portrait) Settings switches to a
+/// list -> detail layout. At or above it, the original side-nav layout is
+/// used unchanged.
+const kCompactSettingsWidth = 600.0;
+
+bool isCompactLayout(BuildContext context) =>
+    MediaQuery.sizeOf(context).width < kCompactSettingsWidth;
+
+/// Page padding for a settings panel. [wide] is each panel's original padding
+/// and is returned untouched everywhere except on compact (phone) screens.
+EdgeInsets settingsPanelPadding(
+  BuildContext context, {
+  EdgeInsets wide = const EdgeInsets.fromLTRB(
+    Space.xxxl,
+    Space.xxl,
+    Space.xxxl,
+    Space.xxxl,
+  ),
+}) {
+  return isCompactLayout(context)
+      ? const EdgeInsets.fromLTRB(Space.lg, Space.lg, Space.lg, Space.xxl)
+      : wide;
+}
+
 class SettingsSection {
   const SettingsSection({
     required this.label,
@@ -116,6 +140,10 @@ class SegmentedTouchControl extends StatelessWidget {
   final IconData Function(String)? iconFor;
   final String Function(String)? labelFor;
 
+  /// Below this per-option width, icon + label no longer fit side by side
+  /// (e.g. "BLUETOOTH" on a phone), so the icon is stacked above the label.
+  static const _stackBelowWidth = 120.0;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -125,9 +153,33 @@ class SegmentedTouchControl extends StatelessWidget {
         for (final option in options) ...[
           if (option != options.first) const SizedBox(width: Space.md),
           Expanded(
-            child: Builder(
-              builder: (context) {
+            child: LayoutBuilder(
+              builder: (context, constraints) {
                 final isSelected = option == selected;
+                final stacked =
+                    iconFor != null && constraints.maxWidth < _stackBelowWidth;
+                final foreground = isSelected
+                    ? colors.onPrimary
+                    : colors.textPrimary;
+                final iconColor = isSelected
+                    ? colors.onPrimary
+                    : colors.textSecondary;
+
+                final label = Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      labelFor != null ? labelFor!(option) : option,
+                      maxLines: 1,
+                      style: AppTypography.ui(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: foreground,
+                      ),
+                    ),
+                  ),
+                );
+
                 return Material(
                   color: isSelected ? colors.primary : colors.surfaceVariant,
                   borderRadius: BorderRadius.circular(14),
@@ -137,31 +189,36 @@ class SegmentedTouchControl extends StatelessWidget {
                     child: Container(
                       height: 64,
                       alignment: Alignment.center,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (iconFor != null) ...[
-                            Icon(
-                              iconFor!(option),
-                              size: 20,
-                              color: isSelected
-                                  ? colors.onPrimary
-                                  : colors.textSecondary,
+                      padding: stacked
+                          ? const EdgeInsets.symmetric(horizontal: Space.xs)
+                          : EdgeInsets.zero,
+                      child: stacked
+                          ? Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  iconFor!(option),
+                                  size: 20,
+                                  color: iconColor,
+                                ),
+                                const SizedBox(height: Space.xs),
+                                label,
+                              ],
+                            )
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (iconFor != null) ...[
+                                  Icon(
+                                    iconFor!(option),
+                                    size: 20,
+                                    color: iconColor,
+                                  ),
+                                  const SizedBox(width: Space.sm),
+                                ],
+                                label,
+                              ],
                             ),
-                            const SizedBox(width: Space.sm),
-                          ],
-                          Text(
-                            labelFor != null ? labelFor!(option) : option,
-                            style: AppTypography.ui(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: isSelected
-                                  ? colors.onPrimary
-                                  : colors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 );
