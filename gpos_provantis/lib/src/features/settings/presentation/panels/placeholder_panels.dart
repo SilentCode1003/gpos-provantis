@@ -46,18 +46,3 @@ class UsersPanel extends StatelessWidget {
     );
   }
 }
-
-class AboutPanel extends StatelessWidget {
-  const AboutPanel();
-
-  @override
-  Widget build(BuildContext context) {
-    return const PanelPlaceholder(
-      icon: Icons.info_outline_rounded,
-      title: 'About',
-      description:
-          'App version, build number, licenses, and support/contact '
-          'information.',
-    );
-  }
-}
