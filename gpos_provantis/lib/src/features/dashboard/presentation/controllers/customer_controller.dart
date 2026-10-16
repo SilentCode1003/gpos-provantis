@@ -25,9 +25,7 @@ class CustomerController extends _$CustomerController {
   @override
   CustomerUiState build() => const CustomerUiState();
 
-  /// Called when Charge is tapped. Forgets any customer left over from a
-  /// payment that was cancelled, then says whether the customer prompt should
-  /// be shown at all (a store setting).
+  // Starts checkout and clears any leftover customer draft from a canceled payment.
   Future<bool> beginCheckout() async {
     final service = ref.read(customerServiceProvider);
     final toast = ref.read(toastEmitterProvider);
@@ -49,7 +47,7 @@ class CustomerController extends _$CustomerController {
     }
   }
 
-  /// The cashier filled the customer in. It is held until the sale completes.
+  // Saves the customer info entered for the current sale until it is completed.
   void saveDraft(CustomerDraft draft) {
     ref.read(customerServiceProvider).setDraft(draft);
     state = CustomerUiState(
@@ -58,7 +56,7 @@ class CustomerController extends _$CustomerController {
     );
   }
 
-  /// The cashier chose to go on without a customer.
+  // Clears the saved customer if the cashier chooses to proceed without one.
   void skip() {
     ref.read(customerServiceProvider).clearDraft();
     state = CustomerUiState(showPurchaseOrder: state.showPurchaseOrder);

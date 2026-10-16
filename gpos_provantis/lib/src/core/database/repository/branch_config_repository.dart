@@ -13,6 +13,8 @@ import '../domain/branch_config_dto.dart';
 
 part 'branch_config_repository.g.dart';
 
+// Creates the branch repository with the app DAO instance.
+// Keeps the repository layer easy to inject and test.
 @Riverpod(keepAlive: true)
 BranchRepository branchRepository(Ref ref) {
   final dao = ref.watch(branchConfigDaoProvider);
@@ -25,6 +27,8 @@ class BranchRepository {
 
   BranchRepository(this._ref, this._dao);
 
+  // Fetches the branch data from the API and saves it locally.
+  // Keeps the offline cache aligned with the remote branch source.
   Future<void> fetchAndSaveBranch(String branchId) async {
     await _ref.read(domainConfigDaoProvider).cacheReady;
 

@@ -9,8 +9,8 @@ class PaymentSummaryReportDao extends DatabaseAccessor<AppDatabase>
     with _$PaymentSummaryReportDaoMixin {
   PaymentSummaryReportDao(super.db);
 
-  /// Replaces the stored rows for ONE receipt range (one shift), leaving other
-  /// shifts untouched. An empty [rows] just clears that range.
+  // Replaces the stored rows for one receipt range only.
+  // Keeps the report cache isolated to the requested shift window.
   Future<void> replaceForRange({
     required int receiptBeginning,
     required int receiptEnding,
@@ -31,6 +31,8 @@ class PaymentSummaryReportDao extends DatabaseAccessor<AppDatabase>
     });
   }
 
+  // Reads payment summary rows for one receipt range.
+  // Returns the requested report portion from the local cache.
   Future<List<PaymentSummaryReportTableData>> getForRange({
     required int receiptBeginning,
     required int receiptEnding,
@@ -43,10 +45,14 @@ class PaymentSummaryReportDao extends DatabaseAccessor<AppDatabase>
         .get();
   }
 
+  // Reads all payment summary reports from local storage.
+  // Returns the full cached report set for the device.
   Future<List<PaymentSummaryReportTableData>> getAllPaymentSummaryReports() {
     return select(paymentSummaryReportTable).get();
   }
 
+  // Watches the payment summary report list for live updates.
+  // Keeps the UI aligned with the latest report state.
   Stream<List<PaymentSummaryReportTableData>> watchAllPaymentSummaryReports() {
     return select(paymentSummaryReportTable).watch();
   }

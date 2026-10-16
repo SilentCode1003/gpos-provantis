@@ -16,11 +16,13 @@ PosRestartService posRestartService(Ref ref) => const PosRestartService();
 class PosRestartService {
   const PosRestartService();
 
+  // Restarts the POS app through the platform restart hook.
   Future<RestartResult> restart() {
     return Restart.restartApp();
   }
 }
 
+// Runs the full restart confirmation flow and shows the final status toast.
 Future<void> showRestartPosFlow(WidgetRef ref) async {
   final service = ref.read(posRestartServiceProvider);
 
@@ -43,6 +45,7 @@ Future<void> showRestartPosFlow(WidgetRef ref) async {
   );
 }
 
+// Shows the restart confirmation dialog before the app closes itself.
 Future<bool?> _showConfirmDialog() {
   final context = rootNavigatorKey.currentContext;
   if (context == null) return Future.value(null);
@@ -94,6 +97,7 @@ Future<bool?> _showConfirmDialog() {
   );
 }
 
+// Shows the countdown dialog while the app is about to reboot.
 Future<bool?> _showCountdownDialog() {
   final context = rootNavigatorKey.currentContext;
   if (context == null) return Future.value(null);
@@ -123,6 +127,7 @@ class _CountdownDialogState extends State<_CountdownDialog> {
     _timer = Timer.periodic(const Duration(seconds: 1), _onTick);
   }
 
+  // Counts down the restart timer and closes the dialog when the window ends.
   void _onTick(Timer timer) {
     if (_secondsLeft <= 1) {
       timer.cancel();
@@ -133,6 +138,7 @@ class _CountdownDialogState extends State<_CountdownDialog> {
     setState(() => _secondsLeft -= 1);
   }
 
+  // Cancels the countdown and closes the dialog without restarting.
   void _cancel() {
     _timer?.cancel();
     Navigator.of(context).pop(false);

@@ -11,6 +11,8 @@ class StaffSalesReportDao extends DatabaseAccessor<AppDatabase>
 
   /// Replaces the stored rows for ONE receipt range (one shift), leaving other
   /// shifts untouched. An empty [rows] just clears that range.
+  // Replaces staff sales rows for one receipt range only.
+  // Keeps reporting data isolated to the requested shift range.
   Future<void> replaceForRange({
     required int receiptBeginning,
     required int receiptEnding,
@@ -31,6 +33,8 @@ class StaffSalesReportDao extends DatabaseAccessor<AppDatabase>
     });
   }
 
+  // Reads staff sales rows for one receipt range.
+  // Returns the report data for the requested shift window.
   Future<List<StaffSalesReportTableData>> getForRange({
     required int receiptBeginning,
     required int receiptEnding,
@@ -43,10 +47,14 @@ class StaffSalesReportDao extends DatabaseAccessor<AppDatabase>
         .get();
   }
 
+  // Reads all staff sales report rows from local storage.
+  // Returns the full cached reporting set for the device.
   Future<List<StaffSalesReportTableData>> getAllStaffSalesReports() {
     return select(staffSalesReportTable).get();
   }
 
+  // Watches the staff sales report list for live updates.
+  // Useful for dashboards that need the latest staffing performance data.
   Stream<List<StaffSalesReportTableData>> watchAllStaffSalesReports() {
     return select(staffSalesReportTable).watch();
   }

@@ -10,6 +10,7 @@ import '../panels/transactions_panel.dart';
 import '../panels/pos_config_panel.dart';
 import '../panels/email_panel.dart';
 import '../panels/placeholder_panels.dart';
+import '../panels/about_panel.dart';
 import '../panels/counter_display_panel.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {

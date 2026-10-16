@@ -45,6 +45,10 @@ dependencies:
   # Mailing Service
   mailer: ^7.2.0
 
+  # About page (app + device info)
+  package_info_plus: ^10.1.0
+  device_info_plus: ^13.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -159,8 +159,8 @@ class ReprintController extends Notifier<ReprintState> {
   @override
   ReprintState build() => const ReprintState();
 
-  /// Prints [row] again, marked as a REPRINT. Never throws: every outcome is
-  /// shown as a toast.
+  // Prints a saved receipt again and surfaces the result through a toast.
+  // Keeps the UI responsive while showing a one-at-a-time print lock.
   Future<void> reprint(SalesTableData row) async {
     // Everything from `ref` is read before the first await.
     final toast = ref.read(toastEmitterProvider);
@@ -186,6 +186,8 @@ class ReprintController extends Notifier<ReprintState> {
     }
   }
 
+  // Describes a printer failure in a user-friendly way.
+  // Keeps the error text readable without exposing internal implementation details.
   String _describe(Object e) {
     if (e is ReceiptPrintException) return e.message;
     return e.toString().replaceFirst('Exception: ', '');

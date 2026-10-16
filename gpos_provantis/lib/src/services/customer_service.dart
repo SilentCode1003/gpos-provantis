@@ -81,6 +81,8 @@ class CustomerService {
   void clearDraft() => _draft = null;
 
   /// Reads the store's switches. Both are off if Settings hasn't been saved.
+  // Loads the customer prompt settings from local app settings.
+  // Keeps the checkout flow aligned with the store's current configuration.
   Future<CustomerSettings> loadSettings() async {
     final rows = await _settingsDao.getSettings();
     final settings = rows.isNotEmpty
@@ -105,6 +107,8 @@ class CustomerService {
   ///    the customer stays PENDING and goes out on a later [syncPending].
   ///
   /// Throws only if the local save itself fails.
+  // Saves the active customer draft for a completed sale and tries to upload it.
+  // Keeps the sale linked to the customer while leaving retry logic to the sync queue.
   Future<CustomerSendResult?> recordForSale({
     required String salesId,
     required String posId,
@@ -135,6 +139,8 @@ class CustomerService {
 
   /// Whether the customer for [salesId] is already on the server. False if
   /// there is no customer for that sale, or it hasn't been accepted yet.
+  // Checks whether the customer for a sale has already been acknowledged by the server.
+  // Helps the app decide whether a retry is still needed for that sale.
   Future<bool> isUploaded(String salesId) async {
     final row = await _repository.getCustomerForSale(salesId);
     return row?.syncStatus == CustomerSyncStatus.synced;
@@ -142,5 +148,7 @@ class CustomerService {
 
   /// Uploads any customers still waiting (e.g. the device was offline when the
   /// sale was made). Safe to call any time; returns how many were sent.
+  // Sends any queued customer records that are still waiting for the server.
+  // Helps recover the customer sync queue after connectivity is restored.
   Future<int> syncPending() => _repository.syncPending();
 }

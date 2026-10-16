@@ -113,6 +113,8 @@ class CashDropService {
   ///
   /// Throws [CashDropException] for an empty drop and
   /// [CashDropIdentityException] if the device isn't set up.
+  // Saves a completed cash drop and prints a receipt for it when possible.
+  // Keeps the drop record durable even if printing or syncing fails later.
   Future<CashDropOutcome> recordCashDrop({
     required List<CashDropLineDto> lines,
   }) async {
@@ -156,6 +158,8 @@ class CashDropService {
 
   /// Prints a saved drop again, marked REPRINT. Throws [CashDropException] if
   /// it isn't on this device; printer errors propagate.
+  // Reprints a saved cash drop slip for the cashier or support desk.
+  // Keeps the slip available even when the original print attempt failed.
   Future<CashDropTableData> reprintCashDrop(String id) async {
     final record = await _repository.getCashDrop(id);
     if (record == null) {
@@ -170,19 +174,24 @@ class CashDropService {
   /// Sends any drops the server hasn't received. Safe to call any time (e.g.
   /// on start-up or alongside the catalog sync); does nothing until the server
   /// API exists. Returns how many were sent.
+  // Sends any queued cash drops that are still waiting for the server.
+  // Helps recover pending cash-drop sync after a connectivity interruption.
   Future<int> syncPending() => _repository.syncPending();
 
+  // Tries the queued sync in the background without failing the saved drop.
+  // Keeps the local cash drop durable even if the network is down.
   Future<void> _syncQuietly() async {
     try {
       await _repository.syncPending();
     } catch (e) {
-      // The drop is already saved; it will be retried later.
       debugPrint('CashDrop: sync failed: $e');
     }
   }
 
   /// Resolves who/where the drop belongs to, the same way the dashboard does
   /// for sales and shift reports.
+  // Resolves the cashier, branch, POS, and shift needed to attribute the drop.
+  // Throws a clear identity error when the device has not been configured yet.
   Future<_Identity> _resolveIdentity() async {
     final config = await _posConfigDao.getPos();
     final shiftRows = await _posShiftDao.getAllPosShifts();
@@ -239,6 +248,8 @@ class CashDropService {
     );
   }
 
+  // Formats the business date in the API's expected yyyy-MM-dd format.
+  // Keeps the cash drop record aligned with the current shift date.
   String _formatBusinessDate(DateTime d) {
     String two(int n) => n.toString().padLeft(2, '0');
     return '${d.year}-${two(d.month)}-${two(d.day)}';

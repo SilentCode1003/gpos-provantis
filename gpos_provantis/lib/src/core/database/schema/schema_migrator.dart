@@ -15,7 +15,7 @@ class SchemaMigrator {
 
   Future<void> _runMigrationForVersion(int version) async {
     switch (version) {
-      case 2:
+      case 1:
         break;
       default:
         break;

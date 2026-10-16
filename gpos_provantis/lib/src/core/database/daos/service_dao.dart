@@ -10,6 +10,8 @@ class ServiceDao extends DatabaseAccessor<AppDatabase> with _$ServiceDaoMixin {
 
   /// Replaces the whole stored list with [rows] in one transaction, so a
   /// service that is no longer active on the server disappears locally too.
+  // Replaces the cached service list with the latest remote snapshot.
+  // Keeps inactive or removed services from lingering in local storage.
   Future<void> replaceServices(List<ServiceTableCompanion> rows) {
     return transaction(() async {
       await delete(serviceTable).go();
@@ -21,20 +23,27 @@ class ServiceDao extends DatabaseAccessor<AppDatabase> with _$ServiceDaoMixin {
     });
   }
 
+  // Reads a single service by its local database ID.
+  // Returns null when no matching service record exists.
   Future<ServiceTableData?> getServiceById(int id) {
-    return (select(serviceTable)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      serviceTable,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
+  // Reads all services in ascending name order.
+  // Helps keep the service catalog sorted and easy to scan.
   Future<List<ServiceTableData>> getAllServices() {
-    return (select(serviceTable)
-          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
-        .get();
+    return (select(
+      serviceTable,
+    )..orderBy([(t) => OrderingTerm.asc(t.name)])).get();
   }
 
+  // Watches the service list for live updates.
+  // Useful for screens that need the current catalog as it changes.
   Stream<List<ServiceTableData>> watchAllServices() {
-    return (select(serviceTable)
-          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
-        .watch();
+    return (select(
+      serviceTable,
+    )..orderBy([(t) => OrderingTerm.asc(t.name)])).watch();
   }
 }

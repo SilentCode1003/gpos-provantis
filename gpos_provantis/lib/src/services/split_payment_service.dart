@@ -51,6 +51,8 @@ class SplitPaymentService {
   /// 2. Then every pending split sale (this one and any older ones) is
   ///    uploaded. This never throws: if the server is unreachable the sale
   ///    stays PENDING and goes out on a later [syncPending].
+  // Saves a split payment and then attempts the queued upload.
+  // Keeps the split-sale record durable even if the server is temporarily unreachable.
   Future<SplitPaymentResult> recordSplitPayment({
     required String detailId,
     required String date,
@@ -102,6 +104,8 @@ class SplitPaymentService {
 
   /// Whether the server already has the sale with receipt id [detailId]. False
   /// if there is no such split sale here, or it hasn't been accepted yet.
+  // Checks whether a split payment receipt has already been accepted by the server.
+  // Helps the UI decide if a retry is still required.
   Future<bool> isUploaded(String detailId) async {
     final row = await _repository.getSplitPaymentForReceipt(detailId);
     return row?.syncStatus == SplitPaymentSyncStatus.synced;
@@ -109,5 +113,7 @@ class SplitPaymentService {
 
   /// Uploads any split sales still waiting (e.g. the device was offline when
   /// they were made). Safe to call any time; returns how many were sent.
+  // Sends any queued split-payment records still waiting for the server.
+  // Helps recover the split-payment sync queue after a reconnect.
   Future<int> syncPending() => _repository.syncPending();
 }
