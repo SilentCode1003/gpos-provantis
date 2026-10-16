@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,6 +8,7 @@ import 'package:gpos_provantis/src/core/database/providers/split_payment_dao_pro
 import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
     show ReceiptPrintException, ReceiptSaleData, receiptGeneratorProvider;
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/receipt_reprint_controller.dart';
+import 'package:gpos_provantis/src/core/database/repository/reprint_receipt_repository.dart';
 import 'receipt_preview_sheet.dart';
 import 'pos_form_sheet.dart';
 
@@ -44,9 +46,9 @@ class _ReprintSheetState extends ConsumerState<ReprintSheet> {
 
   bool get _canSubmit => _orController.text.trim().isNotEmpty && !_busy;
 
-  /// Looks the OR number up on this device: the ordinary sales first, then
-  /// sales paid with two e-payments (kept in their own table). Both are local,
-  /// so this works with no connection.
+  /// Looks the OR number up on this device first (sales, then two e-payment
+  /// sales), so it still works offline. If it isn't saved here, asks the
+  /// server directly. Nothing fetched from the server is stored.
   Future<ReceiptSaleData?> _findReceipt(String orNumber) async {
     final sale = await ref.read(salesDaoProvider).getSaleByDetailId(orNumber);
     if (sale != null) return receiptSaleDataFromSaleRow(sale);
@@ -56,7 +58,28 @@ class _ReprintSheetState extends ConsumerState<ReprintSheet> {
         .getByDetailId(orNumber);
     if (split != null) return receiptSaleDataFromSplitPaymentRow(split);
 
-    if (mounted) setState(() => _error = 'OR number not found.');
+    try {
+      final remote = await ref
+          .read(reprintReceiptRepositoryProvider)
+          .fetchReceipt(orNumber);
+      if (remote != null) return remote;
+      if (mounted) setState(() => _error = 'OR number not found.');
+    } on DioException {
+      if (mounted) {
+        setState(
+          () => _error =
+              'Not saved on this device and the server could not be reached.',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(
+          () => _error =
+              'Could not look up the receipt: '
+              '${e.toString().replaceFirst('Exception: ', '')}',
+        );
+      }
+    }
     return null;
   }
 
