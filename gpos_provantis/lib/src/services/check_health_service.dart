@@ -85,6 +85,14 @@ class ServerHealthController extends _$ServerHealthController {
     }
   }
 
+  // Runs one check now and reports whether the server answered. Used by the
+  // "Reconnect" button so it can wait for a real result. Leaves the poll
+  // timer alone.
+  Future<bool> checkNow() async {
+    await _check();
+    return state == ServerHealthStatus.online;
+  }
+
   // Forces a fresh health check and resets the polling timer.
   Future<void> refresh() async {
     state = ServerHealthStatus.checking;

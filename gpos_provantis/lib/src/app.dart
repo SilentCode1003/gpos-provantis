@@ -9,6 +9,7 @@ import 'shared/widgets/app_toast.dart';
 import 'services/sync/overlay/catalog_sync_overlay.dart';
 import 'services/sync/controller/sales_sync_controller.dart';
 import 'services/check_health_service.dart';
+import 'shared/widgets/server_reconnect_prompt.dart';
 
 class GposProvantisApp extends ConsumerWidget {
   const GposProvantisApp({super.key});
@@ -39,8 +40,10 @@ class GposProvantisApp extends ConsumerWidget {
           // navigator key GoRouter uses.
           builder: (context, child) => AppToastHost(
             navigatorKey: rootNavigatorKey,
-            child: CatalogSyncOverlay(
-              child: DevicePreview.appBuilder(context, child),
+            child: ServerReconnectPrompt(
+              child: CatalogSyncOverlay(
+                child: DevicePreview.appBuilder(context, child),
+              ),
             ),
           ),
 
