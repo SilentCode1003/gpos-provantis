@@ -207,7 +207,12 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        24 + MediaQuery.paddingOf(context).bottom,
+      ),
       itemCount: items.length,
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
@@ -550,68 +555,72 @@ class _ReceiptTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            'OR# ${item.detailId}',
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTypography.ui(
-                              color: colors.textPrimary,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        if (isRefunded) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colors.refund,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              'REFUNDED',
-                              style: AppTypography.ui(
-                                color: colors.onRefund,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.4,
-                              ),
-                            ),
-                          ),
-                        ],
-                        if (item.isNotSynced) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colors.warningContainer,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              'NOT SYNCED',
-                              style: AppTypography.ui(
-                                color: colors.onWarningContainer,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.4,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
+                    Text(
+                      'OR# ${item.detailId}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.ui(
+                        color: colors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
+                    // Badges get their own line so a narrow phone never
+                    // squeezes the OR number down to "OR# 0…".
+                    if (isRefunded || item.isNotSynced) ...[
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          if (isRefunded)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.refund,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                'REFUNDED',
+                                style: AppTypography.ui(
+                                  color: colors.onRefund,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ),
+                          if (item.isNotSynced)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.warningContainer,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                'NOT SYNCED',
+                                style: AppTypography.ui(
+                                  color: colors.onWarningContainer,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Text(
                       '${item.paymentType} · ${item.cashier}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: AppTypography.ui(
                         color: colors.textSecondary,
                         fontSize: 13,

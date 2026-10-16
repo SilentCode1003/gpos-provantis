@@ -32,7 +32,14 @@ TextStyle _amountStyle({
 }
 
 class CartPanel extends ConsumerStatefulWidget {
-  const CartPanel({super.key});
+  const CartPanel({super.key, this.onClose});
+
+  /// Set when the cart is shown inside the phone layout's bottom sheet. It
+  /// switches off the "tap here to close the catalog" scrim (the catalog is
+  /// not beside the cart there) and adds a close button to the header.
+  final VoidCallback? onClose;
+
+  bool get _embedded => onClose != null;
 
   @override
   ConsumerState<CartPanel> createState() => _CartPanelState();
@@ -83,13 +90,15 @@ class _CartPanelState extends ConsumerState<CartPanel> {
     final state = ref.watch(dashboardControllerProvider);
     final notifier = ref.read(dashboardControllerProvider.notifier);
 
-    _syncScrimTimer(state.isCatalogSheetOpen);
+    // Side-by-side layout only: the cart dims while the catalog sheet is open.
+    final isSheetOpen = !widget._embedded && state.isCatalogSheetOpen;
+    _syncScrimTimer(isSheetOpen);
 
     return GestureDetector(
-      behavior: state.isCatalogSheetOpen
+      behavior: isSheetOpen
           ? HitTestBehavior.opaque
           : HitTestBehavior.deferToChild,
-      onTap: state.isCatalogSheetOpen ? notifier.closeCatalogSheet : null,
+      onTap: isSheetOpen ? notifier.closeCatalogSheet : null,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -100,6 +109,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
                 _CartHeader(
                   itemCount: state.itemCount,
                   onRemoveAll: () => _handleRemoveAll(context),
+                  onClose: widget.onClose,
                 ),
                 Expanded(
                   child: AnimatedSwitcher(
@@ -185,10 +195,17 @@ class _TapToCloseHint extends StatelessWidget {
 const double _cartHeaderHeight = 100;
 
 class _CartHeader extends StatelessWidget {
-  const _CartHeader({required this.itemCount, required this.onRemoveAll});
+  const _CartHeader({
+    required this.itemCount,
+    required this.onRemoveAll,
+    this.onClose,
+  });
 
   final int itemCount;
   final VoidCallback onRemoveAll;
+
+  /// Only set in the phone sheet, where the cart needs its own close button.
+  final VoidCallback? onClose;
 
   @override
   Widget build(BuildContext context) {
@@ -251,6 +268,26 @@ class _CartHeader extends StatelessWidget {
             ),
           ),
           if (hasItems) _RemoveAllButton(onTap: onRemoveAll),
+          if (onClose != null) ...[
+            const SizedBox(width: 8),
+            Material(
+              color: colors.surfaceVariant,
+              shape: const CircleBorder(),
+              child: InkWell(
+                onTap: onClose,
+                customBorder: const CircleBorder(),
+                child: SizedBox(
+                  width: minTapTarget,
+                  height: minTapTarget,
+                  child: Icon(
+                    PhosphorIcons.caretDown,
+                    size: 22,
+                    color: colors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -521,10 +558,7 @@ class _EdgeFade extends StatelessWidget {
               gradient: LinearGradient(
                 begin: isTop ? Alignment.topCenter : Alignment.bottomCenter,
                 end: isTop ? Alignment.bottomCenter : Alignment.topCenter,
-                colors: [
-                  colors.surface,
-                  colors.surface.withValues(alpha: 0),
-                ],
+                colors: [colors.surface, colors.surface.withValues(alpha: 0)],
               ),
             ),
           ),
@@ -747,7 +781,9 @@ class _Monogram extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final trimmed = name.trim();
-    final letter = trimmed.isEmpty ? '?' : trimmed.characters.first.toUpperCase();
+    final letter = trimmed.isEmpty
+        ? '?'
+        : trimmed.characters.first.toUpperCase();
 
     return Container(
       width: size,
@@ -1119,7 +1155,10 @@ class _DiscountTile extends StatelessWidget {
               Container(
                 width: 32,
                 height: 32,
-                decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  shape: BoxShape.circle,
+                ),
                 child: Icon(PhosphorIcons.percent, size: 16, color: iconFg),
               ),
               const SizedBox(width: 12),

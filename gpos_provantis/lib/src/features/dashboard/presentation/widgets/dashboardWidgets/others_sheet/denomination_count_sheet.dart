@@ -135,6 +135,7 @@ class _DenominationCountSheetState
                   title: widget.title,
                   subtitle: widget.subtitle,
                   icon: widget.icon,
+                  keyboardOpen: keyboardInset > 0,
                 ),
                 Flexible(
                   child: denominationsAsync.when(
@@ -199,6 +200,8 @@ class _DenominationCountSheetState
       children: [
         Expanded(
           child: SingleChildScrollView(
+            // The iOS number pad has no Done key, so let a drag dismiss it.
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: const EdgeInsets.fromLTRB(24, 4, 24, 4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -241,6 +244,7 @@ class _DenominationCountSheetState
         ),
         _Footer(
           colors: colors,
+          keyboardOpen: MediaQuery.viewInsetsOf(context).bottom > 0,
           totalLabel: widget.totalLabel,
           submitLabel: widget.submitLabel,
           total: totalAmount,
@@ -289,12 +293,17 @@ class _Header extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.icon,
+    required this.keyboardOpen,
   });
 
   final AppColors colors;
   final String title;
   final String subtitle;
   final IconData icon;
+
+  /// While the keyboard is up, drop the handle and subtitle so the counting
+  /// grid keeps as much room as possible.
+  final bool keyboardOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -303,17 +312,18 @@ class _Header extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: colors.border,
-                borderRadius: BorderRadius.circular(999),
+          if (!keyboardOpen)
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: colors.border,
+                  borderRadius: BorderRadius.circular(999),
+                ),
               ),
             ),
-          ),
           Row(
             children: [
               Container(
@@ -338,14 +348,16 @@ class _Header extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: AppTypography.ui(
-                        color: colors.textSecondary,
-                        fontSize: 14,
+                    if (!keyboardOpen) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: AppTypography.ui(
+                          color: colors.textSecondary,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -403,25 +415,35 @@ class _DenominationGrid extends StatelessWidget {
   final void Function(int, String) onChanged;
   final Map<int, int> quantities;
 
+  /// Below this width two cells per row can't fit a label plus
+  /// [-] [qty] [+], so each denomination gets its own full-width row.
+  static const _twoColumnMinWidth = 420.0;
+
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: rows.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        mainAxisExtent: 122,
-      ),
-      itemBuilder: (context, index) {
-        final row = rows[index];
-        return _DenominationCell(
-          label: row.description,
-          unitValue: row.value,
-          controller: controllerFor(row.id),
-          onChanged: (raw) => onChanged(row.id, raw),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < _twoColumnMinWidth;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: rows.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: compact ? 1 : 2,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            mainAxisExtent: compact ? 72 : 122,
+          ),
+          itemBuilder: (context, index) {
+            final row = rows[index];
+            return _DenominationCell(
+              compact: compact,
+              label: row.description,
+              unitValue: row.value,
+              controller: controllerFor(row.id),
+              onChanged: (raw) => onChanged(row.id, raw),
+            );
+          },
         );
       },
     );
@@ -430,12 +452,15 @@ class _DenominationGrid extends StatelessWidget {
 
 class _DenominationCell extends StatelessWidget {
   const _DenominationCell({
+    required this.compact,
     required this.label,
     required this.unitValue,
     required this.controller,
     required this.onChanged,
   });
 
+  /// One-per-row layout: label on the left, stepper on the right.
+  final bool compact;
   final String label;
   final int unitValue;
   final TextEditingController controller;
@@ -454,8 +479,65 @@ class _DenominationCell extends StatelessWidget {
     final colors = context.colors;
     final active = _quantity > 0;
 
+    final labelText = Text(
+      label,
+      maxLines: compact ? 2 : 1,
+      overflow: TextOverflow.ellipsis,
+      style: AppTypography.ui(
+        color: colors.textPrimary,
+        fontSize: compact ? 15 : 14,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+
+    final field = SizedBox(
+      width: 52,
+      height: 44,
+      child: TextField(
+        controller: controller,
+        onChanged: onChanged,
+        textAlign: TextAlign.center,
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        style: AppTypography.ui(
+          color: colors.textPrimary,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+        ),
+        decoration: InputDecoration(
+          isDense: true,
+          filled: true,
+          fillColor: colors.surface,
+          contentPadding: EdgeInsets.zero,
+          hintText: '0',
+          hintStyle: AppTypography.ui(color: colors.textDisabled, fontSize: 18),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: colors.border),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: colors.border),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: colors.primary, width: 2),
+          ),
+        ),
+      ),
+    );
+
+    final minus = _StepperButton(
+      icon: Icons.remove_rounded,
+      onPressed: _quantity > 0 ? () => _setQuantity(_quantity - 1) : null,
+    );
+    final plus = _StepperButton(
+      icon: Icons.add_rounded,
+      onPressed: () => _setQuantity(_quantity + 1),
+    );
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      padding: EdgeInsets.fromLTRB(12, compact ? 8 : 10, 12, compact ? 8 : 10),
       decoration: BoxDecoration(
         color: active
             ? colors.primary.withValues(alpha: 0.08)
@@ -466,76 +548,29 @@ class _DenominationCell extends StatelessWidget {
           width: active ? 1.5 : 1,
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTypography.ui(
-              color: colors.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _StepperButton(
-                icon: Icons.remove_rounded,
-                onPressed: _quantity > 0
-                    ? () => _setQuantity(_quantity - 1)
-                    : null,
-              ),
-              SizedBox(
-                width: 52,
-                height: 44,
-                child: TextField(
-                  controller: controller,
-                  onChanged: onChanged,
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  style: AppTypography.ui(
-                    color: colors.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    filled: true,
-                    fillColor: colors.surface,
-                    contentPadding: EdgeInsets.zero,
-                    hintText: '0',
-                    hintStyle: AppTypography.ui(
-                      color: colors.textDisabled,
-                      fontSize: 18,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: colors.border),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: colors.border),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: colors.primary, width: 2),
-                    ),
-                  ),
+      child: compact
+          ? Row(
+              children: [
+                Expanded(child: labelText),
+                const SizedBox(width: 8),
+                minus,
+                const SizedBox(width: 6),
+                field,
+                const SizedBox(width: 6),
+                plus,
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                labelText,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [minus, field, plus],
                 ),
-              ),
-              _StepperButton(
-                icon: Icons.add_rounded,
-                onPressed: () => _setQuantity(_quantity + 1),
-              ),
-            ],
-          ),
-        ],
-      ),
+              ],
+            ),
     );
   }
 }
@@ -580,8 +615,10 @@ class _Footer extends StatelessWidget {
     required this.submitLabel,
     required this.total,
     required this.onSubmit,
+    required this.keyboardOpen,
   });
 
+  final bool keyboardOpen;
   final AppColors colors;
   final String totalLabel;
   final String submitLabel;
@@ -591,7 +628,13 @@ class _Footer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+      // Clear the home indicator / gesture bar unless the keyboard is up.
+      padding: EdgeInsets.fromLTRB(
+        24,
+        12,
+        24,
+        keyboardOpen ? 12 : 24 + MediaQuery.viewPaddingOf(context).bottom,
+      ),
       decoration: BoxDecoration(
         color: colors.surface,
         border: Border(top: BorderSide(color: colors.border)),
@@ -609,20 +652,31 @@ class _Footer extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  totalLabel,
-                  style: AppTypography.ui(
-                    color: colors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                Flexible(
+                  child: Text(
+                    totalLabel,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.ui(
+                      color: colors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-                Text(
-                  '₱${total.toString()}',
-                  style: AppTypography.display(
-                    color: colors.textPrimary,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
+                const SizedBox(width: 12),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      _peso(total),
+                      style: AppTypography.display(
+                        color: colors.textPrimary,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -743,4 +797,13 @@ class DenominationCountResult {
   /// all ten denominations with `"quantity":"0"` for the ones not present in
   /// the drawer, not just the nonzero ones.
   final List<DenominationCountEntry> allActiveLines;
+}
+
+/// 12500 -> "₱12,500"
+String _peso(int value) {
+  final digits = value.abs().toString().replaceAllMapped(
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (_) => ',',
+  );
+  return '${value < 0 ? '-' : ''}₱$digits';
 }

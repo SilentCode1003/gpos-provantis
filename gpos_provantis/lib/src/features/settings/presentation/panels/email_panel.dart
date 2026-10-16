@@ -118,12 +118,11 @@ class _EmailPanelState extends ConsumerState<EmailPanel> {
     final colors = context.colors;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        Space.xxxl,
-        Space.xxl,
-        Space.xxxl,
-        Space.xxxl,
-      ),
+      // Phones: let a drag dismiss the keyboard.
+      keyboardDismissBehavior: isCompactLayout(context)
+          ? ScrollViewKeyboardDismissBehavior.onDrag
+          : ScrollViewKeyboardDismissBehavior.manual,
+      padding: settingsPanelPadding(context),
       children: [
         const PanelHeader(
           title: 'Email',

@@ -237,12 +237,16 @@ class _DateBar extends StatelessWidget {
                       color: colors.primary,
                     ),
                     const SizedBox(width: 10),
-                    Text(
-                      _formatLongDate(date),
-                      style: AppTypography.ui(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: colors.textPrimary,
+                    Flexible(
+                      child: Text(
+                        _formatLongDate(date),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.ui(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
                       ),
                     ),
                   ],
@@ -428,6 +432,7 @@ class _ShiftCard extends StatelessWidget {
           ],
           const SizedBox(height: 14),
           SizedBox(
+            width: double.infinity,
             height: 48,
             child: OutlinedButton.icon(
               onPressed: canPrint ? onPrint : null,

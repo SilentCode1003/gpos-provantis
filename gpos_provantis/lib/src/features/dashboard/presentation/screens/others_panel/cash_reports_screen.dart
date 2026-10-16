@@ -123,7 +123,12 @@ class _CashReportsScreenState extends ConsumerState<CashReportsScreen> {
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        24 + MediaQuery.paddingOf(context).bottom,
+      ),
       itemCount: state.reports.length,
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
@@ -205,12 +210,16 @@ class _DateBar extends StatelessWidget {
                       color: colors.primary,
                     ),
                     const SizedBox(width: 10),
-                    Text(
-                      label,
-                      style: AppTypography.ui(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: colors.textPrimary,
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.ui(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
                       ),
                     ),
                   ],
@@ -422,6 +431,7 @@ class _CashReportSheet extends StatelessWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _CashReportSheet(report: report),
     );
@@ -485,7 +495,12 @@ class _CashReportSheet extends StatelessWidget {
               Expanded(
                 child: ListView(
                   controller: scrollController,
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    8,
+                    20,
+                    24 + MediaQuery.viewPaddingOf(context).bottom,
+                  ),
                   children: [
                     _SummaryRow(
                       label: 'Cash float',

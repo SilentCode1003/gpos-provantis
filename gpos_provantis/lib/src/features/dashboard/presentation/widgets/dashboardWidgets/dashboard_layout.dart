@@ -5,6 +5,7 @@ import 'barcode_scan_bar.dart';
 import 'cart_panel.dart';
 import 'catalog_panel.dart';
 import 'catalog_sheet.dart';
+import 'phone_cart_bar.dart';
 
 /// Thickness of the line separating the cart from the catalog side.
 const double _panelDividerThickness = 2;
@@ -26,26 +27,30 @@ class WideLayout extends StatelessWidget {
   }
 }
 
-class NarrowLayout extends StatelessWidget {
-  const NarrowLayout({super.key});
+/// Portrait phone layout. The catalog gets the whole screen, and the cart
+/// collapses into a bar docked at the bottom that opens the full cart as a
+/// sheet. The product sheet slides over the catalog only, so the cart bar
+/// stays visible while items are being added.
+class PhoneLayout extends StatelessWidget {
+  const PhoneLayout({super.key, this.hideCartBar = false});
+
+  /// True while the on-screen keyboard is up (the barcode field), so the
+  /// bar doesn't eat the little room that is left above the keyboard.
+  final bool hideCartBar;
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       children: [
-        Expanded(flex: 2, child: CartPanel()),
-
-        _PanelDivider(axis: Axis.horizontal),
-
-        Expanded(flex: 3, child: _CatalogPanelWithSheet()),
+        const Expanded(child: _CatalogPanelWithSheet()),
+        if (!hideCartBar) const PhoneCartBar(),
       ],
     );
   }
 }
 
 /// A solid line between the cart and everything on the catalog side
-/// (top bar, actions, categories). [axis] is the direction the line runs:
-/// vertical for the side-by-side layout, horizontal for the stacked one.
+/// (top bar, actions, categories).
 class _PanelDivider extends StatelessWidget {
   const _PanelDivider({required this.axis});
 

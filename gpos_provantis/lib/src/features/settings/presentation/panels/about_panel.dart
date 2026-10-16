@@ -128,7 +128,10 @@ class _AboutContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(Space.xxl),
+      padding: settingsPanelPadding(
+        context,
+        wide: const EdgeInsets.all(Space.xxl),
+      ),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),

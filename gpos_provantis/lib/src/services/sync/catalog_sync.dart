@@ -16,6 +16,7 @@ import 'package:gpos_provantis/src/core/database/repository/promo_repository.dar
 import 'package:gpos_provantis/src/core/database/repository/service_repository.dart';
 import 'package:gpos_provantis/src/core/database/repository/service_package_repository.dart';
 import 'package:gpos_provantis/src/core/database/repository/addon_repository.dart';
+import 'package:gpos_provantis/src/services/split_payment_service.dart';
 
 part 'catalog_sync.g.dart';
 
@@ -34,6 +35,7 @@ CatalogSyncService catalogSyncService(Ref ref) {
   final serviceRepository = ref.watch(serviceRepositoryProvider);
   final servicePackageRepository = ref.watch(servicePackageRepositoryProvider);
   final addonRepository = ref.watch(addonRepositoryProvider);
+  final splitPaymentService = ref.watch(splitPaymentServiceProvider);
 
   return CatalogSyncService(
     categoriesRepository,
@@ -49,6 +51,7 @@ CatalogSyncService catalogSyncService(Ref ref) {
     serviceRepository,
     servicePackageRepository,
     addonRepository,
+    splitPaymentService,
   );
 }
 
@@ -83,6 +86,7 @@ class CatalogSyncService {
   final ServiceRepository _serviceRepository;
   final ServicePackageRepository _servicePackageRepository;
   final AddonRepository _addonRepository;
+  final SplitPaymentService _splitPaymentService;
 
   CatalogSyncService(
     this._categoriesRepository,
@@ -98,6 +102,7 @@ class CatalogSyncService {
     this._serviceRepository,
     this._servicePackageRepository,
     this._addonRepository,
+    this._splitPaymentService,
   );
 
   Future<CatalogSyncResult> syncCatalog({
@@ -111,6 +116,22 @@ class CatalogSyncService {
     }
 
     try {
+      // Push first, pull second: anything still waiting on this device goes to
+      // the server BEFORE any catalog data is pulled. If it can't be sent, the
+      // sync stops here so nothing pending is ever put at risk.
+      notify('Sending pending sales');
+      try {
+        await _splitPaymentService.syncPending();
+      } catch (e) {
+        if (isDuplicateRequestError(e)) rethrow;
+        debugPrint('CatalogSync: pending sales not sent: $e');
+        return CatalogSyncResult.failure(
+          'Pending sales could not be sent, so the sync was stopped. '
+          'Please try again once the server can be reached. '
+          '${e.toString().replaceFirst('Exception: ', '')}',
+        );
+      }
+
       notify('Categories');
       await _categoriesRepository.fetchAndSaveCategories();
 

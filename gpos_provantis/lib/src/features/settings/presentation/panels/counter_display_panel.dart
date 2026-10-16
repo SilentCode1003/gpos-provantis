@@ -17,12 +17,7 @@ class CounterDisplayPanel extends ConsumerWidget {
     final controller = ref.read(appSettingsProvider.notifier);
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        Space.xxxl,
-        Space.xxl,
-        Space.xxxl,
-        Space.xxxl,
-      ),
+      padding: settingsPanelPadding(context),
       children: [
         const PanelHeader(
           title: 'Counter Display',

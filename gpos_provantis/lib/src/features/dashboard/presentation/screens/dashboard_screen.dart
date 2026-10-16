@@ -14,9 +14,17 @@ class DashboardScreen extends ConsumerWidget {
     final colors = context.colors;
     final isWide = MediaQuery.sizeOf(context).width >= splitLayoutBreakpoint;
 
+    // Read here, above the Scaffold: inside its body the keyboard inset can
+    // already be subtracted.
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+
     return Scaffold(
       backgroundColor: colors.background,
-      body: SafeArea(child: isWide ? const WideLayout() : const NarrowLayout()),
+      body: SafeArea(
+        child: isWide
+            ? const WideLayout()
+            : PhoneLayout(hideCartBar: keyboardOpen),
+      ),
     );
   }
 }
