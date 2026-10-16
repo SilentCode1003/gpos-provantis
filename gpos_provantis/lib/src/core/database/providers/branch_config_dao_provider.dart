@@ -5,6 +5,8 @@ import 'package:gpos_provantis/src/core/database/daos/branch_config_dao.dart';
 
 part 'branch_config_dao_provider.g.dart';
 
+// Creates the branch config DAO from the app database.
+// Keeps the data access layer consistent across the app.
 @Riverpod(keepAlive: true)
 BranchConfigDao branchConfigDao(Ref ref) {
   final db = ref.watch(appDatabaseProvider);
@@ -17,6 +19,8 @@ final branchConfigProvider =
     );
 
 class BranchConfigNotifier extends StreamNotifier<BranchConfigTableData?> {
+  // Builds the notifier stream from the DAO.
+  // Keeps the UI aligned with the latest local branch state.
   @override
   Stream<BranchConfigTableData?> build() {
     final dao = ref.watch(branchConfigDaoProvider);

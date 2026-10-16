@@ -72,6 +72,8 @@ class SalesPurchaseOrderService {
   /// It only saves on the device. Sending is started in the background and
   /// waits for the sale and the customer, so it never holds up checkout. Throws
   /// only if the local save itself fails.
+  // Saves a purchase order for a completed sale and starts background sync.
+  // Keeps the order tied to the sale without blocking the checkout flow.
   Future<SalesPurchaseOrderTableData?> recordForSale({
     required String salesId,
     required String purchaseOrderId,
@@ -94,6 +96,8 @@ class SalesPurchaseOrderService {
 
   /// Whether the server already has the purchase order for [salesId]. False if
   /// there is none for that sale, or it hasn't been accepted yet.
+  // Checks whether the purchase order has already reached the server.
+  // Helps decide whether the sale still needs to wait for a final sync pass.
   Future<bool> isUploaded(String salesId) async {
     final row = await _repository.getSalesPurchaseOrderForSale(salesId);
     return row?.syncStatus == SalesPurchaseOrderSyncStatus.synced;
@@ -102,6 +106,8 @@ class SalesPurchaseOrderService {
   /// Sends every purchase order that is ready, and leaves the rest waiting.
   /// Safe to call any time, from anywhere, as often as you like. Returns how
   /// many were sent.
+  // Tries to send every ready purchase order while leaving the rest queued.
+  // Keeps the sync process idempotent and safe to call repeatedly.
   Future<int> syncPending() async {
     if (_syncing) {
       _rerun = true;
@@ -121,15 +127,18 @@ class SalesPurchaseOrderService {
     return sent;
   }
 
+  // Runs the background sync pass without throwing if a prerequisite fails.
+  // Keeps the purchase order in the queue until the server is ready to accept it.
   Future<void> _syncQuietly() async {
     try {
       await syncPending();
     } catch (e) {
-      // The purchase order is already saved; it will be tried again later.
       debugPrint('SalesPurchaseOrderService: sync failed: $e');
     }
   }
 
+  // Executes one queue pass and uploads each ready purchase order in order.
+  // Returns the number of purchase orders that were successfully sent.
   Future<int> _runPass() async {
     final pending = await _repository.getPendingSalesPurchaseOrders();
     if (pending.isEmpty) {
@@ -164,6 +173,8 @@ class SalesPurchaseOrderService {
   /// Gives the things a purchase order depends on a chance to reach the server
   /// first, in order: the sale, then the customer. Failures are fine here, they
   /// just mean the purchase order keeps waiting.
+  // Pushes prerequisite sales and customer sync before uploading pending purchase orders.
+  // Keeps purchase orders from being sent before their linked sale is ready.
   Future<void> _pushPrerequisites() async {
     await _quietly('sales', () => _salesRepository.uploadSales());
     await _quietly(
@@ -173,6 +184,8 @@ class SalesPurchaseOrderService {
     await _quietly('customers', () => _customerRepository.syncPending());
   }
 
+  // Runs a sync action in the background without interrupting the main queue.
+  // Keeps prerequisite sync failures from stopping the purchase-order pass.
   Future<void> _quietly(String what, Future<Object?> Function() action) async {
     try {
       await action();
@@ -182,6 +195,8 @@ class SalesPurchaseOrderService {
   }
 
   /// Why [row] can't be sent yet, or null when it can.
+  // Decides whether a purchase order is still blocked by a missing sale or customer.
+  // Returns a clear reason so the queue can wait without retrying blindly.
   Future<String?> _waitingFor(SalesPurchaseOrderTableData row) async {
     // 1. The main transaction.
     if (!await _isSaleOnServer(row.salesId)) {
@@ -204,6 +219,8 @@ class SalesPurchaseOrderService {
   /// two e-payments once its row is SYNCED. A sale found in neither table has
   /// been removed by the retention clean-up, which only ever removes sales the
   /// server already has, so it counts as sent.
+  // Checks whether the parent sale has reached the server and is ready for PO sync.
+  // Treats missing records as already sent when cleanup has removed them.
   Future<bool> _isSaleOnServer(String salesId) async {
     final sale = await _salesDao.getSaleByDetailId(salesId);
     if (sale != null) return sale.isSync == '1';

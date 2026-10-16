@@ -23,6 +23,8 @@ class RefundsController extends _$RefundsController {
   @override
   RefundsState build() => const RefundsState();
 
+  // Starts a refund request for the selected receipt.
+  // Validates the cashier and posts the refund while keeping the UI responsive.
   Future<void> submit({
     required String detailId,
     required String reason,
@@ -87,6 +89,8 @@ class RefundsController extends _$RefundsController {
     }
   }
 
+  // Clears the current refund outcome so the sheet can be reopened cleanly.
+  // This keeps the UI state reset between attempts and prevents stale notices.
   void dismissOutcome() => state = const RefundsState();
 
   /// The one place a refund attempt ends: tells the cashier, then publishes

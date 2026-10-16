@@ -148,6 +148,8 @@ class EndShiftService {
   /// the Reports screen) so the receipt carries the **REPRINT** banner. Unlike
   /// [reprintShiftReport] this still fetches from the server when it can, so it
   /// also works for shifts this device never printed.
+  // Loads the shift report and prints it, falling back to the local cache when needed.
+  // Keeps the end-of-shift report available even when the server is unreachable.
   Future<EndShiftResult> printEndShiftReport({
     required String date,
     required int posId,
@@ -156,11 +158,8 @@ class EndShiftService {
   }) async {
     final result = await _loadReport(date, posId, shiftId);
 
-    // If the report itself came from the local copy we already know the
-    // server is unreachable, so skip straight to the local sections.
     final tryServer = result.source == ShiftReportSource.server;
 
-    // Independent calls, so run them side by side.
     final soldFuture = _loadSoldItems(result.report, tryServer: tryServer);
     final servicesFuture = _loadSoldServices(
       result.report,
@@ -218,6 +217,8 @@ class EndShiftService {
   ///
   /// The returned [SendCashReportResult] says whether it has reached the server
   /// yet. Recounting the same shift replaces its earlier report.
+  // Saves a cash report for the shift and tries to upload it in the background.
+  // Keeps the end-of-shift report durable even if the server is temporarily offline.
   Future<SendCashReportResult> sendCashReport({
     required String branchId,
     required String posId,
@@ -226,7 +227,6 @@ class EndShiftService {
     required String cashierId,
     required List<SendCashReportLineDto> lines,
   }) async {
-    // 1. Always save first.
     final saved = await _sendCashReportRepository.saveSendCashReport(
       SendCashReportDto.create(
         branchId: branchId,
@@ -238,7 +238,6 @@ class EndShiftService {
       ),
     );
 
-    // 2. Then upload. Failures are recorded on the row, not thrown.
     try {
       await _sendCashReportRepository.syncPending();
     } catch (e) {
@@ -258,10 +257,14 @@ class EndShiftService {
 
   /// Uploads any cash reports still waiting (e.g. the device was offline when
   /// the shift ended). Safe to call any time; returns how many were sent.
+  // Sends any queued end-of-shift cash reports that are still waiting for the server.
+  // Helps recover the report queue after the connection is restored.
   Future<int> syncPendingCashReports() =>
       _sendCashReportRepository.syncPending();
 
   /// Reprints strictly from the local DB. Never touches the network.
+  // Reprints the saved end-of-shift report directly from the local cache.
+  // Keeps the report available for offline reprint even without a fresh server fetch.
   Future<EndShiftTableData> reprintShiftReport({
     required String date,
     required int posId,
@@ -314,6 +317,8 @@ class EndShiftService {
     return local;
   }
 
+  // Loads the shift report from the server or its local fallback.
+  // Keeps rendering resilient even when the network is unavailable.
   Future<EndShiftResult> _loadReport(
     String date,
     int posId,
@@ -327,8 +332,6 @@ class EndShiftService {
       );
       return EndShiftResult(report: fresh, source: ShiftReportSource.server);
     } on DioException catch (e) {
-      // Only network-level failures fall back. A server that answers with
-      // "no data" throws a plain Exception and is deliberately NOT caught.
       debugPrint(
         'EndShiftService: server unreachable (${e.type}), '
         'trying local copy.',
@@ -358,6 +361,8 @@ class EndShiftService {
   /// [available] is false only when the server failed/was skipped AND there is
   /// nothing saved locally, i.e. the section is missing rather than
   /// legitimately empty.
+  // Loads sold-item rows for the report, preferring the live server copy.
+  // Falls back to the local cache when the network is unavailable.
   Future<({List<ShiftReportLine> lines, bool available})> _loadSoldItems(
     EndShiftTableData report, {
     required bool tryServer,
@@ -389,7 +394,8 @@ class EndShiftService {
     }
   }
 
-  /// Same strategy as [_loadSoldItems], for the sold services.
+  // Loads sold-service rows for the report, preferring the live server copy.
+  // Falls back to the local cache when the network is unavailable.
   Future<({List<ShiftReportLine> lines, bool available})> _loadSoldServices(
     EndShiftTableData report, {
     required bool tryServer,
@@ -424,7 +430,8 @@ class EndShiftService {
     }
   }
 
-  /// Same strategy as [_loadSoldItems], for the sold packages.
+  // Loads sold-package rows for the report, preferring the live server copy.
+  // Falls back to the local cache when the network is unavailable.
   Future<({List<ShiftReportLine> lines, bool available})> _loadSoldPackages(
     EndShiftTableData report, {
     required bool tryServer,
@@ -459,7 +466,8 @@ class EndShiftService {
     }
   }
 
-  /// Same strategy as [_loadSoldItems], for the payment summary.
+  // Loads payment summary rows for the report, preferring the live server copy.
+  // Falls back to the local cache when the network is unavailable.
   Future<({List<ShiftReportAmountLine> lines, bool available})>
   _loadPaymentSummary(
     EndShiftTableData report, {
@@ -495,7 +503,8 @@ class EndShiftService {
     }
   }
 
-  /// Same strategy as [_loadSoldItems], for the staff sales.
+  // Loads staff sales rows for the report, preferring the live server copy.
+  // Falls back to the local cache when the network is unavailable.
   Future<({List<ShiftReportAmountLine> lines, bool available})> _loadStaffSales(
     EndShiftTableData report, {
     required bool tryServer,
@@ -527,11 +536,15 @@ class EndShiftService {
     }
   }
 
+  // Converts sold-item rows into printer-friendly report lines.
+  // Keeps the printing logic simple and reusable across report types.
   List<ShiftReportLine> _soldToLines(List<SoldItemsReportTableData> rows) => [
     for (final r in rows)
       ShiftReportLine(name: r.item, quantity: r.quantity, total: r.total),
   ];
 
+  // Converts sold-service rows into printer-friendly report lines.
+  // Keeps the report formatting consistent across service summaries.
   List<ShiftReportLine> _servicesToLines(
     List<SoldServicesReportTableData> rows,
   ) => [
@@ -539,6 +552,8 @@ class EndShiftService {
       ShiftReportLine(name: r.item, quantity: r.quantity, total: r.total),
   ];
 
+  // Converts sold-package rows into printer-friendly report lines.
+  // Keeps the report formatting consistent across package summaries.
   List<ShiftReportLine> _packagesToLines(
     List<SoldPackagesReportTableData> rows,
   ) => [
@@ -546,6 +561,8 @@ class EndShiftService {
       ShiftReportLine(name: r.item, quantity: r.quantity, total: r.total),
   ];
 
+  // Converts payment rows into report amount lines for printing.
+  // Keeps the cash summary display consistent with the server output.
   List<ShiftReportAmountLine> _paymentsToLines(
     List<PaymentSummaryReportTableData> rows,
   ) => [
@@ -553,6 +570,8 @@ class EndShiftService {
       ShiftReportAmountLine(label: r.paymentType, total: r.total),
   ];
 
+  // Converts staff sales rows into report amount lines for printing.
+  // Keeps the staff summary display consistent with the server output.
   List<ShiftReportAmountLine> _staffToLines(
     List<StaffSalesReportTableData> rows,
   ) => [

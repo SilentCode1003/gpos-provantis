@@ -17,18 +17,26 @@ class PosDetailIdDao extends DatabaseAccessor<AppDatabase>
     with _$PosDetailIdDaoMixin {
   PosDetailIdDao(super.db);
 
+  // Saves the current POS detail ID in local storage.
+  // Keeps the latest remote value ready for the next sale.
   Future<void> savePosDetailId(Insertable<PosDetailIdTableData> posDetailId) {
     return into(posDetailIdTable).insertOnConflictUpdate(posDetailId);
   }
 
+  // Reads the stored POS detail ID from local storage.
+  // Returns null when the app has not synced one yet.
   Future<PosDetailIdTableData?> getPosDetailId() {
     return select(posDetailIdTable).getSingleOrNull();
   }
 
+  // Watches the POS detail ID value for live updates.
+  // Useful for any screen that needs the newest detail ID.
   Stream<PosDetailIdTableData?> watchPosDetailId() {
     return select(posDetailIdTable).watchSingleOrNull();
   }
 
+  // Consumes the current detail ID and advances it for the next use.
+  // This keeps sequential sale IDs monotonic and safe.
   Future<String> consumeAndIncrementDetailId() {
     return transaction(() async {
       final row = await getPosDetailId();

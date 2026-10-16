@@ -9,8 +9,8 @@ class ShiftReportDao extends DatabaseAccessor<AppDatabase>
     with _$ShiftReportDaoMixin {
   ShiftReportDao(super.db);
 
-  /// Replaces the stored shifts for ONE day and POS, leaving other days
-  /// untouched. An empty [rows] just clears that day.
+  // Replaces the stored shifts for one date and POS only.
+  // Keeps the report cache isolated to the requested day and terminal.
   Future<void> replaceForDate({
     required String date,
     required int pos,
@@ -28,6 +28,8 @@ class ShiftReportDao extends DatabaseAccessor<AppDatabase>
     });
   }
 
+  // Reads shift rows for one date and POS.
+  // Returns the requested report list in shift order.
   Future<List<ShiftReportTableData>> getForDate({
     required String date,
     required int pos,
@@ -38,6 +40,8 @@ class ShiftReportDao extends DatabaseAccessor<AppDatabase>
         .get();
   }
 
+  // Watches shift rows for one date and POS.
+  // Keeps the report screen updated as the local cache changes.
   Stream<List<ShiftReportTableData>> watchForDate({
     required String date,
     required int pos,

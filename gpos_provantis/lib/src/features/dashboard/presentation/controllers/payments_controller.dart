@@ -185,18 +185,22 @@ class PaymentController extends _$PaymentController {
   @override
   PaymentState build() => const PaymentState();
 
+  // Opens the list of enabled e-payment methods.
   void openEPaymentsList() {
     state = state.copyWith(step: PaymentStep.ePayments);
   }
 
+  // Opens the cash payment form.
   void openCash() {
     state = state.copyWith(step: PaymentStep.cash);
   }
 
+  // Opens the split-payment choice screen.
   void openSplitChoice() {
     state = state.copyWith(step: PaymentStep.splitChoice);
   }
 
+  // Selects the split-payment layout and initializes the two slots.
   void chooseSplitKind(SplitKind kind) {
     final step = kind == SplitKind.cashAndEPayment
         ? PaymentStep.splitCashEPayment
@@ -211,6 +215,7 @@ class PaymentController extends _$PaymentController {
     );
   }
 
+  // Moves the flow back one screen in the payment journey.
   void goBack() {
     switch (state.step) {
       case PaymentStep.root:
@@ -239,6 +244,7 @@ class PaymentController extends _$PaymentController {
     }
   }
 
+  // Stores the chosen e-payment method before confirmation.
   void selectEPaymentMethod(PaymentMethod method) {
     state = state.copyWith(
       step: PaymentStep.ePaymentConfirm,
@@ -247,36 +253,43 @@ class PaymentController extends _$PaymentController {
     );
   }
 
+  // Saves the reference ID entered for a single e-payment.
   void setSingleEPaymentReferenceId(String referenceId) {
     state = state.copyWith(singleEPaymentReferenceId: referenceId);
   }
 
+  // Stores the cash amount tendered by the customer.
   void setCashAmountTendered(double? amount) {
     state = state.copyWith(cashAmountTendered: amount);
   }
 
+  // Fills in the exact cash amount matching the charge total.
   void setCashExactAmount(double chargeTotal) {
     setCashAmountTendered(chargeTotal);
   }
 
+  // Assigns a payment method to one split-payment slot.
   void setSplitSlotMethod(int index, PaymentMethod method) {
     final updated = [...state.splitSlots];
     updated[index] = updated[index].copyWith(method: method, referenceId: null);
     state = state.copyWith(splitSlots: updated);
   }
 
+  // Saves the amount entered for one split-payment slot.
   void setSplitSlotAmount(int index, double? amount) {
     final updated = [...state.splitSlots];
     updated[index] = updated[index].copyWith(amount: amount);
     state = state.copyWith(splitSlots: updated);
   }
 
+  // Saves the reference ID for an e-payment split slot.
   void setSplitSlotReferenceId(int index, String referenceId) {
     final updated = [...state.splitSlots];
     updated[index] = updated[index].copyWith(referenceId: referenceId);
     state = state.copyWith(splitSlots: updated);
   }
 
+  // Fills the selected split slot with the remaining amount due.
   void fillRemainingAmount(int index, double chargeTotal) {
     final otherIndex = index == 0 ? 1 : 0;
     final otherAmount = state.splitSlots[otherIndex].amount ?? 0;
@@ -284,21 +297,19 @@ class PaymentController extends _$PaymentController {
     setSplitSlotAmount(index, remaining < 0 ? 0 : remaining);
   }
 
-  /// Claims the "submitting" lock. Returns false if a submit is already
-  /// running, in which case the caller must do nothing. Synchronous, so two
-  /// taps in the same frame can't both succeed.
+  // Claims the submitting lock so a payment cannot be posted twice.
   bool beginSubmit() {
     if (state.isSubmitting) return false;
     state = state.copyWith(isSubmitting: true);
     return true;
   }
 
-  /// Releases the lock after a failed submit so the cashier can retry. After a
-  /// successful one call [reset] instead, which also clears the lock.
+  // Releases the payment lock after a failed submit attempt.
   void endSubmit() {
     state = state.copyWith(isSubmitting: false);
   }
 
+  // Clears the payment modal state after a successful submission.
   void reset() {
     state = const PaymentState();
   }

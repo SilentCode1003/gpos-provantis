@@ -118,8 +118,7 @@ class MailerService {
   /// How long to wait for the mail server before giving up.
   final Duration timeout;
 
-  /// Looks the receipt up by [orNumber] (the receipt's detail id).
-  /// Throws [ReceiptNotFoundException] if nothing matches.
+  // Looks up the matching receipt by OR number from local or cached sale data.
   Future<EReceiptData> findReceipt(String orNumber) async {
     final or = orNumber.trim();
 
@@ -135,12 +134,7 @@ class MailerService {
     throw ReceiptNotFoundException(or);
   }
 
-  /// Emails the receipt with OR number [orNumber] to [recipient].
-  ///
-  /// [pdfAttachment] is optional: the old mailer always attached a PDF copy of
-  /// the receipt, and this still can when the caller has the bytes.
-  ///
-  /// Throws an [EReceiptException] (see its subclasses) when it can't send.
+  // Sends the selected receipt to the customer email address.
   Future<void> sendEReceipt({
     required String orNumber,
     required String recipient,
@@ -204,8 +198,7 @@ class MailerService {
     }
   }
 
-  // ---- Building the receipt from each source --------------------------------
-
+  // Builds the receipt payload for a normal in-app sale record.
   EReceiptData _fromSale(String or, SalesTableData row) {
     final cash = _num(row.cash);
     final ecash = _num(row.ecash);
@@ -242,6 +235,7 @@ class MailerService {
     );
   }
 
+  // Builds the receipt payload for a split-payment sale.
   EReceiptData _fromSplit(String or, SplitPaymentTableData row) {
     return EReceiptData(
       orNumber: or,
@@ -265,6 +259,7 @@ class MailerService {
     );
   }
 
+  // Builds the receipt payload from the cached remote receipt history.
   EReceiptData _fromHistory(String or, ReceiptHistoryTableData row) {
     final items = [
       for (final i in row.items)
@@ -297,6 +292,7 @@ class MailerService {
 
 // ---- Provider ---------------------------------------------------------------
 
+// Creates the mailer service with the DAOs and config loader it needs.
 @Riverpod(keepAlive: true)
 MailerService mailerService(Ref ref) {
   final emailDao = ref.watch(emailDaoProvider);
@@ -310,8 +306,7 @@ MailerService mailerService(Ref ref) {
   );
 }
 
-/// The account saved in Settings > Email. Read fresh on every send, so a
-/// change in Settings applies to the next receipt without a restart.
+// Loads the saved SMTP account and validates it before sending a receipt.
 Future<MailerConfig> _loadMailerConfig(EmailDao emailDao) async {
   final row = await emailDao.getEmail();
   final email = row == null ? EmailDto.empty : EmailDto.fromTableData(row);
@@ -333,6 +328,7 @@ Future<MailerConfig> _loadMailerConfig(EmailDao emailDao) async {
 /// WIRE THIS UP: return the branch name and address printed on the email.
 ///
 /// The old mailer read `branchname` and `address` from `branch.json`.
+// Returns the branch info required to build the receipt email.
 Future<EReceiptBranchInfo> _loadBranchInfo() async {
   throw const MailerNotConfiguredException(
     'The branch details for the e-receipt are not set up yet.',

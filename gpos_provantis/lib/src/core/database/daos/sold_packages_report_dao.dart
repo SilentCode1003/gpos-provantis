@@ -9,8 +9,8 @@ class SoldPackagesReportDao extends DatabaseAccessor<AppDatabase>
     with _$SoldPackagesReportDaoMixin {
   SoldPackagesReportDao(super.db);
 
-  /// Replaces the stored rows for ONE receipt range (one shift), leaving other
-  /// shifts untouched. An empty [rows] just clears that range.
+  // Replaces the stored rows for one receipt range only.
+  // Keeps the report cache isolated to the requested shift window.
   Future<void> replaceForRange({
     required int receiptBeginning,
     required int receiptEnding,
@@ -31,6 +31,8 @@ class SoldPackagesReportDao extends DatabaseAccessor<AppDatabase>
     });
   }
 
+  // Reads sold-package rows for one receipt range.
+  // Returns the requested shift report from the local cache.
   Future<List<SoldPackagesReportTableData>> getForRange({
     required int receiptBeginning,
     required int receiptEnding,
@@ -43,10 +45,14 @@ class SoldPackagesReportDao extends DatabaseAccessor<AppDatabase>
         .get();
   }
 
+  // Reads all sold-package reports from local storage.
+  // Returns the full cached package-report set for the device.
   Future<List<SoldPackagesReportTableData>> getAllSoldPackagesReports() {
     return select(soldPackagesReportTable).get();
   }
 
+  // Watches the sold-package report list for live updates.
+  // Keeps the report UI aligned with the latest local cache.
   Stream<List<SoldPackagesReportTableData>> watchAllSoldPackagesReports() {
     return select(soldPackagesReportTable).watch();
   }

@@ -11,6 +11,8 @@ class CashReportDao extends DatabaseAccessor<AppDatabase>
 
   /// Replaces the stored reports for ONE day, branch and POS, leaving other
   /// days untouched. An empty [rows] just clears that day.
+  // Replaces the cash report rows for one branch/date/POS scope.
+  // Keeps reporting data isolated to the requested period.
   Future<void> replaceForDate({
     required String branchId,
     required String posId,
@@ -34,6 +36,8 @@ class CashReportDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// Ordered by shift number.
+  // Reads cash reports for one date and POS in shift order.
+  // Keeps the report rows grouped in chronological sequence.
   Future<List<CashReportTableData>> getForDate({
     required String branchId,
     required String posId,
@@ -50,6 +54,8 @@ class CashReportDao extends DatabaseAccessor<AppDatabase>
         .get();
   }
 
+  // Watches the cash report rows for one date and POS.
+  // Useful for live reporting screens that need the current shift data.
   Stream<List<CashReportTableData>> watchForDate({
     required String branchId,
     required String posId,

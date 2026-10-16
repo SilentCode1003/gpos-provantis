@@ -81,19 +81,23 @@ class SendEReceiptController extends _$SendEReceiptController {
     return SendEReceiptState(orNumber: initialOrNumber);
   }
 
+  // Updates the OR number field and clears any stale lookup message.
+  // This keeps the user-facing validation in sync with the current receipt.
   void setOrNumber(String value) {
     if (value == state.orNumber) return;
     // A new OR number makes the old "not found" message stale.
     state = state.copyWith(orNumber: value, lookupError: null);
   }
 
+  // Updates the email field while the cashier is typing.
+  // Keeps the form state reactive without resetting the validation flags.
   void setEmail(String value) {
     if (value == state.email) return;
     state = state.copyWith(email: value);
   }
 
-  /// Validates and sends. Returns true only when the email went out, so the
-  /// sheet knows to close. On failure the sheet stays open for a retry.
+  // Validates and sends the e-receipt for the current fields.
+  // Returns true only when the email was accepted so the sheet can close.
   Future<bool> submit() async {
     if (state.isSending) return false;
 

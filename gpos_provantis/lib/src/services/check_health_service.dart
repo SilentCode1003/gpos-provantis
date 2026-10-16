@@ -44,6 +44,7 @@ enum ServerHealthStatus { checking, online, offline }
 class ServerHealthController extends _$ServerHealthController {
   Timer? _timer;
 
+  // Starts the heartbeat timer and triggers a first check immediately.
   @override
   ServerHealthStatus build() {
     ref.onDispose(() => _timer?.cancel());
@@ -51,6 +52,7 @@ class ServerHealthController extends _$ServerHealthController {
     return ServerHealthStatus.checking;
   }
 
+  // Starts or refreshes the recurring health check timer.
   void _startPolling() {
     _timer?.cancel();
     // Fire one check immediately rather than waiting out the first
@@ -59,6 +61,7 @@ class ServerHealthController extends _$ServerHealthController {
     _timer = Timer.periodic(_healthCheckInterval, (_) => _check());
   }
 
+  // Pings the server and updates the current connection state.
   Future<void> _check() async {
     try {
       final dio = ref.read(apiClientProvider);
@@ -82,10 +85,7 @@ class ServerHealthController extends _$ServerHealthController {
     }
   }
 
-  /// Force an immediate check, independent of the 10s timer. Used by the
-  /// "Refresh connection" action in the top bar's profile menu. Resets the
-  /// timer so the next automatic check is a full interval after this one,
-  /// rather than firing again almost immediately.
+  // Forces a fresh health check and resets the polling timer.
   Future<void> refresh() async {
     state = ServerHealthStatus.checking;
     _startPolling();

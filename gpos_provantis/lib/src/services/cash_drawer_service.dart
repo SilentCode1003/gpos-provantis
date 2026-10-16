@@ -31,6 +31,8 @@ class CashDrawerService {
   /// network attempt, so this completes (and the shift can proceed) even
   /// with no connectivity; the sends themselves happen in the background via
   /// the outbox and are retried automatically by later queue/drain calls.
+  // Saves the opening drawer count and queues it in the required order.
+  // Keeps the start-of-shift activity synced to the server without blocking the cashier.
   Future<void> recordStartShiftCount({
     required String shift,
     required String cashier,
@@ -50,6 +52,8 @@ class CashDrawerService {
   /// Records the drawer count taken at the end of a shift. Same shape and
   /// ordering as [recordStartShiftCount] — the server does not distinguish
   /// start from end, both are sent as `activity: 'endshift'`.
+  // Saves the closing drawer count and queues it in the same order as the opening count.
+  // Keeps the end-of-shift activity consistent with the server's expected flow.
   Future<void> recordEndShiftCount({
     required String shift,
     required String cashier,
@@ -66,6 +70,8 @@ class CashDrawerService {
     lines: lines,
   );
 
+  // Queues the drawer activity sequence for a shift event in server order.
+  // Ensures the open-drawer notice is recorded before the denomination count.
   Future<void> _recordShiftDrawerCount({
     required String shift,
     required String cashier,
@@ -101,6 +107,8 @@ class CashDrawerService {
 
   /// Records the cash tendered for one completed sale. Called once per
   /// transaction, right after the sale is saved.
+  // Saves a completed sale's cash transaction as a drawer activity.
+  // Keeps the drawer audit trail aligned with transaction history.
   Future<void> recordTransaction({
     required String shift,
     required String cashier,
@@ -127,5 +135,7 @@ class CashDrawerService {
   /// was offline when a shift ended). Safe to call at any time, including
   /// with an empty queue. A good place to call this is app startup and
   /// whenever connectivity is restored, though neither is wired up yet.
+  // Sends any pending drawer activities that were left behind while offline.
+  // Helps recover queued shift activity once the connection is back.
   Future<bool> retryPending() => _repository.drainPendingActivities();
 }
