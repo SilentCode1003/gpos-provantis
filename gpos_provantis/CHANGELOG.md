@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.0](https://github.com/SilentCode1003/gpos-provantis/compare/gpos_provantis-v0.4.0...gpos_provantis-v1.0.0) (2026-10-17)
+
+
+### Miscellaneous Chores
+
+* release 1.0.0 ([cba1a47](https://github.com/SilentCode1003/gpos-provantis/commit/cba1a47c668261b73e2afa04510f6eb099c1698d))
+* release 1.0.0 ([9a8a502](https://github.com/SilentCode1003/gpos-provantis/commit/9a8a502ef3eebed6e3673850dd4b3de005b5f1ea))
+
 ## [0.4.0](https://github.com/SilentCode1003/gpos-provantis/compare/gpos_provantis-v0.3.0...gpos_provantis-v0.4.0) (2026-10-17)
 
 
