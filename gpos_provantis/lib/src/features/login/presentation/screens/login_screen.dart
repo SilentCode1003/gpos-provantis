@@ -1,4 +1,7 @@
+import 'dart:io' show Platform, exit;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:go_router/go_router.dart';
@@ -49,7 +52,7 @@ class _WideLayout extends StatelessWidget {
               children: [
                 Center(child: _LoginForm()),
                 Positioned(top: 20, left: 20, child: _SetupButton()),
-                Positioned(top: 20, right: 20, child: _SyncButton()),
+                Positioned(top: 20, right: 20, child: _TopRightActions()),
               ],
             ),
           ),
@@ -81,7 +84,7 @@ class _NarrowLayout extends StatelessWidget {
           ],
         ),
         const Positioned(top: 12, left: 12, child: _SetupButton()),
-        const Positioned(top: 12, right: 12, child: _SyncButton()),
+        const Positioned(top: 12, right: 12, child: _TopRightActions()),
       ],
     );
   }
@@ -102,7 +105,7 @@ class _BrandPanel extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _LogoMark(color: colors.onPrimary),
+              _LogoMark(size: 260),
               const SizedBox(height: 20),
               Text(
                 'GPOS PROVANTIS',
@@ -143,7 +146,7 @@ class _BrandBand extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _LogoMark(color: colors.onPrimary, size: 44),
+          _LogoMark(size: 44),
           const SizedBox(height: 10),
           Text(
             'GPOS PROVANTIS',
@@ -161,21 +164,17 @@ class _BrandBand extends StatelessWidget {
 }
 
 class _LogoMark extends StatelessWidget {
-  const _LogoMark({required this.color, this.size = 60});
+  const _LogoMark({this.size = 60});
 
-  final Color color;
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Image.asset(
+      'assets/logo/logo.png',
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(size * 0.28),
-      ),
-      child: Icon(Icons.point_of_sale_rounded, color: color, size: size * 0.5),
+      fit: BoxFit.contain,
     );
   }
 }
@@ -477,6 +476,52 @@ Future<void> _confirmReturnToSetup(BuildContext context) async {
 
   if (confirmed == true && context.mounted) {
     context.go('/setup');
+  }
+}
+
+class _TopRightActions extends StatelessWidget {
+  const _TopRightActions();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [_SyncButton(), SizedBox(width: 8), _ExitButton()],
+    );
+  }
+}
+
+class _ExitButton extends StatelessWidget {
+  const _ExitButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return _FlatIconButton(
+      icon: Icons.power_settings_new_rounded,
+      tooltip: 'Exit',
+      onPressed: () => _confirmExit(context),
+    );
+  }
+}
+
+Future<void> _confirmExit(BuildContext context) async {
+  final confirmed = await showConfirmDialog(
+    context,
+    eyebrow: 'EXIT APP',
+    title: 'Close GPOS Provantis?',
+    body: 'The application will close on this device.',
+    confirmLabel: 'EXIT',
+  );
+
+  if (confirmed == true) await _exitApp();
+}
+
+Future<void> _exitApp() async {
+  if (Platform.isAndroid) {
+    await SystemNavigator.pop();
+  } else {
+    // Windows (and other desktop platforms): SystemNavigator.pop is a no-op.
+    exit(0);
   }
 }
 

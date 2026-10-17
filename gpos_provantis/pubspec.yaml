@@ -50,6 +50,9 @@ dependencies:
   device_info_plus: ^13.1.0
   pdfrx: ^2.4.7
 
+  # Generate Flutter Main Icon
+  flutter_launcher_icons: ^0.14.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -63,3 +66,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/guides/
+    - assets/logo/logo.png
