@@ -1,7 +1,7 @@
 name: gpos_provantis
 description: "GPOS Provantis is a Flutter-based Point of Sale (POS) and retail management system designed for business operations that need fast sales processing, shift control, receipt printing, and local transaction management."
 publish_to: "none"
-version: 0.3.0+2
+version: 0.4.0+3
 
 environment:
   sdk: ^3.11.5
