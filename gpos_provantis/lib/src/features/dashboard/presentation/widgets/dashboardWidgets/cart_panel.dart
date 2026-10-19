@@ -87,12 +87,22 @@ class _CartPanelState extends ConsumerState<CartPanel> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final state = ref.watch(dashboardControllerProvider);
+    // Narrow watchers: the panel no longer rebuilds on search keystrokes or
+    // other state it doesn't show.
+    final cartLines = ref.watch(
+      dashboardControllerProvider.select((s) => s.cartLines),
+    );
+    final itemCount = ref.watch(
+      dashboardControllerProvider.select((s) => s.itemCount),
+    );
+    final isCatalogSheetOpen = ref.watch(
+      dashboardControllerProvider.select((s) => s.isCatalogSheetOpen),
+    );
     final notifier = ref.read(dashboardControllerProvider.notifier);
     final isShiftOpen = ref.watch(isShiftOpenProvider);
 
     // Side-by-side layout only: the cart dims while the catalog sheet is open.
-    final isSheetOpen = !widget._embedded && state.isCatalogSheetOpen;
+    final isSheetOpen = !widget._embedded && isCatalogSheetOpen;
     _syncScrimTimer(isSheetOpen);
 
     return GestureDetector(
@@ -108,7 +118,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
             child: Column(
               children: [
                 _CartHeader(
-                  itemCount: state.itemCount,
+                  itemCount: itemCount,
                   canRemoveAll: isShiftOpen,
                   onRemoveAll: () => _handleRemoveAll(context),
                   onClose: widget.onClose,
@@ -116,7 +126,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
-                    child: state.cartLines.isEmpty
+                    child: cartLines.isEmpty
                         ? _EmptyCart(
                             key: const ValueKey('empty'),
                             shiftClosed: !isShiftOpen,
@@ -126,13 +136,11 @@ class _CartPanelState extends ConsumerState<CartPanel> {
                         : AbsorbPointer(
                             key: const ValueKey('list'),
                             absorbing: !isShiftOpen,
-                            child: _ScrollableCartList(
-                              cartLines: state.cartLines,
-                            ),
+                            child: _ScrollableCartList(cartLines: cartLines),
                           ),
                   ),
                 ),
-                _CartFooter(state: state, shiftOpen: isShiftOpen),
+                _CartFooter(shiftOpen: isShiftOpen),
               ],
             ),
           ),
@@ -980,9 +988,7 @@ class _StepperButton extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _CartFooter extends ConsumerWidget {
-  const _CartFooter({required this.state, required this.shiftOpen});
-
-  final DashboardState state;
+  const _CartFooter({required this.shiftOpen});
 
   /// False while the shift is closed: no discount, no charging.
   final bool shiftOpen;
@@ -999,7 +1005,21 @@ class _CartFooter extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final hasItems = state.cartLines.isNotEmpty;
+    // The footer's own narrow watcher. A record compares by value, so it only
+    // rebuilds when one of these numbers (or the discount) really changes.
+    final totals = ref.watch(
+      dashboardControllerProvider.select(
+        (s) => (
+          hasItems: s.cartLines.isNotEmpty,
+          discount: s.selectedDiscount,
+          subtotal: s.subtotal,
+          discountAmount: s.discountAmount,
+          total: s.total,
+        ),
+      ),
+    );
+    final discount = totals.discount;
+    final hasItems = totals.hasItems;
     final canAct = hasItems && shiftOpen;
 
     return Container(
@@ -1029,22 +1049,18 @@ class _CartFooter extends ConsumerWidget {
         children: [
           _DiscountTile(
             enabled: canAct,
-            applied: state.hasDiscount,
-            title: state.hasDiscount
-                ? state.selectedDiscount!.name
-                : 'Add discount',
-            subtitle: state.hasDiscount
-                ? '${state.selectedDiscount!.rate}% off applied'
-                : null,
+            applied: discount != null,
+            title: discount != null ? discount.name : 'Add discount',
+            subtitle: discount != null ? '${discount.rate}% off applied' : null,
             onTap: () => showDiscountPickerSheet(context),
           ),
           const SizedBox(height: 14),
-          _TotalsRow(label: 'Subtotal', value: state.subtotal, colors: colors),
-          if (state.hasDiscount) ...[
+          _TotalsRow(label: 'Subtotal', value: totals.subtotal, colors: colors),
+          if (discount != null) ...[
             const SizedBox(height: 6),
             _TotalsRow(
-              label: 'Discount (${state.selectedDiscount!.rate}%)',
-              value: -state.discountAmount,
+              label: 'Discount (${discount.rate}%)',
+              value: -totals.discountAmount,
               colors: colors,
               valueColor: colors.primary,
             ),
@@ -1066,7 +1082,7 @@ class _CartFooter extends ConsumerWidget {
                 ),
               ),
               Text(
-                _money(state.total),
+                _money(totals.total),
                 style: AppTypography.display(
                   color: colors.textPrimary,
                   fontSize: 30,
@@ -1104,7 +1120,7 @@ class _CartFooter extends ConsumerWidget {
                   ),
                   const Spacer(),
                   Text(
-                    _money(state.total),
+                    _money(totals.total),
                     style: _amountStyle(
                       color: canAct ? colors.onPrimary : colors.textDisabled,
                       fontSize: 17,

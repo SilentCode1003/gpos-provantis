@@ -43,7 +43,12 @@ class _DiscountPickerSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final discountsAsync = ref.watch(discountsProvider);
-    final state = ref.watch(dashboardControllerProvider);
+    final hasDiscount = ref.watch(
+      dashboardControllerProvider.select((s) => s.hasDiscount),
+    );
+    final selectedDiscountId = ref.watch(
+      dashboardControllerProvider.select((s) => s.selectedDiscount?.discountId),
+    );
     final notifier = ref.read(dashboardControllerProvider.notifier);
 
     return FractionallySizedBox(
@@ -60,7 +65,7 @@ class _DiscountPickerSheet extends ConsumerWidget {
             const SizedBox(height: 12),
             const _SheetHandle(),
             _Header(
-              hasDiscount: state.hasDiscount,
+              hasDiscount: hasDiscount,
               onClear: () {
                 notifier.clearDiscount();
                 Navigator.of(context).pop();
@@ -73,7 +78,7 @@ class _DiscountPickerSheet extends ConsumerWidget {
                     ? const _EmptyDiscounts()
                     : _DiscountList(
                         discounts: discounts,
-                        selectedDiscountId: state.selectedDiscount?.discountId,
+                        selectedDiscountId: selectedDiscountId,
                         onPick: (discount) {
                           if (notifier.discountRequiresCustomerInfo(discount)) {
                             showModalBottomSheet<void>(

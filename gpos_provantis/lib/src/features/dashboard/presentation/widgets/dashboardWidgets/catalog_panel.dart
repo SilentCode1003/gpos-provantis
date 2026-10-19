@@ -46,10 +46,13 @@ class _ActionsRail extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
 
-    final state = ref.watch(dashboardControllerProvider);
     final notifier = ref.read(dashboardControllerProvider.notifier);
     final isShiftOpen = notifier.shiftStatus == ShiftStatus.open;
-    final isToggling = state.isTogglingShift;
+    // Only this flag matters here, so a cart tap or a search keystroke no
+    // longer rebuilds the whole actions rail.
+    final isToggling = ref.watch(
+      dashboardControllerProvider.select((s) => s.isTogglingShift),
+    );
     // Cash drop needs a physical drawer: off when no enabled printer has one.
     final hasCashDrawer = ref.watch(cashDrawerEnabledProvider);
 
@@ -309,7 +312,9 @@ class _CategoryGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(dashboardControllerProvider);
+    // Rebuild when the catalog data changes (categories, services, packages,
+    // add-ons), NOT on every cart tap or search keystroke.
+    ref.watch(catalogSourcesProvider);
     final controller = ref.watch(dashboardControllerProvider.notifier);
     final isShiftOpen = ref.watch(isShiftOpenProvider);
 
