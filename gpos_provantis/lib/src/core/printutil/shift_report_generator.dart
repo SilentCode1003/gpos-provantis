@@ -1,3 +1,5 @@
+import 'dart:isolate';
+
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter_multi_formatter/formatters/formatter_utils.dart';
@@ -137,7 +139,10 @@ class ShiftReportPrinterService {
   final _wifiPrinterService = WifiPrinterService();
   final _usbPrinterService = UsbPrinterService();
 
-  String _formatCurrency(double value) =>
+  // The byte-building helpers below are static on purpose: they run on a
+  // background isolate (see _buildReportBytesInBackground) and so must not
+  // touch `this` (the Ref, DAOs and printer services are not sendable).
+  static String _formatCurrency(double value) =>
       toCurrencyString(value.toString(), mantissaLength: 2);
 
   Future<void> printShiftReport(
@@ -180,7 +185,7 @@ class ShiftReportPrinterService {
     final branch = await ref.read(branchConfigDaoProvider).getBranch();
     final posConfig = await ref.read(posConfigDaoProvider).getPos();
 
-    final paperSize = parsePaperSize(printer.paperSize);
+    // Needs the asset bundle, so it must be loaded here on the main isolate.
     final profile = await CapabilityProfile.load();
 
     final logo = await decodeBranchLogo(
@@ -189,10 +194,13 @@ class ShiftReportPrinterService {
       maxHeightPx: 250,
     );
 
-    final bytes = _buildReportBytes(
+    // The CPU-heavy part (ESC/POS encoding, logo rasterising) runs off the
+    // UI thread. Database reads, the logo decode and the actual printing stay
+    // on the main isolate.
+    final bytes = await _buildReportBytesInBackground(
       report: report,
       settings: settings,
-      paper: paperSize,
+      paperSizeName: printer.paperSize,
       profile: profile,
       serialNumber: posConfig?.serial ?? '',
       branchName: branch?.branchName ?? 'UNREGISTERED',
@@ -203,7 +211,7 @@ class ShiftReportPrinterService {
     await _sendToPrinter(printer, bytes);
   }
 
-  List<int> _buildReportBytes({
+  static List<int> _buildReportBytes({
     required ShiftReportPrintData report,
     required SettingsDto settings,
     required PaperSize paper,
@@ -340,7 +348,7 @@ class ShiftReportPrinterService {
 
   /// "DESC / QTY / TOTAL" table (wide) or "name x qty" + amount (narrow).
   /// Returns nothing when [lines] is empty so the section is skipped.
-  List<int> _lineSection(
+  static List<int> _lineSection(
     Generator ticket,
     bool wide,
     String title,
@@ -422,7 +430,7 @@ class ShiftReportPrinterService {
   }
 
   /// Label + amount rows (payments summary, staff sales). Skipped when empty.
-  List<int> _amountSection(
+  static List<int> _amountSection(
     Generator ticket,
     bool wide,
     String title,
@@ -445,7 +453,7 @@ class ShiftReportPrinterService {
     return bytes;
   }
 
-  List<int> _kv(
+  static List<int> _kv(
     Generator ticket,
     bool wide,
     String leftLabel,
@@ -473,7 +481,7 @@ class ShiftReportPrinterService {
     ];
   }
 
-  List<int> _amountRow(
+  static List<int> _amountRow(
     Generator ticket,
     bool wide,
     String label,
@@ -532,6 +540,35 @@ class ShiftReportPrinterService {
         );
     }
   }
+}
+
+/// Builds the Z-reading bytes on a short-lived background isolate.
+///
+/// A top-level function on purpose: the closure below can only capture the
+/// plain-data parameters, never a [ShiftReportPrinterService] (which holds the
+/// Ref). The paper size travels as its name and is parsed inside the isolate.
+Future<List<int>> _buildReportBytesInBackground({
+  required ShiftReportPrintData report,
+  required SettingsDto settings,
+  required String paperSizeName,
+  required CapabilityProfile profile,
+  required String serialNumber,
+  required String branchName,
+  required String branchAddress,
+  required img.Image? logo,
+}) {
+  return Isolate.run(
+    () => ShiftReportPrinterService._buildReportBytes(
+      report: report,
+      settings: settings,
+      paper: parsePaperSize(paperSizeName),
+      profile: profile,
+      serialNumber: serialNumber,
+      branchName: branchName,
+      branchAddress: branchAddress,
+      logo: logo,
+    ),
+  );
 }
 
 final shiftReportPrinterServiceProvider = Provider<ShiftReportPrinterService>((

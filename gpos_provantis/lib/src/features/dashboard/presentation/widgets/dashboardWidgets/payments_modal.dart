@@ -236,7 +236,7 @@ class _ModalHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final total = ref.watch(dashboardControllerProvider).total;
+    final total = ref.watch(dashboardControllerProvider.select((s) => s.total));
     final notifier = ref.read(paymentControllerProvider.notifier);
     final isRoot = step == PaymentStep.root;
     final narrow = _isNarrow(context);
@@ -685,7 +685,7 @@ class _EPaymentConfirmScreenState
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final total = ref.watch(dashboardControllerProvider).total;
+    final total = ref.watch(dashboardControllerProvider.select((s) => s.total));
     final paymentState = ref.watch(paymentControllerProvider);
     final notifier = ref.read(paymentControllerProvider.notifier);
     final method = paymentState.selectedMethod;
@@ -861,7 +861,7 @@ class _CashScreenState extends ConsumerState<_CashScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final total = ref.watch(dashboardControllerProvider).total;
+    final total = ref.watch(dashboardControllerProvider.select((s) => s.total));
     final paymentState = ref.watch(paymentControllerProvider);
     final notifier = ref.read(paymentControllerProvider.notifier);
     final changeDue = paymentState.cashChangeDue(total);
@@ -1160,7 +1160,7 @@ class _SplitLayoutState extends ConsumerState<_SplitLayout> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final total = ref.watch(dashboardControllerProvider).total;
+    final total = ref.watch(dashboardControllerProvider.select((s) => s.total));
     final paymentState = ref.watch(paymentControllerProvider);
     final remaining = total - paymentState.splitAssignedTotal;
     final narrow = _isNarrow(context);

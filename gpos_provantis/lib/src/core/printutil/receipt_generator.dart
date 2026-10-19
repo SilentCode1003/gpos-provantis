@@ -1,3 +1,5 @@
+import 'dart:isolate';
+
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter_multi_formatter/formatters/formatter_utils.dart';
@@ -112,7 +114,11 @@ class ReceiptGenerator {
   final _wifiPrinterService = WifiPrinterService();
   final _usbPrinterService = UsbPrinterService();
 
-  String _formatCurrency(double value) => toCurrencyString(value.toString());
+  // The byte-building helpers below are static on purpose: they run on a
+  // background isolate (see _buildTicketBytesInBackground) and so must not
+  // touch `this` (the Ref, DAOs and printer services are not sendable).
+  static String _formatCurrency(double value) =>
+      toCurrencyString(value.toString());
 
   Future<void> printForSale(
     ReceiptSaleData sale, {
@@ -154,7 +160,7 @@ class ReceiptGenerator {
     final branch = await ref.read(branchConfigDaoProvider).getBranch();
     final posConfig = await ref.read(posConfigDaoProvider).getPos();
 
-    final paperSize = parsePaperSize(printer.paperSize);
+    // Needs the asset bundle, so it must be loaded here on the main isolate.
     final profile = await CapabilityProfile.load();
 
     final logo = await decodeBranchLogo(
@@ -163,10 +169,13 @@ class ReceiptGenerator {
       maxHeightPx: 250,
     );
 
-    final bytes = _buildTicketBytes(
+    // The CPU-heavy part (ESC/POS encoding, logo rasterising) runs off the
+    // UI thread. Database reads, the logo decode and the actual printing stay
+    // on the main isolate.
+    final bytes = await _buildTicketBytesInBackground(
       sale: sale,
       settings: settings,
-      paper: paperSize,
+      paperSizeName: printer.paperSize,
       profile: profile,
       serialNumber: posConfig?.serial ?? '',
       branchName: branch?.branchName ?? 'UNREGISTERED',
@@ -177,7 +186,7 @@ class ReceiptGenerator {
     await _sendToPrinter(printer, bytes);
   }
 
-  List<int> _buildTicketBytes({
+  static List<int> _buildTicketBytes({
     required ReceiptSaleData sale,
     required SettingsDto settings,
     required PaperSize paper,
@@ -486,7 +495,7 @@ class ReceiptGenerator {
     return bytes;
   }
 
-  List<int> _kv(
+  static List<int> _kv(
     Generator ticket,
     bool wide,
     String leftLabel,
@@ -533,7 +542,7 @@ class ReceiptGenerator {
     ];
   }
 
-  List<int> _amountRow(
+  static List<int> _amountRow(
     Generator ticket,
     bool wide,
     String label,
@@ -554,7 +563,7 @@ class ReceiptGenerator {
     ]);
   }
 
-  String _formatDate(DateTime dateTime) {
+  static String _formatDate(DateTime dateTime) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     return '${dateTime.year}-${twoDigits(dateTime.month)}-${twoDigits(dateTime.day)} '
         '${twoDigits(dateTime.hour)}:${twoDigits(dateTime.minute)}';
@@ -598,6 +607,36 @@ class ReceiptGenerator {
         );
     }
   }
+}
+
+/// Builds the receipt bytes on a short-lived background isolate.
+///
+/// A top-level function on purpose: the closure below can only capture the
+/// plain-data parameters, never a [ReceiptGenerator] (which holds the Ref).
+/// The paper size travels as its name and is parsed inside the isolate, so no
+/// const instance has to survive the trip with its identity intact.
+Future<List<int>> _buildTicketBytesInBackground({
+  required ReceiptSaleData sale,
+  required SettingsDto settings,
+  required String paperSizeName,
+  required CapabilityProfile profile,
+  required String serialNumber,
+  required String branchName,
+  required String branchAddress,
+  required img.Image? logo,
+}) {
+  return Isolate.run(
+    () => ReceiptGenerator._buildTicketBytes(
+      sale: sale,
+      settings: settings,
+      paper: parsePaperSize(paperSizeName),
+      profile: profile,
+      serialNumber: serialNumber,
+      branchName: branchName,
+      branchAddress: branchAddress,
+      logo: logo,
+    ),
+  );
 }
 
 class ReceiptPrintException implements Exception {
