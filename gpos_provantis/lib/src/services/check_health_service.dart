@@ -24,6 +24,62 @@ const String _healthCheckPath = '/checkhealth/alive';
 /// rather than assuming online or offline.
 enum ServerHealthStatus { checking, online, offline }
 
+/// One-off health probe against an arbitrary [baseUrl] (e.g.
+/// `https://host:8080/`), independent of the saved domain.
+///
+/// Used by the setup screen to verify the address the user just typed BEFORE
+/// it is persisted — [apiClientProvider] only knows the saved domain, so it
+/// can't be used there. Hits the same endpoint as [ServerHealthController].
+///
+/// Returns `null` when the server answered with a 2xx, otherwise a short
+/// human-readable reason the check failed.
+Future<String?> probeServerHealth(
+  String baseUrl, {
+  Duration timeout = const Duration(seconds: 6),
+}) async {
+  final root = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
+  final path = _healthCheckPath.startsWith('/')
+      ? _healthCheckPath.substring(1)
+      : _healthCheckPath;
+
+  final dio = Dio(
+    BaseOptions(
+      connectTimeout: timeout,
+      receiveTimeout: timeout,
+      sendTimeout: timeout,
+    ),
+  );
+
+  try {
+    final response = await dio.get('$root$path');
+    final code = response.statusCode;
+    if (code != null && code >= 200 && code < 300) return null;
+    return 'server responded with status ${code ?? 'unknown'}';
+  } on DioException catch (e) {
+    debugPrint('🔥 setup health probe failed: ${e.type} ${e.message}');
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return 'the server took too long to respond';
+      case DioExceptionType.badCertificate:
+        return 'the SSL certificate was rejected';
+      case DioExceptionType.badResponse:
+        return 'server responded with status '
+            '${e.response?.statusCode ?? 'unknown'}';
+      case DioExceptionType.connectionError:
+        return 'the server could not be reached';
+      default:
+        return e.message ?? 'unknown network error';
+    }
+  } catch (e) {
+    debugPrint('🔥 setup health probe error: $e');
+    return 'unexpected error';
+  } finally {
+    dio.close(force: true);
+  }
+}
+
 /// --- Server health polling ---------------------------------------------------
 ///
 /// Pings `/checkhealth/check-health` on [apiClientProvider]'s [Dio] instance

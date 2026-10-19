@@ -204,19 +204,6 @@ class ReceiptGenerator {
       bytes += ticket.image(logo);
     }
 
-    if (sale.isReprint) {
-      bytes += ticket.text(
-        '**REPRINT**',
-        styles: const PosStyles(
-          align: PosAlign.center,
-          bold: true,
-          height: PosTextSize.size2,
-          width: PosTextSize.size2,
-        ),
-        linesAfter: 1,
-      );
-    }
-
     bytes += ticket.text(
       branchName,
       styles: const PosStyles(
@@ -471,20 +458,13 @@ class ReceiptGenerator {
       );
     }
 
+    // The footer message only prints when it is toggled on in Settings.
+    // With the toggle off, nothing is printed between the receipt body and
+    // the paper cut.
     if (settings.showOfficialReceiptMessageAtTheBottom) {
       bytes += ticket.feed(1);
       bytes += ticket.text(
         '---THIS IS AN OFFICIAL RECEIPT---',
-        styles: const PosStyles(align: PosAlign.center),
-      );
-    } else {
-      bytes += ticket.feed(1);
-      bytes += ticket.text(
-        'Thank you! Come again!',
-        styles: const PosStyles(align: PosAlign.center),
-      );
-      bytes += ticket.text(
-        '***NOT AN OFFICIAL RECEIPT***',
         styles: const PosStyles(align: PosAlign.center),
       );
     }

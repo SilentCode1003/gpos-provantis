@@ -4,6 +4,7 @@ import 'package:gpos_provantis/src/features/setup/domain/setup_model.dart';
 import 'package:gpos_provantis/src/core/network/domain_provider.dart';
 import 'package:gpos_provantis/src/core/network/api_client.dart';
 import 'package:gpos_provantis/src/services/sync/initial_sync.dart';
+import 'package:gpos_provantis/src/services/check_health_service.dart';
 
 part 'setup_controller.g.dart';
 
@@ -87,6 +88,22 @@ class SetupController extends _$SetupController {
       state = state.copyWith(isLoading: false, errorMessage: portError);
       return false;
     }
+
+    // Verify the typed address is reachable BEFORE anything is saved, so a
+    // typo is caught here instead of after a failed save/sync.
+    debugPrint('🔧 saveSetup: checking server health at "$domain"');
+    final healthError = await probeServerHealth(domain);
+    if (healthError != null) {
+      debugPrint('🔥 saveSetup: health check failed: $healthError');
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage:
+            'Could not connect to $domain ($healthError). '
+            'Please check the domain and port, then try again.',
+      );
+      return false;
+    }
+    debugPrint('🔧 saveSetup: server is reachable');
 
     try {
       debugPrint('🔧 saveSetup: saving domain="$domain"');
