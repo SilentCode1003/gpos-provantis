@@ -89,6 +89,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
     final colors = context.colors;
     final state = ref.watch(dashboardControllerProvider);
     final notifier = ref.read(dashboardControllerProvider.notifier);
+    final isShiftOpen = ref.watch(isShiftOpenProvider);
 
     // Side-by-side layout only: the cart dims while the catalog sheet is open.
     final isSheetOpen = !widget._embedded && state.isCatalogSheetOpen;
@@ -108,6 +109,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
               children: [
                 _CartHeader(
                   itemCount: state.itemCount,
+                  canRemoveAll: isShiftOpen,
                   onRemoveAll: () => _handleRemoveAll(context),
                   onClose: widget.onClose,
                 ),
@@ -115,14 +117,22 @@ class _CartPanelState extends ConsumerState<CartPanel> {
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
                     child: state.cartLines.isEmpty
-                        ? const _EmptyCart(key: ValueKey('empty'))
-                        : _ScrollableCartList(
+                        ? _EmptyCart(
+                            key: const ValueKey('empty'),
+                            shiftClosed: !isShiftOpen,
+                          )
+                        // Line controls (steppers, remove, swipe) are inert
+                        // while the shift is closed.
+                        : AbsorbPointer(
                             key: const ValueKey('list'),
-                            cartLines: state.cartLines,
+                            absorbing: !isShiftOpen,
+                            child: _ScrollableCartList(
+                              cartLines: state.cartLines,
+                            ),
                           ),
                   ),
                 ),
-                _CartFooter(state: state),
+                _CartFooter(state: state, shiftOpen: isShiftOpen),
               ],
             ),
           ),
@@ -198,11 +208,15 @@ class _CartHeader extends StatelessWidget {
   const _CartHeader({
     required this.itemCount,
     required this.onRemoveAll,
+    this.canRemoveAll = true,
     this.onClose,
   });
 
   final int itemCount;
   final VoidCallback onRemoveAll;
+
+  /// False while the shift is closed: the "Remove all" button is hidden.
+  final bool canRemoveAll;
 
   /// Only set in the phone sheet, where the cart needs its own close button.
   final VoidCallback? onClose;
@@ -267,7 +281,7 @@ class _CartHeader extends StatelessWidget {
               ],
             ),
           ),
-          if (hasItems) _RemoveAllButton(onTap: onRemoveAll),
+          if (hasItems && canRemoveAll) _RemoveAllButton(onTap: onRemoveAll),
           if (onClose != null) ...[
             const SizedBox(width: 8),
             Material(
@@ -340,7 +354,9 @@ class _RemoveAllButton extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _EmptyCart extends StatelessWidget {
-  const _EmptyCart({super.key});
+  const _EmptyCart({super.key, this.shiftClosed = false});
+
+  final bool shiftClosed;
 
   @override
   Widget build(BuildContext context) {
@@ -377,7 +393,7 @@ class _EmptyCart extends StatelessWidget {
             ),
             const SizedBox(height: 22),
             Text(
-              'Start a new sale',
+              shiftClosed ? 'Shift is closed' : 'Start a new sale',
               style: AppTypography.display(
                 color: colors.textPrimary,
                 fontSize: 20,
@@ -386,7 +402,9 @@ class _EmptyCart extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Tap a product on the right to add it here.',
+              shiftClosed
+                  ? 'Start a shift to begin taking sales.'
+                  : 'Tap a product on the right to add it here.',
               textAlign: TextAlign.center,
               style: AppTypography.ui(
                 color: colors.textSecondary,
@@ -962,9 +980,12 @@ class _StepperButton extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _CartFooter extends ConsumerWidget {
-  const _CartFooter({required this.state});
+  const _CartFooter({required this.state, required this.shiftOpen});
 
   final DashboardState state;
+
+  /// False while the shift is closed: no discount, no charging.
+  final bool shiftOpen;
 
   /// Charge: first ask who the customer is (if the store has that switched
   /// on), then go on to payment. Closing the customer sheet without choosing
@@ -979,6 +1000,7 @@ class _CartFooter extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final hasItems = state.cartLines.isNotEmpty;
+    final canAct = hasItems && shiftOpen;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -1006,7 +1028,7 @@ class _CartFooter extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _DiscountTile(
-            enabled: hasItems,
+            enabled: canAct,
             applied: state.hasDiscount,
             title: state.hasDiscount
                 ? state.selectedDiscount!.name
@@ -1059,7 +1081,7 @@ class _CartFooter extends ConsumerWidget {
             width: double.infinity,
             height: primaryTapTarget,
             child: ElevatedButton(
-              onPressed: hasItems ? () => _charge(context, ref) : null,
+              onPressed: canAct ? () => _charge(context, ref) : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.primary,
                 foregroundColor: colors.onPrimary,
@@ -1084,7 +1106,7 @@ class _CartFooter extends ConsumerWidget {
                   Text(
                     _money(state.total),
                     style: _amountStyle(
-                      color: hasItems ? colors.onPrimary : colors.textDisabled,
+                      color: canAct ? colors.onPrimary : colors.textDisabled,
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
                     ),

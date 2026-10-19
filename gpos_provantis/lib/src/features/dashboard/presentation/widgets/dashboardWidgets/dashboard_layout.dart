@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
+import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart'
+    show isShiftOpenProvider;
 import 'barcode_scan_bar.dart';
 import 'cart_panel.dart';
 import 'catalog_panel.dart';
@@ -69,17 +72,26 @@ class _PanelDivider extends StatelessWidget {
   }
 }
 
-class _CatalogPanelWithSheet extends StatelessWidget {
+class _CatalogPanelWithSheet extends ConsumerWidget {
   const _CatalogPanelWithSheet();
 
   @override
-  Widget build(BuildContext context) {
-    return const Stack(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isShiftOpen = ref.watch(isShiftOpenProvider);
+
+    return Stack(
       fit: StackFit.expand,
       children: [
-        CatalogPanel(),
-        Positioned(left: 16, right: 16, bottom: 16, child: BarcodeScanBar()),
-        CatalogSheet(),
+        const CatalogPanel(),
+        // The slot stays in the Stack (only its child is swapped) so the
+        // CatalogSheet after it keeps its State and its animation.
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 16,
+          child: isShiftOpen ? const BarcodeScanBar() : const SizedBox.shrink(),
+        ),
+        const CatalogSheet(),
       ],
     );
   }
