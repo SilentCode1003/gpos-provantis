@@ -11,6 +11,8 @@ import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/pos_detail_id_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/pos_shift_dao_provider.dart';
+import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart'
+    show isShiftOpenProvider;
 import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
 import 'package:gpos_provantis/src/services/check_health_service.dart';
 
@@ -25,6 +27,7 @@ class TopBar extends ConsumerWidget {
     final branchName = _watchBranchName(ref);
     final detailID = _watchDetailID(ref);
     final shiftID = _watchShiftID(ref);
+    final isShiftOpen = ref.watch(isShiftOpenProvider);
 
     return Container(
       width: double.infinity,
@@ -45,7 +48,7 @@ class TopBar extends ConsumerWidget {
                   const _InfoDivider(),
                   const _ClockStatusItem(),
                   const _InfoDivider(),
-                  _InfoItem(label: 'Shift', value: shiftID),
+                  _ShiftItem(shiftId: shiftID, isOpen: isShiftOpen),
                   const _InfoDivider(),
                   _InfoItem(label: 'OR number', value: detailID),
                 ],
@@ -188,6 +191,65 @@ class _InfoItem extends StatelessWidget {
             fontSize: 17,
             fontWeight: FontWeight.w600,
           ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+        ),
+      ],
+    );
+  }
+}
+
+/// The shift readout. With an open shift it is a plain [_InfoItem]. With no
+/// active shift it turns into a red warning, so the cashier sees at a glance
+/// that nothing can be sold yet (a dash or a stale shift number is too easy
+/// to read past).
+class _ShiftItem extends StatelessWidget {
+  const _ShiftItem({required this.shiftId, required this.isOpen});
+
+  final String shiftId;
+  final bool isOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isOpen) return _InfoItem(label: 'Shift', value: shiftId);
+
+    final colors = context.colors;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'SHIFT',
+          style: AppTypography.ui(
+            color: colors.danger,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.0,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: colors.danger.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: colors.danger.withValues(alpha: 0.5)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.warning_amber_rounded, size: 20, color: colors.danger),
+              const SizedBox(width: 6),
+              Text(
+                'NO ACTIVE SHIFT',
+                style: AppTypography.ui(
+                  color: colors.danger,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

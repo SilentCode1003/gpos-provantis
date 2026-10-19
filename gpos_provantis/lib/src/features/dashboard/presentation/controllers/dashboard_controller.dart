@@ -174,6 +174,22 @@ class CartLine {
 
 enum ShiftStatus { closed, open }
 
+/// True while a shift is open (any pos_shift row with status START).
+///
+/// Widgets watch this to lock the counter while the shift is closed, and the
+/// controller reads it to refuse selling actions as a second line of defence.
+/// Until pos_shift has loaded it reads as closed, so nothing can be sold
+/// before the app knows a shift is really open.
+final isShiftOpenProvider = Provider<bool>((ref) {
+  final rows = ref
+      .watch(posShiftProvider)
+      .maybeWhen(
+        data: (items) => items,
+        orElse: () => const <PosShiftTableData>[],
+      );
+  return rows.any((row) => row.status == 'START');
+});
+
 /// Outcome of [DashboardController.toggleShift].
 ///
 /// Ending a shift is two steps: closing it on the server, then printing the
@@ -1085,6 +1101,8 @@ class DashboardController extends _$DashboardController {
   // ── end Sectioned catalog ─────────────────────────────────────────────────
 
   void selectCategory(String categoryId) {
+    // No browsing the catalog while the shift is closed.
+    if (!ref.read(isShiftOpenProvider)) return;
     state = state.copyWith(
       selectedCategoryId: categoryId,
       catalogSheetCategoryId: categoryId,
@@ -1506,6 +1524,8 @@ class DashboardController extends _$DashboardController {
       _discountRequiresCustomerInfo(discount);
 
   void addToCart(Product product) {
+    // Nothing can be sold while the shift is closed.
+    if (!ref.read(isShiftOpenProvider)) return;
     final existingIndex = state.cartLines.indexWhere(
       (line) => line.product.id == product.id,
     );
@@ -1531,6 +1551,10 @@ class DashboardController extends _$DashboardController {
   /// the cart. Reads the already-loaded Drift stream, so it is instant and
   /// works offline.
   BarcodeScanResult addToCartByBarcode(String rawBarcode) {
+    // Checked first so a scan can't report "added" for a refused add.
+    if (!ref.read(isShiftOpenProvider)) {
+      return const BarcodeScanResult(BarcodeScanStatus.notReady);
+    }
     final code = rawBarcode.trim().toLowerCase();
     final productsAsync = ref.read(productPriceProvider);
     if (!productsAsync.hasValue) {

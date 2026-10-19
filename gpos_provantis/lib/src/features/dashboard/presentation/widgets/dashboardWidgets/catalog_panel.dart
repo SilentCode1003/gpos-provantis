@@ -72,8 +72,8 @@ class _ActionsRail extends ConsumerWidget {
         context,
         title: isShiftOpen ? 'End shift?' : 'Start shift?',
         body: isShiftOpen
-            ? 'This will close the current shift. The quick action buttons '
-                  'and Others will be unavailable until you start a new one.'
+            ? 'This will close the current shift. You won\u2019t be able to '
+                  'take sales until you start a new one.'
             : 'This will open a new shift so you can begin taking sales.',
         confirmLabel: isShiftOpen ? 'END SHIFT' : 'START SHIFT',
       );
@@ -192,9 +192,8 @@ class _ActionsRail extends ConsumerWidget {
               _ActionButton(
                 icon: otherActionIcon(action.icon),
                 label: action.label,
-                enabled:
-                    isShiftOpen &&
-                    !(isCashDrawerAction(action.id) && !hasCashDrawer),
+                // Usable with the shift closed too (re-print receipts, reports).
+                enabled: !(isCashDrawerAction(action.id) && !hasCashDrawer),
                 onTap: () => runOtherAction(context, ref, action),
               ),
             ],
@@ -202,7 +201,6 @@ class _ActionsRail extends ConsumerWidget {
             _ActionButton(
               icon: PhosphorIcons.gridNine,
               label: 'Others',
-              enabled: isShiftOpen,
               onTap: () => OthersSheet.show(context),
             ),
           ],
@@ -313,6 +311,13 @@ class _CategoryGrid extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(dashboardControllerProvider);
     final controller = ref.watch(dashboardControllerProvider.notifier);
+    final isShiftOpen = ref.watch(isShiftOpenProvider);
+
+    // If the shift closes while a product sheet is open, put the sheet away.
+    ref.listen<bool>(isShiftOpenProvider, (previous, isOpen) {
+      if (!isOpen) controller.closeCatalogSheet();
+    });
+
     final status = controller.categoriesStatus;
     final hidden = ref.watch(hiddenCategoryCodesProvider);
 
@@ -362,11 +367,13 @@ class _CategoryGrid extends ConsumerWidget {
 
     return CustomScrollView(
       slivers: [
+        if (!isShiftOpen) const _ShiftClosedBanner(),
         if (paintCategories.isNotEmpty) ...[
           const _GroupHeader(label: 'Paint'),
           _CategorySliverGrid(
             categories: paintCategories,
             onTap: controller.selectCategory,
+            enabled: isShiftOpen,
           ),
         ],
         if (productCategories.isNotEmpty) ...[
@@ -374,6 +381,7 @@ class _CategoryGrid extends ConsumerWidget {
           _CategorySliverGrid(
             categories: productCategories,
             onTap: controller.selectCategory,
+            enabled: isShiftOpen,
           ),
         ],
         if (serviceCategories.isNotEmpty) ...[
@@ -381,12 +389,57 @@ class _CategoryGrid extends ConsumerWidget {
           _CategorySliverGrid(
             categories: serviceCategories,
             onTap: controller.selectCategory,
+            enabled: isShiftOpen,
           ),
         ],
 
         // Keeps the last row clear of the floating barcode bar.
         const SliverToBoxAdapter(child: SizedBox(height: barcodeBarClearance)),
       ],
+    );
+  }
+}
+
+/// Tells the cashier why the categories are greyed out.
+class _ShiftClosedBanner extends StatelessWidget {
+  const _ShiftClosedBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: colors.surfaceVariant,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: colors.border.withValues(alpha: 0.6)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.lock_outline_rounded,
+                size: 22,
+                color: colors.textSecondary,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Shift is closed. Start a shift to begin selling.',
+                  style: AppTypography.ui(
+                    color: colors.textSecondary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -429,10 +482,15 @@ class _GroupHeader extends StatelessWidget {
 }
 
 class _CategorySliverGrid extends StatelessWidget {
-  const _CategorySliverGrid({required this.categories, required this.onTap});
+  const _CategorySliverGrid({
+    required this.categories,
+    required this.onTap,
+    required this.enabled,
+  });
 
   final List<Category> categories;
   final ValueChanged<String> onTap;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -449,6 +507,7 @@ class _CategorySliverGrid extends StatelessWidget {
           final category = categories[index];
           return _CategoryTile(
             category: category,
+            enabled: enabled,
             onTap: () => onTap(category.id),
           );
         }, childCount: categories.length),
@@ -529,10 +588,17 @@ const BorderRadius _categoryBadgeRadius = BorderRadius.only(
 );
 
 class _CategoryTile extends StatelessWidget {
-  const _CategoryTile({required this.category, required this.onTap});
+  const _CategoryTile({
+    required this.category,
+    required this.onTap,
+    this.enabled = true,
+  });
 
   final Category category;
   final VoidCallback onTap;
+
+  /// False while the shift is closed: dimmed and not tappable.
+  final bool enabled;
 
   static const _iconMap = {
     'water_drop_rounded': PhosphorIcons.chatTeardrop,
@@ -552,46 +618,49 @@ class _CategoryTile extends StatelessWidget {
     final colors = context.colors;
     final icon = _iconMap[category.icon] ?? PhosphorIcons.shapes;
 
-    return Material(
-      color: colors.surfaceRaised,
-      shape: RoundedRectangleBorder(
-        borderRadius: _categoryTileRadius,
-        side: BorderSide(color: colors.border.withValues(alpha: 0.6)),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: _categoryTileRadius,
-        splashColor: colors.primary.withValues(alpha: 0.12),
-        highlightColor: colors.primary.withValues(alpha: 0.06),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer,
-                  borderRadius: _categoryBadgeRadius,
+    return Opacity(
+      opacity: enabled ? 1 : 0.45,
+      child: Material(
+        color: colors.surfaceRaised,
+        shape: RoundedRectangleBorder(
+          borderRadius: _categoryTileRadius,
+          side: BorderSide(color: colors.border.withValues(alpha: 0.6)),
+        ),
+        child: InkWell(
+          onTap: enabled ? onTap : null,
+          borderRadius: _categoryTileRadius,
+          splashColor: colors.primary.withValues(alpha: 0.12),
+          highlightColor: colors.primary.withValues(alpha: 0.06),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: colors.primaryContainer,
+                    borderRadius: _categoryBadgeRadius,
+                  ),
+                  child: Icon(icon, size: 24, color: colors.onPrimaryContainer),
                 ),
-                child: Icon(icon, size: 24, color: colors.onPrimaryContainer),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                category.name,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.ui(
-                  color: colors.textPrimary,
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w600,
-                  height: 1.2,
+                const SizedBox(height: 10),
+                Text(
+                  category.name,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.ui(
+                    color: colors.textPrimary,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    height: 1.2,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

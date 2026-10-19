@@ -90,7 +90,7 @@ final class ServerHealthControllerProvider
 }
 
 String _$serverHealthControllerHash() =>
-    r'b51801d58d3e5879527a651a254f0f5cf485b147';
+    r'631f78909425621b3a8b8f73acaf5d404a749395';
 
 /// --- Server health polling ---------------------------------------------------
 ///
