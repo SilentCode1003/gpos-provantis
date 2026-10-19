@@ -83,6 +83,10 @@ class _DenominationCountSheetState
   final Map<int, TextEditingController> _controllers = {};
   final Map<int, int> _quantities = {};
 
+  /// Body height measured while the keyboard is closed. The layout is planned
+  /// from this so it stays put while the keyboard is open.
+  double? _stableBodyHeight;
+
   @override
   void dispose() {
     for (final controller in _controllers.values) {
@@ -119,7 +123,7 @@ class _DenominationCountSheetState
           padding: EdgeInsets.only(bottom: keyboardInset),
           child: Container(
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.86,
+              maxHeight: MediaQuery.of(context).size.height * 0.92,
             ),
             decoration: BoxDecoration(
               color: colors.surface,
@@ -199,47 +203,47 @@ class _DenominationCountSheetState
       mainAxisSize: MainAxisSize.min,
       children: [
         Expanded(
-          child: SingleChildScrollView(
-            // The iOS number pad has no Done key, so let a drag dismiss it.
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: const EdgeInsets.fromLTRB(24, 4, 24, 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (coins.isNotEmpty) ...[
-                  _SectionLabel(label: 'Coins', colors: colors),
-                  const SizedBox(height: 10),
-                  _DenominationGrid(
-                    rows: coins,
-                    controllerFor: _controllerFor,
-                    onChanged: _onQuantityChanged,
-                    quantities: _quantities,
-                  ),
-                  const SizedBox(height: 20),
-                ],
-                if (bills.isNotEmpty) ...[
-                  _SectionLabel(label: 'Bills', colors: colors),
-                  const SizedBox(height: 10),
-                  _DenominationGrid(
-                    rows: bills,
-                    controllerFor: _controllerFor,
-                    onChanged: _onQuantityChanged,
-                    quantities: _quantities,
-                  ),
-                  const SizedBox(height: 20),
-                ],
-                if (other.isNotEmpty) ...[
-                  _SectionLabel(label: 'Other', colors: colors),
-                  const SizedBox(height: 10),
-                  _DenominationGrid(
-                    rows: other,
-                    controllerFor: _controllerFor,
-                    onChanged: _onQuantityChanged,
-                    quantities: _quantities,
-                  ),
-                ],
-              ],
-            ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Decide the layout from the keyboard-closed height and keep it
+              // while the keyboard is open. Otherwise the grid would reshuffle
+              // as the keyboard slides up, rebuilding the field being typed
+              // into and dismissing the keyboard. With the keyboard up the
+              // same layout simply scrolls.
+              final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+              if (!keyboardOpen || _stableBodyHeight == null) {
+                _stableBodyHeight = constraints.maxHeight;
+              }
+
+              final sections = <_DenominationSection>[
+                if (coins.isNotEmpty)
+                  _DenominationSection(label: 'Coins', rows: coins),
+                if (bills.isNotEmpty)
+                  _DenominationSection(label: 'Bills', rows: bills),
+                if (other.isNotEmpty)
+                  _DenominationSection(label: 'Other', rows: other),
+              ];
+
+              final plan = _planLayout(
+                width: constraints.maxWidth - 48,
+                height: _stableBodyHeight!,
+                sectionSizes: [for (final s in sections) s.rows.length],
+              );
+
+              return SingleChildScrollView(
+                // The iOS number pad has no Done key, so let a drag dismiss it.
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(24, 4, 24, 4),
+                child: _DenominationSections(
+                  sections: sections,
+                  plan: plan,
+                  colors: colors,
+                  controllerFor: _controllerFor,
+                  onChanged: _onQuantityChanged,
+                ),
+              );
+            },
           ),
         ),
         _Footer(
@@ -402,67 +406,223 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-class _DenominationGrid extends StatelessWidget {
-  const _DenominationGrid({
-    required this.rows,
-    required this.controllerFor,
-    required this.onChanged,
-    required this.quantities,
+// ---------------------------------------------------------------------------
+// Fit-to-screen layout
+//
+// Every active denomination is shown at once, without scrolling. The body
+// measures the room it has, then picks the fewest columns (and the cell
+// style) at which all rows still fit, and stretches the cells to use the
+// space. Only if the screen is genuinely too small (e.g. a phone in
+// landscape) does it fall back to the smallest cells and scroll.
+// ---------------------------------------------------------------------------
+
+enum _CellStyle {
+  /// Label on the left, stepper on the right.
+  row,
+
+  /// Label on top, stepper underneath (narrower cells).
+  stacked,
+}
+
+const double _kCellGap = 8;
+const double _kSectionGap = 14;
+const double _kLabelHeight = 16;
+const double _kLabelGap = 8;
+const double _kBodyVerticalPadding = 8;
+const double _kControlSize = 42;
+const double _kControlMaxSize = 56;
+const int _kMaxColumns = 4;
+
+const double _kRowMinWidth = 240;
+const double _kRowMinHeight = 54;
+const double _kRowMaxHeight = 68;
+
+const double _kStackedMinWidth = 160;
+const double _kStackedMinHeight = 84;
+const double _kStackedMaxHeight = 108;
+
+class _DenominationSection {
+  const _DenominationSection({required this.label, required this.rows});
+
+  final String label;
+  final List<DenominationsTableData> rows;
+}
+
+class _FitPlan {
+  const _FitPlan({
+    required this.columns,
+    required this.style,
+    required this.cellHeight,
+    required this.fits,
   });
 
-  final List<DenominationsTableData> rows;
+  final int columns;
+  final _CellStyle style;
+  final double cellHeight;
+
+  /// False when even the smallest cells don't fit, so the body must scroll.
+  final bool fits;
+}
+
+/// Picks the most comfortable layout (fewest columns) in which every row of
+/// every section fits inside [width] x [height].
+_FitPlan _planLayout({
+  required double width,
+  required double height,
+  required List<int> sectionSizes,
+}) {
+  final sections = sectionSizes.length;
+  _FitPlan? densest;
+
+  for (var columns = 1; columns <= _kMaxColumns; columns++) {
+    final cellWidth = (width - (columns - 1) * _kCellGap) / columns;
+
+    final _CellStyle style;
+    if (cellWidth >= _kRowMinWidth) {
+      style = _CellStyle.row;
+    } else if (cellWidth >= _kStackedMinWidth) {
+      style = _CellStyle.stacked;
+    } else {
+      break;
+    }
+
+    final minHeight = style == _CellStyle.row
+        ? _kRowMinHeight
+        : _kStackedMinHeight;
+    final maxHeight = style == _CellStyle.row
+        ? _kRowMaxHeight
+        : _kStackedMaxHeight;
+
+    final rows = sectionSizes.fold<int>(
+      0,
+      (sum, size) => sum + (size / columns).ceil(),
+    );
+    if (rows == 0) continue;
+
+    final chrome =
+        _kBodyVerticalPadding +
+        sections * (_kLabelHeight + _kLabelGap) +
+        (sections > 0 ? sections - 1 : 0) * _kSectionGap +
+        (rows - sections) * _kCellGap;
+
+    // Floor so rounding can never push the content a hair past the viewport.
+    final perRow = ((height - chrome) / rows).floorToDouble();
+
+    final plan = _FitPlan(
+      columns: columns,
+      style: style,
+      cellHeight: perRow.clamp(minHeight, maxHeight).toDouble(),
+      fits: perRow >= minHeight,
+    );
+    if (plan.fits) return plan;
+    densest = plan;
+  }
+
+  return densest ??
+      const _FitPlan(
+        columns: 1,
+        style: _CellStyle.stacked,
+        cellHeight: _kStackedMinHeight,
+        fits: false,
+      );
+}
+
+class _DenominationSections extends StatelessWidget {
+  const _DenominationSections({
+    required this.sections,
+    required this.plan,
+    required this.colors,
+    required this.controllerFor,
+    required this.onChanged,
+  });
+
+  final List<_DenominationSection> sections;
+  final _FitPlan plan;
+  final AppColors colors;
   final TextEditingController Function(int) controllerFor;
   final void Function(int, String) onChanged;
-  final Map<int, int> quantities;
-
-  /// Below this width two cells per row can't fit a label plus
-  /// [-] [qty] [+], so each denomination gets its own full-width row.
-  static const _twoColumnMinWidth = 420.0;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < _twoColumnMinWidth;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: rows.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: compact ? 1 : 2,
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            mainAxisExtent: compact ? 72 : 122,
+    final columns = plan.columns;
+    final children = <Widget>[];
+
+    for (var s = 0; s < sections.length; s++) {
+      final section = sections[s];
+
+      if (s > 0) children.add(const SizedBox(height: _kSectionGap));
+      children.add(
+        SizedBox(
+          height: _kLabelHeight,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: _SectionLabel(label: section.label, colors: colors),
           ),
-          itemBuilder: (context, index) {
-            final row = rows[index];
-            return _DenominationCell(
-              compact: compact,
-              label: row.description,
-              unitValue: row.value,
-              controller: controllerFor(row.id),
-              onChanged: (raw) => onChanged(row.id, raw),
-            );
-          },
+        ),
+      );
+      children.add(const SizedBox(height: _kLabelGap));
+
+      for (var i = 0; i < section.rows.length; i += columns) {
+        if (i > 0) children.add(const SizedBox(height: _kCellGap));
+        children.add(
+          SizedBox(
+            height: plan.cellHeight,
+            child: Row(
+              children: [
+                for (var j = 0; j < columns; j++) ...[
+                  if (j > 0) const SizedBox(width: _kCellGap),
+                  Expanded(
+                    child: i + j < section.rows.length
+                        ? _cellFor(section.rows[i + j])
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            ),
+          ),
         );
-      },
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
+    );
+  }
+
+  Widget _cellFor(DenominationsTableData row) {
+    return _DenominationCell(
+      key: ValueKey(row.id),
+      style: plan.style,
+      dense: plan.columns > 1,
+      height: plan.cellHeight,
+      label: row.description,
+      controller: controllerFor(row.id),
+      onChanged: (raw) => onChanged(row.id, raw),
     );
   }
 }
 
 class _DenominationCell extends StatelessWidget {
   const _DenominationCell({
-    required this.compact,
+    super.key,
+    required this.style,
+    required this.dense,
+    required this.height,
     required this.label,
-    required this.unitValue,
     required this.controller,
     required this.onChanged,
   });
 
-  /// One-per-row layout: label on the left, stepper on the right.
-  final bool compact;
+  final _CellStyle style;
+
+  /// Multi-column layouts use slightly smaller label text.
+  final bool dense;
+
+  /// The height this cell is given. The quantity box and the +/- buttons grow
+  /// to use it, so they fill the cell instead of sitting at the top.
+  final double height;
   final String label;
-  final int unitValue;
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
 
@@ -478,66 +638,92 @@ class _DenominationCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final active = _quantity > 0;
+    final stacked = style == _CellStyle.stacked;
 
     final labelText = Text(
       label,
-      maxLines: compact ? 2 : 1,
+      maxLines: stacked ? 1 : 2,
       overflow: TextOverflow.ellipsis,
       style: AppTypography.ui(
         color: colors.textPrimary,
-        fontSize: compact ? 15 : 14,
+        fontSize: (dense || stacked) ? 14 : 15,
         fontWeight: FontWeight.w600,
       ),
     );
 
-    final field = SizedBox(
-      width: 52,
-      height: 44,
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        textAlign: TextAlign.center,
-        keyboardType: TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        style: AppTypography.ui(
-          color: colors.textPrimary,
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
+    // Size the controls to the room the cell actually has: its height minus
+    // the vertical padding (and, when stacked, the label row above them).
+    final verticalPadding = stacked ? 8.0 : 6.0;
+    final labelAllowance = stacked ? 22.0 : 0.0;
+    final controlHeight = (height - verticalPadding * 2 - labelAllowance)
+        .clamp(_kControlSize, _kControlMaxSize)
+        .toDouble();
+    final buttonWidth = controlHeight.clamp(_kControlSize, 52.0).toDouble();
+
+    Widget buildField({double? width}) {
+      return SizedBox(
+        width: width,
+        height: controlHeight,
+        child: TextField(
+          controller: controller,
+          onChanged: onChanged,
+          textAlign: TextAlign.center,
+          // Without `expands`, the field's filled box is only as tall as one
+          // line of text and sits at the top of the SizedBox. Expanding makes
+          // it fill the full height, and the number is centred inside it.
+          expands: true,
+          maxLines: null,
+          minLines: null,
+          textAlignVertical: TextAlignVertical.center,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          style: AppTypography.ui(
+            color: colors.textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+          decoration: InputDecoration(
+            isDense: true,
+            filled: true,
+            fillColor: colors.surface,
+            contentPadding: EdgeInsets.zero,
+            hintText: '0',
+            hintStyle: AppTypography.ui(
+              color: colors.textDisabled,
+              fontSize: 18,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: colors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: colors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: colors.primary, width: 2),
+            ),
+          ),
         ),
-        decoration: InputDecoration(
-          isDense: true,
-          filled: true,
-          fillColor: colors.surface,
-          contentPadding: EdgeInsets.zero,
-          hintText: '0',
-          hintStyle: AppTypography.ui(color: colors.textDisabled, fontSize: 18),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: colors.border),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: colors.border),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: colors.primary, width: 2),
-          ),
-        ),
-      ),
-    );
+      );
+    }
 
     final minus = _StepperButton(
       icon: Icons.remove_rounded,
+      width: buttonWidth,
+      height: controlHeight,
       onPressed: _quantity > 0 ? () => _setQuantity(_quantity - 1) : null,
     );
     final plus = _StepperButton(
       icon: Icons.add_rounded,
+      width: buttonWidth,
+      height: controlHeight,
       onPressed: () => _setQuantity(_quantity + 1),
     );
 
     return Container(
-      padding: EdgeInsets.fromLTRB(12, compact ? 8 : 10, 12, compact ? 8 : 10),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: verticalPadding),
       decoration: BoxDecoration(
         color: active
             ? colors.primary.withValues(alpha: 0.08)
@@ -548,27 +734,33 @@ class _DenominationCell extends StatelessWidget {
           width: active ? 1.5 : 1,
         ),
       ),
-      child: compact
-          ? Row(
+      child: stacked
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                labelText,
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    minus,
+                    const SizedBox(width: 6),
+                    Expanded(child: buildField()),
+                    const SizedBox(width: 6),
+                    plus,
+                  ],
+                ),
+              ],
+            )
+          : Row(
               children: [
                 Expanded(child: labelText),
                 const SizedBox(width: 8),
                 minus,
-                const SizedBox(width: 6),
-                field,
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
+                buildField(width: 48),
+                const SizedBox(width: 4),
                 plus,
-              ],
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                labelText,
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [minus, field, plus],
-                ),
               ],
             ),
     );
@@ -576,10 +768,17 @@ class _DenominationCell extends StatelessWidget {
 }
 
 class _StepperButton extends StatelessWidget {
-  const _StepperButton({required this.icon, required this.onPressed});
+  const _StepperButton({
+    required this.icon,
+    required this.onPressed,
+    required this.width,
+    required this.height,
+  });
 
   final IconData icon;
   final VoidCallback? onPressed;
+  final double width;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
@@ -595,8 +794,8 @@ class _StepperButton extends StatelessWidget {
         onTap: onPressed,
         borderRadius: BorderRadius.circular(10),
         child: SizedBox(
-          width: 44,
-          height: 44,
+          width: width,
+          height: height,
           child: Icon(
             icon,
             size: 20,

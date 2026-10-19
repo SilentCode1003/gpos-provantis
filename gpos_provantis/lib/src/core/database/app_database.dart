@@ -120,6 +120,37 @@ class AppDatabase extends _$AppDatabase {
   Stream<UserDataTableData?> watchCurrentUser() {
     return select(userDataTable).watchSingleOrNull();
   }
+
+  /// Factory reset: deletes every row in every table while keeping the
+  /// database open, then re-runs the initial seed (same as a first launch).
+  ///
+  /// The connection is never closed and the file is never touched, so
+  /// Riverpod providers and drift streams stay valid and simply re-emit.
+  Future<void> wipeAllData() async {
+    // PRAGMA foreign_keys is a no-op inside a transaction, so toggle it
+    // outside. OFF lets us delete tables in any order without FK errors.
+    await customStatement('PRAGMA foreign_keys = OFF');
+    try {
+      await transaction(() async {
+        for (final table in allTables) {
+          await delete(table).go();
+        }
+
+        // Reset AUTOINCREMENT counters (table only exists if one is used).
+        try {
+          await customStatement('DELETE FROM sqlite_sequence');
+        } catch (_) {}
+      });
+    } finally {
+      await customStatement('PRAGMA foreign_keys = ON');
+    }
+
+    // Reclaim disk space left by the deleted rows (must run outside a
+    // transaction).
+    await customStatement('VACUUM');
+
+    await SchemaSeeder(this).seedInitialData();
+  }
 }
 
 LazyDatabase _openConnection() {

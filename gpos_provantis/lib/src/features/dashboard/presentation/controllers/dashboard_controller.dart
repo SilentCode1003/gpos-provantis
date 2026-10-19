@@ -30,6 +30,8 @@ import 'package:gpos_provantis/src/core/database/domain/cash_drawer_dto.dart'
 import 'payments_controller.dart';
 import 'package:gpos_provantis/src/services/end_shift_service.dart';
 import 'package:gpos_provantis/src/services/cash_drawer_service.dart';
+import 'package:gpos_provantis/src/core/printutil/cash_drawer_opener.dart'
+    show cashDrawerOpenerProvider;
 import 'package:gpos_provantis/src/services/customer_service.dart';
 import 'package:gpos_provantis/src/services/sales_purchase_order_service.dart';
 import 'package:gpos_provantis/src/services/split_payment_service.dart';
@@ -1760,6 +1762,32 @@ class DashboardController extends _$DashboardController {
     }
   }
 
+  /// Pops the cash drawer for a sale that took cash.
+  ///
+  /// Does nothing unless an enabled printer has a cash drawer (printer
+  /// settings). A problem is reported here instead of thrown, for the same
+  /// reason as [_printReceiptAndAnnounce]: the sale is already saved, so it
+  /// must not look like a failed payment.
+  Future<void> _openCashDrawerAfterSale({
+    required ToastEmitter toast,
+    required String detailId,
+  }) async {
+    // ref.read happens before the await (see _resolveShiftKey for why).
+    final opener = ref.read(cashDrawerOpenerProvider);
+    try {
+      if (!await isCashDrawerEnabled()) return;
+      await opener.open();
+    } catch (e, st) {
+      debugPrint(
+        'Sale $detailId saved but the cash drawer did not open: $e\n$st',
+      );
+      toast.warning(
+        'Sale #$detailId was recorded, but the cash drawer did not open: '
+        '${_describeErrorSentence(e)}',
+      );
+    }
+  }
+
   Future<void> createSaleFromCash() => _runSaleOnce(_createSaleFromCash);
 
   Future<void> _createSaleFromCash() async {
@@ -1826,6 +1854,10 @@ class DashboardController extends _$DashboardController {
 
     clearCart();
     clearDiscount();
+
+    // Cash was taken, so pop the drawer before the receipt starts printing
+    // (both go to the same printer, so they are sent one after the other).
+    await _openCashDrawerAfterSale(toast: toast, detailId: detailId);
 
     final receipt = _receiptDataFromCheckout(
       state: saleState,
@@ -2014,6 +2046,11 @@ class DashboardController extends _$DashboardController {
 
     clearCart();
     clearDiscount();
+
+    // Only the cash part touches the drawer; skipped if the cash slot was 0.
+    if (cashAmount > 0) {
+      await _openCashDrawerAfterSale(toast: toast, detailId: detailId);
+    }
 
     final receipt = _receiptDataFromCheckout(
       state: saleState,

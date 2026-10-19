@@ -1167,7 +1167,6 @@ class _SplitLayoutState extends ConsumerState<_SplitLayout> {
 
     final slot0 = widget.kind == SplitKind.cashAndEPayment
         ? _CashRow(
-            total: total,
             amountController: _slot0AmountController,
             amountFocusNode: _slot0FocusNode,
             isActive: _activeSlot == 0,
@@ -1396,7 +1395,6 @@ class _SlotTab extends StatelessWidget {
 
 class _CashRow extends ConsumerWidget {
   const _CashRow({
-    required this.total,
     required this.amountController,
     required this.amountFocusNode,
     required this.isActive,
@@ -1404,14 +1402,12 @@ class _CashRow extends ConsumerWidget {
     this.compact = false,
   });
 
-  final double total;
   final TextEditingController amountController;
   final FocusNode amountFocusNode;
   final bool isActive;
   final VoidCallback onActivate;
 
-  /// Phone version: no title or "Cash" chip (the tab above says it), and the
-  /// exact-amount button sits beside the field instead of under it.
+  /// Phone version: no title or "Cash" chip (the tab above says it).
   final bool compact;
 
   @override
@@ -1445,17 +1441,6 @@ class _CashRow extends ConsumerWidget {
       ),
     );
 
-    void fillExact() {
-      onActivate();
-      ref
-          .read(paymentControllerProvider.notifier)
-          .fillRemainingAmount(0, total);
-      final updated = ref.read(paymentControllerProvider).splitSlots[0].amount;
-      amountController.text = updated == null
-          ? ''
-          : formatAmountForField(updated);
-    }
-
     if (compact) {
       return Container(
         padding: const EdgeInsets.all(16),
@@ -1467,38 +1452,7 @@ class _CashRow extends ConsumerWidget {
             width: isActive ? 2 : 1.5,
           ),
         ),
-        child: SizedBox(
-          height: _compactFieldHeight,
-          child: Row(
-            children: [
-              Expanded(child: amountField),
-              const SizedBox(width: 10),
-              SizedBox(
-                width: 112,
-                child: OutlinedButton(
-                  onPressed: fillExact,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: colors.primary,
-                    side: BorderSide(color: colors.primary, width: 1.5),
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    'EXACT AMOUNT',
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    style: AppTypography.ui(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        child: SizedBox(height: _compactFieldHeight, child: amountField),
       );
     }
 
@@ -1554,29 +1508,6 @@ class _CashRow extends ConsumerWidget {
             height: primaryTapTarget,
             child: amountField,
           ),
-          const SizedBox(height: 12),
-
-          SizedBox(
-            width: double.infinity,
-            height: primaryTapTarget,
-            child: OutlinedButton(
-              onPressed: fillExact,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: colors.primary,
-                side: BorderSide(color: colors.primary, width: 1.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                'EXACT AMOUNT',
-                style: AppTypography.ui(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -1601,8 +1532,7 @@ class _EPaymentBlock extends ConsumerStatefulWidget {
   final bool isActive;
   final VoidCallback onActivate;
 
-  /// Phone version: no title (the tab above says it), shorter fields, and the
-  /// fill-remaining button sits beside the amount field.
+  /// Phone version: no title (the tab above says it) and shorter fields.
   final bool compact;
 
   @override
@@ -1623,23 +1553,6 @@ class _EPaymentBlockState extends ConsumerState<_EPaymentBlock> {
   void dispose() {
     _referenceController.dispose();
     super.dispose();
-  }
-
-  void _fillRemaining() {
-    widget.onActivate();
-    ref
-        .read(paymentControllerProvider.notifier)
-        .fillRemainingAmount(
-          widget.index,
-          ref.read(dashboardControllerProvider).total,
-        );
-    final updated = ref
-        .read(paymentControllerProvider)
-        .splitSlots[widget.index]
-        .amount;
-    widget.amountController.text = updated == null
-        ? ''
-        : formatAmountForField(updated);
   }
 
   @override
@@ -1770,69 +1683,11 @@ class _EPaymentBlockState extends ConsumerState<_EPaymentBlock> {
           ),
           SizedBox(height: gap),
 
-          if (compact)
-            SizedBox(
-              height: fieldHeight,
-              child: Row(
-                children: [
-                  Expanded(child: amountField),
-                  const SizedBox(width: 10),
-                  SizedBox(
-                    width: 112,
-                    child: OutlinedButton(
-                      onPressed: _fillRemaining,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: colors.primary,
-                        side: BorderSide(color: colors.primary, width: 1.5),
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        'FILL REMAINING',
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        style: AppTypography.ui(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else ...[
-            SizedBox(
-              width: double.infinity,
-              height: primaryTapTarget,
-              child: amountField,
-            ),
-            const SizedBox(height: 12),
-
-            SizedBox(
-              width: double.infinity,
-              height: primaryTapTarget,
-              child: OutlinedButton(
-                onPressed: _fillRemaining,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: colors.primary,
-                  side: BorderSide(color: colors.primary, width: 1.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'FILL REMAINING',
-                  style: AppTypography.ui(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ],
+          SizedBox(
+            width: double.infinity,
+            height: fieldHeight,
+            child: amountField,
+          ),
         ],
       ),
     );

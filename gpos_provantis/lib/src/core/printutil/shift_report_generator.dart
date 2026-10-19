@@ -229,19 +229,6 @@ class ShiftReportPrinterService {
       bytes += ticket.image(logo);
     }
 
-    if (report.isReprint) {
-      bytes += ticket.text(
-        '**REPRINT**',
-        styles: const PosStyles(
-          align: PosAlign.center,
-          bold: true,
-          height: PosTextSize.size2,
-          width: PosTextSize.size2,
-        ),
-        linesAfter: 1,
-      );
-    }
-
     // --- Header ---------------------------------------------------------
     bytes += ticket.text(
       branchName,

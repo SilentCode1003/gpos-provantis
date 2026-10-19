@@ -41,7 +41,7 @@ final class SetupControllerProvider
   }
 }
 
-String _$setupControllerHash() => r'ccf5c16727ae3bc33f786795af6c31833f45d2f7';
+String _$setupControllerHash() => r'6016f5f04fbd5f852438e004ab77a9f47b30b949';
 
 abstract class _$SetupController extends $Notifier<SetupState> {
   SetupState build();

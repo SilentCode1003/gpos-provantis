@@ -15,9 +15,13 @@ class AmountNumpad extends StatelessWidget {
   final ValueChanged<double?> onChanged;
 
   void _handleKey(NumpadKey key) {
+    // Always type and delete at the END of the amount. The field's own cursor
+    // can't be trusted here: tapping a field moves its cursor to wherever the
+    // tap landed (often the far left of the right-aligned text), and that
+    // stale cursor stays put while the other field is being edited.
     final current = TextEditingValue(
       text: controller.text,
-      selection: controller.selection,
+      selection: TextSelection.collapsed(offset: controller.text.length),
     );
     final next = applyNumpadKey(current, key);
     controller.value = next;
