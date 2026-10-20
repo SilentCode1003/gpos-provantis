@@ -36,6 +36,23 @@ class SettingsTable extends Table {
   TextColumn get machineIdentificationNumber =>
       text().withDefault(const Constant('UNREGISTERED'))();
 
+  // ---- Product images (managed from Settings > Product Images) ------------
+
+  /// Show pictures on the product grid.
+  BoolColumn get showProductImages =>
+      boolean().withDefault(const Constant(true))();
+
+  /// Download missing pictures automatically after each catalog sync.
+  BoolColumn get autoFetchProductImages =>
+      boolean().withDefault(const Constant(true))();
+
+  /// Re-download every picture every N days. 0 = never.
+  IntColumn get productImageRefetchDays =>
+      integer().withDefault(const Constant(0))();
+
+  /// When every picture was last downloaded fresh (null = never).
+  DateTimeColumn get productImagesLastRefetchedAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }

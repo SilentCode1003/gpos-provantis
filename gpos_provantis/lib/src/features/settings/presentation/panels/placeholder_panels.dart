@@ -17,21 +17,6 @@ class SyncPanel extends StatelessWidget {
   }
 }
 
-class SystemPanel extends StatelessWidget {
-  const SystemPanel();
-
-  @override
-  Widget build(BuildContext context) {
-    return const PanelPlaceholder(
-      icon: Icons.tune_rounded,
-      title: 'System',
-      description:
-          'Device-level settings — receipt footer text, tax rates, '
-          'currency, language, and hardware diagnostics.',
-    );
-  }
-}
-
 class UsersPanel extends StatelessWidget {
   const UsersPanel();
 

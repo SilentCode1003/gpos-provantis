@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -17,8 +19,13 @@ import 'package:gpos_provantis/src/core/database/repository/service_repository.d
 import 'package:gpos_provantis/src/core/database/repository/service_package_repository.dart';
 import 'package:gpos_provantis/src/core/database/repository/addon_repository.dart';
 import 'package:gpos_provantis/src/services/split_payment_service.dart';
+import 'package:gpos_provantis/src/services/sync/product_images_sync.dart';
 
 part 'catalog_sync.g.dart';
+
+/// How long after a successful catalog sync the picture download waits before
+/// starting, so the dashboard can finish its first render undisturbed.
+const Duration _imageSyncStartDelay = Duration(seconds: 5);
 
 @Riverpod(keepAlive: true)
 CatalogSyncService catalogSyncService(Ref ref) {
@@ -36,6 +43,7 @@ CatalogSyncService catalogSyncService(Ref ref) {
   final servicePackageRepository = ref.watch(servicePackageRepositoryProvider);
   final addonRepository = ref.watch(addonRepositoryProvider);
   final splitPaymentService = ref.watch(splitPaymentServiceProvider);
+  final productImagesSync = ref.watch(productImagesSyncProvider);
 
   return CatalogSyncService(
     categoriesRepository,
@@ -52,6 +60,7 @@ CatalogSyncService catalogSyncService(Ref ref) {
     servicePackageRepository,
     addonRepository,
     splitPaymentService,
+    productImagesSync,
   );
 }
 
@@ -87,6 +96,7 @@ class CatalogSyncService {
   final ServicePackageRepository _servicePackageRepository;
   final AddonRepository _addonRepository;
   final SplitPaymentService _splitPaymentService;
+  final ProductImagesSync _productImagesSync;
 
   CatalogSyncService(
     this._categoriesRepository,
@@ -103,7 +113,23 @@ class CatalogSyncService {
     this._servicePackageRepository,
     this._addonRepository,
     this._splitPaymentService,
+    this._productImagesSync,
   );
+
+  /// Starts pulling product images in the background. Only called once the
+  /// catalog has synced (so the product list is saved). Not awaited: the sync
+  /// result returns immediately and the images arrive one at a time while the
+  /// till is in use. A picture problem never affects the sync result.
+  void _startProductImageSync() {
+    unawaited(
+      Future<void>.delayed(
+        _imageSyncStartDelay,
+      ).then((_) => _productImagesSync.runAutomatic()).catchError((Object e) {
+        debugPrint('CatalogSync: product images not started: $e');
+        return const ProductImagesSyncResult(aborted: true);
+      }),
+    );
+  }
 
   Future<CatalogSyncResult> syncCatalog({
     void Function(String label)? onStep,
@@ -179,6 +205,8 @@ class CatalogSyncService {
       } catch (e) {
         if (isDuplicateRequestError(e)) rethrow;
         debugPrint('CatalogSync: printer settings not synced: $e');
+        // The catalog itself synced, so the products are saved.
+        _startProductImageSync();
         return CatalogSyncResult.ok(
           warning:
               'Printer settings were not updated. '
@@ -186,6 +214,7 @@ class CatalogSyncService {
         );
       }
 
+      _startProductImageSync();
       return const CatalogSyncResult.ok();
     } catch (e) {
       if (isDuplicateRequestError(e)) {
