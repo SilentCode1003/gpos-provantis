@@ -27,6 +27,36 @@ class SettingsDao extends DatabaseAccessor<AppDatabase>
     return select(settingsTable).get();
   }
 
+  // ---- Product image settings ----------------------------------------------
+  // Each of these changes ONLY its own column, so they can never disturb the
+  // printer / receipt settings, and the server-settings sync (which doesn't
+  // write these columns) can never reset them.
+
+  Future<void> setShowProductImages(bool value) => _updateImageSettings(
+    SettingsTableCompanion(showProductImages: Value(value)),
+  );
+
+  Future<void> setAutoFetchProductImages(bool value) => _updateImageSettings(
+    SettingsTableCompanion(autoFetchProductImages: Value(value)),
+  );
+
+  /// 0 turns the schedule off.
+  Future<void> setProductImageRefetchDays(int days) => _updateImageSettings(
+    SettingsTableCompanion(productImageRefetchDays: Value(days < 0 ? 0 : days)),
+  );
+
+  Future<void> markProductImagesRefetched(DateTime when) =>
+      _updateImageSettings(
+        SettingsTableCompanion(productImagesLastRefetchedAt: Value(when)),
+      );
+
+  // Updates the existing settings row; if there is none yet, creates it (every
+  // other column takes its default).
+  Future<void> _updateImageSettings(SettingsTableCompanion changes) async {
+    final updated = await update(settingsTable).write(changes);
+    if (updated == 0) await into(settingsTable).insert(changes);
+  }
+
   // Watches the settings table for live updates.
   // Useful for screens that react to configuration changes.
   Stream<List<SettingsTableData>> watchSettings() {

@@ -10,6 +10,7 @@ import '../panels/transactions_panel.dart';
 import '../panels/pos_config_panel.dart';
 import '../panels/email_panel.dart';
 import '../panels/placeholder_panels.dart';
+import '../panels/product_images_panel.dart';
 import '../panels/about_panel.dart';
 import '../panels/counter_display_panel.dart';
 import '../panels/guides_panel.dart';
@@ -50,9 +51,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: SyncPanel.new,
     ),
     SettingsSection(
-      label: 'System',
-      icon: Icons.tune_rounded,
-      builder: SystemPanel.new,
+      label: 'Product Images',
+      icon: Icons.image_rounded,
+      builder: ProductImagesPanel.new,
     ),
     SettingsSection(
       label: 'Theme',

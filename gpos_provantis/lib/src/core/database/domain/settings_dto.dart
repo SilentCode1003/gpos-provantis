@@ -20,6 +20,10 @@ class SettingsDto {
     required this.vatReg,
     required this.permitToUse,
     required this.machineIdentificationNumber,
+    this.showProductImages = true,
+    this.autoFetchProductImages = true,
+    this.productImageRefetchDays = 0,
+    this.productImagesLastRefetchedAt,
   });
 
   static const String defaultId = 'settings_config';
@@ -61,6 +65,10 @@ class SettingsDto {
   final String vatReg;
   final String permitToUse;
   final String machineIdentificationNumber;
+  final bool showProductImages;
+  final bool autoFetchProductImages;
+  final int productImageRefetchDays;
+  final DateTime? productImagesLastRefetchedAt;
 
   factory SettingsDto.fromJson(Map<String, dynamic> json) {
     return SettingsDto(
@@ -107,9 +115,18 @@ class SettingsDto {
       vatReg: row.vatReg,
       permitToUse: row.permitToUse,
       machineIdentificationNumber: row.machineIdentificationNumber,
+      showProductImages: row.showProductImages,
+      autoFetchProductImages: row.autoFetchProductImages,
+      productImageRefetchDays: row.productImageRefetchDays,
+      productImagesLastRefetchedAt: row.productImagesLastRefetchedAt,
     );
   }
 
+  /// NOTE: the product-image settings are deliberately NOT included here.
+  /// This is what the server-settings sync upserts, and leaving those columns
+  /// out means that sync never resets what the cashier chose on the Product
+  /// Images screen. They are changed through the dedicated methods on
+  /// SettingsDao instead.
   SettingsTableCompanion toCompanion() {
     return SettingsTableCompanion(
       id: Value(id),
@@ -151,6 +168,10 @@ class SettingsDto {
     String? vatReg,
     String? permitToUse,
     String? machineIdentificationNumber,
+    bool? showProductImages,
+    bool? autoFetchProductImages,
+    int? productImageRefetchDays,
+    DateTime? productImagesLastRefetchedAt,
   }) {
     return SettingsDto(
       id: id,
@@ -175,6 +196,69 @@ class SettingsDto {
       permitToUse: permitToUse ?? this.permitToUse,
       machineIdentificationNumber:
           machineIdentificationNumber ?? this.machineIdentificationNumber,
+      showProductImages: showProductImages ?? this.showProductImages,
+      autoFetchProductImages:
+          autoFetchProductImages ?? this.autoFetchProductImages,
+      productImageRefetchDays:
+          productImageRefetchDays ?? this.productImageRefetchDays,
+      productImagesLastRefetchedAt:
+          productImagesLastRefetchedAt ?? this.productImagesLastRefetchedAt,
     );
   }
+}
+
+/// Just the product-image settings, as the rest of the app reads them.
+class ProductImageSettings {
+  const ProductImageSettings({
+    this.show = true,
+    this.autoFetch = true,
+    this.refetchDays = 0,
+    this.lastRefetchedAt,
+  });
+
+  factory ProductImageSettings.fromTableData(SettingsTableData row) {
+    return ProductImageSettings(
+      show: row.showProductImages,
+      autoFetch: row.autoFetchProductImages,
+      refetchDays: row.productImageRefetchDays,
+      lastRefetchedAt: row.productImagesLastRefetchedAt,
+    );
+  }
+
+  /// Show pictures on the product grid.
+  final bool show;
+
+  /// Download missing pictures automatically after a catalog sync.
+  final bool autoFetch;
+
+  /// Re-download every picture every this many days. 0 = never.
+  final int refetchDays;
+
+  /// When every picture was last downloaded fresh. Null = never.
+  final DateTime? lastRefetchedAt;
+
+  /// When the next full refresh falls due, or null if there is no schedule
+  /// (or no starting point yet).
+  DateTime? get nextRefetchAt {
+    final last = lastRefetchedAt;
+    if (refetchDays <= 0 || last == null) return null;
+    return last.add(Duration(days: refetchDays));
+  }
+
+  bool isRefetchDue(DateTime now) {
+    final next = nextRefetchAt;
+    return next != null && !now.isBefore(next);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is ProductImageSettings &&
+      other.show == show &&
+      other.autoFetch == autoFetch &&
+      other.refetchDays == refetchDays &&
+      other.lastRefetchedAt == lastRefetchedAt;
+
+  @override
+  int get hashCode =>
+      Object.hash(show, autoFetch, refetchDays, lastRefetchedAt);
 }

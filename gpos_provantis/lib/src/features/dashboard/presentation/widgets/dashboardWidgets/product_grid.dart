@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:io' show File;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+import 'package:gpos_provantis/src/core/database/providers/product_image_dao_provider.dart';
+import 'package:gpos_provantis/src/core/database/providers/settings_dao_provider.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'category_visibility.dart';
@@ -72,6 +75,29 @@ const double _tileAspectRatio = 1.05;
 const double _headerExtent = 56;
 const double _gridTopPadding = 4;
 const double _sectionBottomPadding = 20;
+
+/// Product cards with a picture are taller than plain ones: the picture sits
+/// at the top, full width, and the name / price block below it keeps a fixed
+/// height. So the picture grows with the tile: wide tiles get a big one.
+/// Tiles narrower than [_minTileWidthForImage] have no room for a useful
+/// picture and keep the plain card. Services / packages / add-ons have no
+/// pictures and always use the plain card.
+///
+/// These feed the scroll maths below, so the grid and [_GridLayout] always
+/// agree on every tile's size.
+const double _imageTileAspectRatio = 0.75;
+const double _minTileWidthForImage = 170;
+const double _imageInset = 8;
+const double _cardTextAreaHeight = 120;
+const double _maxImageHeight = 160;
+
+bool _sectionHasImages(CatalogSection s, double imageHeight) =>
+    imageHeight > 0 && s.products.isNotEmpty && !s.products.first.isService;
+
+double _sectionTileHeight(bool images, double tileWidth, double imageHeight) =>
+    images
+    ? imageHeight + _imageInset * 2 + _cardTextAreaHeight
+    : tileWidth / _tileAspectRatio;
 
 /// A section counts as "current" once its header is within this many pixels
 /// of the top edge.
@@ -339,76 +365,96 @@ class _SectionedGridState extends ConsumerState<_SectionedGrid> {
       },
     );
 
-    return _CartQuantitiesScope(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final layout = _GridLayout.compute(
-            width: constraints.maxWidth,
-            height: constraints.maxHeight,
-            sections: widget.sections,
-          );
-          _layout = layout;
+    // Settings > Product Images > Show product images. Off = plain cards, the
+    // same layout as before pictures existed.
+    final showImages = ref.watch(showProductImagesProvider);
 
-          return CustomScrollView(
-            controller: _scrollController,
-            // Momentum scrolling that glides to a stop and gives a soft bounce
-            // at the very top / bottom, instead of halting dead.
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            // Builds a bit beyond the screen so cards are already there when a
-            // fast fling arrives.
-            cacheExtent: _warm ? _warmCacheExtent : 0,
-            slivers: [
-              // Room for the notch that floats over the top of the grid.
-              const SliverToBoxAdapter(
-                child: SizedBox(height: catalogNotchHeight),
+    return _CartQuantitiesScope(
+      child: _ProductImagesScope(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final layout = _GridLayout.compute(
+              width: constraints.maxWidth,
+              height: constraints.maxHeight,
+              sections: widget.sections,
+              showImages: showImages,
+            );
+            _layout = layout;
+
+            // Decode pictures at their real on-screen pixel size, never bigger.
+            final imageCachePx =
+                (layout.tileWidth * MediaQuery.devicePixelRatioOf(context))
+                    .round();
+
+            return CustomScrollView(
+              controller: _scrollController,
+              // Momentum scrolling that glides to a stop and gives a soft bounce
+              // at the very top / bottom, instead of halting dead.
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
               ),
-              for (final section in widget.sections) ...[
-                SliverToBoxAdapter(
-                  child: _SectionHeader(
-                    title: section.category.name,
-                    count: section.products.length,
-                  ),
+              // Builds a bit beyond the screen so cards are already there when a
+              // fast fling arrives.
+              cacheExtent: _warm ? _warmCacheExtent : 0,
+              slivers: [
+                // Room for the notch that floats over the top of the grid.
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: catalogNotchHeight),
                 ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                    _gridHorizontalPadding,
-                    _gridTopPadding,
-                    _gridHorizontalPadding,
-                    _sectionBottomPadding,
-                  ),
-                  sliver: SliverGrid(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: layout.columns,
-                      mainAxisSpacing: _gridGap,
-                      crossAxisSpacing: _gridGap,
-                      childAspectRatio: _tileAspectRatio,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        if (_showSkeleton) return const _SkeletonCard();
-                        final product = section.products[index];
-                        return _ProductCard(
-                          key: ValueKey(product.id),
-                          product: product,
-                          onTap: () => notifier.addToCart(product),
-                        );
-                      },
-                      childCount: section.products.length,
-                      // Cards don't need to stay alive off-screen; skipping the
-                      // keep-alive wrappers is less work per card.
-                      addAutomaticKeepAlives: false,
+                for (final section in widget.sections) ...[
+                  SliverToBoxAdapter(
+                    child: _SectionHeader(
+                      title: section.category.name,
+                      count: section.products.length,
                     ),
                   ),
-                ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(
+                      _gridHorizontalPadding,
+                      _gridTopPadding,
+                      _gridHorizontalPadding,
+                      _sectionBottomPadding,
+                    ),
+                    sliver: SliverGrid(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: layout.columns,
+                        mainAxisSpacing: _gridGap,
+                        crossAxisSpacing: _gridGap,
+                        childAspectRatio: layout.aspectFor(section),
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final product = section.products[index];
+                          // 0 = plain card (no picture area).
+                          final imageHeight = layout.hasImages(section)
+                              ? layout.imageHeight
+                              : 0.0;
+                          if (_showSkeleton) {
+                            return _SkeletonCard(imageHeight: imageHeight);
+                          }
+                          return _ProductCard(
+                            key: ValueKey(product.id),
+                            product: product,
+                            imageHeight: imageHeight,
+                            imageCachePx: imageCachePx,
+                            onTap: () => notifier.addToCart(product),
+                          );
+                        },
+                        childCount: section.products.length,
+                        // Cards don't need to stay alive off-screen; skipping the
+                        // keep-alive wrappers is less work per card.
+                        addAutomaticKeepAlives: false,
+                      ),
+                    ),
+                  ),
+                ],
+                // Lets even the last (short) section scroll all the way up to the
+                // top, so tapping its chip lands exactly on it.
+                SliverToBoxAdapter(child: SizedBox(height: layout.tail)),
               ],
-              // Lets even the last (short) section scroll all the way up to the
-              // top, so tapping its chip lands exactly on it.
-              SliverToBoxAdapter(child: SizedBox(height: layout.tail)),
-            ],
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -422,6 +468,8 @@ class _GridLayout {
     required this.sectionIds,
     required this.starts,
     required this.tail,
+    required this.tileWidth,
+    required this.imageHeight,
   });
 
   static const empty = _GridLayout(
@@ -429,6 +477,8 @@ class _GridLayout {
     sectionIds: [],
     starts: [],
     tail: 0,
+    tileWidth: 0,
+    imageHeight: 0,
   );
 
   final int columns;
@@ -440,10 +490,27 @@ class _GridLayout {
   /// Extra space after the last section (see the filler in the grid).
   final double tail;
 
+  final double tileWidth;
+
+  /// Height of the picture area on product cards at this screen width, or 0
+  /// when the tiles are too narrow for one.
+  final double imageHeight;
+
+  bool hasImages(CatalogSection s) => _sectionHasImages(s, imageHeight);
+
+  double tileHeightFor(CatalogSection s) =>
+      _sectionTileHeight(hasImages(s), tileWidth, imageHeight);
+
+  double aspectFor(CatalogSection s) {
+    final h = tileHeightFor(s);
+    return h <= 0 ? _tileAspectRatio : tileWidth / h;
+  }
+
   factory _GridLayout.compute({
     required double width,
     required double height,
     required List<CatalogSection> sections,
+    bool showImages = true,
   }) {
     final crossExtent = math.max(0.0, width - _gridHorizontalPadding * 2);
     final columns = math.max(
@@ -452,7 +519,15 @@ class _GridLayout {
     );
     final tileWidth =
         math.max(0.0, crossExtent - _gridGap * (columns - 1)) / columns;
-    final tileHeight = tileWidth / _tileAspectRatio;
+
+    final imageHeight = showImages && tileWidth >= _minTileWidthForImage
+        ? math.min(
+            _maxImageHeight,
+            tileWidth / _imageTileAspectRatio -
+                _imageInset * 2 -
+                _cardTextAreaHeight,
+          )
+        : 0.0;
 
     final ids = <String>[];
     final starts = <double>[];
@@ -460,6 +535,11 @@ class _GridLayout {
     var lastExtent = 0.0;
 
     for (final section in sections) {
+      final tileHeight = _sectionTileHeight(
+        _sectionHasImages(section, imageHeight),
+        tileWidth,
+        imageHeight,
+      );
       final rows = (section.products.length / columns).ceil();
       final gridHeight = rows == 0
           ? 0.0
@@ -475,6 +555,8 @@ class _GridLayout {
 
     return _GridLayout(
       columns: columns,
+      tileWidth: tileWidth,
+      imageHeight: imageHeight,
       sectionIds: ids,
       starts: starts,
       tail: math.max(
@@ -620,7 +702,10 @@ class _StateMessage extends StatelessWidget {
 /// Cheap stand-in for a product card, shown while the sheet slides in. Just a
 /// few plain boxes: no ripple, no text layout, no provider watching.
 class _SkeletonCard extends StatelessWidget {
-  const _SkeletonCard();
+  const _SkeletonCard({this.imageHeight = 0});
+
+  /// Same picture area the real card will have (0 = plain card).
+  final double imageHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -638,23 +723,59 @@ class _SkeletonCard extends StatelessWidget {
       ),
     );
 
+    final bars = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        bar(0.8, 14),
+        const SizedBox(height: 8),
+        bar(0.5, 14),
+        const Spacer(),
+        bar(0.4, 18),
+      ],
+    );
+
+    final decoration = BoxDecoration(
+      color: colors.surfaceRaised,
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: colors.border.withValues(alpha: 0.4)),
+    );
+
+    if (imageHeight > 0) {
+      return Container(
+        decoration: decoration,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(_imageInset),
+              child: Container(
+                height: imageHeight,
+                decoration: BoxDecoration(
+                  color: colors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  _imageInset + 4,
+                  0,
+                  _imageInset + 2,
+                  10,
+                ),
+                child: bars,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.surfaceRaised,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border.withValues(alpha: 0.4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          bar(0.8, 14),
-          const SizedBox(height: 8),
-          bar(0.5, 14),
-          const Spacer(),
-          bar(0.4, 18),
-        ],
-      ),
+      decoration: decoration,
+      child: bars,
     );
   }
 }
@@ -714,10 +835,20 @@ class _CartQuantitiesScope extends ConsumerWidget {
 /// provider subscription, no animation controller. Pressing tints the card
 /// instantly instead of rippling, which also feels snappier on slow hardware.
 class _ProductCard extends StatefulWidget {
-  const _ProductCard({super.key, required this.product, required this.onTap});
+  const _ProductCard({
+    super.key,
+    required this.product,
+    required this.onTap,
+    this.imageHeight = 0,
+    this.imageCachePx = 0,
+  });
 
   final Product product;
   final VoidCallback onTap;
+
+  /// Height of the picture area at the top of the card, or 0 for a plain card.
+  final double imageHeight;
+  final int imageCachePx;
 
   @override
   State<_ProductCard> createState() => _ProductCardState();
@@ -753,6 +884,63 @@ class _ProductCardState extends State<_ProductCard> {
 
     final textColor = isOutOfStock ? colors.textDisabled : colors.textPrimary;
 
+    // Name, SKU and price: the same in both card styles.
+    final details = <Widget>[
+      // The name yields space first: it's clipped (never the price) if the
+      // card is too short for everything. The SKU is laid out first and
+      // always shows; the name takes whatever height is left.
+      Expanded(
+        child: ClipRect(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Flexible(
+                child: Text(
+                  product.name,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: _productNameStyle.copyWith(color: textColor),
+                ),
+              ),
+              if (product.sku.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  product.sku,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: _skuStyle.copyWith(
+                    color: isOutOfStock
+                        ? colors.textDisabled
+                        : colors.textSecondary,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      const SizedBox(height: 8),
+      // Out of stock sits ABOVE the price, so the price always gets the
+      // card's full width.
+      if (isOutOfStock) ...[
+        _OutOfStockTag(colors: colors),
+        const SizedBox(height: 6),
+      ],
+      Row(
+        children: [
+          Expanded(
+            child: _PriceText(price: product.price, color: textColor),
+          ),
+          if (!isOutOfStock) ...[
+            const SizedBox(width: 8),
+            _AddBadge(quantity: inCart, colors: colors),
+          ],
+        ],
+      ),
+    ];
+
+    final showImage = widget.imageHeight > 0;
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: isOutOfStock ? null : widget.onTap,
@@ -761,7 +949,9 @@ class _ProductCardState extends State<_ProductCard> {
       onTapCancel: isOutOfStock ? null : () => _setPressed(false),
       child: Container(
         constraints: const BoxConstraints(minHeight: primaryTapTarget),
-        padding: const EdgeInsets.fromLTRB(16, 16, 12, 12),
+        padding: showImage
+            ? EdgeInsets.zero
+            : const EdgeInsets.fromLTRB(16, 16, 12, 12),
         decoration: BoxDecoration(
           color: fill,
           borderRadius: BorderRadius.circular(18),
@@ -774,63 +964,44 @@ class _ProductCardState extends State<_ProductCard> {
                   width: isInCart ? 1.5 : 1,
                 ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // The name yields space first: it's clipped (never the price) if
-            // the card is too short for everything.
-            // The SKU is laid out first and always shows; the name takes
-            // whatever height is left and is clipped if it needs more.
-            Expanded(
-              child: ClipRect(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        product.name,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: _productNameStyle.copyWith(color: textColor),
+        child: showImage
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Picture area. Selecting the product never waits on it: the
+                  // card is tappable from its first frame and the picture
+                  // fills in later.
+                  Padding(
+                    padding: const EdgeInsets.all(_imageInset),
+                    child: _ProductThumb(
+                      productId: int.tryParse(product.id),
+                      height: widget.imageHeight,
+                      cachePx: widget.imageCachePx,
+                      dimmed: isOutOfStock,
+                      placeholder: colors.surfaceVariant,
+                      iconColor: colors.textDisabled,
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        _imageInset + 4,
+                        0,
+                        _imageInset + 2,
+                        10,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: details,
                       ),
                     ),
-                    if (product.sku.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        product.sku,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: _skuStyle.copyWith(
-                          color: isOutOfStock
-                              ? colors.textDisabled
-                              : colors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Out of stock sits ABOVE the price, so the price always gets the
-            // card's full width.
-            if (isOutOfStock) ...[
-              _OutOfStockTag(colors: colors),
-              const SizedBox(height: 6),
-            ],
-            Row(
-              children: [
-                Expanded(
-                  child: _PriceText(price: product.price, color: textColor),
-                ),
-                if (!isOutOfStock) ...[
-                  const SizedBox(width: 8),
-                  _AddBadge(quantity: inCart, colors: colors),
+                  ),
                 ],
-              ],
-            ),
-          ],
-        ),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: details,
+              ),
       ),
     );
   }
@@ -911,6 +1082,130 @@ class _OutOfStockTag extends StatelessWidget {
       child: Text(
         'Out of stock',
         style: _outOfStockStyle.copyWith(color: colors.textDisabled),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Product pictures
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// productId -> picture file, shared with every card through ONE inherited
+/// widget (same idea as [_CartQuantities]). When the background sync saves
+/// more pictures, only the thumbnails whose own file changed rebuild; no card
+/// has a Riverpod subscription of its own.
+class _ProductImages extends InheritedModel<int> {
+  const _ProductImages({required this.paths, required super.child});
+
+  final Map<int, String> paths;
+
+  static String? of(BuildContext context, int productId) {
+    final model = InheritedModel.inheritFrom<_ProductImages>(
+      context,
+      aspect: productId,
+    );
+    return model?.paths[productId];
+  }
+
+  @override
+  bool updateShouldNotify(_ProductImages oldWidget) =>
+      !identical(paths, oldWidget.paths);
+
+  @override
+  bool updateShouldNotifyDependent(
+    _ProductImages oldWidget,
+    Set<int> dependencies,
+  ) {
+    for (final id in dependencies) {
+      if (paths[id] != oldWidget.paths[id]) return true;
+    }
+    return false;
+  }
+}
+
+class _ProductImagesScope extends ConsumerWidget {
+  const _ProductImagesScope({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Throttled upstream (see productImagePathsProvider), so a sync saving
+    // hundreds of pictures updates the grid in a few batches, not hundreds of
+    // times.
+    final paths =
+        ref.watch(productImagePathsProvider).value ?? const <int, String>{};
+    return _ProductImages(paths: paths, child: child);
+  }
+}
+
+/// The picture of one product, full width of the card. A plain grey box until
+/// the file is known and decoded; then the picture draws over it. Deliberately
+/// static: no shimmer or fade animation, because dozens of animating
+/// placeholders repaint every frame, which is exactly what a weak device can't
+/// afford.
+///
+/// The whole picture is always visible (BoxFit.contain): nothing is cropped, so
+/// the cashier sees the product itself. Change to BoxFit.cover to fill the box
+/// edge to edge at the cost of trimming the picture's top and bottom.
+///
+/// Image.file is used (not a raw decoder) on purpose: it decodes off the UI
+/// thread, and it holds back loading while the list is being flung, loading
+/// the pictures once scrolling slows down.
+class _ProductThumb extends StatelessWidget {
+  const _ProductThumb({
+    required this.productId,
+    required this.height,
+    required this.cachePx,
+    required this.dimmed,
+    required this.placeholder,
+    required this.iconColor,
+  });
+
+  final int? productId;
+  final double height;
+  final int cachePx;
+  final bool dimmed;
+  final Color placeholder;
+  final Color iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final id = productId;
+    final path = id == null ? null : _ProductImages.of(context, id);
+    final radius = BorderRadius.circular(12);
+
+    return SizedBox(
+      width: double.infinity,
+      height: height,
+      child: DecoratedBox(
+        decoration: BoxDecoration(color: placeholder, borderRadius: radius),
+        child: path == null
+            ? Icon(
+                Icons.image_outlined,
+                size: math.min(40.0, height * 0.4),
+                color: iconColor.withValues(alpha: 0.5),
+              )
+            : ClipRRect(
+                borderRadius: radius,
+                child: Image.file(
+                  File(path),
+                  width: double.infinity,
+                  height: height,
+                  fit: BoxFit.contain,
+                  cacheWidth: cachePx > 0 ? cachePx : null,
+                  // Pictures are shown larger than their source, so smooth
+                  // the scaling instead of leaving hard pixels.
+                  filterQuality: FilterQuality.medium,
+                  gaplessPlayback: true,
+                  // Out-of-stock: faded without an Opacity layer.
+                  color: dimmed ? const Color(0x73FFFFFF) : null,
+                  colorBlendMode: dimmed ? BlendMode.modulate : null,
+                  // A missing / corrupt file just leaves the grey box.
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
       ),
     );
   }

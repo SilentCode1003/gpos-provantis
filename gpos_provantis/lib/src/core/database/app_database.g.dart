@@ -6201,6 +6201,59 @@ class $SettingsTableTable extends SettingsTable
         requiredDuringInsert: false,
         defaultValue: const Constant('UNREGISTERED'),
       );
+  static const VerificationMeta _showProductImagesMeta = const VerificationMeta(
+    'showProductImages',
+  );
+  @override
+  late final GeneratedColumn<bool> showProductImages = GeneratedColumn<bool>(
+    'show_product_images',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_product_images" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _autoFetchProductImagesMeta =
+      const VerificationMeta('autoFetchProductImages');
+  @override
+  late final GeneratedColumn<bool> autoFetchProductImages =
+      GeneratedColumn<bool>(
+        'auto_fetch_product_images',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("auto_fetch_product_images" IN (0, 1))',
+        ),
+        defaultValue: const Constant(true),
+      );
+  static const VerificationMeta _productImageRefetchDaysMeta =
+      const VerificationMeta('productImageRefetchDays');
+  @override
+  late final GeneratedColumn<int> productImageRefetchDays =
+      GeneratedColumn<int>(
+        'product_image_refetch_days',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
+  static const VerificationMeta _productImagesLastRefetchedAtMeta =
+      const VerificationMeta('productImagesLastRefetchedAt');
+  @override
+  late final GeneratedColumn<DateTime> productImagesLastRefetchedAt =
+      GeneratedColumn<DateTime>(
+        'product_images_last_refetched_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -6220,6 +6273,10 @@ class $SettingsTableTable extends SettingsTable
     vatReg,
     permitToUse,
     machineIdentificationNumber,
+    showProductImages,
+    autoFetchProductImages,
+    productImageRefetchDays,
+    productImagesLastRefetchedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6368,6 +6425,42 @@ class $SettingsTableTable extends SettingsTable
         ),
       );
     }
+    if (data.containsKey('show_product_images')) {
+      context.handle(
+        _showProductImagesMeta,
+        showProductImages.isAcceptableOrUnknown(
+          data['show_product_images']!,
+          _showProductImagesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('auto_fetch_product_images')) {
+      context.handle(
+        _autoFetchProductImagesMeta,
+        autoFetchProductImages.isAcceptableOrUnknown(
+          data['auto_fetch_product_images']!,
+          _autoFetchProductImagesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('product_image_refetch_days')) {
+      context.handle(
+        _productImageRefetchDaysMeta,
+        productImageRefetchDays.isAcceptableOrUnknown(
+          data['product_image_refetch_days']!,
+          _productImageRefetchDaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('product_images_last_refetched_at')) {
+      context.handle(
+        _productImagesLastRefetchedAtMeta,
+        productImagesLastRefetchedAt.isAcceptableOrUnknown(
+          data['product_images_last_refetched_at']!,
+          _productImagesLastRefetchedAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -6445,6 +6538,22 @@ class $SettingsTableTable extends SettingsTable
         DriftSqlType.string,
         data['${effectivePrefix}machine_identification_number'],
       )!,
+      showProductImages: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_product_images'],
+      )!,
+      autoFetchProductImages: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}auto_fetch_product_images'],
+      )!,
+      productImageRefetchDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}product_image_refetch_days'],
+      )!,
+      productImagesLastRefetchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}product_images_last_refetched_at'],
+      ),
     );
   }
 
@@ -6473,6 +6582,18 @@ class SettingsTableData extends DataClass
   final String vatReg;
   final String permitToUse;
   final String machineIdentificationNumber;
+
+  /// Show pictures on the product grid.
+  final bool showProductImages;
+
+  /// Download missing pictures automatically after each catalog sync.
+  final bool autoFetchProductImages;
+
+  /// Re-download every picture every N days. 0 = never.
+  final int productImageRefetchDays;
+
+  /// When every picture was last downloaded fresh (null = never).
+  final DateTime? productImagesLastRefetchedAt;
   const SettingsTableData({
     required this.id,
     required this.mainPrinter,
@@ -6491,6 +6612,10 @@ class SettingsTableData extends DataClass
     required this.vatReg,
     required this.permitToUse,
     required this.machineIdentificationNumber,
+    required this.showProductImages,
+    required this.autoFetchProductImages,
+    required this.productImageRefetchDays,
+    this.productImagesLastRefetchedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6520,6 +6645,14 @@ class SettingsTableData extends DataClass
     map['machine_identification_number'] = Variable<String>(
       machineIdentificationNumber,
     );
+    map['show_product_images'] = Variable<bool>(showProductImages);
+    map['auto_fetch_product_images'] = Variable<bool>(autoFetchProductImages);
+    map['product_image_refetch_days'] = Variable<int>(productImageRefetchDays);
+    if (!nullToAbsent || productImagesLastRefetchedAt != null) {
+      map['product_images_last_refetched_at'] = Variable<DateTime>(
+        productImagesLastRefetchedAt,
+      );
+    }
     return map;
   }
 
@@ -6544,6 +6677,13 @@ class SettingsTableData extends DataClass
       vatReg: Value(vatReg),
       permitToUse: Value(permitToUse),
       machineIdentificationNumber: Value(machineIdentificationNumber),
+      showProductImages: Value(showProductImages),
+      autoFetchProductImages: Value(autoFetchProductImages),
+      productImageRefetchDays: Value(productImageRefetchDays),
+      productImagesLastRefetchedAt:
+          productImagesLastRefetchedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(productImagesLastRefetchedAt),
     );
   }
 
@@ -6578,6 +6718,16 @@ class SettingsTableData extends DataClass
       machineIdentificationNumber: serializer.fromJson<String>(
         json['machineIdentificationNumber'],
       ),
+      showProductImages: serializer.fromJson<bool>(json['showProductImages']),
+      autoFetchProductImages: serializer.fromJson<bool>(
+        json['autoFetchProductImages'],
+      ),
+      productImageRefetchDays: serializer.fromJson<int>(
+        json['productImageRefetchDays'],
+      ),
+      productImagesLastRefetchedAt: serializer.fromJson<DateTime?>(
+        json['productImagesLastRefetchedAt'],
+      ),
     );
   }
   @override
@@ -6609,6 +6759,14 @@ class SettingsTableData extends DataClass
       'machineIdentificationNumber': serializer.toJson<String>(
         machineIdentificationNumber,
       ),
+      'showProductImages': serializer.toJson<bool>(showProductImages),
+      'autoFetchProductImages': serializer.toJson<bool>(autoFetchProductImages),
+      'productImageRefetchDays': serializer.toJson<int>(
+        productImageRefetchDays,
+      ),
+      'productImagesLastRefetchedAt': serializer.toJson<DateTime?>(
+        productImagesLastRefetchedAt,
+      ),
     };
   }
 
@@ -6630,6 +6788,10 @@ class SettingsTableData extends DataClass
     String? vatReg,
     String? permitToUse,
     String? machineIdentificationNumber,
+    bool? showProductImages,
+    bool? autoFetchProductImages,
+    int? productImageRefetchDays,
+    Value<DateTime?> productImagesLastRefetchedAt = const Value.absent(),
   }) => SettingsTableData(
     id: id ?? this.id,
     mainPrinter: mainPrinter ?? this.mainPrinter,
@@ -6653,6 +6815,14 @@ class SettingsTableData extends DataClass
     permitToUse: permitToUse ?? this.permitToUse,
     machineIdentificationNumber:
         machineIdentificationNumber ?? this.machineIdentificationNumber,
+    showProductImages: showProductImages ?? this.showProductImages,
+    autoFetchProductImages:
+        autoFetchProductImages ?? this.autoFetchProductImages,
+    productImageRefetchDays:
+        productImageRefetchDays ?? this.productImageRefetchDays,
+    productImagesLastRefetchedAt: productImagesLastRefetchedAt.present
+        ? productImagesLastRefetchedAt.value
+        : this.productImagesLastRefetchedAt,
   );
   SettingsTableData copyWithCompanion(SettingsTableCompanion data) {
     return SettingsTableData(
@@ -6702,6 +6872,18 @@ class SettingsTableData extends DataClass
       machineIdentificationNumber: data.machineIdentificationNumber.present
           ? data.machineIdentificationNumber.value
           : this.machineIdentificationNumber,
+      showProductImages: data.showProductImages.present
+          ? data.showProductImages.value
+          : this.showProductImages,
+      autoFetchProductImages: data.autoFetchProductImages.present
+          ? data.autoFetchProductImages.value
+          : this.autoFetchProductImages,
+      productImageRefetchDays: data.productImageRefetchDays.present
+          ? data.productImageRefetchDays.value
+          : this.productImageRefetchDays,
+      productImagesLastRefetchedAt: data.productImagesLastRefetchedAt.present
+          ? data.productImagesLastRefetchedAt.value
+          : this.productImagesLastRefetchedAt,
     );
   }
 
@@ -6728,13 +6910,17 @@ class SettingsTableData extends DataClass
           ..write('validUntil: $validUntil, ')
           ..write('vatReg: $vatReg, ')
           ..write('permitToUse: $permitToUse, ')
-          ..write('machineIdentificationNumber: $machineIdentificationNumber')
+          ..write('machineIdentificationNumber: $machineIdentificationNumber, ')
+          ..write('showProductImages: $showProductImages, ')
+          ..write('autoFetchProductImages: $autoFetchProductImages, ')
+          ..write('productImageRefetchDays: $productImageRefetchDays, ')
+          ..write('productImagesLastRefetchedAt: $productImagesLastRefetchedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     mainPrinter,
     subPrinter,
@@ -6752,7 +6938,11 @@ class SettingsTableData extends DataClass
     vatReg,
     permitToUse,
     machineIdentificationNumber,
-  );
+    showProductImages,
+    autoFetchProductImages,
+    productImageRefetchDays,
+    productImagesLastRefetchedAt,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -6776,7 +6966,12 @@ class SettingsTableData extends DataClass
           other.vatReg == this.vatReg &&
           other.permitToUse == this.permitToUse &&
           other.machineIdentificationNumber ==
-              this.machineIdentificationNumber);
+              this.machineIdentificationNumber &&
+          other.showProductImages == this.showProductImages &&
+          other.autoFetchProductImages == this.autoFetchProductImages &&
+          other.productImageRefetchDays == this.productImageRefetchDays &&
+          other.productImagesLastRefetchedAt ==
+              this.productImagesLastRefetchedAt);
 }
 
 class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
@@ -6797,6 +6992,10 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
   final Value<String> vatReg;
   final Value<String> permitToUse;
   final Value<String> machineIdentificationNumber;
+  final Value<bool> showProductImages;
+  final Value<bool> autoFetchProductImages;
+  final Value<int> productImageRefetchDays;
+  final Value<DateTime?> productImagesLastRefetchedAt;
   final Value<int> rowid;
   const SettingsTableCompanion({
     this.id = const Value.absent(),
@@ -6816,6 +7015,10 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     this.vatReg = const Value.absent(),
     this.permitToUse = const Value.absent(),
     this.machineIdentificationNumber = const Value.absent(),
+    this.showProductImages = const Value.absent(),
+    this.autoFetchProductImages = const Value.absent(),
+    this.productImageRefetchDays = const Value.absent(),
+    this.productImagesLastRefetchedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SettingsTableCompanion.insert({
@@ -6836,6 +7039,10 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     this.vatReg = const Value.absent(),
     this.permitToUse = const Value.absent(),
     this.machineIdentificationNumber = const Value.absent(),
+    this.showProductImages = const Value.absent(),
+    this.autoFetchProductImages = const Value.absent(),
+    this.productImageRefetchDays = const Value.absent(),
+    this.productImagesLastRefetchedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   static Insertable<SettingsTableData> custom({
@@ -6856,6 +7063,10 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     Expression<String>? vatReg,
     Expression<String>? permitToUse,
     Expression<String>? machineIdentificationNumber,
+    Expression<bool>? showProductImages,
+    Expression<bool>? autoFetchProductImages,
+    Expression<int>? productImageRefetchDays,
+    Expression<DateTime>? productImagesLastRefetchedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -6882,6 +7093,13 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
       if (permitToUse != null) 'permit_to_use': permitToUse,
       if (machineIdentificationNumber != null)
         'machine_identification_number': machineIdentificationNumber,
+      if (showProductImages != null) 'show_product_images': showProductImages,
+      if (autoFetchProductImages != null)
+        'auto_fetch_product_images': autoFetchProductImages,
+      if (productImageRefetchDays != null)
+        'product_image_refetch_days': productImageRefetchDays,
+      if (productImagesLastRefetchedAt != null)
+        'product_images_last_refetched_at': productImagesLastRefetchedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -6904,6 +7122,10 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     Value<String>? vatReg,
     Value<String>? permitToUse,
     Value<String>? machineIdentificationNumber,
+    Value<bool>? showProductImages,
+    Value<bool>? autoFetchProductImages,
+    Value<int>? productImageRefetchDays,
+    Value<DateTime?>? productImagesLastRefetchedAt,
     Value<int>? rowid,
   }) {
     return SettingsTableCompanion(
@@ -6929,6 +7151,13 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
       permitToUse: permitToUse ?? this.permitToUse,
       machineIdentificationNumber:
           machineIdentificationNumber ?? this.machineIdentificationNumber,
+      showProductImages: showProductImages ?? this.showProductImages,
+      autoFetchProductImages:
+          autoFetchProductImages ?? this.autoFetchProductImages,
+      productImageRefetchDays:
+          productImageRefetchDays ?? this.productImageRefetchDays,
+      productImagesLastRefetchedAt:
+          productImagesLastRefetchedAt ?? this.productImagesLastRefetchedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6995,6 +7224,24 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
         machineIdentificationNumber.value,
       );
     }
+    if (showProductImages.present) {
+      map['show_product_images'] = Variable<bool>(showProductImages.value);
+    }
+    if (autoFetchProductImages.present) {
+      map['auto_fetch_product_images'] = Variable<bool>(
+        autoFetchProductImages.value,
+      );
+    }
+    if (productImageRefetchDays.present) {
+      map['product_image_refetch_days'] = Variable<int>(
+        productImageRefetchDays.value,
+      );
+    }
+    if (productImagesLastRefetchedAt.present) {
+      map['product_images_last_refetched_at'] = Variable<DateTime>(
+        productImagesLastRefetchedAt.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -7025,6 +7272,12 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
           ..write('vatReg: $vatReg, ')
           ..write('permitToUse: $permitToUse, ')
           ..write('machineIdentificationNumber: $machineIdentificationNumber, ')
+          ..write('showProductImages: $showProductImages, ')
+          ..write('autoFetchProductImages: $autoFetchProductImages, ')
+          ..write('productImageRefetchDays: $productImageRefetchDays, ')
+          ..write(
+            'productImagesLastRefetchedAt: $productImagesLastRefetchedAt, ',
+          )
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -20287,6 +20540,362 @@ class SalesPurchaseOrderTableCompanion
   }
 }
 
+class $ProductImageTableTable extends ProductImageTable
+    with TableInfo<$ProductImageTableTable, ProductImageTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProductImageTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _productIdMeta = const VerificationMeta(
+    'productId',
+  );
+  @override
+  late final GeneratedColumn<int> productId = GeneratedColumn<int>(
+    'product_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _filePathMeta = const VerificationMeta(
+    'filePath',
+  );
+  @override
+  late final GeneratedColumn<String> filePath = GeneratedColumn<String>(
+    'file_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(ProductImageStatus.failed),
+  );
+  static const VerificationMeta _fetchedAtMeta = const VerificationMeta(
+    'fetchedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> fetchedAt = GeneratedColumn<DateTime>(
+    'fetched_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    productId,
+    filePath,
+    status,
+    fetchedAt,
+    lastError,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'product_image_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ProductImageTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('product_id')) {
+      context.handle(
+        _productIdMeta,
+        productId.isAcceptableOrUnknown(data['product_id']!, _productIdMeta),
+      );
+    }
+    if (data.containsKey('file_path')) {
+      context.handle(
+        _filePathMeta,
+        filePath.isAcceptableOrUnknown(data['file_path']!, _filePathMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('fetched_at')) {
+      context.handle(
+        _fetchedAtMeta,
+        fetchedAt.isAcceptableOrUnknown(data['fetched_at']!, _fetchedAtMeta),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {productId};
+  @override
+  ProductImageTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProductImageTableData(
+      productId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}product_id'],
+      )!,
+      filePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_path'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      fetchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}fetched_at'],
+      ),
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+    );
+  }
+
+  @override
+  $ProductImageTableTable createAlias(String alias) {
+    return $ProductImageTableTable(attachedDatabase, alias);
+  }
+}
+
+class ProductImageTableData extends DataClass
+    implements Insertable<ProductImageTableData> {
+  final int productId;
+  final String? filePath;
+  final String status;
+  final DateTime? fetchedAt;
+  final String? lastError;
+  const ProductImageTableData({
+    required this.productId,
+    this.filePath,
+    required this.status,
+    this.fetchedAt,
+    this.lastError,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['product_id'] = Variable<int>(productId);
+    if (!nullToAbsent || filePath != null) {
+      map['file_path'] = Variable<String>(filePath);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || fetchedAt != null) {
+      map['fetched_at'] = Variable<DateTime>(fetchedAt);
+    }
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    return map;
+  }
+
+  ProductImageTableCompanion toCompanion(bool nullToAbsent) {
+    return ProductImageTableCompanion(
+      productId: Value(productId),
+      filePath: filePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(filePath),
+      status: Value(status),
+      fetchedAt: fetchedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fetchedAt),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+    );
+  }
+
+  factory ProductImageTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProductImageTableData(
+      productId: serializer.fromJson<int>(json['productId']),
+      filePath: serializer.fromJson<String?>(json['filePath']),
+      status: serializer.fromJson<String>(json['status']),
+      fetchedAt: serializer.fromJson<DateTime?>(json['fetchedAt']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'productId': serializer.toJson<int>(productId),
+      'filePath': serializer.toJson<String?>(filePath),
+      'status': serializer.toJson<String>(status),
+      'fetchedAt': serializer.toJson<DateTime?>(fetchedAt),
+      'lastError': serializer.toJson<String?>(lastError),
+    };
+  }
+
+  ProductImageTableData copyWith({
+    int? productId,
+    Value<String?> filePath = const Value.absent(),
+    String? status,
+    Value<DateTime?> fetchedAt = const Value.absent(),
+    Value<String?> lastError = const Value.absent(),
+  }) => ProductImageTableData(
+    productId: productId ?? this.productId,
+    filePath: filePath.present ? filePath.value : this.filePath,
+    status: status ?? this.status,
+    fetchedAt: fetchedAt.present ? fetchedAt.value : this.fetchedAt,
+    lastError: lastError.present ? lastError.value : this.lastError,
+  );
+  ProductImageTableData copyWithCompanion(ProductImageTableCompanion data) {
+    return ProductImageTableData(
+      productId: data.productId.present ? data.productId.value : this.productId,
+      filePath: data.filePath.present ? data.filePath.value : this.filePath,
+      status: data.status.present ? data.status.value : this.status,
+      fetchedAt: data.fetchedAt.present ? data.fetchedAt.value : this.fetchedAt,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductImageTableData(')
+          ..write('productId: $productId, ')
+          ..write('filePath: $filePath, ')
+          ..write('status: $status, ')
+          ..write('fetchedAt: $fetchedAt, ')
+          ..write('lastError: $lastError')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(productId, filePath, status, fetchedAt, lastError);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProductImageTableData &&
+          other.productId == this.productId &&
+          other.filePath == this.filePath &&
+          other.status == this.status &&
+          other.fetchedAt == this.fetchedAt &&
+          other.lastError == this.lastError);
+}
+
+class ProductImageTableCompanion
+    extends UpdateCompanion<ProductImageTableData> {
+  final Value<int> productId;
+  final Value<String?> filePath;
+  final Value<String> status;
+  final Value<DateTime?> fetchedAt;
+  final Value<String?> lastError;
+  const ProductImageTableCompanion({
+    this.productId = const Value.absent(),
+    this.filePath = const Value.absent(),
+    this.status = const Value.absent(),
+    this.fetchedAt = const Value.absent(),
+    this.lastError = const Value.absent(),
+  });
+  ProductImageTableCompanion.insert({
+    this.productId = const Value.absent(),
+    this.filePath = const Value.absent(),
+    this.status = const Value.absent(),
+    this.fetchedAt = const Value.absent(),
+    this.lastError = const Value.absent(),
+  });
+  static Insertable<ProductImageTableData> custom({
+    Expression<int>? productId,
+    Expression<String>? filePath,
+    Expression<String>? status,
+    Expression<DateTime>? fetchedAt,
+    Expression<String>? lastError,
+  }) {
+    return RawValuesInsertable({
+      if (productId != null) 'product_id': productId,
+      if (filePath != null) 'file_path': filePath,
+      if (status != null) 'status': status,
+      if (fetchedAt != null) 'fetched_at': fetchedAt,
+      if (lastError != null) 'last_error': lastError,
+    });
+  }
+
+  ProductImageTableCompanion copyWith({
+    Value<int>? productId,
+    Value<String?>? filePath,
+    Value<String>? status,
+    Value<DateTime?>? fetchedAt,
+    Value<String?>? lastError,
+  }) {
+    return ProductImageTableCompanion(
+      productId: productId ?? this.productId,
+      filePath: filePath ?? this.filePath,
+      status: status ?? this.status,
+      fetchedAt: fetchedAt ?? this.fetchedAt,
+      lastError: lastError ?? this.lastError,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (productId.present) {
+      map['product_id'] = Variable<int>(productId.value);
+    }
+    if (filePath.present) {
+      map['file_path'] = Variable<String>(filePath.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (fetchedAt.present) {
+      map['fetched_at'] = Variable<DateTime>(fetchedAt.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductImageTableCompanion(')
+          ..write('productId: $productId, ')
+          ..write('filePath: $filePath, ')
+          ..write('status: $status, ')
+          ..write('fetchedAt: $fetchedAt, ')
+          ..write('lastError: $lastError')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -20352,6 +20961,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $EmailTableTable emailTable = $EmailTableTable(this);
   late final $SalesPurchaseOrderTableTable salesPurchaseOrderTable =
       $SalesPurchaseOrderTableTable(this);
+  late final $ProductImageTableTable productImageTable =
+      $ProductImageTableTable(this);
   late final DomainConfigDao domainConfigDao = DomainConfigDao(
     this as AppDatabase,
   );
@@ -20401,6 +21012,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     loginCredentialsTable,
     emailTable,
     salesPurchaseOrderTable,
+    productImageTable,
   ];
 }
 
@@ -23736,6 +24348,10 @@ typedef $$SettingsTableTableCreateCompanionBuilder =
       Value<String> vatReg,
       Value<String> permitToUse,
       Value<String> machineIdentificationNumber,
+      Value<bool> showProductImages,
+      Value<bool> autoFetchProductImages,
+      Value<int> productImageRefetchDays,
+      Value<DateTime?> productImagesLastRefetchedAt,
       Value<int> rowid,
     });
 typedef $$SettingsTableTableUpdateCompanionBuilder =
@@ -23757,6 +24373,10 @@ typedef $$SettingsTableTableUpdateCompanionBuilder =
       Value<String> vatReg,
       Value<String> permitToUse,
       Value<String> machineIdentificationNumber,
+      Value<bool> showProductImages,
+      Value<bool> autoFetchProductImages,
+      Value<int> productImageRefetchDays,
+      Value<DateTime?> productImagesLastRefetchedAt,
       Value<int> rowid,
     });
 
@@ -23854,6 +24474,27 @@ class $$SettingsTableTableFilterComposer
     column: $table.machineIdentificationNumber,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<bool> get showProductImages => $composableBuilder(
+    column: $table.showProductImages,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get autoFetchProductImages => $composableBuilder(
+    column: $table.autoFetchProductImages,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get productImageRefetchDays => $composableBuilder(
+    column: $table.productImageRefetchDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get productImagesLastRefetchedAt =>
+      $composableBuilder(
+        column: $table.productImagesLastRefetchedAt,
+        builder: (column) => ColumnFilters(column),
+      );
 }
 
 class $$SettingsTableTableOrderingComposer
@@ -23950,6 +24591,27 @@ class $$SettingsTableTableOrderingComposer
     column: $table.machineIdentificationNumber,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get showProductImages => $composableBuilder(
+    column: $table.showProductImages,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get autoFetchProductImages => $composableBuilder(
+    column: $table.autoFetchProductImages,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get productImageRefetchDays => $composableBuilder(
+    column: $table.productImageRefetchDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get productImagesLastRefetchedAt =>
+      $composableBuilder(
+        column: $table.productImagesLastRefetchedAt,
+        builder: (column) => ColumnOrderings(column),
+      );
 }
 
 class $$SettingsTableTableAnnotationComposer
@@ -24040,6 +24702,27 @@ class $$SettingsTableTableAnnotationComposer
     column: $table.machineIdentificationNumber,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get showProductImages => $composableBuilder(
+    column: $table.showProductImages,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get autoFetchProductImages => $composableBuilder(
+    column: $table.autoFetchProductImages,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get productImageRefetchDays => $composableBuilder(
+    column: $table.productImageRefetchDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get productImagesLastRefetchedAt =>
+      $composableBuilder(
+        column: $table.productImagesLastRefetchedAt,
+        builder: (column) => column,
+      );
 }
 
 class $$SettingsTableTableTableManager
@@ -24097,6 +24780,11 @@ class $$SettingsTableTableTableManager
                 Value<String> permitToUse = const Value.absent(),
                 Value<String> machineIdentificationNumber =
                     const Value.absent(),
+                Value<bool> showProductImages = const Value.absent(),
+                Value<bool> autoFetchProductImages = const Value.absent(),
+                Value<int> productImageRefetchDays = const Value.absent(),
+                Value<DateTime?> productImagesLastRefetchedAt =
+                    const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsTableCompanion(
                 id: id,
@@ -24117,6 +24805,10 @@ class $$SettingsTableTableTableManager
                 vatReg: vatReg,
                 permitToUse: permitToUse,
                 machineIdentificationNumber: machineIdentificationNumber,
+                showProductImages: showProductImages,
+                autoFetchProductImages: autoFetchProductImages,
+                productImageRefetchDays: productImageRefetchDays,
+                productImagesLastRefetchedAt: productImagesLastRefetchedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -24141,6 +24833,11 @@ class $$SettingsTableTableTableManager
                 Value<String> permitToUse = const Value.absent(),
                 Value<String> machineIdentificationNumber =
                     const Value.absent(),
+                Value<bool> showProductImages = const Value.absent(),
+                Value<bool> autoFetchProductImages = const Value.absent(),
+                Value<int> productImageRefetchDays = const Value.absent(),
+                Value<DateTime?> productImagesLastRefetchedAt =
+                    const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsTableCompanion.insert(
                 id: id,
@@ -24161,6 +24858,10 @@ class $$SettingsTableTableTableManager
                 vatReg: vatReg,
                 permitToUse: permitToUse,
                 machineIdentificationNumber: machineIdentificationNumber,
+                showProductImages: showProductImages,
+                autoFetchProductImages: autoFetchProductImages,
+                productImageRefetchDays: productImageRefetchDays,
+                productImagesLastRefetchedAt: productImagesLastRefetchedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -30945,6 +31646,213 @@ typedef $$SalesPurchaseOrderTableTableProcessedTableManager =
       SalesPurchaseOrderTableData,
       PrefetchHooks Function()
     >;
+typedef $$ProductImageTableTableCreateCompanionBuilder =
+    ProductImageTableCompanion Function({
+      Value<int> productId,
+      Value<String?> filePath,
+      Value<String> status,
+      Value<DateTime?> fetchedAt,
+      Value<String?> lastError,
+    });
+typedef $$ProductImageTableTableUpdateCompanionBuilder =
+    ProductImageTableCompanion Function({
+      Value<int> productId,
+      Value<String?> filePath,
+      Value<String> status,
+      Value<DateTime?> fetchedAt,
+      Value<String?> lastError,
+    });
+
+class $$ProductImageTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ProductImageTableTable> {
+  $$ProductImageTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get productId => $composableBuilder(
+    column: $table.productId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ProductImageTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProductImageTableTable> {
+  $$ProductImageTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get productId => $composableBuilder(
+    column: $table.productId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ProductImageTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProductImageTableTable> {
+  $$ProductImageTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get productId =>
+      $composableBuilder(column: $table.productId, builder: (column) => column);
+
+  GeneratedColumn<String> get filePath =>
+      $composableBuilder(column: $table.filePath, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get fetchedAt =>
+      $composableBuilder(column: $table.fetchedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+}
+
+class $$ProductImageTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ProductImageTableTable,
+          ProductImageTableData,
+          $$ProductImageTableTableFilterComposer,
+          $$ProductImageTableTableOrderingComposer,
+          $$ProductImageTableTableAnnotationComposer,
+          $$ProductImageTableTableCreateCompanionBuilder,
+          $$ProductImageTableTableUpdateCompanionBuilder,
+          (
+            ProductImageTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $ProductImageTableTable,
+              ProductImageTableData
+            >,
+          ),
+          ProductImageTableData,
+          PrefetchHooks Function()
+        > {
+  $$ProductImageTableTableTableManager(
+    _$AppDatabase db,
+    $ProductImageTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProductImageTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProductImageTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProductImageTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> productId = const Value.absent(),
+                Value<String?> filePath = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> fetchedAt = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+              }) => ProductImageTableCompanion(
+                productId: productId,
+                filePath: filePath,
+                status: status,
+                fetchedAt: fetchedAt,
+                lastError: lastError,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> productId = const Value.absent(),
+                Value<String?> filePath = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> fetchedAt = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+              }) => ProductImageTableCompanion.insert(
+                productId: productId,
+                filePath: filePath,
+                status: status,
+                fetchedAt: fetchedAt,
+                lastError: lastError,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ProductImageTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ProductImageTableTable,
+      ProductImageTableData,
+      $$ProductImageTableTableFilterComposer,
+      $$ProductImageTableTableOrderingComposer,
+      $$ProductImageTableTableAnnotationComposer,
+      $$ProductImageTableTableCreateCompanionBuilder,
+      $$ProductImageTableTableUpdateCompanionBuilder,
+      (
+        ProductImageTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $ProductImageTableTable,
+          ProductImageTableData
+        >,
+      ),
+      ProductImageTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -31035,6 +31943,8 @@ class $AppDatabaseManager {
         _db,
         _db.salesPurchaseOrderTable,
       );
+  $$ProductImageTableTableTableManager get productImageTable =>
+      $$ProductImageTableTableTableManager(_db, _db.productImageTable);
 }
 
 // **************************************************************************

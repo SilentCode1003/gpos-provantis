@@ -2,6 +2,7 @@ import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:gpos_provantis/src/core/database/app_database.dart';
 import 'package:gpos_provantis/src/core/database/daos/settings_dao.dart';
+import 'package:gpos_provantis/src/core/database/domain/settings_dto.dart';
 
 part 'settings_dao_provider.g.dart';
 
@@ -23,3 +24,27 @@ class SettingsNotifier extends StreamNotifier<List<SettingsTableData>> {
     return dao.watchSettings();
   }
 }
+
+/// The product-image settings, live. Falls back to the defaults (pictures on,
+/// automatic download on, no schedule) until a settings row exists.
+final productImageSettingsProvider = StreamProvider<ProductImageSettings>((
+  ref,
+) {
+  return ref
+      .watch(settingsDaoProvider)
+      .watchSettings()
+      .map(
+        (rows) => rows.isEmpty
+            ? const ProductImageSettings()
+            : ProductImageSettings.fromTableData(rows.first),
+      )
+      .distinct();
+});
+
+/// Whether pictures show on the product grid. Only changes when that one
+/// setting does.
+final showProductImagesProvider = Provider<bool>((ref) {
+  return ref.watch(
+    productImageSettingsProvider.select((a) => a.value?.show ?? true),
+  );
+});
