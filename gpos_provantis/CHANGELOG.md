@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.1.0](https://github.com/SilentCode1003/gpos-provantis/compare/gpos_provantis-v1.0.0...gpos_provantis-v1.1.0) (2026-10-20)
+
+
+### Features
+
+* New factory reset panel. ([5a690f4](https://github.com/SilentCode1003/gpos-provantis/commit/5a690f4457c07503a86779c6fdfb276b7fd93b26))
+* New factory reset panel. ([77a325e](https://github.com/SilentCode1003/gpos-provantis/commit/77a325e4fcee01e6838b1db2cd41565b69b62cbe))
+* Product Images and Sync Settings. ([630b5f3](https://github.com/SilentCode1003/gpos-provantis/commit/630b5f3f372df22207fbb06457149cd54182240a))
+* Product Images and Sync Settings. ([a3d28d0](https://github.com/SilentCode1003/gpos-provantis/commit/a3d28d0f2c333ed8a5f8e5f01a11522d220e8497))
+
+
+### Bug Fixes
+
+* Locks dashboard if there's no Shift. ([97f59b4](https://github.com/SilentCode1003/gpos-provantis/commit/97f59b4047f5f1c94d462cbbdbab656792b220cc))
+* Locks dashboard if there's no Shift. ([3ce80ec](https://github.com/SilentCode1003/gpos-provantis/commit/3ce80eccf812f721b53e7c18063a8acef92834ec))
+* The transaction completion will call the cash drawer to open. ([5a690f4](https://github.com/SilentCode1003/gpos-provantis/commit/5a690f4457c07503a86779c6fdfb276b7fd93b26))
+* The transaction completion will call the cash drawer to open. ([77a325e](https://github.com/SilentCode1003/gpos-provantis/commit/77a325e4fcee01e6838b1db2cd41565b69b62cbe))
+* Updated shift on top bar to show users that the shift is inactive. ([97f59b4](https://github.com/SilentCode1003/gpos-provantis/commit/97f59b4047f5f1c94d462cbbdbab656792b220cc))
+* Updated shift on top bar to show users that the shift is inactive. ([3ce80ec](https://github.com/SilentCode1003/gpos-provantis/commit/3ce80eccf812f721b53e7c18063a8acef92834ec))
+
 ## [1.0.0](https://github.com/SilentCode1003/gpos-provantis/compare/gpos_provantis-v0.4.0...gpos_provantis-v1.0.0) (2026-10-17)
 
 
