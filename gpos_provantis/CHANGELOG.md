@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.2.0](https://github.com/SilentCode1003/gpos-provantis/compare/gpos_provantis-v1.1.0...gpos_provantis-v1.2.0) (2026-10-21)
+
+
+### Features
+
+* Add Product Images settings panel. ([572403a](https://github.com/SilentCode1003/gpos-provantis/commit/572403a648a8dedf8073c68025b478482babc2dc))
+* Add Sync settings panel. ([572403a](https://github.com/SilentCode1003/gpos-provantis/commit/572403a648a8dedf8073c68025b478482babc2dc))
+* Obey settings when downloading product images. ([572403a](https://github.com/SilentCode1003/gpos-provantis/commit/572403a648a8dedf8073c68025b478482babc2dc))
+* Optionally delete synced data on logout. ([572403a](https://github.com/SilentCode1003/gpos-provantis/commit/572403a648a8dedf8073c68025b478482babc2dc))
+* Scheduled background sync. ([572403a](https://github.com/SilentCode1003/gpos-provantis/commit/572403a648a8dedf8073c68025b478482babc2dc))
+* Send sales right after each sale, controllable from settings. ([572403a](https://github.com/SilentCode1003/gpos-provantis/commit/572403a648a8dedf8073c68025b478482babc2dc))
+* Store product-image and sync preferences locally. ([572403a](https://github.com/SilentCode1003/gpos-provantis/commit/572403a648a8dedf8073c68025b478482babc2dc))
+* Sync Settings. ([3129188](https://github.com/SilentCode1003/gpos-provantis/commit/3129188722588359af3c7710ff9881dc299a21a3))
+* Sync Settings. ([572403a](https://github.com/SilentCode1003/gpos-provantis/commit/572403a648a8dedf8073c68025b478482babc2dc))
+* Upload pending sales before pulling the catalog. ([572403a](https://github.com/SilentCode1003/gpos-provantis/commit/572403a648a8dedf8073c68025b478482babc2dc))
+
+
+### Bug Fixes
+
+* Honour a cancel requested while a run is starting. ([572403a](https://github.com/SilentCode1003/gpos-provantis/commit/572403a648a8dedf8073c68025b478482babc2dc))
+* Upload pending regular sales before pulling the catalog. ([572403a](https://github.com/SilentCode1003/gpos-provantis/commit/572403a648a8dedf8073c68025b478482babc2dc))
+
 ## [1.1.0](https://github.com/SilentCode1003/gpos-provantis/compare/gpos_provantis-v1.0.0...gpos_provantis-v1.1.0) (2026-10-20)
 
 
