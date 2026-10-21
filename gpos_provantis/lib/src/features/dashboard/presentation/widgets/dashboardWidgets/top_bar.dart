@@ -15,6 +15,7 @@ import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/d
     show isShiftOpenProvider;
 import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
 import 'package:gpos_provantis/src/services/check_health_service.dart';
+import 'package:gpos_provantis/src/cleaners/synced_data_cleaner.dart';
 
 const double _topBarHeight = 100;
 
@@ -396,7 +397,13 @@ class _ProfileMenuState extends ConsumerState<_ProfileMenu>
           confirmLabel: 'LOGOUT',
         );
         if (confirmed == true && context.mounted) {
+          // Read BEFORE leaving: this widget is gone once the dashboard is.
+          final cleaner = ref.read(syncedDataCleanerProvider);
           context.go('/login');
+          // Settings > Sync > "Delete synced data on logout". Does nothing
+          // when that is off. Runs after navigating so the till never shows
+          // an emptied screen.
+          unawaited(cleaner.clearIfEnabled());
         }
     }
   }

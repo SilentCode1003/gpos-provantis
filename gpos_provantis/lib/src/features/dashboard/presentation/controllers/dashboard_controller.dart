@@ -35,6 +35,7 @@ import 'package:gpos_provantis/src/core/printutil/cash_drawer_opener.dart'
 import 'package:gpos_provantis/src/services/customer_service.dart';
 import 'package:gpos_provantis/src/services/sales_purchase_order_service.dart';
 import 'package:gpos_provantis/src/services/split_payment_service.dart';
+import 'package:gpos_provantis/src/services/sync/post_transaction_sync.dart';
 import 'package:gpos_provantis/src/core/database/domain/split_payment_dto.dart'
     show SplitPaymentLeg;
 import 'package:gpos_provantis/src/core/database/domain/send_cash_report_dto.dart';
@@ -1705,6 +1706,7 @@ class DashboardController extends _$DashboardController {
   /// can release its lock and stay open for a retry.
   Future<void> _runSaleOnce(Future<void> Function() saveSale) async {
     final toast = ref.read(toastEmitterProvider);
+    final postSale = ref.read(postTransactionSyncProvider);
 
     if (_saleInFlight) {
       const e = SaleAlreadyInProgressException();
@@ -1719,6 +1721,9 @@ class DashboardController extends _$DashboardController {
     _saleInFlight = true;
     try {
       await saveSale();
+      // Settings > Sync > "Sync after each sale". Fire-and-forget: the sale is
+      // already saved, and this checks the setting and the connection itself.
+      unawaited(postSale.run());
     } on DuplicateDetailIdException {
       // The reserved receipt number belongs to another sale: drop it so the
       // next attempt takes a fresh one.

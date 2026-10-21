@@ -53,6 +53,23 @@ class SettingsTable extends Table {
   /// When every picture was last downloaded fresh (null = never).
   DateTimeColumn get productImagesLastRefetchedAt => dateTime().nullable()();
 
+  // ---- Sync (managed from Settings > Sync) ---------------------------------
+
+  /// Send waiting sales/customers/etc. to the server right after each sale.
+  BoolColumn get autoSyncAfterTransaction =>
+      boolean().withDefault(const Constant(true))();
+
+  /// On logout, delete the data downloaded from the server (never the sales).
+  BoolColumn get autoDeleteSyncedDataOnLogout =>
+      boolean().withDefault(const Constant(false))();
+
+  /// Run a full sync every N minutes while the app is open. 0 = off.
+  IntColumn get autoSyncIntervalMinutes =>
+      integer().withDefault(const Constant(0))();
+
+  /// When the catalog was last synced successfully (null = never / cleared).
+  DateTimeColumn get lastCatalogSyncAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }

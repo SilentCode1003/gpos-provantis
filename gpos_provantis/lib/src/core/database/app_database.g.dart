@@ -6254,6 +6254,60 @@ class $SettingsTableTable extends SettingsTable
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _autoSyncAfterTransactionMeta =
+      const VerificationMeta('autoSyncAfterTransaction');
+  @override
+  late final GeneratedColumn<bool> autoSyncAfterTransaction =
+      GeneratedColumn<bool>(
+        'auto_sync_after_transaction',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("auto_sync_after_transaction" IN (0, 1))',
+        ),
+        defaultValue: const Constant(true),
+      );
+  static const VerificationMeta _autoDeleteSyncedDataOnLogoutMeta =
+      const VerificationMeta('autoDeleteSyncedDataOnLogout');
+  @override
+  late final GeneratedColumn<bool> autoDeleteSyncedDataOnLogout =
+      GeneratedColumn<bool>(
+        'auto_delete_synced_data_on_logout',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("auto_delete_synced_data_on_logout" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _autoSyncIntervalMinutesMeta =
+      const VerificationMeta('autoSyncIntervalMinutes');
+  @override
+  late final GeneratedColumn<int> autoSyncIntervalMinutes =
+      GeneratedColumn<int>(
+        'auto_sync_interval_minutes',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
+  static const VerificationMeta _lastCatalogSyncAtMeta = const VerificationMeta(
+    'lastCatalogSyncAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastCatalogSyncAt =
+      GeneratedColumn<DateTime>(
+        'last_catalog_sync_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -6277,6 +6331,10 @@ class $SettingsTableTable extends SettingsTable
     autoFetchProductImages,
     productImageRefetchDays,
     productImagesLastRefetchedAt,
+    autoSyncAfterTransaction,
+    autoDeleteSyncedDataOnLogout,
+    autoSyncIntervalMinutes,
+    lastCatalogSyncAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6461,6 +6519,42 @@ class $SettingsTableTable extends SettingsTable
         ),
       );
     }
+    if (data.containsKey('auto_sync_after_transaction')) {
+      context.handle(
+        _autoSyncAfterTransactionMeta,
+        autoSyncAfterTransaction.isAcceptableOrUnknown(
+          data['auto_sync_after_transaction']!,
+          _autoSyncAfterTransactionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('auto_delete_synced_data_on_logout')) {
+      context.handle(
+        _autoDeleteSyncedDataOnLogoutMeta,
+        autoDeleteSyncedDataOnLogout.isAcceptableOrUnknown(
+          data['auto_delete_synced_data_on_logout']!,
+          _autoDeleteSyncedDataOnLogoutMeta,
+        ),
+      );
+    }
+    if (data.containsKey('auto_sync_interval_minutes')) {
+      context.handle(
+        _autoSyncIntervalMinutesMeta,
+        autoSyncIntervalMinutes.isAcceptableOrUnknown(
+          data['auto_sync_interval_minutes']!,
+          _autoSyncIntervalMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_catalog_sync_at')) {
+      context.handle(
+        _lastCatalogSyncAtMeta,
+        lastCatalogSyncAt.isAcceptableOrUnknown(
+          data['last_catalog_sync_at']!,
+          _lastCatalogSyncAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -6554,6 +6648,22 @@ class $SettingsTableTable extends SettingsTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}product_images_last_refetched_at'],
       ),
+      autoSyncAfterTransaction: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}auto_sync_after_transaction'],
+      )!,
+      autoDeleteSyncedDataOnLogout: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}auto_delete_synced_data_on_logout'],
+      )!,
+      autoSyncIntervalMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}auto_sync_interval_minutes'],
+      )!,
+      lastCatalogSyncAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_catalog_sync_at'],
+      ),
     );
   }
 
@@ -6594,6 +6704,18 @@ class SettingsTableData extends DataClass
 
   /// When every picture was last downloaded fresh (null = never).
   final DateTime? productImagesLastRefetchedAt;
+
+  /// Send waiting sales/customers/etc. to the server right after each sale.
+  final bool autoSyncAfterTransaction;
+
+  /// On logout, delete the data downloaded from the server (never the sales).
+  final bool autoDeleteSyncedDataOnLogout;
+
+  /// Run a full sync every N minutes while the app is open. 0 = off.
+  final int autoSyncIntervalMinutes;
+
+  /// When the catalog was last synced successfully (null = never / cleared).
+  final DateTime? lastCatalogSyncAt;
   const SettingsTableData({
     required this.id,
     required this.mainPrinter,
@@ -6616,6 +6738,10 @@ class SettingsTableData extends DataClass
     required this.autoFetchProductImages,
     required this.productImageRefetchDays,
     this.productImagesLastRefetchedAt,
+    required this.autoSyncAfterTransaction,
+    required this.autoDeleteSyncedDataOnLogout,
+    required this.autoSyncIntervalMinutes,
+    this.lastCatalogSyncAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6653,6 +6779,16 @@ class SettingsTableData extends DataClass
         productImagesLastRefetchedAt,
       );
     }
+    map['auto_sync_after_transaction'] = Variable<bool>(
+      autoSyncAfterTransaction,
+    );
+    map['auto_delete_synced_data_on_logout'] = Variable<bool>(
+      autoDeleteSyncedDataOnLogout,
+    );
+    map['auto_sync_interval_minutes'] = Variable<int>(autoSyncIntervalMinutes);
+    if (!nullToAbsent || lastCatalogSyncAt != null) {
+      map['last_catalog_sync_at'] = Variable<DateTime>(lastCatalogSyncAt);
+    }
     return map;
   }
 
@@ -6684,6 +6820,12 @@ class SettingsTableData extends DataClass
           productImagesLastRefetchedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(productImagesLastRefetchedAt),
+      autoSyncAfterTransaction: Value(autoSyncAfterTransaction),
+      autoDeleteSyncedDataOnLogout: Value(autoDeleteSyncedDataOnLogout),
+      autoSyncIntervalMinutes: Value(autoSyncIntervalMinutes),
+      lastCatalogSyncAt: lastCatalogSyncAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastCatalogSyncAt),
     );
   }
 
@@ -6728,6 +6870,18 @@ class SettingsTableData extends DataClass
       productImagesLastRefetchedAt: serializer.fromJson<DateTime?>(
         json['productImagesLastRefetchedAt'],
       ),
+      autoSyncAfterTransaction: serializer.fromJson<bool>(
+        json['autoSyncAfterTransaction'],
+      ),
+      autoDeleteSyncedDataOnLogout: serializer.fromJson<bool>(
+        json['autoDeleteSyncedDataOnLogout'],
+      ),
+      autoSyncIntervalMinutes: serializer.fromJson<int>(
+        json['autoSyncIntervalMinutes'],
+      ),
+      lastCatalogSyncAt: serializer.fromJson<DateTime?>(
+        json['lastCatalogSyncAt'],
+      ),
     );
   }
   @override
@@ -6767,6 +6921,16 @@ class SettingsTableData extends DataClass
       'productImagesLastRefetchedAt': serializer.toJson<DateTime?>(
         productImagesLastRefetchedAt,
       ),
+      'autoSyncAfterTransaction': serializer.toJson<bool>(
+        autoSyncAfterTransaction,
+      ),
+      'autoDeleteSyncedDataOnLogout': serializer.toJson<bool>(
+        autoDeleteSyncedDataOnLogout,
+      ),
+      'autoSyncIntervalMinutes': serializer.toJson<int>(
+        autoSyncIntervalMinutes,
+      ),
+      'lastCatalogSyncAt': serializer.toJson<DateTime?>(lastCatalogSyncAt),
     };
   }
 
@@ -6792,6 +6956,10 @@ class SettingsTableData extends DataClass
     bool? autoFetchProductImages,
     int? productImageRefetchDays,
     Value<DateTime?> productImagesLastRefetchedAt = const Value.absent(),
+    bool? autoSyncAfterTransaction,
+    bool? autoDeleteSyncedDataOnLogout,
+    int? autoSyncIntervalMinutes,
+    Value<DateTime?> lastCatalogSyncAt = const Value.absent(),
   }) => SettingsTableData(
     id: id ?? this.id,
     mainPrinter: mainPrinter ?? this.mainPrinter,
@@ -6823,6 +6991,15 @@ class SettingsTableData extends DataClass
     productImagesLastRefetchedAt: productImagesLastRefetchedAt.present
         ? productImagesLastRefetchedAt.value
         : this.productImagesLastRefetchedAt,
+    autoSyncAfterTransaction:
+        autoSyncAfterTransaction ?? this.autoSyncAfterTransaction,
+    autoDeleteSyncedDataOnLogout:
+        autoDeleteSyncedDataOnLogout ?? this.autoDeleteSyncedDataOnLogout,
+    autoSyncIntervalMinutes:
+        autoSyncIntervalMinutes ?? this.autoSyncIntervalMinutes,
+    lastCatalogSyncAt: lastCatalogSyncAt.present
+        ? lastCatalogSyncAt.value
+        : this.lastCatalogSyncAt,
   );
   SettingsTableData copyWithCompanion(SettingsTableCompanion data) {
     return SettingsTableData(
@@ -6884,6 +7061,18 @@ class SettingsTableData extends DataClass
       productImagesLastRefetchedAt: data.productImagesLastRefetchedAt.present
           ? data.productImagesLastRefetchedAt.value
           : this.productImagesLastRefetchedAt,
+      autoSyncAfterTransaction: data.autoSyncAfterTransaction.present
+          ? data.autoSyncAfterTransaction.value
+          : this.autoSyncAfterTransaction,
+      autoDeleteSyncedDataOnLogout: data.autoDeleteSyncedDataOnLogout.present
+          ? data.autoDeleteSyncedDataOnLogout.value
+          : this.autoDeleteSyncedDataOnLogout,
+      autoSyncIntervalMinutes: data.autoSyncIntervalMinutes.present
+          ? data.autoSyncIntervalMinutes.value
+          : this.autoSyncIntervalMinutes,
+      lastCatalogSyncAt: data.lastCatalogSyncAt.present
+          ? data.lastCatalogSyncAt.value
+          : this.lastCatalogSyncAt,
     );
   }
 
@@ -6914,7 +7103,15 @@ class SettingsTableData extends DataClass
           ..write('showProductImages: $showProductImages, ')
           ..write('autoFetchProductImages: $autoFetchProductImages, ')
           ..write('productImageRefetchDays: $productImageRefetchDays, ')
-          ..write('productImagesLastRefetchedAt: $productImagesLastRefetchedAt')
+          ..write(
+            'productImagesLastRefetchedAt: $productImagesLastRefetchedAt, ',
+          )
+          ..write('autoSyncAfterTransaction: $autoSyncAfterTransaction, ')
+          ..write(
+            'autoDeleteSyncedDataOnLogout: $autoDeleteSyncedDataOnLogout, ',
+          )
+          ..write('autoSyncIntervalMinutes: $autoSyncIntervalMinutes, ')
+          ..write('lastCatalogSyncAt: $lastCatalogSyncAt')
           ..write(')'))
         .toString();
   }
@@ -6942,6 +7139,10 @@ class SettingsTableData extends DataClass
     autoFetchProductImages,
     productImageRefetchDays,
     productImagesLastRefetchedAt,
+    autoSyncAfterTransaction,
+    autoDeleteSyncedDataOnLogout,
+    autoSyncIntervalMinutes,
+    lastCatalogSyncAt,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -6971,7 +7172,12 @@ class SettingsTableData extends DataClass
           other.autoFetchProductImages == this.autoFetchProductImages &&
           other.productImageRefetchDays == this.productImageRefetchDays &&
           other.productImagesLastRefetchedAt ==
-              this.productImagesLastRefetchedAt);
+              this.productImagesLastRefetchedAt &&
+          other.autoSyncAfterTransaction == this.autoSyncAfterTransaction &&
+          other.autoDeleteSyncedDataOnLogout ==
+              this.autoDeleteSyncedDataOnLogout &&
+          other.autoSyncIntervalMinutes == this.autoSyncIntervalMinutes &&
+          other.lastCatalogSyncAt == this.lastCatalogSyncAt);
 }
 
 class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
@@ -6996,6 +7202,10 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
   final Value<bool> autoFetchProductImages;
   final Value<int> productImageRefetchDays;
   final Value<DateTime?> productImagesLastRefetchedAt;
+  final Value<bool> autoSyncAfterTransaction;
+  final Value<bool> autoDeleteSyncedDataOnLogout;
+  final Value<int> autoSyncIntervalMinutes;
+  final Value<DateTime?> lastCatalogSyncAt;
   final Value<int> rowid;
   const SettingsTableCompanion({
     this.id = const Value.absent(),
@@ -7019,6 +7229,10 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     this.autoFetchProductImages = const Value.absent(),
     this.productImageRefetchDays = const Value.absent(),
     this.productImagesLastRefetchedAt = const Value.absent(),
+    this.autoSyncAfterTransaction = const Value.absent(),
+    this.autoDeleteSyncedDataOnLogout = const Value.absent(),
+    this.autoSyncIntervalMinutes = const Value.absent(),
+    this.lastCatalogSyncAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SettingsTableCompanion.insert({
@@ -7043,6 +7257,10 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     this.autoFetchProductImages = const Value.absent(),
     this.productImageRefetchDays = const Value.absent(),
     this.productImagesLastRefetchedAt = const Value.absent(),
+    this.autoSyncAfterTransaction = const Value.absent(),
+    this.autoDeleteSyncedDataOnLogout = const Value.absent(),
+    this.autoSyncIntervalMinutes = const Value.absent(),
+    this.lastCatalogSyncAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   static Insertable<SettingsTableData> custom({
@@ -7067,6 +7285,10 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     Expression<bool>? autoFetchProductImages,
     Expression<int>? productImageRefetchDays,
     Expression<DateTime>? productImagesLastRefetchedAt,
+    Expression<bool>? autoSyncAfterTransaction,
+    Expression<bool>? autoDeleteSyncedDataOnLogout,
+    Expression<int>? autoSyncIntervalMinutes,
+    Expression<DateTime>? lastCatalogSyncAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -7100,6 +7322,13 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
         'product_image_refetch_days': productImageRefetchDays,
       if (productImagesLastRefetchedAt != null)
         'product_images_last_refetched_at': productImagesLastRefetchedAt,
+      if (autoSyncAfterTransaction != null)
+        'auto_sync_after_transaction': autoSyncAfterTransaction,
+      if (autoDeleteSyncedDataOnLogout != null)
+        'auto_delete_synced_data_on_logout': autoDeleteSyncedDataOnLogout,
+      if (autoSyncIntervalMinutes != null)
+        'auto_sync_interval_minutes': autoSyncIntervalMinutes,
+      if (lastCatalogSyncAt != null) 'last_catalog_sync_at': lastCatalogSyncAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -7126,6 +7355,10 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     Value<bool>? autoFetchProductImages,
     Value<int>? productImageRefetchDays,
     Value<DateTime?>? productImagesLastRefetchedAt,
+    Value<bool>? autoSyncAfterTransaction,
+    Value<bool>? autoDeleteSyncedDataOnLogout,
+    Value<int>? autoSyncIntervalMinutes,
+    Value<DateTime?>? lastCatalogSyncAt,
     Value<int>? rowid,
   }) {
     return SettingsTableCompanion(
@@ -7158,6 +7391,13 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
           productImageRefetchDays ?? this.productImageRefetchDays,
       productImagesLastRefetchedAt:
           productImagesLastRefetchedAt ?? this.productImagesLastRefetchedAt,
+      autoSyncAfterTransaction:
+          autoSyncAfterTransaction ?? this.autoSyncAfterTransaction,
+      autoDeleteSyncedDataOnLogout:
+          autoDeleteSyncedDataOnLogout ?? this.autoDeleteSyncedDataOnLogout,
+      autoSyncIntervalMinutes:
+          autoSyncIntervalMinutes ?? this.autoSyncIntervalMinutes,
+      lastCatalogSyncAt: lastCatalogSyncAt ?? this.lastCatalogSyncAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -7242,6 +7482,24 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
         productImagesLastRefetchedAt.value,
       );
     }
+    if (autoSyncAfterTransaction.present) {
+      map['auto_sync_after_transaction'] = Variable<bool>(
+        autoSyncAfterTransaction.value,
+      );
+    }
+    if (autoDeleteSyncedDataOnLogout.present) {
+      map['auto_delete_synced_data_on_logout'] = Variable<bool>(
+        autoDeleteSyncedDataOnLogout.value,
+      );
+    }
+    if (autoSyncIntervalMinutes.present) {
+      map['auto_sync_interval_minutes'] = Variable<int>(
+        autoSyncIntervalMinutes.value,
+      );
+    }
+    if (lastCatalogSyncAt.present) {
+      map['last_catalog_sync_at'] = Variable<DateTime>(lastCatalogSyncAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -7278,6 +7536,12 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
           ..write(
             'productImagesLastRefetchedAt: $productImagesLastRefetchedAt, ',
           )
+          ..write('autoSyncAfterTransaction: $autoSyncAfterTransaction, ')
+          ..write(
+            'autoDeleteSyncedDataOnLogout: $autoDeleteSyncedDataOnLogout, ',
+          )
+          ..write('autoSyncIntervalMinutes: $autoSyncIntervalMinutes, ')
+          ..write('lastCatalogSyncAt: $lastCatalogSyncAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -24352,6 +24616,10 @@ typedef $$SettingsTableTableCreateCompanionBuilder =
       Value<bool> autoFetchProductImages,
       Value<int> productImageRefetchDays,
       Value<DateTime?> productImagesLastRefetchedAt,
+      Value<bool> autoSyncAfterTransaction,
+      Value<bool> autoDeleteSyncedDataOnLogout,
+      Value<int> autoSyncIntervalMinutes,
+      Value<DateTime?> lastCatalogSyncAt,
       Value<int> rowid,
     });
 typedef $$SettingsTableTableUpdateCompanionBuilder =
@@ -24377,6 +24645,10 @@ typedef $$SettingsTableTableUpdateCompanionBuilder =
       Value<bool> autoFetchProductImages,
       Value<int> productImageRefetchDays,
       Value<DateTime?> productImagesLastRefetchedAt,
+      Value<bool> autoSyncAfterTransaction,
+      Value<bool> autoDeleteSyncedDataOnLogout,
+      Value<int> autoSyncIntervalMinutes,
+      Value<DateTime?> lastCatalogSyncAt,
       Value<int> rowid,
     });
 
@@ -24495,6 +24767,26 @@ class $$SettingsTableTableFilterComposer
         column: $table.productImagesLastRefetchedAt,
         builder: (column) => ColumnFilters(column),
       );
+
+  ColumnFilters<bool> get autoSyncAfterTransaction => $composableBuilder(
+    column: $table.autoSyncAfterTransaction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get autoDeleteSyncedDataOnLogout => $composableBuilder(
+    column: $table.autoDeleteSyncedDataOnLogout,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get autoSyncIntervalMinutes => $composableBuilder(
+    column: $table.autoSyncIntervalMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastCatalogSyncAt => $composableBuilder(
+    column: $table.lastCatalogSyncAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$SettingsTableTableOrderingComposer
@@ -24612,6 +24904,26 @@ class $$SettingsTableTableOrderingComposer
         column: $table.productImagesLastRefetchedAt,
         builder: (column) => ColumnOrderings(column),
       );
+
+  ColumnOrderings<bool> get autoSyncAfterTransaction => $composableBuilder(
+    column: $table.autoSyncAfterTransaction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get autoDeleteSyncedDataOnLogout => $composableBuilder(
+    column: $table.autoDeleteSyncedDataOnLogout,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get autoSyncIntervalMinutes => $composableBuilder(
+    column: $table.autoSyncIntervalMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastCatalogSyncAt => $composableBuilder(
+    column: $table.lastCatalogSyncAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableTableAnnotationComposer
@@ -24723,6 +25035,26 @@ class $$SettingsTableTableAnnotationComposer
         column: $table.productImagesLastRefetchedAt,
         builder: (column) => column,
       );
+
+  GeneratedColumn<bool> get autoSyncAfterTransaction => $composableBuilder(
+    column: $table.autoSyncAfterTransaction,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get autoDeleteSyncedDataOnLogout => $composableBuilder(
+    column: $table.autoDeleteSyncedDataOnLogout,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get autoSyncIntervalMinutes => $composableBuilder(
+    column: $table.autoSyncIntervalMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastCatalogSyncAt => $composableBuilder(
+    column: $table.lastCatalogSyncAt,
+    builder: (column) => column,
+  );
 }
 
 class $$SettingsTableTableTableManager
@@ -24785,6 +25117,10 @@ class $$SettingsTableTableTableManager
                 Value<int> productImageRefetchDays = const Value.absent(),
                 Value<DateTime?> productImagesLastRefetchedAt =
                     const Value.absent(),
+                Value<bool> autoSyncAfterTransaction = const Value.absent(),
+                Value<bool> autoDeleteSyncedDataOnLogout = const Value.absent(),
+                Value<int> autoSyncIntervalMinutes = const Value.absent(),
+                Value<DateTime?> lastCatalogSyncAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsTableCompanion(
                 id: id,
@@ -24809,6 +25145,10 @@ class $$SettingsTableTableTableManager
                 autoFetchProductImages: autoFetchProductImages,
                 productImageRefetchDays: productImageRefetchDays,
                 productImagesLastRefetchedAt: productImagesLastRefetchedAt,
+                autoSyncAfterTransaction: autoSyncAfterTransaction,
+                autoDeleteSyncedDataOnLogout: autoDeleteSyncedDataOnLogout,
+                autoSyncIntervalMinutes: autoSyncIntervalMinutes,
+                lastCatalogSyncAt: lastCatalogSyncAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -24838,6 +25178,10 @@ class $$SettingsTableTableTableManager
                 Value<int> productImageRefetchDays = const Value.absent(),
                 Value<DateTime?> productImagesLastRefetchedAt =
                     const Value.absent(),
+                Value<bool> autoSyncAfterTransaction = const Value.absent(),
+                Value<bool> autoDeleteSyncedDataOnLogout = const Value.absent(),
+                Value<int> autoSyncIntervalMinutes = const Value.absent(),
+                Value<DateTime?> lastCatalogSyncAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsTableCompanion.insert(
                 id: id,
@@ -24862,6 +25206,10 @@ class $$SettingsTableTableTableManager
                 autoFetchProductImages: autoFetchProductImages,
                 productImageRefetchDays: productImageRefetchDays,
                 productImagesLastRefetchedAt: productImagesLastRefetchedAt,
+                autoSyncAfterTransaction: autoSyncAfterTransaction,
+                autoDeleteSyncedDataOnLogout: autoDeleteSyncedDataOnLogout,
+                autoSyncIntervalMinutes: autoSyncIntervalMinutes,
+                lastCatalogSyncAt: lastCatalogSyncAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

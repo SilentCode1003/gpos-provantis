@@ -2,21 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../screens/settings_shared.dart';
 
-class SyncPanel extends StatelessWidget {
-  const SyncPanel();
-
-  @override
-  Widget build(BuildContext context) {
-    return const PanelPlaceholder(
-      icon: Icons.sync_rounded,
-      title: 'Sync',
-      description:
-          'Manage data sync with the back office — connection status, '
-          'last sync time, and manual sync controls will live here.',
-    );
-  }
-}
-
 class UsersPanel extends StatelessWidget {
   const UsersPanel();
 
