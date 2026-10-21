@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'package:gpos_provantis/src/core/database/providers/settings_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/repository/sales_repository.dart';
 
 part 'sales_sync_controller.g.dart';
@@ -66,7 +67,29 @@ class SalesSyncController extends _$SalesSyncController {
     return const SalesSyncState();
   }
 
-  Future<void> _runOnce() async {
+  /// Settings > Sync > "Sync after each sale". Defaults to on if there is no
+  /// settings row yet or it can't be read, so sales are never held back by a
+  /// settings problem.
+  Future<bool> _autoSendEnabled() async {
+    try {
+      final rows = await ref.read(settingsDaoProvider).getSettings();
+      return rows.isEmpty || rows.first.autoSyncAfterTransaction;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  /// [force] skips the setting: Sync now / the schedule / the post-sale push
+  /// are explicit requests, only the background 30-second timer obeys it.
+  Future<void> _runOnce({bool force = false}) async {
+    // The setting is read BEFORE the "already running" check below, so there
+    // is no await between that check and setting the status (two callers can
+    // never both slip through).
+    if (!force && !await _autoSendEnabled()) {
+      debugPrint('SalesSyncController: skipped — automatic sync is off');
+      return;
+    }
+
     if (state.status == SalesSyncStatus.syncing) {
       debugPrint('SalesSyncController: skipped — a pass is already running');
 
@@ -93,5 +116,6 @@ class SalesSyncController extends _$SalesSyncController {
     }
   }
 
-  Future<void> syncNow() => _runOnce();
+  /// Always runs, whatever the automatic-sync setting says.
+  Future<void> syncNow() => _runOnce(force: true);
 }

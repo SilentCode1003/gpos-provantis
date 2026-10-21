@@ -42,6 +42,10 @@ class SalesRepository {
     }
   }
 
+  /// How many sales are still waiting to be sent. Used by the catalog sync to
+  /// make sure nothing is left behind before it downloads anything.
+  Future<int> pendingCount() async => (await _dao.getUnsyncedSales()).length;
+
   DateTime? _lastPurgeAt;
 
   /// Removes sales the server already has once they are older than

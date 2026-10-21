@@ -262,3 +262,48 @@ class ProductImageSettings {
   int get hashCode =>
       Object.hash(show, autoFetch, refetchDays, lastRefetchedAt);
 }
+
+/// Just the sync settings, as the rest of the app reads them.
+class SyncSettings {
+  const SyncSettings({
+    this.autoSyncAfterTransaction = true,
+    this.autoDeleteSyncedDataOnLogout = false,
+    this.autoSyncIntervalMinutes = 0,
+    this.lastCatalogSyncAt,
+  });
+
+  factory SyncSettings.fromTableData(SettingsTableData row) {
+    return SyncSettings(
+      autoSyncAfterTransaction: row.autoSyncAfterTransaction,
+      autoDeleteSyncedDataOnLogout: row.autoDeleteSyncedDataOnLogout,
+      autoSyncIntervalMinutes: row.autoSyncIntervalMinutes,
+      lastCatalogSyncAt: row.lastCatalogSyncAt,
+    );
+  }
+
+  final bool autoSyncAfterTransaction;
+  final bool autoDeleteSyncedDataOnLogout;
+
+  /// 0 = no scheduled sync.
+  final int autoSyncIntervalMinutes;
+
+  final DateTime? lastCatalogSyncAt;
+
+  bool get hasSchedule => autoSyncIntervalMinutes > 0;
+
+  @override
+  bool operator ==(Object other) =>
+      other is SyncSettings &&
+      other.autoSyncAfterTransaction == autoSyncAfterTransaction &&
+      other.autoDeleteSyncedDataOnLogout == autoDeleteSyncedDataOnLogout &&
+      other.autoSyncIntervalMinutes == autoSyncIntervalMinutes &&
+      other.lastCatalogSyncAt == lastCatalogSyncAt;
+
+  @override
+  int get hashCode => Object.hash(
+    autoSyncAfterTransaction,
+    autoDeleteSyncedDataOnLogout,
+    autoSyncIntervalMinutes,
+    lastCatalogSyncAt,
+  );
+}

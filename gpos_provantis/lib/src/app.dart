@@ -10,6 +10,7 @@ import 'services/sync/overlay/catalog_sync_overlay.dart';
 import 'services/sync/controller/sales_sync_controller.dart';
 import 'services/check_health_service.dart';
 import 'shared/widgets/server_reconnect_prompt.dart';
+import 'schedulers/auto_sync_scheduler.dart';
 
 class GposProvantisApp extends ConsumerWidget {
   const GposProvantisApp({super.key});
@@ -24,6 +25,8 @@ class GposProvantisApp extends ConsumerWidget {
     // as the sales sync watcher above. See ServerHealthController for why
     // this is foreground-only and keepAlive.
     ref.watch(serverHealthControllerProvider);
+    // Scheduled sync (Settings > Sync). Idle unless the cashier set a schedule.
+    ref.watch(autoSyncSchedulerProvider);
 
     return ScreenUtilInit(
       designSize: const Size(360, 800), // Our "Golden Standard" base math

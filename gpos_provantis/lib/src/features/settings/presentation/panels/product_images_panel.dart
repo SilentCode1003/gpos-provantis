@@ -7,6 +7,7 @@ import 'package:gpos_provantis/src/core/database/providers/settings_dao_provider
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/settings/presentation/controllers/product_images_controller.dart';
 import 'package:gpos_provantis/src/shared/widgets/confirm_dialog.dart';
+import '../screens/settings_cards.dart';
 import '../screens/settings_shared.dart';
 
 /// Largest schedule the custom box accepts (10 years).
@@ -108,7 +109,7 @@ class _ProductImagesPanelState extends ConsumerState<ProductImagesPanel> {
           const SizedBox(height: Space.md),
         ],
 
-        _ToggleCard(
+        SettingsToggleCard(
           title: 'Show product images',
           description:
               'Shows the pictures on the product list. Turn off to go back to '
@@ -120,7 +121,7 @@ class _ProductImagesPanelState extends ConsumerState<ProductImagesPanel> {
         ),
         const SizedBox(height: Space.md),
 
-        _ToggleCard(
+        SettingsToggleCard(
           title: 'Automatic download',
           description:
               'After each catalog sync, downloads the pictures of any product '
@@ -133,13 +134,13 @@ class _ProductImagesPanelState extends ConsumerState<ProductImagesPanel> {
         ),
         const SizedBox(height: Space.md),
 
-        _CardShell(
+        SettingsCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _CardTitle(title: 'Refresh schedule'),
+              const SettingsCardTitle(title: 'Refresh schedule'),
               const SizedBox(height: Space.xs),
-              const _CardDescription(
+              const SettingsCardDescription(
                 text:
                     'Downloads every picture again after this many days, '
                     'replacing the old ones. Useful when pictures change on '
@@ -153,7 +154,7 @@ class _ProductImagesPanelState extends ConsumerState<ProductImagesPanel> {
                 runSpacing: Space.sm,
                 children: [
                   for (final (days, label) in _presets)
-                    _DayChip(
+                    SettingsChoiceChip(
                       label: label,
                       selected: settings.refetchDays == days,
                       onTap: () => _setDays(days),
@@ -208,7 +209,7 @@ class _ProductImagesPanelState extends ConsumerState<ProductImagesPanel> {
         ),
         const SizedBox(height: Space.md),
 
-        _ActionCard(
+        SettingsActionCard(
           title: 'Delete and download again',
           description:
               'Deletes every picture saved on this device, then downloads them '
@@ -222,7 +223,7 @@ class _ProductImagesPanelState extends ConsumerState<ProductImagesPanel> {
         ),
         const SizedBox(height: Space.md),
 
-        _ActionCard(
+        SettingsActionCard(
           title: 'Delete images and stop downloading',
           description:
               'Deletes every picture saved on this device AND turns off '
@@ -274,185 +275,6 @@ class _ProductImagesPanelState extends ConsumerState<ProductImagesPanel> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-
-class _CardShell extends StatelessWidget {
-  const _CardShell({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Container(
-      padding: const EdgeInsets.all(Space.lg),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.borderSubtle),
-        color: colors.surface,
-      ),
-      child: child,
-    );
-  }
-}
-
-class _CardTitle extends StatelessWidget {
-  const _CardTitle({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Text(
-      title,
-      style: AppTypography.ui(
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        color: colors.textPrimary,
-      ),
-    );
-  }
-}
-
-class _CardDescription extends StatelessWidget {
-  const _CardDescription({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Text(
-      text,
-      style: AppTypography.ui(
-        fontSize: 13,
-        height: 1.4,
-        color: colors.textSecondary,
-      ),
-    );
-  }
-}
-
-class _ToggleCard extends StatelessWidget {
-  const _ToggleCard({
-    required this.title,
-    required this.description,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String title;
-  final String description;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return _CardShell(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _CardTitle(title: title),
-                const SizedBox(height: Space.xs),
-                _CardDescription(text: description),
-              ],
-            ),
-          ),
-          const SizedBox(width: Space.md),
-          Switch(value: value, onChanged: onChanged),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActionCard extends StatelessWidget {
-  const _ActionCard({
-    required this.title,
-    required this.description,
-    required this.buttonLabel,
-    required this.icon,
-    required this.enabled,
-    required this.onPressed,
-    this.destructive = false,
-  });
-
-  final String title;
-  final String description;
-  final String buttonLabel;
-  final IconData icon;
-  final bool enabled;
-  final bool destructive;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return _CardShell(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _CardTitle(title: title),
-          const SizedBox(height: Space.xs),
-          _CardDescription(text: description),
-          const SizedBox(height: Space.md),
-          FilledButton.icon(
-            onPressed: enabled ? onPressed : null,
-            icon: Icon(icon, size: 20),
-            label: Text(buttonLabel),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(52),
-              backgroundColor: destructive ? colors.danger : colors.primary,
-              foregroundColor: destructive ? Colors.white : colors.onPrimary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DayChip extends StatelessWidget {
-  const _DayChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Material(
-      color: selected ? colors.primary : colors.surfaceVariant,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          height: 48,
-          padding: const EdgeInsets.symmetric(horizontal: Space.lg),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: AppTypography.ui(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: selected ? colors.onPrimary : colors.textPrimary,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _ProgressCard extends StatelessWidget {
   const _ProgressCard({required this.job});

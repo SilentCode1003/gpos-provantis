@@ -18,6 +18,9 @@ import 'package:gpos_provantis/src/core/database/repository/promo_repository.dar
 import 'package:gpos_provantis/src/core/database/repository/service_repository.dart';
 import 'package:gpos_provantis/src/core/database/repository/service_package_repository.dart';
 import 'package:gpos_provantis/src/core/database/repository/addon_repository.dart';
+import 'package:gpos_provantis/src/core/database/daos/settings_dao.dart';
+import 'package:gpos_provantis/src/core/database/repository/sales_repository.dart';
+import 'package:gpos_provantis/src/core/database/providers/settings_dao_provider.dart';
 import 'package:gpos_provantis/src/services/split_payment_service.dart';
 import 'package:gpos_provantis/src/services/sync/product_images_sync.dart';
 
@@ -44,6 +47,8 @@ CatalogSyncService catalogSyncService(Ref ref) {
   final addonRepository = ref.watch(addonRepositoryProvider);
   final splitPaymentService = ref.watch(splitPaymentServiceProvider);
   final productImagesSync = ref.watch(productImagesSyncProvider);
+  final settingsDao = ref.watch(settingsDaoProvider);
+  final salesRepository = ref.watch(salesRepositoryProvider);
 
   return CatalogSyncService(
     categoriesRepository,
@@ -61,6 +66,8 @@ CatalogSyncService catalogSyncService(Ref ref) {
     addonRepository,
     splitPaymentService,
     productImagesSync,
+    settingsDao,
+    salesRepository,
   );
 }
 
@@ -97,6 +104,8 @@ class CatalogSyncService {
   final AddonRepository _addonRepository;
   final SplitPaymentService _splitPaymentService;
   final ProductImagesSync _productImagesSync;
+  final SettingsDao _settingsDao;
+  final SalesRepository _salesRepository;
 
   CatalogSyncService(
     this._categoriesRepository,
@@ -114,7 +123,25 @@ class CatalogSyncService {
     this._addonRepository,
     this._splitPaymentService,
     this._productImagesSync,
+    this._settingsDao,
+    this._salesRepository,
   );
+
+  /// Uploads the regular sales and returns how many are STILL waiting after.
+  Future<int> _pushSales() async {
+    await _salesRepository.uploadSales();
+    return _salesRepository.pendingCount();
+  }
+
+  /// Remembers when the catalog last synced (shown on Settings > Sync, and
+  /// used by the scheduled sync to know a catalog exists). Never fails a sync.
+  Future<void> _recordSuccess() async {
+    try {
+      await _settingsDao.markCatalogSynced(DateTime.now());
+    } catch (e) {
+      debugPrint('CatalogSync: could not record sync time: $e');
+    }
+  }
 
   /// Starts pulling product images in the background. Only called once the
   /// catalog has synced (so the product list is saved). Not awaited: the sync
@@ -147,6 +174,16 @@ class CatalogSyncService {
       // sync stops here so nothing pending is ever put at risk.
       notify('Sending pending sales');
       try {
+        // Regular sales first; they report how many are still waiting.
+        var pendingSales = await _pushSales();
+        if (pendingSales > 0) {
+          // The background upload may have been mid-pass; give it a moment.
+          await Future<void>.delayed(const Duration(seconds: 3));
+          pendingSales = await _pushSales();
+        }
+        if (pendingSales > 0) {
+          throw Exception('$pendingSales sale(s) could not be sent.');
+        }
         await _splitPaymentService.syncPending();
       } catch (e) {
         if (isDuplicateRequestError(e)) rethrow;
@@ -206,6 +243,7 @@ class CatalogSyncService {
         if (isDuplicateRequestError(e)) rethrow;
         debugPrint('CatalogSync: printer settings not synced: $e');
         // The catalog itself synced, so the products are saved.
+        await _recordSuccess();
         _startProductImageSync();
         return CatalogSyncResult.ok(
           warning:
@@ -214,6 +252,7 @@ class CatalogSyncService {
         );
       }
 
+      await _recordSuccess();
       _startProductImageSync();
       return const CatalogSyncResult.ok();
     } catch (e) {

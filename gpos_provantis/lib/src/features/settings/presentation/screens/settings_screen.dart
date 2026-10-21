@@ -11,6 +11,7 @@ import '../panels/pos_config_panel.dart';
 import '../panels/email_panel.dart';
 import '../panels/placeholder_panels.dart';
 import '../panels/product_images_panel.dart';
+import '../panels/sync_panel.dart';
 import '../panels/about_panel.dart';
 import '../panels/counter_display_panel.dart';
 import '../panels/guides_panel.dart';

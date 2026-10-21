@@ -48,3 +48,17 @@ final showProductImagesProvider = Provider<bool>((ref) {
     productImageSettingsProvider.select((a) => a.value?.show ?? true),
   );
 });
+
+/// The sync settings, live. Falls back to the defaults until a settings row
+/// exists.
+final syncSettingsProvider = StreamProvider<SyncSettings>((ref) {
+  return ref
+      .watch(settingsDaoProvider)
+      .watchSettings()
+      .map(
+        (rows) => rows.isEmpty
+            ? const SyncSettings()
+            : SyncSettings.fromTableData(rows.first),
+      )
+      .distinct();
+});

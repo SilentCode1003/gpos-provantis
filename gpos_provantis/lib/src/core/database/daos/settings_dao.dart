@@ -32,27 +32,52 @@ class SettingsDao extends DatabaseAccessor<AppDatabase>
   // printer / receipt settings, and the server-settings sync (which doesn't
   // write these columns) can never reset them.
 
-  Future<void> setShowProductImages(bool value) => _updateImageSettings(
+  Future<void> setShowProductImages(bool value) => _updateOwnSettings(
     SettingsTableCompanion(showProductImages: Value(value)),
   );
 
-  Future<void> setAutoFetchProductImages(bool value) => _updateImageSettings(
+  Future<void> setAutoFetchProductImages(bool value) => _updateOwnSettings(
     SettingsTableCompanion(autoFetchProductImages: Value(value)),
   );
 
   /// 0 turns the schedule off.
-  Future<void> setProductImageRefetchDays(int days) => _updateImageSettings(
+  Future<void> setProductImageRefetchDays(int days) => _updateOwnSettings(
     SettingsTableCompanion(productImageRefetchDays: Value(days < 0 ? 0 : days)),
   );
 
-  Future<void> markProductImagesRefetched(DateTime when) =>
-      _updateImageSettings(
-        SettingsTableCompanion(productImagesLastRefetchedAt: Value(when)),
+  Future<void> markProductImagesRefetched(DateTime when) => _updateOwnSettings(
+    SettingsTableCompanion(productImagesLastRefetchedAt: Value(when)),
+  );
+
+  // ---- Sync settings -------------------------------------------------------
+
+  Future<void> setAutoSyncAfterTransaction(bool value) => _updateOwnSettings(
+    SettingsTableCompanion(autoSyncAfterTransaction: Value(value)),
+  );
+
+  Future<void> setAutoDeleteSyncedDataOnLogout(bool value) =>
+      _updateOwnSettings(
+        SettingsTableCompanion(autoDeleteSyncedDataOnLogout: Value(value)),
       );
+
+  /// 0 turns the scheduled sync off.
+  Future<void> setAutoSyncIntervalMinutes(int minutes) => _updateOwnSettings(
+    SettingsTableCompanion(
+      autoSyncIntervalMinutes: Value(minutes < 0 ? 0 : minutes),
+    ),
+  );
+
+  Future<void> markCatalogSynced(DateTime when) => _updateOwnSettings(
+    SettingsTableCompanion(lastCatalogSyncAt: Value(when)),
+  );
+
+  Future<void> clearCatalogSyncedAt() => _updateOwnSettings(
+    const SettingsTableCompanion(lastCatalogSyncAt: Value(null)),
+  );
 
   // Updates the existing settings row; if there is none yet, creates it (every
   // other column takes its default).
-  Future<void> _updateImageSettings(SettingsTableCompanion changes) async {
+  Future<void> _updateOwnSettings(SettingsTableCompanion changes) async {
     final updated = await update(settingsTable).write(changes);
     if (updated == 0) await into(settingsTable).insert(changes);
   }
