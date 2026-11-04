@@ -8,6 +8,7 @@ import 'package:gpos_provantis/src/core/database/domain/printer_dto.dart';
 import 'package:gpos_provantis/src/core/database/domain/settings_dto.dart';
 import 'package:gpos_provantis/src/core/database/providers/printer_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/settings_dao_provider.dart';
+import 'package:gpos_provantis/src/services/printing/bluetooth_printing.dart';
 import 'package:gpos_provantis/src/services/printing/usb_printing.dart';
 import 'package:gpos_provantis/src/services/printing/wifi_printing.dart';
 import 'package:gpos_provantis/src/services/printing/test_ticket.dart'
@@ -88,6 +89,7 @@ class CashDropGenerator {
 
   final _wifiPrinterService = WifiPrinterService();
   final _usbPrinterService = UsbPrinterService();
+  final _bluetoothPrinterService = BluetoothPrinterService();
 
   String _formatCurrency(double value) => toCurrencyString(value.toString());
 
@@ -345,6 +347,28 @@ class CashDropGenerator {
         }
         try {
           await _usbPrinterService.printDirect(bytes, printerDevice: device);
+        } catch (e) {
+          throw ReceiptPrintException(
+            'Printing to "${printer.name}" failed: $e',
+          );
+        }
+        break;
+
+      case 'BLUETOOTH':
+        final device = await _bluetoothPrinterService.getSavedBlePrinter(
+          printer.address,
+        );
+        if (device == null) {
+          throw ReceiptPrintException(
+            'Could not find "${printer.name}" over Bluetooth — check it is '
+            'powered on, in range, and Bluetooth is enabled.',
+          );
+        }
+        try {
+          await _bluetoothPrinterService.printDirect(
+            bytes,
+            printerDevice: device,
+          );
         } catch (e) {
           throw ReceiptPrintException(
             'Printing to "${printer.name}" failed: $e',

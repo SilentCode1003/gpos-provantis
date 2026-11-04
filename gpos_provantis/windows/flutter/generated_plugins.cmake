@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   flutter_thermal_printer
+  permission_handler_windows
   restart_app
   screen_retriever_windows
   sqlite3_flutter_libs

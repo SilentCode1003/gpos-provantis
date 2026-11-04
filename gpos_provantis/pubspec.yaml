@@ -54,6 +54,9 @@ dependencies:
   # Generate Flutter Main Icon
   flutter_launcher_icons: ^0.14.4
 
+  # Permission Handling
+  permission_handler: ^11.3.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../controllers/app_settings_controller.dart';
 import '../controllers/settings_controller.dart';
+import '../controllers/bluetooth_scan_controller.dart';
 import '../controllers/usb_scan_controller.dart';
 import 'package:gpos_provantis/src/core/database/domain/printer_dto.dart';
 import 'package:gpos_provantis/src/core/database/domain/settings_dto.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import '../screens/settings_shared.dart';
+import 'package:gpos_provantis/src/services/printing/bluetooth_printing.dart';
 import 'package:gpos_provantis/src/services/printing/usb_printing.dart';
 import 'package:gpos_provantis/src/services/printing/wifi_printing.dart';
 import 'package:flutter_thermal_printer/utils/printer.dart';
@@ -47,6 +49,7 @@ class PrintersPanel extends ConsumerStatefulWidget {
 
 class _PrintersPanelState extends ConsumerState<PrintersPanel> {
   final _usbPrinterService = UsbPrinterService();
+  final _bluetoothPrinterService = BluetoothPrinterService();
   final _wifiPrinterService = WifiPrinterService();
 
   Future<void> _openAddPrinterSheet() async {
@@ -158,7 +161,7 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
         case 'WIFI':
           await _wifiPrinterService.printTestPage(printer);
         case 'BLUETOOTH':
-          throw Exception('Bluetooth printing isn\'t wired up yet.');
+          await _bluetoothPrinterService.printTestPage(printer);
         default:
           throw Exception('Unknown connection type: ${printer.connectionType}');
       }
@@ -872,6 +875,7 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
   bool _showPaperSizeError = false;
 
   Printer? _selectedUsbDevice;
+  Printer? _selectedBleDevice;
   bool _isEnabled = true;
   bool _hasCashDrawer = false;
 
@@ -892,7 +896,7 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
   }
 
   String get _addressLabel => switch (_connectionType) {
-    'BLUETOOTH' => 'Device MAC address',
+    'BLUETOOTH' => 'Bluetooth device',
     'WIFI' => 'IP address',
     'USB' => 'Device path / port',
     _ => 'Address',
@@ -904,6 +908,10 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
     'USB' => '/dev/usb/lp0',
     _ => 'Select a connection type first',
   };
+
+  /// USB and Bluetooth addresses come from a scan, not from typing.
+  bool get _usesScanner =>
+      _connectionType == 'USB' || _connectionType == 'BLUETOOTH';
 
   bool get _hasUnsavedChanges {
     final existing = widget.existing;
@@ -960,7 +968,7 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
       _showPaperSizeError = _paperSize == null;
     });
     if (!formValid || _connectionType == null || _paperSize == null) return;
-    if (_connectionType == 'USB' && addressMissing) {
+    if (_usesScanner && addressMissing) {
       setState(() {});
       return;
     }
@@ -1075,17 +1083,33 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
                       selected: _connectionType,
                       iconFor: _connectionTypeIcon,
                       onSelected: (value) {
+                        final changed = value != _connectionType;
                         setState(() {
                           _connectionType = value;
                           _showConnectionError = false;
+                          if (changed) {
+                            // An address from one connection type is never
+                            // valid for another (e.g. a USB id as a BLE id).
+                            _addressController.clear();
+                            _selectedUsbDevice = null;
+                            _selectedBleDevice = null;
+                          }
                         });
-                        final scanController = ref.read(
+                        final usbScan = ref.read(
                           usbScanControllerProvider.notifier,
                         );
+                        final bleScan = ref.read(
+                          bluetoothScanControllerProvider.notifier,
+                        );
                         if (value == 'USB') {
-                          scanController.start();
+                          bleScan.stop();
+                          usbScan.start();
+                        } else if (value == 'BLUETOOTH') {
+                          usbScan.stop();
+                          bleScan.start();
                         } else {
-                          scanController.stop();
+                          usbScan.stop();
+                          bleScan.stop();
                         }
                       },
                     ),
@@ -1111,6 +1135,24 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
                           });
                         },
                       )
+                    else if (_connectionType == 'BLUETOOTH')
+                      _BluetoothDevicePicker(
+                        selectedDevice: _selectedBleDevice,
+                        onDeviceSelected: (device) {
+                          // Picking a device ends the scan (saves battery).
+                          ref
+                              .read(bluetoothScanControllerProvider.notifier)
+                              .stop();
+                          setState(() {
+                            _selectedBleDevice = device;
+                            _addressController.text = device.address ?? '';
+                            if (_nameController.text.trim().isEmpty &&
+                                device.name != null) {
+                              _nameController.text = device.name!;
+                            }
+                          });
+                        },
+                      )
                     else
                       _TouchTextField(
                         controller: _addressController,
@@ -1122,10 +1164,14 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
                             ? "Enter the printer's address"
                             : null,
                       ),
-                    if (_connectionType == 'USB' &&
+                    if (_usesScanner &&
                         _addressController.text.trim().isEmpty) ...[
                       const SizedBox(height: Space.sm),
-                      const _ErrorText('Select a USB device'),
+                      _ErrorText(
+                        _connectionType == 'USB'
+                            ? 'Select a USB device'
+                            : 'Select a Bluetooth device',
+                      ),
                     ],
                     const SizedBox(height: Space.xxl),
 
@@ -1193,20 +1239,33 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
   }
 }
 
-class _UsbDevicePicker extends ConsumerWidget {
-  const _UsbDevicePicker({
+/// Shared scan UI used by both the USB and Bluetooth pickers.
+class _ScanDevicePicker extends StatelessWidget {
+  const _ScanDevicePicker({
+    required this.isScanning,
+    required this.devices,
     required this.selectedDevice,
     required this.onDeviceSelected,
+    required this.onStart,
+    required this.onStop,
+    required this.scanLabel,
+    required this.emptyMessage,
+    this.error,
   });
 
+  final bool isScanning;
+  final List<Printer> devices;
   final Printer? selectedDevice;
   final ValueChanged<Printer> onDeviceSelected;
+  final VoidCallback onStart;
+  final VoidCallback onStop;
+  final String scanLabel;
+  final String emptyMessage;
+  final String? error;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final colors = context.colors;
-    final scanState = ref.watch(usbScanControllerProvider);
-    final scanController = ref.read(usbScanControllerProvider.notifier);
 
     return Container(
       padding: const EdgeInsets.all(Space.md),
@@ -1218,13 +1277,11 @@ class _UsbDevicePicker extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Material(
-            color: scanState.isScanning ? colors.danger : colors.primary,
+            color: isScanning ? colors.danger : colors.primary,
             borderRadius: BorderRadius.circular(12),
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
-              onTap: scanState.isScanning
-                  ? scanController.stop
-                  : scanController.start,
+              onTap: isScanning ? onStop : onStart,
               child: Container(
                 height: 56,
                 alignment: Alignment.center,
@@ -1233,17 +1290,13 @@ class _UsbDevicePicker extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      scanState.isScanning
-                          ? Icons.stop_rounded
-                          : Icons.search_rounded,
+                      isScanning ? Icons.stop_rounded : Icons.search_rounded,
                       size: 20,
                       color: colors.onPrimary,
                     ),
                     const SizedBox(width: Space.sm),
                     Text(
-                      scanState.isScanning
-                          ? 'Stop scanning'
-                          : 'Scan for USB printers',
+                      isScanning ? 'Stop scanning' : scanLabel,
                       style: AppTypography.ui(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -1255,9 +1308,16 @@ class _UsbDevicePicker extends ConsumerWidget {
               ),
             ),
           ),
-          if (scanState.isScanning) ...[
+          if (isScanning) ...[
             const SizedBox(height: Space.sm),
             const LinearProgressIndicator(),
+          ],
+          if (error != null) ...[
+            const SizedBox(height: Space.sm),
+            Text(
+              error!,
+              style: AppTypography.ui(fontSize: 13, color: colors.danger),
+            ),
           ],
           if (selectedDevice != null) ...[
             const SizedBox(height: Space.sm),
@@ -1290,7 +1350,7 @@ class _UsbDevicePicker extends ConsumerWidget {
               ),
             ),
           ],
-          if (scanState.devices.isNotEmpty) ...[
+          if (devices.isNotEmpty) ...[
             const SizedBox(height: Space.sm),
             Container(
               constraints: const BoxConstraints(maxHeight: 220),
@@ -1301,11 +1361,11 @@ class _UsbDevicePicker extends ConsumerWidget {
               ),
               child: ListView.separated(
                 shrinkWrap: true,
-                itemCount: scanState.devices.length,
+                itemCount: devices.length,
                 separatorBuilder: (_, __) =>
                     Divider(height: 1, color: colors.borderSubtle),
                 itemBuilder: (context, index) {
-                  final device = scanState.devices[index];
+                  final device = devices[index];
                   final isSelected = selectedDevice?.address == device.address;
                   return Material(
                     color: Colors.transparent,
@@ -1351,10 +1411,10 @@ class _UsbDevicePicker extends ConsumerWidget {
                 },
               ),
             ),
-          ] else if (!scanState.isScanning) ...[
+          ] else if (!isScanning && error == null) ...[
             const SizedBox(height: Space.sm),
             Text(
-              'No USB printers found yet. Make sure it\'s plugged in and tap scan.',
+              emptyMessage,
               style: AppTypography.ui(
                 fontSize: 13,
                 color: colors.textSecondary,
@@ -1363,6 +1423,66 @@ class _UsbDevicePicker extends ConsumerWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _UsbDevicePicker extends ConsumerWidget {
+  const _UsbDevicePicker({
+    required this.selectedDevice,
+    required this.onDeviceSelected,
+  });
+
+  final Printer? selectedDevice;
+  final ValueChanged<Printer> onDeviceSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scanState = ref.watch(usbScanControllerProvider);
+    final scanController = ref.read(usbScanControllerProvider.notifier);
+
+    return _ScanDevicePicker(
+      isScanning: scanState.isScanning,
+      devices: scanState.devices,
+      selectedDevice: selectedDevice,
+      onDeviceSelected: onDeviceSelected,
+      onStart: scanController.start,
+      onStop: scanController.stop,
+      scanLabel: 'Scan for USB printers',
+      emptyMessage:
+          "No USB printers found yet. Make sure it's plugged in and tap scan.",
+    );
+  }
+}
+
+class _BluetoothDevicePicker extends ConsumerWidget {
+  const _BluetoothDevicePicker({
+    required this.selectedDevice,
+    required this.onDeviceSelected,
+  });
+
+  final Printer? selectedDevice;
+  final ValueChanged<Printer> onDeviceSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scanState = ref.watch(bluetoothScanControllerProvider);
+    final scanController = ref.read(bluetoothScanControllerProvider.notifier);
+
+    return _ScanDevicePicker(
+      isScanning: scanState.isScanning,
+      devices: scanState.devices,
+      selectedDevice: selectedDevice,
+      onDeviceSelected: onDeviceSelected,
+      onStart: scanController.start,
+      onStop: scanController.stop,
+      scanLabel: scanState.devices.isEmpty
+          ? 'Scan for Bluetooth printers'
+          : 'Scan again',
+      emptyMessage:
+          "No Bluetooth printers found yet. Make sure it's powered on and "
+          'in range, then tap scan.',
+      error: scanState.error,
     );
   }
 }

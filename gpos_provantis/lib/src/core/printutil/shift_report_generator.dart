@@ -12,6 +12,7 @@ import 'package:gpos_provantis/src/core/database/providers/printer_dao_provider.
 import 'package:gpos_provantis/src/core/database/providers/settings_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/pos_config_dao_provider.dart';
+import 'package:gpos_provantis/src/services/printing/bluetooth_printing.dart';
 import 'package:gpos_provantis/src/services/printing/usb_printing.dart';
 import 'package:gpos_provantis/src/services/printing/wifi_printing.dart';
 import 'package:gpos_provantis/src/services/printing/test_ticket.dart'
@@ -138,6 +139,7 @@ class ShiftReportPrinterService {
 
   final _wifiPrinterService = WifiPrinterService();
   final _usbPrinterService = UsbPrinterService();
+  final _bluetoothPrinterService = BluetoothPrinterService();
 
   // The byte-building helpers below are static on purpose: they run on a
   // background isolate (see _buildReportBytesInBackground) and so must not
@@ -513,6 +515,28 @@ class ShiftReportPrinterService {
         }
         try {
           await _usbPrinterService.printDirect(bytes, printerDevice: device);
+        } catch (e) {
+          throw ReceiptPrintException(
+            'Printing to "${printer.name}" failed: $e',
+          );
+        }
+        break;
+
+      case 'BLUETOOTH':
+        final device = await _bluetoothPrinterService.getSavedBlePrinter(
+          printer.address,
+        );
+        if (device == null) {
+          throw ReceiptPrintException(
+            'Could not find "${printer.name}" over Bluetooth — check it is '
+            'powered on, in range, and Bluetooth is enabled.',
+          );
+        }
+        try {
+          await _bluetoothPrinterService.printDirect(
+            bytes,
+            printerDevice: device,
+          );
         } catch (e) {
           throw ReceiptPrintException(
             'Printing to "${printer.name}" failed: $e',

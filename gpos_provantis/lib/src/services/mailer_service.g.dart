@@ -48,4 +48,4 @@ final class MailerServiceProvider
   }
 }
 
-String _$mailerServiceHash() => r'b2c829992216f3e844688341f6435364a12d0588';
+String _$mailerServiceHash() => r'313bf660162afe68ddbc3751bd9682df844d42a2';

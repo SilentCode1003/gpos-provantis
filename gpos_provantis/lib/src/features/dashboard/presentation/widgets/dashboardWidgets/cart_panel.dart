@@ -596,78 +596,31 @@ class _EdgeFade extends StatelessWidget {
 
 enum _ScrollHintDirection { up, down }
 
-class _ScrollHintArrow extends StatefulWidget {
+/// Static scroll hint. It used to bounce via a repeating AnimationController,
+/// which kept the GPU busy for as long as the cart had items.
+class _ScrollHintArrow extends StatelessWidget {
   const _ScrollHintArrow({required this.colors, required this.direction});
 
   final AppColors colors;
   final _ScrollHintDirection direction;
 
   @override
-  State<_ScrollHintArrow> createState() => _ScrollHintArrowState();
-}
-
-class _ScrollHintArrowState extends State<_ScrollHintArrow>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _bounce;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
-
-    final bounceTowards = widget.direction == _ScrollHintDirection.up
-        ? -4.0
-        : 4.0;
-    _bounce = Tween<double>(
-      begin: 0,
-      end: bounceTowards,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final colors = widget.colors;
-    final icon = widget.direction == _ScrollHintDirection.up
+    final icon = direction == _ScrollHintDirection.up
         ? PhosphorIcons.caretUp
         : PhosphorIcons.caretDown;
 
     return Center(
-      child: AnimatedBuilder(
-        animation: _bounce,
-        builder: (context, child) {
-          return Transform.translate(
-            offset: Offset(0, _bounce.value),
-            child: child,
-          );
-        },
-        child: Container(
-          width: 32,
-          height: 32,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: colors.surfaceRaised,
-            border: Border.all(color: colors.border),
-            boxShadow: [
-              BoxShadow(
-                color: colors.shadow,
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Icon(icon, size: 18, color: colors.primary),
+      child: Container(
+        width: 32,
+        height: 32,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: colors.surfaceRaised,
+          border: Border.all(color: colors.border),
         ),
+        child: Icon(icon, size: 18, color: colors.primary),
       ),
     );
   }

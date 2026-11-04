@@ -9,12 +9,14 @@ import 'package:mailer/smtp_server.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:gpos_provantis/src/core/database/app_database.dart';
+import 'package:gpos_provantis/src/core/database/daos/branch_config_dao.dart';
 import 'package:gpos_provantis/src/core/database/daos/email_dao.dart';
 import 'package:gpos_provantis/src/core/database/daos/receipt_history_dao.dart';
 import 'package:gpos_provantis/src/core/database/daos/sales_dao.dart';
 import 'package:gpos_provantis/src/core/database/daos/split_payment_dao.dart';
 import 'package:gpos_provantis/src/core/database/domain/email_dto.dart';
 import 'package:gpos_provantis/src/core/database/domain/receipt_history_dto.dart';
+import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/email_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/receipt_history_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/sales_dao_provider.dart';
@@ -296,13 +298,14 @@ class MailerService {
 @Riverpod(keepAlive: true)
 MailerService mailerService(Ref ref) {
   final emailDao = ref.watch(emailDaoProvider);
+  final branchDao = ref.watch(branchConfigDaoProvider);
 
   return MailerService(
     salesDao: ref.watch(salesDaoProvider),
     splitPaymentDao: ref.watch(splitPaymentDaoProvider),
     receiptHistoryDao: ref.watch(receiptHistoryDaoProvider),
     loadConfig: () => _loadMailerConfig(emailDao),
-    loadBranch: _loadBranchInfo,
+    loadBranch: () => _loadBranchInfo(branchDao),
   );
 }
 
@@ -325,14 +328,19 @@ Future<MailerConfig> _loadMailerConfig(EmailDao emailDao) async {
   );
 }
 
-/// WIRE THIS UP: return the branch name and address printed on the email.
-///
-/// The old mailer read `branchname` and `address` from `branch.json`.
-// Returns the branch info required to build the receipt email.
-Future<EReceiptBranchInfo> _loadBranchInfo() async {
-  throw const MailerNotConfiguredException(
-    'The branch details for the e-receipt are not set up yet.',
-  );
+// Reads the saved branch and maps it to the details printed on the email.
+// The name is required; a missing address does not block sending.
+Future<EReceiptBranchInfo> _loadBranchInfo(BranchConfigDao branchDao) async {
+  final row = await branchDao.getBranch();
+  final name = _str(row?.branchName).trim();
+
+  if (row == null || name.isEmpty) {
+    throw const MailerNotConfiguredException(
+      'The branch details for the e-receipt are not set up yet.',
+    );
+  }
+
+  return EReceiptBranchInfo(name: name, address: _str(row.address).trim());
 }
 
 // ---- Small helpers ----------------------------------------------------------
