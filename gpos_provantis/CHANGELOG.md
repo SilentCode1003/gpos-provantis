@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0](https://github.com/SilentCode1003/gpos-provantis/compare/gpos_provantis-v1.2.0...gpos_provantis-v1.3.0) (2026-11-04)
+
+
+### Features
+
+* Bluetooth Feature on Printing. ([39fe9ca](https://github.com/SilentCode1003/gpos-provantis/commit/39fe9ca4edabca9bc580708536418d3c43120e12))
+
+
+### Bug Fixes
+
+* Heavy GPU usage on cart panel during scroll animation. ([39fe9ca](https://github.com/SilentCode1003/gpos-provantis/commit/39fe9ca4edabca9bc580708536418d3c43120e12))
+* Mailer Service now has branch. ([39fe9ca](https://github.com/SilentCode1003/gpos-provantis/commit/39fe9ca4edabca9bc580708536418d3c43120e12))
+
 ## [1.2.0](https://github.com/SilentCode1003/gpos-provantis/compare/gpos_provantis-v1.1.0...gpos_provantis-v1.2.0) (2026-10-21)
 
 
