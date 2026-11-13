@@ -7,6 +7,8 @@ import '../controllers/bluetooth_scan_controller.dart';
 import '../controllers/usb_scan_controller.dart';
 import 'package:gpos_provantis/src/core/database/domain/printer_dto.dart';
 import 'package:gpos_provantis/src/core/database/domain/settings_dto.dart';
+import 'package:gpos_provantis/src/core/database/providers/settings_dao_provider.dart'
+    show settingsDaoProvider, subPrinterOrderSlipModeProvider;
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import '../screens/settings_shared.dart';
 import 'package:gpos_provantis/src/services/printing/bluetooth_printing.dart';
@@ -131,6 +133,17 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
         SnackBar(
           content: Text('Could not save the ${role.label.toLowerCase()}.'),
         ),
+      );
+    }
+  }
+
+  Future<void> _setOrderSlipMode(OrderSlipMode mode) async {
+    try {
+      await ref.read(settingsDaoProvider).setSubPrinterOrderSlipMode(mode);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not save the order slip setting.')),
       );
     }
   }
@@ -270,6 +283,7 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
     final printersAsync = ref.watch(settingsControllerProvider);
     final settings =
         ref.watch(appSettingsProvider).value ?? SettingsDto.defaults();
+    final orderSlipMode = ref.watch(subPrinterOrderSlipModeProvider);
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -324,6 +338,8 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
               mainPrinter: _printerById(printers, settings.mainPrinter),
               subPrinter: _printerById(printers, settings.subPrinter),
               hasPrinters: printers.isNotEmpty,
+              orderSlipMode: orderSlipMode,
+              onOrderSlipModeChanged: _setOrderSlipMode,
               onSelect: (role) => _openPrinterPicker(
                 role: role,
                 printers: printers,
@@ -515,12 +531,16 @@ class _PrinterAssignmentSection extends StatelessWidget {
     required this.mainPrinter,
     required this.subPrinter,
     required this.hasPrinters,
+    required this.orderSlipMode,
+    required this.onOrderSlipModeChanged,
     required this.onSelect,
   });
 
   final PrinterDto? mainPrinter;
   final PrinterDto? subPrinter;
   final bool hasPrinters;
+  final OrderSlipMode orderSlipMode;
+  final ValueChanged<OrderSlipMode> onOrderSlipModeChanged;
   final ValueChanged<_PrinterRole> onSelect;
 
   @override
@@ -566,6 +586,12 @@ class _PrinterAssignmentSection extends StatelessWidget {
                   printer: subPrinter,
                   enabled: hasPrinters,
                   onTap: () => onSelect(_PrinterRole.sub),
+                ),
+                Divider(height: 1, thickness: 1, color: colors.borderSubtle),
+                _OrderSlipRow(
+                  mode: orderSlipMode,
+                  enabled: subPrinter != null,
+                  onChanged: onOrderSlipModeChanged,
                 ),
               ],
             ),
@@ -659,6 +685,105 @@ class _AssignmentRow extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+String _orderSlipLabel(OrderSlipMode mode) => switch (mode) {
+  OrderSlipMode.auto => 'Automatic',
+  OrderSlipMode.ask => 'Ask',
+  OrderSlipMode.off => 'Off',
+};
+
+String _orderSlipHint(OrderSlipMode mode) => switch (mode) {
+  OrderSlipMode.auto =>
+    'Prints on the sub printer as soon as an order is placed',
+  OrderSlipMode.ask => 'Asks the cashier each time whether to print one',
+  OrderSlipMode.off => 'No order slip is printed',
+};
+
+/// Below the sub printer: when that printer prints an order slip.
+class _OrderSlipRow extends StatelessWidget {
+  const _OrderSlipRow({
+    required this.mode,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final OrderSlipMode mode;
+
+  /// False while no sub printer is assigned: there is nothing to print on.
+  final bool enabled;
+  final ValueChanged<OrderSlipMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return ColoredBox(
+      color: colors.surface,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: Space.lg,
+          vertical: Space.md,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.receipt_long_rounded,
+                  size: 22,
+                  color: colors.textSecondary,
+                ),
+                const SizedBox(width: Space.lg),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Order slip',
+                        style: AppTypography.ui(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        enabled
+                            ? _orderSlipHint(mode)
+                            : 'Assign a sub printer to use this',
+                        style: AppTypography.ui(
+                          fontSize: 13,
+                          color: enabled
+                              ? colors.textSecondary
+                              : colors.textDisabled,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: Space.md),
+            Opacity(
+              opacity: enabled ? 1 : 0.45,
+              child: IgnorePointer(
+                ignoring: !enabled,
+                child: SegmentedTouchControl(
+                  options: [for (final m in OrderSlipMode.values) m.name],
+                  selected: mode.name,
+                  labelFor: (name) =>
+                      _orderSlipLabel(OrderSlipMode.fromName(name)),
+                  onSelected: (name) => onChanged(OrderSlipMode.fromName(name)),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

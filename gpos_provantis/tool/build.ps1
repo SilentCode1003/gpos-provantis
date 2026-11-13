@@ -5,7 +5,7 @@
 .DESCRIPTION
   Reads the app name and version from pubspec.yaml, builds, and drops the
   finished files into <project>\dist:
-    Android  -> an .apk
+    Android  -> an .apk and a release .aab (Play Store app bundle)
     Windows  -> a Setup .exe (built with Inno Setup)
 
 .EXAMPLE
@@ -28,6 +28,7 @@ param(
     [switch]$Clean,
 
     # Android: one APK per CPU type (smaller) instead of a single universal APK.
+    # (The .aab is unaffected: Google Play splits it per device on its own.)
     [switch]$SplitPerAbi
 )
 
@@ -128,8 +129,9 @@ try {
     # -----------------------------------------------------------------------
     if ($Target -eq 'all' -or $Target -eq 'android') {
         if (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'android\key.properties'))) {
-            Write-Warning ('android\key.properties not found: the APK will be signed with the ' +
-                'debug key. Fine for installing on your own devices, not for the Play Store.')
+            Write-Warning ('android\key.properties not found: the APK and AAB will be signed with ' +
+                'the debug key. Fine for installing on your own devices, but the Play Store ' +
+                'will reject an AAB signed with the debug key.')
         }
 
         $flutterArgs = @('build', 'apk', '--release')
@@ -156,6 +158,15 @@ try {
             Copy-Item -LiteralPath $apk -Destination $dest -Force
             $artifacts.Add($dest)
         }
+
+        # Release app bundle (.aab) for the Play Store.
+        Invoke-Step 'flutter build appbundle --release' { & flutter build appbundle --release }
+
+        $aab = Join-Path $projectRoot 'build\app\outputs\bundle\release\app-release.aab'
+        if (-not (Test-Path -LiteralPath $aab)) { throw "AAB not found: $aab" }
+        $dest = Join-Path $distDir "$prefix.aab"
+        Copy-Item -LiteralPath $aab -Destination $dest -Force
+        $artifacts.Add($dest)
     }
 
     # -----------------------------------------------------------------------

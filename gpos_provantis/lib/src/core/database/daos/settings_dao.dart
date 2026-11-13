@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import '../app_database.dart';
 import '../tables/settings_table.dart';
+import '../domain/settings_dto.dart' show OrderSlipMode;
 
 part 'settings_dao.g.dart';
 
@@ -74,6 +75,29 @@ class SettingsDao extends DatabaseAccessor<AppDatabase>
   Future<void> clearCatalogSyncedAt() => _updateOwnSettings(
     const SettingsTableCompanion(lastCatalogSyncAt: Value(null)),
   );
+
+  // ---- Login settings ------------------------------------------------------
+
+  /// Turning it off also forgets the saved username straight away.
+  Future<void> setRememberLastLogin(bool value) => _updateOwnSettings(
+    SettingsTableCompanion(
+      rememberLastLogin: Value(value),
+      lastLoginUsername: value
+          ? const Value<String?>.absent()
+          : const Value<String?>(null),
+    ),
+  );
+
+  Future<void> setLastLoginUsername(String? username) => _updateOwnSettings(
+    SettingsTableCompanion(lastLoginUsername: Value(username)),
+  );
+
+  // ---- Printer settings ----------------------------------------------------
+
+  Future<void> setSubPrinterOrderSlipMode(OrderSlipMode mode) =>
+      _updateOwnSettings(
+        SettingsTableCompanion(subPrinterOrderSlipMode: Value(mode.name)),
+      );
 
   // Updates the existing settings row; if there is none yet, creates it (every
   // other column takes its default).

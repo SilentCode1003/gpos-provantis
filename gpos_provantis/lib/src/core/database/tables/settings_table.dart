@@ -70,6 +70,25 @@ class SettingsTable extends Table {
   /// When the catalog was last synced successfully (null = never / cleared).
   DateTimeColumn get lastCatalogSyncAt => dateTime().nullable()();
 
+  // ---- Login (managed from Settings > Login) ------------------------------
+
+  /// Fill in the last signed-in username and password on the login screen.
+  /// Off by default: on a shared till, the cashier should type their own.
+  BoolColumn get rememberLastLogin =>
+      boolean().withDefault(const Constant(false))();
+
+  /// Username of the last successful sign-in (null = none / feature off).
+  /// The password is NOT stored here; it lives in the device's secure storage.
+  TextColumn get lastLoginUsername => text().nullable()();
+
+  // ---- Printers (managed from Settings > Printers) -------------------------
+
+  /// When the sub printer prints an order slip: 'auto' (as soon as the order
+  /// is placed), 'ask' (ask the cashier each time) or 'off'. Stored as the
+  /// name of OrderSlipMode.
+  TextColumn get subPrinterOrderSlipMode =>
+      text().withDefault(const Constant('off'))();
+
   @override
   Set<Column> get primaryKey => {id};
 }

@@ -6308,6 +6308,45 @@ class $SettingsTableTable extends SettingsTable
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _rememberLastLoginMeta = const VerificationMeta(
+    'rememberLastLogin',
+  );
+  @override
+  late final GeneratedColumn<bool> rememberLastLogin = GeneratedColumn<bool>(
+    'remember_last_login',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("remember_last_login" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _lastLoginUsernameMeta = const VerificationMeta(
+    'lastLoginUsername',
+  );
+  @override
+  late final GeneratedColumn<String> lastLoginUsername =
+      GeneratedColumn<String>(
+        'last_login_username',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _subPrinterOrderSlipModeMeta =
+      const VerificationMeta('subPrinterOrderSlipMode');
+  @override
+  late final GeneratedColumn<String> subPrinterOrderSlipMode =
+      GeneratedColumn<String>(
+        'sub_printer_order_slip_mode',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('off'),
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -6335,6 +6374,9 @@ class $SettingsTableTable extends SettingsTable
     autoDeleteSyncedDataOnLogout,
     autoSyncIntervalMinutes,
     lastCatalogSyncAt,
+    rememberLastLogin,
+    lastLoginUsername,
+    subPrinterOrderSlipMode,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6555,6 +6597,33 @@ class $SettingsTableTable extends SettingsTable
         ),
       );
     }
+    if (data.containsKey('remember_last_login')) {
+      context.handle(
+        _rememberLastLoginMeta,
+        rememberLastLogin.isAcceptableOrUnknown(
+          data['remember_last_login']!,
+          _rememberLastLoginMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_login_username')) {
+      context.handle(
+        _lastLoginUsernameMeta,
+        lastLoginUsername.isAcceptableOrUnknown(
+          data['last_login_username']!,
+          _lastLoginUsernameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sub_printer_order_slip_mode')) {
+      context.handle(
+        _subPrinterOrderSlipModeMeta,
+        subPrinterOrderSlipMode.isAcceptableOrUnknown(
+          data['sub_printer_order_slip_mode']!,
+          _subPrinterOrderSlipModeMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -6664,6 +6733,18 @@ class $SettingsTableTable extends SettingsTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_catalog_sync_at'],
       ),
+      rememberLastLogin: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}remember_last_login'],
+      )!,
+      lastLoginUsername: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_login_username'],
+      ),
+      subPrinterOrderSlipMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sub_printer_order_slip_mode'],
+      )!,
     );
   }
 
@@ -6716,6 +6797,19 @@ class SettingsTableData extends DataClass
 
   /// When the catalog was last synced successfully (null = never / cleared).
   final DateTime? lastCatalogSyncAt;
+
+  /// Fill in the last signed-in username and password on the login screen.
+  /// Off by default: on a shared till, the cashier should type their own.
+  final bool rememberLastLogin;
+
+  /// Username of the last successful sign-in (null = none / feature off).
+  /// The password is NOT stored here; it lives in the device's secure storage.
+  final String? lastLoginUsername;
+
+  /// When the sub printer prints an order slip: 'auto' (as soon as the order
+  /// is placed), 'ask' (ask the cashier each time) or 'off'. Stored as the
+  /// name of OrderSlipMode.
+  final String subPrinterOrderSlipMode;
   const SettingsTableData({
     required this.id,
     required this.mainPrinter,
@@ -6742,6 +6836,9 @@ class SettingsTableData extends DataClass
     required this.autoDeleteSyncedDataOnLogout,
     required this.autoSyncIntervalMinutes,
     this.lastCatalogSyncAt,
+    required this.rememberLastLogin,
+    this.lastLoginUsername,
+    required this.subPrinterOrderSlipMode,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6789,6 +6886,13 @@ class SettingsTableData extends DataClass
     if (!nullToAbsent || lastCatalogSyncAt != null) {
       map['last_catalog_sync_at'] = Variable<DateTime>(lastCatalogSyncAt);
     }
+    map['remember_last_login'] = Variable<bool>(rememberLastLogin);
+    if (!nullToAbsent || lastLoginUsername != null) {
+      map['last_login_username'] = Variable<String>(lastLoginUsername);
+    }
+    map['sub_printer_order_slip_mode'] = Variable<String>(
+      subPrinterOrderSlipMode,
+    );
     return map;
   }
 
@@ -6826,6 +6930,11 @@ class SettingsTableData extends DataClass
       lastCatalogSyncAt: lastCatalogSyncAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastCatalogSyncAt),
+      rememberLastLogin: Value(rememberLastLogin),
+      lastLoginUsername: lastLoginUsername == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastLoginUsername),
+      subPrinterOrderSlipMode: Value(subPrinterOrderSlipMode),
     );
   }
 
@@ -6882,6 +6991,13 @@ class SettingsTableData extends DataClass
       lastCatalogSyncAt: serializer.fromJson<DateTime?>(
         json['lastCatalogSyncAt'],
       ),
+      rememberLastLogin: serializer.fromJson<bool>(json['rememberLastLogin']),
+      lastLoginUsername: serializer.fromJson<String?>(
+        json['lastLoginUsername'],
+      ),
+      subPrinterOrderSlipMode: serializer.fromJson<String>(
+        json['subPrinterOrderSlipMode'],
+      ),
     );
   }
   @override
@@ -6931,6 +7047,11 @@ class SettingsTableData extends DataClass
         autoSyncIntervalMinutes,
       ),
       'lastCatalogSyncAt': serializer.toJson<DateTime?>(lastCatalogSyncAt),
+      'rememberLastLogin': serializer.toJson<bool>(rememberLastLogin),
+      'lastLoginUsername': serializer.toJson<String?>(lastLoginUsername),
+      'subPrinterOrderSlipMode': serializer.toJson<String>(
+        subPrinterOrderSlipMode,
+      ),
     };
   }
 
@@ -6960,6 +7081,9 @@ class SettingsTableData extends DataClass
     bool? autoDeleteSyncedDataOnLogout,
     int? autoSyncIntervalMinutes,
     Value<DateTime?> lastCatalogSyncAt = const Value.absent(),
+    bool? rememberLastLogin,
+    Value<String?> lastLoginUsername = const Value.absent(),
+    String? subPrinterOrderSlipMode,
   }) => SettingsTableData(
     id: id ?? this.id,
     mainPrinter: mainPrinter ?? this.mainPrinter,
@@ -7000,6 +7124,12 @@ class SettingsTableData extends DataClass
     lastCatalogSyncAt: lastCatalogSyncAt.present
         ? lastCatalogSyncAt.value
         : this.lastCatalogSyncAt,
+    rememberLastLogin: rememberLastLogin ?? this.rememberLastLogin,
+    lastLoginUsername: lastLoginUsername.present
+        ? lastLoginUsername.value
+        : this.lastLoginUsername,
+    subPrinterOrderSlipMode:
+        subPrinterOrderSlipMode ?? this.subPrinterOrderSlipMode,
   );
   SettingsTableData copyWithCompanion(SettingsTableCompanion data) {
     return SettingsTableData(
@@ -7073,6 +7203,15 @@ class SettingsTableData extends DataClass
       lastCatalogSyncAt: data.lastCatalogSyncAt.present
           ? data.lastCatalogSyncAt.value
           : this.lastCatalogSyncAt,
+      rememberLastLogin: data.rememberLastLogin.present
+          ? data.rememberLastLogin.value
+          : this.rememberLastLogin,
+      lastLoginUsername: data.lastLoginUsername.present
+          ? data.lastLoginUsername.value
+          : this.lastLoginUsername,
+      subPrinterOrderSlipMode: data.subPrinterOrderSlipMode.present
+          ? data.subPrinterOrderSlipMode.value
+          : this.subPrinterOrderSlipMode,
     );
   }
 
@@ -7111,7 +7250,10 @@ class SettingsTableData extends DataClass
             'autoDeleteSyncedDataOnLogout: $autoDeleteSyncedDataOnLogout, ',
           )
           ..write('autoSyncIntervalMinutes: $autoSyncIntervalMinutes, ')
-          ..write('lastCatalogSyncAt: $lastCatalogSyncAt')
+          ..write('lastCatalogSyncAt: $lastCatalogSyncAt, ')
+          ..write('rememberLastLogin: $rememberLastLogin, ')
+          ..write('lastLoginUsername: $lastLoginUsername, ')
+          ..write('subPrinterOrderSlipMode: $subPrinterOrderSlipMode')
           ..write(')'))
         .toString();
   }
@@ -7143,6 +7285,9 @@ class SettingsTableData extends DataClass
     autoDeleteSyncedDataOnLogout,
     autoSyncIntervalMinutes,
     lastCatalogSyncAt,
+    rememberLastLogin,
+    lastLoginUsername,
+    subPrinterOrderSlipMode,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -7177,7 +7322,10 @@ class SettingsTableData extends DataClass
           other.autoDeleteSyncedDataOnLogout ==
               this.autoDeleteSyncedDataOnLogout &&
           other.autoSyncIntervalMinutes == this.autoSyncIntervalMinutes &&
-          other.lastCatalogSyncAt == this.lastCatalogSyncAt);
+          other.lastCatalogSyncAt == this.lastCatalogSyncAt &&
+          other.rememberLastLogin == this.rememberLastLogin &&
+          other.lastLoginUsername == this.lastLoginUsername &&
+          other.subPrinterOrderSlipMode == this.subPrinterOrderSlipMode);
 }
 
 class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
@@ -7206,6 +7354,9 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
   final Value<bool> autoDeleteSyncedDataOnLogout;
   final Value<int> autoSyncIntervalMinutes;
   final Value<DateTime?> lastCatalogSyncAt;
+  final Value<bool> rememberLastLogin;
+  final Value<String?> lastLoginUsername;
+  final Value<String> subPrinterOrderSlipMode;
   final Value<int> rowid;
   const SettingsTableCompanion({
     this.id = const Value.absent(),
@@ -7233,6 +7384,9 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     this.autoDeleteSyncedDataOnLogout = const Value.absent(),
     this.autoSyncIntervalMinutes = const Value.absent(),
     this.lastCatalogSyncAt = const Value.absent(),
+    this.rememberLastLogin = const Value.absent(),
+    this.lastLoginUsername = const Value.absent(),
+    this.subPrinterOrderSlipMode = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SettingsTableCompanion.insert({
@@ -7261,6 +7415,9 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     this.autoDeleteSyncedDataOnLogout = const Value.absent(),
     this.autoSyncIntervalMinutes = const Value.absent(),
     this.lastCatalogSyncAt = const Value.absent(),
+    this.rememberLastLogin = const Value.absent(),
+    this.lastLoginUsername = const Value.absent(),
+    this.subPrinterOrderSlipMode = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   static Insertable<SettingsTableData> custom({
@@ -7289,6 +7446,9 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     Expression<bool>? autoDeleteSyncedDataOnLogout,
     Expression<int>? autoSyncIntervalMinutes,
     Expression<DateTime>? lastCatalogSyncAt,
+    Expression<bool>? rememberLastLogin,
+    Expression<String>? lastLoginUsername,
+    Expression<String>? subPrinterOrderSlipMode,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -7329,6 +7489,10 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
       if (autoSyncIntervalMinutes != null)
         'auto_sync_interval_minutes': autoSyncIntervalMinutes,
       if (lastCatalogSyncAt != null) 'last_catalog_sync_at': lastCatalogSyncAt,
+      if (rememberLastLogin != null) 'remember_last_login': rememberLastLogin,
+      if (lastLoginUsername != null) 'last_login_username': lastLoginUsername,
+      if (subPrinterOrderSlipMode != null)
+        'sub_printer_order_slip_mode': subPrinterOrderSlipMode,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -7359,6 +7523,9 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     Value<bool>? autoDeleteSyncedDataOnLogout,
     Value<int>? autoSyncIntervalMinutes,
     Value<DateTime?>? lastCatalogSyncAt,
+    Value<bool>? rememberLastLogin,
+    Value<String?>? lastLoginUsername,
+    Value<String>? subPrinterOrderSlipMode,
     Value<int>? rowid,
   }) {
     return SettingsTableCompanion(
@@ -7398,6 +7565,10 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
       autoSyncIntervalMinutes:
           autoSyncIntervalMinutes ?? this.autoSyncIntervalMinutes,
       lastCatalogSyncAt: lastCatalogSyncAt ?? this.lastCatalogSyncAt,
+      rememberLastLogin: rememberLastLogin ?? this.rememberLastLogin,
+      lastLoginUsername: lastLoginUsername ?? this.lastLoginUsername,
+      subPrinterOrderSlipMode:
+          subPrinterOrderSlipMode ?? this.subPrinterOrderSlipMode,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -7500,6 +7671,17 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     if (lastCatalogSyncAt.present) {
       map['last_catalog_sync_at'] = Variable<DateTime>(lastCatalogSyncAt.value);
     }
+    if (rememberLastLogin.present) {
+      map['remember_last_login'] = Variable<bool>(rememberLastLogin.value);
+    }
+    if (lastLoginUsername.present) {
+      map['last_login_username'] = Variable<String>(lastLoginUsername.value);
+    }
+    if (subPrinterOrderSlipMode.present) {
+      map['sub_printer_order_slip_mode'] = Variable<String>(
+        subPrinterOrderSlipMode.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -7542,6 +7724,9 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
           )
           ..write('autoSyncIntervalMinutes: $autoSyncIntervalMinutes, ')
           ..write('lastCatalogSyncAt: $lastCatalogSyncAt, ')
+          ..write('rememberLastLogin: $rememberLastLogin, ')
+          ..write('lastLoginUsername: $lastLoginUsername, ')
+          ..write('subPrinterOrderSlipMode: $subPrinterOrderSlipMode, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -21160,6 +21345,516 @@ class ProductImageTableCompanion
   }
 }
 
+class $AppLogTableTable extends AppLogTable
+    with TableInfo<$AppLogTableTable, AppLogTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AppLogTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    clientDefault: () => DateTime.now(),
+  );
+  static const VerificationMeta _levelMeta = const VerificationMeta('level');
+  @override
+  late final GeneratedColumn<String> level = GeneratedColumn<String>(
+    'level',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _messageMeta = const VerificationMeta(
+    'message',
+  );
+  @override
+  late final GeneratedColumn<String> message = GeneratedColumn<String>(
+    'message',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _detailIdMeta = const VerificationMeta(
+    'detailId',
+  );
+  @override
+  late final GeneratedColumn<String> detailId = GeneratedColumn<String>(
+    'detail_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _contextMeta = const VerificationMeta(
+    'context',
+  );
+  @override
+  late final GeneratedColumn<String> context = GeneratedColumn<String>(
+    'context',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _stackTraceMeta = const VerificationMeta(
+    'stackTrace',
+  );
+  @override
+  late final GeneratedColumn<String> stackTrace = GeneratedColumn<String>(
+    'stack_trace',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    createdAt,
+    level,
+    source,
+    message,
+    detailId,
+    context,
+    stackTrace,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'app_log_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AppLogTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('level')) {
+      context.handle(
+        _levelMeta,
+        level.isAcceptableOrUnknown(data['level']!, _levelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_levelMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    if (data.containsKey('message')) {
+      context.handle(
+        _messageMeta,
+        message.isAcceptableOrUnknown(data['message']!, _messageMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_messageMeta);
+    }
+    if (data.containsKey('detail_id')) {
+      context.handle(
+        _detailIdMeta,
+        detailId.isAcceptableOrUnknown(data['detail_id']!, _detailIdMeta),
+      );
+    }
+    if (data.containsKey('context')) {
+      context.handle(
+        _contextMeta,
+        this.context.isAcceptableOrUnknown(data['context']!, _contextMeta),
+      );
+    }
+    if (data.containsKey('stack_trace')) {
+      context.handle(
+        _stackTraceMeta,
+        stackTrace.isAcceptableOrUnknown(data['stack_trace']!, _stackTraceMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AppLogTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AppLogTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      level: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}level'],
+      )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      message: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message'],
+      )!,
+      detailId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}detail_id'],
+      ),
+      context: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}context'],
+      ),
+      stackTrace: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}stack_trace'],
+      ),
+    );
+  }
+
+  @override
+  $AppLogTableTable createAlias(String alias) {
+    return $AppLogTableTable(attachedDatabase, alias);
+  }
+}
+
+class AppLogTableData extends DataClass implements Insertable<AppLogTableData> {
+  final int id;
+  final DateTime createdAt;
+
+  /// `INFO`, `WARN` or `ERROR`.
+  final String level;
+
+  /// Where it came from, e.g. `sales.upload`.
+  final String source;
+  final String message;
+
+  /// The receipt (OR) number this entry is about, so a transaction can be
+  /// searched by its number.
+  final String? detailId;
+
+  /// JSON with the details (status code, server reply, the sale's amounts).
+  final String? context;
+  final String? stackTrace;
+  const AppLogTableData({
+    required this.id,
+    required this.createdAt,
+    required this.level,
+    required this.source,
+    required this.message,
+    this.detailId,
+    this.context,
+    this.stackTrace,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['level'] = Variable<String>(level);
+    map['source'] = Variable<String>(source);
+    map['message'] = Variable<String>(message);
+    if (!nullToAbsent || detailId != null) {
+      map['detail_id'] = Variable<String>(detailId);
+    }
+    if (!nullToAbsent || context != null) {
+      map['context'] = Variable<String>(context);
+    }
+    if (!nullToAbsent || stackTrace != null) {
+      map['stack_trace'] = Variable<String>(stackTrace);
+    }
+    return map;
+  }
+
+  AppLogTableCompanion toCompanion(bool nullToAbsent) {
+    return AppLogTableCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      level: Value(level),
+      source: Value(source),
+      message: Value(message),
+      detailId: detailId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(detailId),
+      context: context == null && nullToAbsent
+          ? const Value.absent()
+          : Value(context),
+      stackTrace: stackTrace == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stackTrace),
+    );
+  }
+
+  factory AppLogTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AppLogTableData(
+      id: serializer.fromJson<int>(json['id']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      level: serializer.fromJson<String>(json['level']),
+      source: serializer.fromJson<String>(json['source']),
+      message: serializer.fromJson<String>(json['message']),
+      detailId: serializer.fromJson<String?>(json['detailId']),
+      context: serializer.fromJson<String?>(json['context']),
+      stackTrace: serializer.fromJson<String?>(json['stackTrace']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'level': serializer.toJson<String>(level),
+      'source': serializer.toJson<String>(source),
+      'message': serializer.toJson<String>(message),
+      'detailId': serializer.toJson<String?>(detailId),
+      'context': serializer.toJson<String?>(context),
+      'stackTrace': serializer.toJson<String?>(stackTrace),
+    };
+  }
+
+  AppLogTableData copyWith({
+    int? id,
+    DateTime? createdAt,
+    String? level,
+    String? source,
+    String? message,
+    Value<String?> detailId = const Value.absent(),
+    Value<String?> context = const Value.absent(),
+    Value<String?> stackTrace = const Value.absent(),
+  }) => AppLogTableData(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    level: level ?? this.level,
+    source: source ?? this.source,
+    message: message ?? this.message,
+    detailId: detailId.present ? detailId.value : this.detailId,
+    context: context.present ? context.value : this.context,
+    stackTrace: stackTrace.present ? stackTrace.value : this.stackTrace,
+  );
+  AppLogTableData copyWithCompanion(AppLogTableCompanion data) {
+    return AppLogTableData(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      level: data.level.present ? data.level.value : this.level,
+      source: data.source.present ? data.source.value : this.source,
+      message: data.message.present ? data.message.value : this.message,
+      detailId: data.detailId.present ? data.detailId.value : this.detailId,
+      context: data.context.present ? data.context.value : this.context,
+      stackTrace: data.stackTrace.present
+          ? data.stackTrace.value
+          : this.stackTrace,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppLogTableData(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('level: $level, ')
+          ..write('source: $source, ')
+          ..write('message: $message, ')
+          ..write('detailId: $detailId, ')
+          ..write('context: $context, ')
+          ..write('stackTrace: $stackTrace')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    level,
+    source,
+    message,
+    detailId,
+    context,
+    stackTrace,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AppLogTableData &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.level == this.level &&
+          other.source == this.source &&
+          other.message == this.message &&
+          other.detailId == this.detailId &&
+          other.context == this.context &&
+          other.stackTrace == this.stackTrace);
+}
+
+class AppLogTableCompanion extends UpdateCompanion<AppLogTableData> {
+  final Value<int> id;
+  final Value<DateTime> createdAt;
+  final Value<String> level;
+  final Value<String> source;
+  final Value<String> message;
+  final Value<String?> detailId;
+  final Value<String?> context;
+  final Value<String?> stackTrace;
+  const AppLogTableCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.level = const Value.absent(),
+    this.source = const Value.absent(),
+    this.message = const Value.absent(),
+    this.detailId = const Value.absent(),
+    this.context = const Value.absent(),
+    this.stackTrace = const Value.absent(),
+  });
+  AppLogTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String level,
+    required String source,
+    required String message,
+    this.detailId = const Value.absent(),
+    this.context = const Value.absent(),
+    this.stackTrace = const Value.absent(),
+  }) : level = Value(level),
+       source = Value(source),
+       message = Value(message);
+  static Insertable<AppLogTableData> custom({
+    Expression<int>? id,
+    Expression<DateTime>? createdAt,
+    Expression<String>? level,
+    Expression<String>? source,
+    Expression<String>? message,
+    Expression<String>? detailId,
+    Expression<String>? context,
+    Expression<String>? stackTrace,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (level != null) 'level': level,
+      if (source != null) 'source': source,
+      if (message != null) 'message': message,
+      if (detailId != null) 'detail_id': detailId,
+      if (context != null) 'context': context,
+      if (stackTrace != null) 'stack_trace': stackTrace,
+    });
+  }
+
+  AppLogTableCompanion copyWith({
+    Value<int>? id,
+    Value<DateTime>? createdAt,
+    Value<String>? level,
+    Value<String>? source,
+    Value<String>? message,
+    Value<String?>? detailId,
+    Value<String?>? context,
+    Value<String?>? stackTrace,
+  }) {
+    return AppLogTableCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      level: level ?? this.level,
+      source: source ?? this.source,
+      message: message ?? this.message,
+      detailId: detailId ?? this.detailId,
+      context: context ?? this.context,
+      stackTrace: stackTrace ?? this.stackTrace,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (level.present) {
+      map['level'] = Variable<String>(level.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (message.present) {
+      map['message'] = Variable<String>(message.value);
+    }
+    if (detailId.present) {
+      map['detail_id'] = Variable<String>(detailId.value);
+    }
+    if (context.present) {
+      map['context'] = Variable<String>(context.value);
+    }
+    if (stackTrace.present) {
+      map['stack_trace'] = Variable<String>(stackTrace.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppLogTableCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('level: $level, ')
+          ..write('source: $source, ')
+          ..write('message: $message, ')
+          ..write('detailId: $detailId, ')
+          ..write('context: $context, ')
+          ..write('stackTrace: $stackTrace')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -21227,6 +21922,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $SalesPurchaseOrderTableTable(this);
   late final $ProductImageTableTable productImageTable =
       $ProductImageTableTable(this);
+  late final $AppLogTableTable appLogTable = $AppLogTableTable(this);
   late final DomainConfigDao domainConfigDao = DomainConfigDao(
     this as AppDatabase,
   );
@@ -21277,6 +21973,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     emailTable,
     salesPurchaseOrderTable,
     productImageTable,
+    appLogTable,
   ];
 }
 
@@ -24620,6 +25317,9 @@ typedef $$SettingsTableTableCreateCompanionBuilder =
       Value<bool> autoDeleteSyncedDataOnLogout,
       Value<int> autoSyncIntervalMinutes,
       Value<DateTime?> lastCatalogSyncAt,
+      Value<bool> rememberLastLogin,
+      Value<String?> lastLoginUsername,
+      Value<String> subPrinterOrderSlipMode,
       Value<int> rowid,
     });
 typedef $$SettingsTableTableUpdateCompanionBuilder =
@@ -24649,6 +25349,9 @@ typedef $$SettingsTableTableUpdateCompanionBuilder =
       Value<bool> autoDeleteSyncedDataOnLogout,
       Value<int> autoSyncIntervalMinutes,
       Value<DateTime?> lastCatalogSyncAt,
+      Value<bool> rememberLastLogin,
+      Value<String?> lastLoginUsername,
+      Value<String> subPrinterOrderSlipMode,
       Value<int> rowid,
     });
 
@@ -24785,6 +25488,21 @@ class $$SettingsTableTableFilterComposer
 
   ColumnFilters<DateTime> get lastCatalogSyncAt => $composableBuilder(
     column: $table.lastCatalogSyncAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get rememberLastLogin => $composableBuilder(
+    column: $table.rememberLastLogin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastLoginUsername => $composableBuilder(
+    column: $table.lastLoginUsername,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subPrinterOrderSlipMode => $composableBuilder(
+    column: $table.subPrinterOrderSlipMode,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -24924,6 +25642,21 @@ class $$SettingsTableTableOrderingComposer
     column: $table.lastCatalogSyncAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get rememberLastLogin => $composableBuilder(
+    column: $table.rememberLastLogin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastLoginUsername => $composableBuilder(
+    column: $table.lastLoginUsername,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subPrinterOrderSlipMode => $composableBuilder(
+    column: $table.subPrinterOrderSlipMode,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableTableAnnotationComposer
@@ -25055,6 +25788,21 @@ class $$SettingsTableTableAnnotationComposer
     column: $table.lastCatalogSyncAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get rememberLastLogin => $composableBuilder(
+    column: $table.rememberLastLogin,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastLoginUsername => $composableBuilder(
+    column: $table.lastLoginUsername,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get subPrinterOrderSlipMode => $composableBuilder(
+    column: $table.subPrinterOrderSlipMode,
+    builder: (column) => column,
+  );
 }
 
 class $$SettingsTableTableTableManager
@@ -25121,6 +25869,9 @@ class $$SettingsTableTableTableManager
                 Value<bool> autoDeleteSyncedDataOnLogout = const Value.absent(),
                 Value<int> autoSyncIntervalMinutes = const Value.absent(),
                 Value<DateTime?> lastCatalogSyncAt = const Value.absent(),
+                Value<bool> rememberLastLogin = const Value.absent(),
+                Value<String?> lastLoginUsername = const Value.absent(),
+                Value<String> subPrinterOrderSlipMode = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsTableCompanion(
                 id: id,
@@ -25149,6 +25900,9 @@ class $$SettingsTableTableTableManager
                 autoDeleteSyncedDataOnLogout: autoDeleteSyncedDataOnLogout,
                 autoSyncIntervalMinutes: autoSyncIntervalMinutes,
                 lastCatalogSyncAt: lastCatalogSyncAt,
+                rememberLastLogin: rememberLastLogin,
+                lastLoginUsername: lastLoginUsername,
+                subPrinterOrderSlipMode: subPrinterOrderSlipMode,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -25182,6 +25936,9 @@ class $$SettingsTableTableTableManager
                 Value<bool> autoDeleteSyncedDataOnLogout = const Value.absent(),
                 Value<int> autoSyncIntervalMinutes = const Value.absent(),
                 Value<DateTime?> lastCatalogSyncAt = const Value.absent(),
+                Value<bool> rememberLastLogin = const Value.absent(),
+                Value<String?> lastLoginUsername = const Value.absent(),
+                Value<String> subPrinterOrderSlipMode = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsTableCompanion.insert(
                 id: id,
@@ -25210,6 +25967,9 @@ class $$SettingsTableTableTableManager
                 autoDeleteSyncedDataOnLogout: autoDeleteSyncedDataOnLogout,
                 autoSyncIntervalMinutes: autoSyncIntervalMinutes,
                 lastCatalogSyncAt: lastCatalogSyncAt,
+                rememberLastLogin: rememberLastLogin,
+                lastLoginUsername: lastLoginUsername,
+                subPrinterOrderSlipMode: subPrinterOrderSlipMode,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -32201,6 +32961,259 @@ typedef $$ProductImageTableTableProcessedTableManager =
       ProductImageTableData,
       PrefetchHooks Function()
     >;
+typedef $$AppLogTableTableCreateCompanionBuilder =
+    AppLogTableCompanion Function({
+      Value<int> id,
+      Value<DateTime> createdAt,
+      required String level,
+      required String source,
+      required String message,
+      Value<String?> detailId,
+      Value<String?> context,
+      Value<String?> stackTrace,
+    });
+typedef $$AppLogTableTableUpdateCompanionBuilder =
+    AppLogTableCompanion Function({
+      Value<int> id,
+      Value<DateTime> createdAt,
+      Value<String> level,
+      Value<String> source,
+      Value<String> message,
+      Value<String?> detailId,
+      Value<String?> context,
+      Value<String?> stackTrace,
+    });
+
+class $$AppLogTableTableFilterComposer
+    extends Composer<_$AppDatabase, $AppLogTableTable> {
+  $$AppLogTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get message => $composableBuilder(
+    column: $table.message,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get detailId => $composableBuilder(
+    column: $table.detailId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get context => $composableBuilder(
+    column: $table.context,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get stackTrace => $composableBuilder(
+    column: $table.stackTrace,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AppLogTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $AppLogTableTable> {
+  $$AppLogTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get message => $composableBuilder(
+    column: $table.message,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get detailId => $composableBuilder(
+    column: $table.detailId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get context => $composableBuilder(
+    column: $table.context,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get stackTrace => $composableBuilder(
+    column: $table.stackTrace,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AppLogTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AppLogTableTable> {
+  $$AppLogTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get level =>
+      $composableBuilder(column: $table.level, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get message =>
+      $composableBuilder(column: $table.message, builder: (column) => column);
+
+  GeneratedColumn<String> get detailId =>
+      $composableBuilder(column: $table.detailId, builder: (column) => column);
+
+  GeneratedColumn<String> get context =>
+      $composableBuilder(column: $table.context, builder: (column) => column);
+
+  GeneratedColumn<String> get stackTrace => $composableBuilder(
+    column: $table.stackTrace,
+    builder: (column) => column,
+  );
+}
+
+class $$AppLogTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AppLogTableTable,
+          AppLogTableData,
+          $$AppLogTableTableFilterComposer,
+          $$AppLogTableTableOrderingComposer,
+          $$AppLogTableTableAnnotationComposer,
+          $$AppLogTableTableCreateCompanionBuilder,
+          $$AppLogTableTableUpdateCompanionBuilder,
+          (
+            AppLogTableData,
+            BaseReferences<_$AppDatabase, $AppLogTableTable, AppLogTableData>,
+          ),
+          AppLogTableData,
+          PrefetchHooks Function()
+        > {
+  $$AppLogTableTableTableManager(_$AppDatabase db, $AppLogTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AppLogTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AppLogTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AppLogTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<String> level = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<String> message = const Value.absent(),
+                Value<String?> detailId = const Value.absent(),
+                Value<String?> context = const Value.absent(),
+                Value<String?> stackTrace = const Value.absent(),
+              }) => AppLogTableCompanion(
+                id: id,
+                createdAt: createdAt,
+                level: level,
+                source: source,
+                message: message,
+                detailId: detailId,
+                context: context,
+                stackTrace: stackTrace,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                required String level,
+                required String source,
+                required String message,
+                Value<String?> detailId = const Value.absent(),
+                Value<String?> context = const Value.absent(),
+                Value<String?> stackTrace = const Value.absent(),
+              }) => AppLogTableCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                level: level,
+                source: source,
+                message: message,
+                detailId: detailId,
+                context: context,
+                stackTrace: stackTrace,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AppLogTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AppLogTableTable,
+      AppLogTableData,
+      $$AppLogTableTableFilterComposer,
+      $$AppLogTableTableOrderingComposer,
+      $$AppLogTableTableAnnotationComposer,
+      $$AppLogTableTableCreateCompanionBuilder,
+      $$AppLogTableTableUpdateCompanionBuilder,
+      (
+        AppLogTableData,
+        BaseReferences<_$AppDatabase, $AppLogTableTable, AppLogTableData>,
+      ),
+      AppLogTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -32293,6 +33306,8 @@ class $AppDatabaseManager {
       );
   $$ProductImageTableTableTableManager get productImageTable =>
       $$ProductImageTableTableTableManager(_db, _db.productImageTable);
+  $$AppLogTableTableTableManager get appLogTable =>
+      $$AppLogTableTableTableManager(_db, _db.appLogTable);
 }
 
 // **************************************************************************

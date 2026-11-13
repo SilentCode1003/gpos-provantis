@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
+import 'package:gpos_provantis/src/core/database/providers/pos_config_dao_provider.dart';
 import 'settings_shared.dart';
 import '../panels/printers_panel.dart';
 import '../panels/theme_panel.dart';
@@ -10,12 +11,14 @@ import '../panels/transactions_panel.dart';
 import '../panels/pos_config_panel.dart';
 import '../panels/email_panel.dart';
 import '../panels/placeholder_panels.dart';
+import '../panels/login_panel.dart';
 import '../panels/product_images_panel.dart';
 import '../panels/sync_panel.dart';
 import '../panels/about_panel.dart';
 import '../panels/counter_display_panel.dart';
 import '../panels/guides_panel.dart';
 import '../panels/factory_reset_panel.dart';
+import '../panels/developer_logs_panel.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -67,6 +70,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: UsersPanel.new,
     ),
     SettingsSection(
+      label: 'Login',
+      icon: Icons.login_rounded,
+      builder: LoginPanel.new,
+    ),
+    SettingsSection(
       label: 'Counter Display',
       icon: Icons.monitor_rounded,
       builder: CounterDisplayPanel.new,
@@ -75,6 +83,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       label: 'Guides',
       icon: Icons.menu_book_rounded,
       builder: GuidesPanel.new,
+    ),
+    SettingsSection(
+      label: 'Developer',
+      icon: Icons.terminal_rounded,
+      builder: DeveloperLogsPanel.new,
     ),
     SettingsSection(
       label: 'Factory Reset',
@@ -268,15 +281,7 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          Text(
-            'REGISTER 1',
-            style: AppTypography.ui(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: colors.textSecondary,
-              letterSpacing: 0.6,
-            ),
-          ),
+          const _PosIdLabel(),
         ],
       ),
     );
@@ -328,15 +333,7 @@ class _CompactTopBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: Space.sm),
-          Text(
-            'REGISTER 1',
-            style: AppTypography.ui(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: colors.textSecondary,
-              letterSpacing: 0.6,
-            ),
-          ),
+          const _PosIdLabel(),
         ],
       ),
     );
@@ -440,6 +437,28 @@ class _CompactSectionTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Shows which POS this device is, from the POS config saved during setup.
+/// Shows a dash until that config is available.
+class _PosIdLabel extends ConsumerWidget {
+  const _PosIdLabel();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final posId = ref.watch(posConfigProvider.select((a) => a.value?.posId));
+
+    return Text(
+      'POS ID: ${posId ?? '—'}',
+      style: AppTypography.ui(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: colors.textSecondary,
+        letterSpacing: 0.6,
       ),
     );
   }

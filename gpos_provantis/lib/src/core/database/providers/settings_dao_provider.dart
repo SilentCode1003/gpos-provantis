@@ -62,3 +62,42 @@ final syncSettingsProvider = StreamProvider<SyncSettings>((ref) {
       )
       .distinct();
 });
+
+/// The login settings, live. Falls back to the defaults (remembering off)
+/// until a settings row exists.
+final loginSettingsProvider = StreamProvider<LoginSettings>((ref) {
+  return ref
+      .watch(settingsDaoProvider)
+      .watchSettings()
+      .map(
+        (rows) => rows.isEmpty
+            ? const LoginSettings()
+            : LoginSettings.fromTableData(rows.first),
+      )
+      .distinct();
+});
+
+/// Whether the login screen should be pre-filled. Only changes when that one
+/// setting does.
+final rememberLastLoginProvider = Provider<bool>((ref) {
+  return ref.watch(
+    loginSettingsProvider.select((a) => a.value?.rememberLastLogin ?? false),
+  );
+});
+
+/// When the sub printer prints an order slip. Off until a settings row exists.
+final subPrinterOrderSlipModeProvider = Provider<OrderSlipMode>((ref) {
+  return ref.watch(_orderSlipModeStreamProvider).value ?? OrderSlipMode.off;
+});
+
+final _orderSlipModeStreamProvider = StreamProvider<OrderSlipMode>((ref) {
+  return ref
+      .watch(settingsDaoProvider)
+      .watchSettings()
+      .map(
+        (rows) => rows.isEmpty
+            ? OrderSlipMode.off
+            : OrderSlipMode.fromName(rows.first.subPrinterOrderSlipMode),
+      )
+      .distinct();
+});

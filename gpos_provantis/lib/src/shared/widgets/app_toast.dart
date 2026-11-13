@@ -257,23 +257,36 @@ class _AppToastStackState extends State<_AppToastStack> {
     final mediaQuery = MediaQuery.of(context);
     final entries = widget.queue.entries;
 
+    // Phones in portrait: the toasts span the screen width (minus the side
+    // gutters) so long messages wrap instead of running off the left edge.
+    // Tablets / landscape keep the compact card in the bottom-right corner.
+    final isNarrow = mediaQuery.size.width < 600;
+
+    // Stay above the keyboard when it is open. The keyboard inset already
+    // includes the home-indicator area, so only one of the two applies.
+    final bottomInset = mediaQuery.viewInsets.bottom > 0
+        ? mediaQuery.viewInsets.bottom
+        : mediaQuery.padding.bottom;
+
     return Positioned(
-      right: 16,
-      bottom: mediaQuery.padding.bottom + 16,
-      child: SafeArea(
-        top: false,
-        left: false,
+      // Left AND right: the child is given a bounded width (screen width minus
+      // the gutters) instead of being free to grow past the screen edge.
+      left: mediaQuery.padding.left + 16,
+      right: mediaQuery.padding.right + 16,
+      bottom: bottomInset + 16,
+      child: Align(
+        alignment: Alignment.bottomRight,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 460),
-
           child: AnimatedSize(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOut,
             alignment: Alignment.bottomRight,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-
+              crossAxisAlignment: isNarrow
+                  ? CrossAxisAlignment.stretch
+                  : CrossAxisAlignment.end,
               children: [
                 for (final entry in entries.reversed)
                   _AppToastView(

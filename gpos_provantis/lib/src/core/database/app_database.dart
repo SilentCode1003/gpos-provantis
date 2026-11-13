@@ -49,6 +49,7 @@ import 'tables/login_credentials_table.dart';
 import 'tables/email_table.dart';
 import 'tables/sales_purchase_order_table.dart';
 import 'tables/product_image_table.dart';
+import 'tables/app_log_table.dart';
 
 import 'daos/domain_config_dao.dart';
 import 'daos/branch_config_dao.dart';
@@ -96,6 +97,7 @@ part 'app_database.g.dart';
     EmailTable,
     SalesPurchaseOrderTable,
     ProductImageTable,
+    AppLogTable,
   ],
   daos: [DomainConfigDao, BranchConfigDao, PosConfigDao],
 )
@@ -103,7 +105,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => SchemaMigrator.currentVersion;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(

@@ -3,6 +3,7 @@ import 'package:riverpod/riverpod.dart';
 
 import 'package:gpos_provantis/src/core/database/domain/settings_dto.dart';
 import 'package:gpos_provantis/src/core/database/providers/settings_dao_provider.dart';
+import 'package:gpos_provantis/src/services/app_logger.dart';
 import 'package:gpos_provantis/src/services/check_health_service.dart';
 import 'package:gpos_provantis/src/services/customer_service.dart';
 import 'package:gpos_provantis/src/services/sales_purchase_order_service.dart';
@@ -44,8 +45,16 @@ class PostTransactionSync {
         _again = false;
         await _once();
       } while (_again);
-    } catch (e) {
+    } catch (e, st) {
       debugPrint('PostTransactionSync: $e');
+      _ref
+          .read(appLoggerProvider)
+          .error(
+            'post-sale.sync',
+            'Post-sale sync failed.',
+            error: e,
+            stackTrace: st,
+          );
     } finally {
       _running = false;
     }
@@ -79,8 +88,16 @@ class PostTransactionSync {
   Future<void> _guard(String what, Future<Object?> Function() task) async {
     try {
       await task();
-    } catch (e) {
+    } catch (e, st) {
       debugPrint('PostTransactionSync: $what not sent: $e');
+      // Stays saved on the device and is retried later, so a warning.
+      _ref
+          .read(appLoggerProvider)
+          .warn(
+            'post-sale.sync',
+            '$what not sent after the sale.',
+            context: {'error': e.toString(), 'stack': st.toString()},
+          );
     }
   }
 }

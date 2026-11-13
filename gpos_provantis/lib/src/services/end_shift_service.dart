@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:gpos_provantis/src/core/database/app_database.dart';
 
 import 'package:gpos_provantis/src/core/printutil/shift_report_generator.dart';
+import 'package:gpos_provantis/src/core/printutil/cash_report_generator.dart';
 
 import 'package:gpos_provantis/src/core/database/repository/end_shift_report_repository.dart';
 import 'package:gpos_provantis/src/core/database/repository/sold_items_report_repository.dart';
@@ -96,6 +97,7 @@ EndShiftService endShiftService(Ref ref) {
     staffSalesRepository: ref.watch(staffSalesReportRepositoryProvider),
     sendCashReportRepository: ref.watch(sendCashReportRepositoryProvider),
     printer: ref.watch(shiftReportPrinterServiceProvider),
+    cashReportGenerator: ref.watch(cashReportGeneratorProvider),
   );
 }
 
@@ -109,6 +111,7 @@ class EndShiftService {
     required StaffSalesReportRepository staffSalesRepository,
     required SendCashReportRepository sendCashReportRepository,
     required ShiftReportPrinterService printer,
+    required CashReportGenerator cashReportGenerator,
   }) : _repository = repository,
        _soldItemsRepository = soldItemsRepository,
        _soldServicesRepository = soldServicesRepository,
@@ -116,7 +119,8 @@ class EndShiftService {
        _paymentSummaryRepository = paymentSummaryRepository,
        _staffSalesRepository = staffSalesRepository,
        _sendCashReportRepository = sendCashReportRepository,
-       _printer = printer;
+       _printer = printer,
+       _cashReportGenerator = cashReportGenerator;
 
   final EndShiftRepository _repository;
   final SoldItemsReportRepository _soldItemsRepository;
@@ -126,6 +130,7 @@ class EndShiftService {
   final StaffSalesReportRepository _staffSalesRepository;
   final SendCashReportRepository _sendCashReportRepository;
   final ShiftReportPrinterService _printer;
+  final CashReportGenerator _cashReportGenerator;
 
   /// Gets the shift report and prints it.
   ///
@@ -252,6 +257,33 @@ class EndShiftService {
       record: latest,
       sent: sent,
       error: sent ? null : latest.lastError,
+    );
+  }
+
+  /// Prints the CASH REPORT slip (the denominations the cashier counted when
+  /// ending the shift). Purely a printout: it doesn't touch the network or the
+  /// saved cash report records, so a printer problem can never affect the
+  /// saved or uploaded report. Printer errors propagate so the caller can
+  /// report them.
+  Future<void> printCashReportSlip({
+    required String branchId,
+    required String posId,
+    required String shift,
+    required String shiftDate,
+    required String cashier,
+    required List<CashReportSlipLine> lines,
+    bool isReprint = false,
+  }) {
+    return _cashReportGenerator.printCashReport(
+      CashReportSlipData(
+        cashier: cashier,
+        branchId: branchId,
+        posId: posId,
+        shift: shift,
+        shiftDate: shiftDate,
+        lines: lines,
+        isReprint: isReprint,
+      ),
     );
   }
 

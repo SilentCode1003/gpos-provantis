@@ -4,6 +4,7 @@ import 'package:gpos_provantis/src/core/database/repository/login_repository.dar
 import 'package:gpos_provantis/src/services/sync/catalog_sync.dart';
 import 'package:gpos_provantis/src/services/sync/controller/catalog_sync_controller.dart';
 import 'package:gpos_provantis/src/core/database/providers/user_data_dao_provider.dart';
+import 'package:gpos_provantis/src/core/security/remembered_login_service.dart';
 
 part 'login_controller.g.dart';
 
@@ -57,6 +58,12 @@ class LoginController extends _$LoginController {
     state = state.copyWith(obscurePassword: !state.obscurePassword);
   }
 
+  /// The login to pre-fill, or null when "remember last login" is off or
+  /// nothing has been saved yet.
+  Future<RememberedLogin?> loadRemembered() {
+    return ref.read(rememberedLoginServiceProvider).load();
+  }
+
   bool _isOffline(DioException e) =>
       e.type == DioExceptionType.connectionError ||
       e.type == DioExceptionType.connectionTimeout ||
@@ -81,6 +88,12 @@ class LoginController extends _$LoginController {
     try {
       await repo.fetchAndSaveUser(username, password);
       state = state.copyWith(isSubmitting: false);
+
+      // The server accepted these details, so they are safe to remember.
+      // (Does nothing when the setting is off, and never blocks the login.)
+      await ref
+          .read(rememberedLoginServiceProvider)
+          .saveIfEnabled(username, password);
 
       try {
         await ref
