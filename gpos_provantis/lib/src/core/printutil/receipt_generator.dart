@@ -471,6 +471,14 @@ class ReceiptGenerator {
       );
     }
 
+    if (sale.isReprint) {
+      bytes += ticket.feed(1);
+      bytes += ticket.text(
+        '*** REPRINT ***',
+        styles: const PosStyles(align: PosAlign.center, bold: true),
+      );
+    }
+
     bytes += ticket.feed(2);
     bytes += ticket.cut();
 
