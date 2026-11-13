@@ -6335,6 +6335,18 @@ class $SettingsTableTable extends SettingsTable
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _subPrinterOrderSlipModeMeta =
+      const VerificationMeta('subPrinterOrderSlipMode');
+  @override
+  late final GeneratedColumn<String> subPrinterOrderSlipMode =
+      GeneratedColumn<String>(
+        'sub_printer_order_slip_mode',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('off'),
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -6364,6 +6376,7 @@ class $SettingsTableTable extends SettingsTable
     lastCatalogSyncAt,
     rememberLastLogin,
     lastLoginUsername,
+    subPrinterOrderSlipMode,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6602,6 +6615,15 @@ class $SettingsTableTable extends SettingsTable
         ),
       );
     }
+    if (data.containsKey('sub_printer_order_slip_mode')) {
+      context.handle(
+        _subPrinterOrderSlipModeMeta,
+        subPrinterOrderSlipMode.isAcceptableOrUnknown(
+          data['sub_printer_order_slip_mode']!,
+          _subPrinterOrderSlipModeMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -6719,6 +6741,10 @@ class $SettingsTableTable extends SettingsTable
         DriftSqlType.string,
         data['${effectivePrefix}last_login_username'],
       ),
+      subPrinterOrderSlipMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sub_printer_order_slip_mode'],
+      )!,
     );
   }
 
@@ -6779,6 +6805,11 @@ class SettingsTableData extends DataClass
   /// Username of the last successful sign-in (null = none / feature off).
   /// The password is NOT stored here; it lives in the device's secure storage.
   final String? lastLoginUsername;
+
+  /// When the sub printer prints an order slip: 'auto' (as soon as the order
+  /// is placed), 'ask' (ask the cashier each time) or 'off'. Stored as the
+  /// name of OrderSlipMode.
+  final String subPrinterOrderSlipMode;
   const SettingsTableData({
     required this.id,
     required this.mainPrinter,
@@ -6807,6 +6838,7 @@ class SettingsTableData extends DataClass
     this.lastCatalogSyncAt,
     required this.rememberLastLogin,
     this.lastLoginUsername,
+    required this.subPrinterOrderSlipMode,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6858,6 +6890,9 @@ class SettingsTableData extends DataClass
     if (!nullToAbsent || lastLoginUsername != null) {
       map['last_login_username'] = Variable<String>(lastLoginUsername);
     }
+    map['sub_printer_order_slip_mode'] = Variable<String>(
+      subPrinterOrderSlipMode,
+    );
     return map;
   }
 
@@ -6899,6 +6934,7 @@ class SettingsTableData extends DataClass
       lastLoginUsername: lastLoginUsername == null && nullToAbsent
           ? const Value.absent()
           : Value(lastLoginUsername),
+      subPrinterOrderSlipMode: Value(subPrinterOrderSlipMode),
     );
   }
 
@@ -6959,6 +6995,9 @@ class SettingsTableData extends DataClass
       lastLoginUsername: serializer.fromJson<String?>(
         json['lastLoginUsername'],
       ),
+      subPrinterOrderSlipMode: serializer.fromJson<String>(
+        json['subPrinterOrderSlipMode'],
+      ),
     );
   }
   @override
@@ -7010,6 +7049,9 @@ class SettingsTableData extends DataClass
       'lastCatalogSyncAt': serializer.toJson<DateTime?>(lastCatalogSyncAt),
       'rememberLastLogin': serializer.toJson<bool>(rememberLastLogin),
       'lastLoginUsername': serializer.toJson<String?>(lastLoginUsername),
+      'subPrinterOrderSlipMode': serializer.toJson<String>(
+        subPrinterOrderSlipMode,
+      ),
     };
   }
 
@@ -7041,6 +7083,7 @@ class SettingsTableData extends DataClass
     Value<DateTime?> lastCatalogSyncAt = const Value.absent(),
     bool? rememberLastLogin,
     Value<String?> lastLoginUsername = const Value.absent(),
+    String? subPrinterOrderSlipMode,
   }) => SettingsTableData(
     id: id ?? this.id,
     mainPrinter: mainPrinter ?? this.mainPrinter,
@@ -7085,6 +7128,8 @@ class SettingsTableData extends DataClass
     lastLoginUsername: lastLoginUsername.present
         ? lastLoginUsername.value
         : this.lastLoginUsername,
+    subPrinterOrderSlipMode:
+        subPrinterOrderSlipMode ?? this.subPrinterOrderSlipMode,
   );
   SettingsTableData copyWithCompanion(SettingsTableCompanion data) {
     return SettingsTableData(
@@ -7164,6 +7209,9 @@ class SettingsTableData extends DataClass
       lastLoginUsername: data.lastLoginUsername.present
           ? data.lastLoginUsername.value
           : this.lastLoginUsername,
+      subPrinterOrderSlipMode: data.subPrinterOrderSlipMode.present
+          ? data.subPrinterOrderSlipMode.value
+          : this.subPrinterOrderSlipMode,
     );
   }
 
@@ -7204,7 +7252,8 @@ class SettingsTableData extends DataClass
           ..write('autoSyncIntervalMinutes: $autoSyncIntervalMinutes, ')
           ..write('lastCatalogSyncAt: $lastCatalogSyncAt, ')
           ..write('rememberLastLogin: $rememberLastLogin, ')
-          ..write('lastLoginUsername: $lastLoginUsername')
+          ..write('lastLoginUsername: $lastLoginUsername, ')
+          ..write('subPrinterOrderSlipMode: $subPrinterOrderSlipMode')
           ..write(')'))
         .toString();
   }
@@ -7238,6 +7287,7 @@ class SettingsTableData extends DataClass
     lastCatalogSyncAt,
     rememberLastLogin,
     lastLoginUsername,
+    subPrinterOrderSlipMode,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -7274,7 +7324,8 @@ class SettingsTableData extends DataClass
           other.autoSyncIntervalMinutes == this.autoSyncIntervalMinutes &&
           other.lastCatalogSyncAt == this.lastCatalogSyncAt &&
           other.rememberLastLogin == this.rememberLastLogin &&
-          other.lastLoginUsername == this.lastLoginUsername);
+          other.lastLoginUsername == this.lastLoginUsername &&
+          other.subPrinterOrderSlipMode == this.subPrinterOrderSlipMode);
 }
 
 class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
@@ -7305,6 +7356,7 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
   final Value<DateTime?> lastCatalogSyncAt;
   final Value<bool> rememberLastLogin;
   final Value<String?> lastLoginUsername;
+  final Value<String> subPrinterOrderSlipMode;
   final Value<int> rowid;
   const SettingsTableCompanion({
     this.id = const Value.absent(),
@@ -7334,6 +7386,7 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     this.lastCatalogSyncAt = const Value.absent(),
     this.rememberLastLogin = const Value.absent(),
     this.lastLoginUsername = const Value.absent(),
+    this.subPrinterOrderSlipMode = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SettingsTableCompanion.insert({
@@ -7364,6 +7417,7 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     this.lastCatalogSyncAt = const Value.absent(),
     this.rememberLastLogin = const Value.absent(),
     this.lastLoginUsername = const Value.absent(),
+    this.subPrinterOrderSlipMode = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   static Insertable<SettingsTableData> custom({
@@ -7394,6 +7448,7 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     Expression<DateTime>? lastCatalogSyncAt,
     Expression<bool>? rememberLastLogin,
     Expression<String>? lastLoginUsername,
+    Expression<String>? subPrinterOrderSlipMode,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -7436,6 +7491,8 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
       if (lastCatalogSyncAt != null) 'last_catalog_sync_at': lastCatalogSyncAt,
       if (rememberLastLogin != null) 'remember_last_login': rememberLastLogin,
       if (lastLoginUsername != null) 'last_login_username': lastLoginUsername,
+      if (subPrinterOrderSlipMode != null)
+        'sub_printer_order_slip_mode': subPrinterOrderSlipMode,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -7468,6 +7525,7 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     Value<DateTime?>? lastCatalogSyncAt,
     Value<bool>? rememberLastLogin,
     Value<String?>? lastLoginUsername,
+    Value<String>? subPrinterOrderSlipMode,
     Value<int>? rowid,
   }) {
     return SettingsTableCompanion(
@@ -7509,6 +7567,8 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
       lastCatalogSyncAt: lastCatalogSyncAt ?? this.lastCatalogSyncAt,
       rememberLastLogin: rememberLastLogin ?? this.rememberLastLogin,
       lastLoginUsername: lastLoginUsername ?? this.lastLoginUsername,
+      subPrinterOrderSlipMode:
+          subPrinterOrderSlipMode ?? this.subPrinterOrderSlipMode,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -7617,6 +7677,11 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     if (lastLoginUsername.present) {
       map['last_login_username'] = Variable<String>(lastLoginUsername.value);
     }
+    if (subPrinterOrderSlipMode.present) {
+      map['sub_printer_order_slip_mode'] = Variable<String>(
+        subPrinterOrderSlipMode.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -7661,6 +7726,7 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
           ..write('lastCatalogSyncAt: $lastCatalogSyncAt, ')
           ..write('rememberLastLogin: $rememberLastLogin, ')
           ..write('lastLoginUsername: $lastLoginUsername, ')
+          ..write('subPrinterOrderSlipMode: $subPrinterOrderSlipMode, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -24741,6 +24807,7 @@ typedef $$SettingsTableTableCreateCompanionBuilder =
       Value<DateTime?> lastCatalogSyncAt,
       Value<bool> rememberLastLogin,
       Value<String?> lastLoginUsername,
+      Value<String> subPrinterOrderSlipMode,
       Value<int> rowid,
     });
 typedef $$SettingsTableTableUpdateCompanionBuilder =
@@ -24772,6 +24839,7 @@ typedef $$SettingsTableTableUpdateCompanionBuilder =
       Value<DateTime?> lastCatalogSyncAt,
       Value<bool> rememberLastLogin,
       Value<String?> lastLoginUsername,
+      Value<String> subPrinterOrderSlipMode,
       Value<int> rowid,
     });
 
@@ -24918,6 +24986,11 @@ class $$SettingsTableTableFilterComposer
 
   ColumnFilters<String> get lastLoginUsername => $composableBuilder(
     column: $table.lastLoginUsername,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subPrinterOrderSlipMode => $composableBuilder(
+    column: $table.subPrinterOrderSlipMode,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -25067,6 +25140,11 @@ class $$SettingsTableTableOrderingComposer
     column: $table.lastLoginUsername,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get subPrinterOrderSlipMode => $composableBuilder(
+    column: $table.subPrinterOrderSlipMode,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableTableAnnotationComposer
@@ -25208,6 +25286,11 @@ class $$SettingsTableTableAnnotationComposer
     column: $table.lastLoginUsername,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get subPrinterOrderSlipMode => $composableBuilder(
+    column: $table.subPrinterOrderSlipMode,
+    builder: (column) => column,
+  );
 }
 
 class $$SettingsTableTableTableManager
@@ -25276,6 +25359,7 @@ class $$SettingsTableTableTableManager
                 Value<DateTime?> lastCatalogSyncAt = const Value.absent(),
                 Value<bool> rememberLastLogin = const Value.absent(),
                 Value<String?> lastLoginUsername = const Value.absent(),
+                Value<String> subPrinterOrderSlipMode = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsTableCompanion(
                 id: id,
@@ -25306,6 +25390,7 @@ class $$SettingsTableTableTableManager
                 lastCatalogSyncAt: lastCatalogSyncAt,
                 rememberLastLogin: rememberLastLogin,
                 lastLoginUsername: lastLoginUsername,
+                subPrinterOrderSlipMode: subPrinterOrderSlipMode,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -25341,6 +25426,7 @@ class $$SettingsTableTableTableManager
                 Value<DateTime?> lastCatalogSyncAt = const Value.absent(),
                 Value<bool> rememberLastLogin = const Value.absent(),
                 Value<String?> lastLoginUsername = const Value.absent(),
+                Value<String> subPrinterOrderSlipMode = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsTableCompanion.insert(
                 id: id,
@@ -25371,6 +25457,7 @@ class $$SettingsTableTableTableManager
                 lastCatalogSyncAt: lastCatalogSyncAt,
                 rememberLastLogin: rememberLastLogin,
                 lastLoginUsername: lastLoginUsername,
+                subPrinterOrderSlipMode: subPrinterOrderSlipMode,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
