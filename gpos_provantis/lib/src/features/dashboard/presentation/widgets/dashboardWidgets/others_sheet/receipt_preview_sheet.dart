@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
+import 'package:gpos_provantis/src/core/utils/money_format.dart';
 import 'package:gpos_provantis/src/core/database/app_database.dart'
     show SalesTableData;
 import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
@@ -361,7 +362,7 @@ class _ReceiptPreviewTicket extends StatelessWidget {
     );
   }
 
-  String _formatCurrency(double value) => value.toStringAsFixed(2);
+  String _formatCurrency(double value) => formatPeso(value);
 
   String _formatDateTime(DateTime dateTime) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');

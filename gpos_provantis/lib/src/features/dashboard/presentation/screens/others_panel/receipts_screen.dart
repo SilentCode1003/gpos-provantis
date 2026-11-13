@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
+import 'package:gpos_provantis/src/core/utils/money_format.dart';
 import 'package:gpos_provantis/src/core/database/providers/sales_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/split_payment_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_provider.dart';
@@ -634,7 +635,7 @@ class _ReceiptTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    item.total.toStringAsFixed(2),
+                    formatPeso(item.total),
                     style: AppTypography.ui(
                       color: colors.textPrimary,
                       fontSize: 17,
