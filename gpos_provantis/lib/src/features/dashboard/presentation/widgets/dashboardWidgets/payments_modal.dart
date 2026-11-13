@@ -190,36 +190,31 @@ class _PaymentModal extends ConsumerWidget {
       );
     }
 
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOut,
-      padding: EdgeInsets.only(bottom: keyboardInset),
-      child: PopScope(
-        // Don't let the system back button close the modal mid-payment.
-        canPop: !isSubmitting,
-        child: Dialog(
-          backgroundColor: colors.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+    // No extra keyboard padding here: [Dialog] already lifts itself above the
+    // on-screen keyboard (it adds the view insets to its own padding), so
+    // padding again would push the dialog up twice and hide the fields.
+    return PopScope(
+      // Don't let the system back button close the modal mid-payment.
+      canPop: !isSubmitting,
+      child: Dialog(
+        backgroundColor: colors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        insetPadding: const EdgeInsets.all(32),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 1160,
+            maxHeight: (MediaQuery.sizeOf(context).height - keyboardInset - 64)
+                .clamp(320, 720),
           ),
-          insetPadding: const EdgeInsets.all(32),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: 1160,
-              maxHeight:
-                  (MediaQuery.sizeOf(context).height - keyboardInset - 64)
-                      .clamp(320, 720),
-            ),
-            // Ignore every tap (back, close, fields, numpad) while saving.
-            child: IgnorePointer(
-              ignoring: isSubmitting,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _ModalHeader(step: step),
-                  Flexible(child: _ModalBody(step: step)),
-                ],
-              ),
+          // Ignore every tap (back, close, fields, numpad) while saving.
+          child: IgnorePointer(
+            ignoring: isSubmitting,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _ModalHeader(step: step),
+                Flexible(child: _ModalBody(step: step)),
+              ],
             ),
           ),
         ),
@@ -630,20 +625,20 @@ class _EPaymentsList extends ConsumerWidget {
           );
         }
 
+        // Uniform, shorter buttons (instead of big square tiles). The fixed
+        // row height keeps them touch-friendly for the POS screen.
         return GridView.builder(
           padding: EdgeInsets.all(_bodyPadding(context)),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            // Phone: two per row, a little wider than tall, so the labels
-            // aren't squeezed into three narrow squares.
             crossAxisCount: narrow ? 2 : 3,
-            mainAxisSpacing: narrow ? 14 : 20,
-            crossAxisSpacing: narrow ? 14 : 20,
-            childAspectRatio: narrow ? 1.1 : 1,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            mainAxisExtent: narrow ? 68 : 76,
           ),
           itemCount: methods.length,
           itemBuilder: (context, index) {
             final method = methods[index];
-            return _CubeButton(
+            return _EPaymentButton(
               label: method.label,
               icon: PhosphorIcons.deviceMobile,
               onTap: () => notifier.selectEPaymentMethod(method),
@@ -651,6 +646,69 @@ class _EPaymentsList extends ConsumerWidget {
           },
         );
       },
+    );
+  }
+}
+
+/// Medium-sized button for an E-payment method: tinted icon badge on the
+/// left, label on the right. Much shorter than [_CubeButton] but still a
+/// comfortable touch target.
+class _EPaymentButton extends StatelessWidget {
+  const _EPaymentButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Material(
+      color: colors.surfaceVariant,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.border, width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, size: 24, color: colors.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.ui(
+                    color: colors.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -728,6 +786,9 @@ class _EPaymentConfirmScreenState
             height: primaryTapTarget,
             child: TextField(
               controller: _referenceController,
+              // Extra room so the field and the Confirm button below it stay
+              // visible above the on-screen keyboard while typing.
+              scrollPadding: const EdgeInsets.only(bottom: 140),
               style: AppTypography.ui(color: colors.textPrimary, fontSize: 16),
               decoration: InputDecoration(
                 labelText: 'Reference ID',
