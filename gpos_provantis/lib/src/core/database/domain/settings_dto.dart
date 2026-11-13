@@ -307,3 +307,27 @@ class SyncSettings {
     lastCatalogSyncAt,
   );
 }
+
+/// Just the login settings, as the rest of the app reads them.
+class LoginSettings {
+  const LoginSettings({this.rememberLastLogin = false, this.lastLoginUsername});
+
+  factory LoginSettings.fromTableData(SettingsTableData row) {
+    return LoginSettings(
+      rememberLastLogin: row.rememberLastLogin,
+      lastLoginUsername: row.lastLoginUsername,
+    );
+  }
+
+  final bool rememberLastLogin;
+  final String? lastLoginUsername;
+
+  @override
+  bool operator ==(Object other) =>
+      other is LoginSettings &&
+      other.rememberLastLogin == rememberLastLogin &&
+      other.lastLoginUsername == lastLoginUsername;
+
+  @override
+  int get hashCode => Object.hash(rememberLastLogin, lastLoginUsername);
+}

@@ -10,6 +10,7 @@ import '../panels/transactions_panel.dart';
 import '../panels/pos_config_panel.dart';
 import '../panels/email_panel.dart';
 import '../panels/placeholder_panels.dart';
+import '../panels/login_panel.dart';
 import '../panels/product_images_panel.dart';
 import '../panels/sync_panel.dart';
 import '../panels/about_panel.dart';
@@ -65,6 +66,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       label: 'Users',
       icon: Icons.badge_rounded,
       builder: UsersPanel.new,
+    ),
+    SettingsSection(
+      label: 'Login',
+      icon: Icons.login_rounded,
+      builder: LoginPanel.new,
     ),
     SettingsSection(
       label: 'Counter Display',

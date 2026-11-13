@@ -6308,6 +6308,33 @@ class $SettingsTableTable extends SettingsTable
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _rememberLastLoginMeta = const VerificationMeta(
+    'rememberLastLogin',
+  );
+  @override
+  late final GeneratedColumn<bool> rememberLastLogin = GeneratedColumn<bool>(
+    'remember_last_login',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("remember_last_login" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _lastLoginUsernameMeta = const VerificationMeta(
+    'lastLoginUsername',
+  );
+  @override
+  late final GeneratedColumn<String> lastLoginUsername =
+      GeneratedColumn<String>(
+        'last_login_username',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -6335,6 +6362,8 @@ class $SettingsTableTable extends SettingsTable
     autoDeleteSyncedDataOnLogout,
     autoSyncIntervalMinutes,
     lastCatalogSyncAt,
+    rememberLastLogin,
+    lastLoginUsername,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6555,6 +6584,24 @@ class $SettingsTableTable extends SettingsTable
         ),
       );
     }
+    if (data.containsKey('remember_last_login')) {
+      context.handle(
+        _rememberLastLoginMeta,
+        rememberLastLogin.isAcceptableOrUnknown(
+          data['remember_last_login']!,
+          _rememberLastLoginMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_login_username')) {
+      context.handle(
+        _lastLoginUsernameMeta,
+        lastLoginUsername.isAcceptableOrUnknown(
+          data['last_login_username']!,
+          _lastLoginUsernameMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -6664,6 +6711,14 @@ class $SettingsTableTable extends SettingsTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_catalog_sync_at'],
       ),
+      rememberLastLogin: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}remember_last_login'],
+      )!,
+      lastLoginUsername: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_login_username'],
+      ),
     );
   }
 
@@ -6716,6 +6771,14 @@ class SettingsTableData extends DataClass
 
   /// When the catalog was last synced successfully (null = never / cleared).
   final DateTime? lastCatalogSyncAt;
+
+  /// Fill in the last signed-in username and password on the login screen.
+  /// Off by default: on a shared till, the cashier should type their own.
+  final bool rememberLastLogin;
+
+  /// Username of the last successful sign-in (null = none / feature off).
+  /// The password is NOT stored here; it lives in the device's secure storage.
+  final String? lastLoginUsername;
   const SettingsTableData({
     required this.id,
     required this.mainPrinter,
@@ -6742,6 +6805,8 @@ class SettingsTableData extends DataClass
     required this.autoDeleteSyncedDataOnLogout,
     required this.autoSyncIntervalMinutes,
     this.lastCatalogSyncAt,
+    required this.rememberLastLogin,
+    this.lastLoginUsername,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6789,6 +6854,10 @@ class SettingsTableData extends DataClass
     if (!nullToAbsent || lastCatalogSyncAt != null) {
       map['last_catalog_sync_at'] = Variable<DateTime>(lastCatalogSyncAt);
     }
+    map['remember_last_login'] = Variable<bool>(rememberLastLogin);
+    if (!nullToAbsent || lastLoginUsername != null) {
+      map['last_login_username'] = Variable<String>(lastLoginUsername);
+    }
     return map;
   }
 
@@ -6826,6 +6895,10 @@ class SettingsTableData extends DataClass
       lastCatalogSyncAt: lastCatalogSyncAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastCatalogSyncAt),
+      rememberLastLogin: Value(rememberLastLogin),
+      lastLoginUsername: lastLoginUsername == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastLoginUsername),
     );
   }
 
@@ -6882,6 +6955,10 @@ class SettingsTableData extends DataClass
       lastCatalogSyncAt: serializer.fromJson<DateTime?>(
         json['lastCatalogSyncAt'],
       ),
+      rememberLastLogin: serializer.fromJson<bool>(json['rememberLastLogin']),
+      lastLoginUsername: serializer.fromJson<String?>(
+        json['lastLoginUsername'],
+      ),
     );
   }
   @override
@@ -6931,6 +7008,8 @@ class SettingsTableData extends DataClass
         autoSyncIntervalMinutes,
       ),
       'lastCatalogSyncAt': serializer.toJson<DateTime?>(lastCatalogSyncAt),
+      'rememberLastLogin': serializer.toJson<bool>(rememberLastLogin),
+      'lastLoginUsername': serializer.toJson<String?>(lastLoginUsername),
     };
   }
 
@@ -6960,6 +7039,8 @@ class SettingsTableData extends DataClass
     bool? autoDeleteSyncedDataOnLogout,
     int? autoSyncIntervalMinutes,
     Value<DateTime?> lastCatalogSyncAt = const Value.absent(),
+    bool? rememberLastLogin,
+    Value<String?> lastLoginUsername = const Value.absent(),
   }) => SettingsTableData(
     id: id ?? this.id,
     mainPrinter: mainPrinter ?? this.mainPrinter,
@@ -7000,6 +7081,10 @@ class SettingsTableData extends DataClass
     lastCatalogSyncAt: lastCatalogSyncAt.present
         ? lastCatalogSyncAt.value
         : this.lastCatalogSyncAt,
+    rememberLastLogin: rememberLastLogin ?? this.rememberLastLogin,
+    lastLoginUsername: lastLoginUsername.present
+        ? lastLoginUsername.value
+        : this.lastLoginUsername,
   );
   SettingsTableData copyWithCompanion(SettingsTableCompanion data) {
     return SettingsTableData(
@@ -7073,6 +7158,12 @@ class SettingsTableData extends DataClass
       lastCatalogSyncAt: data.lastCatalogSyncAt.present
           ? data.lastCatalogSyncAt.value
           : this.lastCatalogSyncAt,
+      rememberLastLogin: data.rememberLastLogin.present
+          ? data.rememberLastLogin.value
+          : this.rememberLastLogin,
+      lastLoginUsername: data.lastLoginUsername.present
+          ? data.lastLoginUsername.value
+          : this.lastLoginUsername,
     );
   }
 
@@ -7111,7 +7202,9 @@ class SettingsTableData extends DataClass
             'autoDeleteSyncedDataOnLogout: $autoDeleteSyncedDataOnLogout, ',
           )
           ..write('autoSyncIntervalMinutes: $autoSyncIntervalMinutes, ')
-          ..write('lastCatalogSyncAt: $lastCatalogSyncAt')
+          ..write('lastCatalogSyncAt: $lastCatalogSyncAt, ')
+          ..write('rememberLastLogin: $rememberLastLogin, ')
+          ..write('lastLoginUsername: $lastLoginUsername')
           ..write(')'))
         .toString();
   }
@@ -7143,6 +7236,8 @@ class SettingsTableData extends DataClass
     autoDeleteSyncedDataOnLogout,
     autoSyncIntervalMinutes,
     lastCatalogSyncAt,
+    rememberLastLogin,
+    lastLoginUsername,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -7177,7 +7272,9 @@ class SettingsTableData extends DataClass
           other.autoDeleteSyncedDataOnLogout ==
               this.autoDeleteSyncedDataOnLogout &&
           other.autoSyncIntervalMinutes == this.autoSyncIntervalMinutes &&
-          other.lastCatalogSyncAt == this.lastCatalogSyncAt);
+          other.lastCatalogSyncAt == this.lastCatalogSyncAt &&
+          other.rememberLastLogin == this.rememberLastLogin &&
+          other.lastLoginUsername == this.lastLoginUsername);
 }
 
 class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
@@ -7206,6 +7303,8 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
   final Value<bool> autoDeleteSyncedDataOnLogout;
   final Value<int> autoSyncIntervalMinutes;
   final Value<DateTime?> lastCatalogSyncAt;
+  final Value<bool> rememberLastLogin;
+  final Value<String?> lastLoginUsername;
   final Value<int> rowid;
   const SettingsTableCompanion({
     this.id = const Value.absent(),
@@ -7233,6 +7332,8 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     this.autoDeleteSyncedDataOnLogout = const Value.absent(),
     this.autoSyncIntervalMinutes = const Value.absent(),
     this.lastCatalogSyncAt = const Value.absent(),
+    this.rememberLastLogin = const Value.absent(),
+    this.lastLoginUsername = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SettingsTableCompanion.insert({
@@ -7261,6 +7362,8 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     this.autoDeleteSyncedDataOnLogout = const Value.absent(),
     this.autoSyncIntervalMinutes = const Value.absent(),
     this.lastCatalogSyncAt = const Value.absent(),
+    this.rememberLastLogin = const Value.absent(),
+    this.lastLoginUsername = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   static Insertable<SettingsTableData> custom({
@@ -7289,6 +7392,8 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     Expression<bool>? autoDeleteSyncedDataOnLogout,
     Expression<int>? autoSyncIntervalMinutes,
     Expression<DateTime>? lastCatalogSyncAt,
+    Expression<bool>? rememberLastLogin,
+    Expression<String>? lastLoginUsername,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -7329,6 +7434,8 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
       if (autoSyncIntervalMinutes != null)
         'auto_sync_interval_minutes': autoSyncIntervalMinutes,
       if (lastCatalogSyncAt != null) 'last_catalog_sync_at': lastCatalogSyncAt,
+      if (rememberLastLogin != null) 'remember_last_login': rememberLastLogin,
+      if (lastLoginUsername != null) 'last_login_username': lastLoginUsername,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -7359,6 +7466,8 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     Value<bool>? autoDeleteSyncedDataOnLogout,
     Value<int>? autoSyncIntervalMinutes,
     Value<DateTime?>? lastCatalogSyncAt,
+    Value<bool>? rememberLastLogin,
+    Value<String?>? lastLoginUsername,
     Value<int>? rowid,
   }) {
     return SettingsTableCompanion(
@@ -7398,6 +7507,8 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
       autoSyncIntervalMinutes:
           autoSyncIntervalMinutes ?? this.autoSyncIntervalMinutes,
       lastCatalogSyncAt: lastCatalogSyncAt ?? this.lastCatalogSyncAt,
+      rememberLastLogin: rememberLastLogin ?? this.rememberLastLogin,
+      lastLoginUsername: lastLoginUsername ?? this.lastLoginUsername,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -7500,6 +7611,12 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     if (lastCatalogSyncAt.present) {
       map['last_catalog_sync_at'] = Variable<DateTime>(lastCatalogSyncAt.value);
     }
+    if (rememberLastLogin.present) {
+      map['remember_last_login'] = Variable<bool>(rememberLastLogin.value);
+    }
+    if (lastLoginUsername.present) {
+      map['last_login_username'] = Variable<String>(lastLoginUsername.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -7542,6 +7659,8 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
           )
           ..write('autoSyncIntervalMinutes: $autoSyncIntervalMinutes, ')
           ..write('lastCatalogSyncAt: $lastCatalogSyncAt, ')
+          ..write('rememberLastLogin: $rememberLastLogin, ')
+          ..write('lastLoginUsername: $lastLoginUsername, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -24620,6 +24739,8 @@ typedef $$SettingsTableTableCreateCompanionBuilder =
       Value<bool> autoDeleteSyncedDataOnLogout,
       Value<int> autoSyncIntervalMinutes,
       Value<DateTime?> lastCatalogSyncAt,
+      Value<bool> rememberLastLogin,
+      Value<String?> lastLoginUsername,
       Value<int> rowid,
     });
 typedef $$SettingsTableTableUpdateCompanionBuilder =
@@ -24649,6 +24770,8 @@ typedef $$SettingsTableTableUpdateCompanionBuilder =
       Value<bool> autoDeleteSyncedDataOnLogout,
       Value<int> autoSyncIntervalMinutes,
       Value<DateTime?> lastCatalogSyncAt,
+      Value<bool> rememberLastLogin,
+      Value<String?> lastLoginUsername,
       Value<int> rowid,
     });
 
@@ -24785,6 +24908,16 @@ class $$SettingsTableTableFilterComposer
 
   ColumnFilters<DateTime> get lastCatalogSyncAt => $composableBuilder(
     column: $table.lastCatalogSyncAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get rememberLastLogin => $composableBuilder(
+    column: $table.rememberLastLogin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastLoginUsername => $composableBuilder(
+    column: $table.lastLoginUsername,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -24924,6 +25057,16 @@ class $$SettingsTableTableOrderingComposer
     column: $table.lastCatalogSyncAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get rememberLastLogin => $composableBuilder(
+    column: $table.rememberLastLogin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastLoginUsername => $composableBuilder(
+    column: $table.lastLoginUsername,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableTableAnnotationComposer
@@ -25055,6 +25198,16 @@ class $$SettingsTableTableAnnotationComposer
     column: $table.lastCatalogSyncAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get rememberLastLogin => $composableBuilder(
+    column: $table.rememberLastLogin,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastLoginUsername => $composableBuilder(
+    column: $table.lastLoginUsername,
+    builder: (column) => column,
+  );
 }
 
 class $$SettingsTableTableTableManager
@@ -25121,6 +25274,8 @@ class $$SettingsTableTableTableManager
                 Value<bool> autoDeleteSyncedDataOnLogout = const Value.absent(),
                 Value<int> autoSyncIntervalMinutes = const Value.absent(),
                 Value<DateTime?> lastCatalogSyncAt = const Value.absent(),
+                Value<bool> rememberLastLogin = const Value.absent(),
+                Value<String?> lastLoginUsername = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsTableCompanion(
                 id: id,
@@ -25149,6 +25304,8 @@ class $$SettingsTableTableTableManager
                 autoDeleteSyncedDataOnLogout: autoDeleteSyncedDataOnLogout,
                 autoSyncIntervalMinutes: autoSyncIntervalMinutes,
                 lastCatalogSyncAt: lastCatalogSyncAt,
+                rememberLastLogin: rememberLastLogin,
+                lastLoginUsername: lastLoginUsername,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -25182,6 +25339,8 @@ class $$SettingsTableTableTableManager
                 Value<bool> autoDeleteSyncedDataOnLogout = const Value.absent(),
                 Value<int> autoSyncIntervalMinutes = const Value.absent(),
                 Value<DateTime?> lastCatalogSyncAt = const Value.absent(),
+                Value<bool> rememberLastLogin = const Value.absent(),
+                Value<String?> lastLoginUsername = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettingsTableCompanion.insert(
                 id: id,
@@ -25210,6 +25369,8 @@ class $$SettingsTableTableTableManager
                 autoDeleteSyncedDataOnLogout: autoDeleteSyncedDataOnLogout,
                 autoSyncIntervalMinutes: autoSyncIntervalMinutes,
                 lastCatalogSyncAt: lastCatalogSyncAt,
+                rememberLastLogin: rememberLastLogin,
+                lastLoginUsername: lastLoginUsername,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

@@ -191,6 +191,35 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
   final _passwordController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Needs to run after the first frame: it reads providers and then writes
+    // into the text fields.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _prefill());
+  }
+
+  Future<void> _prefill() async {
+    final saved = await ref
+        .read(loginControllerProvider.notifier)
+        .loadRemembered();
+    if (!mounted || saved == null) return;
+
+    // Don't overwrite anything the cashier has already started typing.
+    if (_usernameController.text.isNotEmpty ||
+        _passwordController.text.isNotEmpty) {
+      return;
+    }
+    _usernameController.text = saved.username;
+    _passwordController.text = saved.password;
+
+    // Typing into the fields reports to the controller through onChanged;
+    // setting .text from code doesn't, so tell it ourselves.
+    final controller = ref.read(loginControllerProvider.notifier);
+    controller.usernameChanged(saved.username);
+    controller.passwordChanged(saved.password);
+  }
+
+  @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();

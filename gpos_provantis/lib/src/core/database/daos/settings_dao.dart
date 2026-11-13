@@ -75,6 +75,22 @@ class SettingsDao extends DatabaseAccessor<AppDatabase>
     const SettingsTableCompanion(lastCatalogSyncAt: Value(null)),
   );
 
+  // ---- Login settings ------------------------------------------------------
+
+  /// Turning it off also forgets the saved username straight away.
+  Future<void> setRememberLastLogin(bool value) => _updateOwnSettings(
+    SettingsTableCompanion(
+      rememberLastLogin: Value(value),
+      lastLoginUsername: value
+          ? const Value<String?>.absent()
+          : const Value<String?>(null),
+    ),
+  );
+
+  Future<void> setLastLoginUsername(String? username) => _updateOwnSettings(
+    SettingsTableCompanion(lastLoginUsername: Value(username)),
+  );
+
   // Updates the existing settings row; if there is none yet, creates it (every
   // other column takes its default).
   Future<void> _updateOwnSettings(SettingsTableCompanion changes) async {
