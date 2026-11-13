@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import '../app_database.dart';
 import '../tables/settings_table.dart';
+import '../domain/settings_dto.dart' show OrderSlipMode;
 
 part 'settings_dao.g.dart';
 
@@ -90,6 +91,13 @@ class SettingsDao extends DatabaseAccessor<AppDatabase>
   Future<void> setLastLoginUsername(String? username) => _updateOwnSettings(
     SettingsTableCompanion(lastLoginUsername: Value(username)),
   );
+
+  // ---- Printer settings ----------------------------------------------------
+
+  Future<void> setSubPrinterOrderSlipMode(OrderSlipMode mode) =>
+      _updateOwnSettings(
+        SettingsTableCompanion(subPrinterOrderSlipMode: Value(mode.name)),
+      );
 
   // Updates the existing settings row; if there is none yet, creates it (every
   // other column takes its default).

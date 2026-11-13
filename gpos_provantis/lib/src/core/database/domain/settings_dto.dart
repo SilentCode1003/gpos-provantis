@@ -331,3 +331,23 @@ class LoginSettings {
   @override
   int get hashCode => Object.hash(rememberLastLogin, lastLoginUsername);
 }
+
+/// When the sub printer prints an order slip.
+enum OrderSlipMode {
+  /// Print it as soon as the order is placed.
+  auto,
+
+  /// Ask the cashier each time.
+  ask,
+
+  /// Never print it.
+  off;
+
+  /// Reads what is stored in the database. Anything unknown means off.
+  static OrderSlipMode fromName(String? name) {
+    for (final mode in values) {
+      if (mode.name == name) return mode;
+    }
+    return off;
+  }
+}

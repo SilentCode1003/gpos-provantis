@@ -81,6 +81,14 @@ class SettingsTable extends Table {
   /// The password is NOT stored here; it lives in the device's secure storage.
   TextColumn get lastLoginUsername => text().nullable()();
 
+  // ---- Printers (managed from Settings > Printers) -------------------------
+
+  /// When the sub printer prints an order slip: 'auto' (as soon as the order
+  /// is placed), 'ask' (ask the cashier each time) or 'off'. Stored as the
+  /// name of OrderSlipMode.
+  TextColumn get subPrinterOrderSlipMode =>
+      text().withDefault(const Constant('off'))();
+
   @override
   Set<Column> get primaryKey => {id};
 }

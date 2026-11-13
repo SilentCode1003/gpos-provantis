@@ -84,3 +84,20 @@ final rememberLastLoginProvider = Provider<bool>((ref) {
     loginSettingsProvider.select((a) => a.value?.rememberLastLogin ?? false),
   );
 });
+
+/// When the sub printer prints an order slip. Off until a settings row exists.
+final subPrinterOrderSlipModeProvider = Provider<OrderSlipMode>((ref) {
+  return ref.watch(_orderSlipModeStreamProvider).value ?? OrderSlipMode.off;
+});
+
+final _orderSlipModeStreamProvider = StreamProvider<OrderSlipMode>((ref) {
+  return ref
+      .watch(settingsDaoProvider)
+      .watchSettings()
+      .map(
+        (rows) => rows.isEmpty
+            ? OrderSlipMode.off
+            : OrderSlipMode.fromName(rows.first.subPrinterOrderSlipMode),
+      )
+      .distinct();
+});
