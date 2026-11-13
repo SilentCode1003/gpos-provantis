@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
+import 'package:gpos_provantis/src/core/database/providers/pos_config_dao_provider.dart';
 import 'settings_shared.dart';
 import '../panels/printers_panel.dart';
 import '../panels/theme_panel.dart';
@@ -274,15 +275,7 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          Text(
-            'REGISTER 1',
-            style: AppTypography.ui(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: colors.textSecondary,
-              letterSpacing: 0.6,
-            ),
-          ),
+          const _PosIdLabel(),
         ],
       ),
     );
@@ -334,15 +327,7 @@ class _CompactTopBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: Space.sm),
-          Text(
-            'REGISTER 1',
-            style: AppTypography.ui(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: colors.textSecondary,
-              letterSpacing: 0.6,
-            ),
-          ),
+          const _PosIdLabel(),
         ],
       ),
     );
@@ -446,6 +431,28 @@ class _CompactSectionTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Shows which POS this device is, from the POS config saved during setup.
+/// Shows a dash until that config is available.
+class _PosIdLabel extends ConsumerWidget {
+  const _PosIdLabel();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final posId = ref.watch(posConfigProvider.select((a) => a.value?.posId));
+
+    return Text(
+      'POS ID: ${posId ?? '—'}',
+      style: AppTypography.ui(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: colors.textSecondary,
+        letterSpacing: 0.6,
       ),
     );
   }
