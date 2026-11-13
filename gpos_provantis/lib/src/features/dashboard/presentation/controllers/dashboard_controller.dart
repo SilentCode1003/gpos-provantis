@@ -29,6 +29,8 @@ import 'package:gpos_provantis/src/core/database/domain/cash_drawer_dto.dart'
     show DenominationCountLine;
 import 'payments_controller.dart';
 import 'package:gpos_provantis/src/services/end_shift_service.dart';
+import 'package:gpos_provantis/src/core/printutil/cash_report_generator.dart'
+    show CashReportSlipLine;
 import 'package:gpos_provantis/src/services/cash_drawer_service.dart';
 import 'package:gpos_provantis/src/core/printutil/cash_drawer_opener.dart'
     show cashDrawerOpenerProvider;
@@ -212,6 +214,7 @@ class ToggleShiftResult {
     this.cancelled = false,
     this.drawerCountError,
     this.unrecordedCount,
+    this.cashPrintError,
   });
 
   /// True if this call ended a shift; false if it started one.
@@ -236,6 +239,10 @@ class ToggleShiftResult {
   /// controller was disposed while the shift was starting. Null otherwise.
   /// The UI should log/warn if this is non-null.
   final DenominationCountResult? unrecordedCount;
+
+  /// Set only when the shift ended and the count was collected, but the cash
+  /// count slip did not print. Independent of [printError] (the Z-reading).
+  final Object? cashPrintError;
 
   bool get reportPrinted => wasEnding && printError == null && !cancelled;
 }
@@ -1196,6 +1203,7 @@ class DashboardController extends _$DashboardController {
     final problems = <String>[
       if (r.drawerCountError != null) 'the drawer count could not be saved',
       if (r.printError != null) 'the end-of-shift report did not print',
+      if (r.cashPrintError != null) 'the cash report did not print',
     ];
 
     if (problems.isEmpty) {
@@ -1338,16 +1346,50 @@ class DashboardController extends _$DashboardController {
         }
       }
 
+      // Print the CASH REPORT slip. Done here, before any ref.mounted bail-out
+      // below, and with only the service read before the first await, so a
+      // disposed Ref can't skip it. A failure is captured, never thrown: the
+      // shift is already closed and the count already saved, so it must not
+      // block the Z-reading or look like the shift failed to end. Only runs
+      // when a drawer count was taken, i.e. a cash drawer is enabled.
+      Object? cashPrintError;
+      if (count != null) {
+        try {
+          await endShiftService.printCashReportSlip(
+            branchId: shiftKey.branchId,
+            posId: shiftKey.posId,
+            shift: shiftKey.shift,
+            shiftDate: shiftKey.businessDate,
+            cashier: shiftKey.cashier,
+            // Every active denomination, zeros included, like the old report.
+            lines: [
+              for (final entry in count.allActiveLines)
+                CashReportSlipLine(
+                  label: entry.label,
+                  quantity: entry.quantity,
+                  value: entry.value,
+                ),
+            ],
+          );
+        } catch (e, st) {
+          debugPrint(
+            '[CashDrawer] end-of-shift cash report did not print: $e\n$st',
+          );
+          cashPrintError = e;
+        }
+      }
+
       if (!ref.mounted) {
         debugPrint(
           '[CashDrawer] toggleShift: ref no longer mounted after endShift(), '
-          'bailing out (shift ended and the count was recorded; Z-reading '
-          'print was skipped this call)',
+          'bailing out (shift ended, the count was recorded and printed; '
+          'Z-reading print was skipped this call)',
         );
         return ToggleShiftResult(
           wasEnding: true,
           shiftKey: shiftKey,
           drawerCountError: drawerError,
+          cashPrintError: cashPrintError,
         );
       }
 
@@ -1363,6 +1405,7 @@ class DashboardController extends _$DashboardController {
           wasEnding: true,
           shiftKey: shiftKey,
           drawerCountError: drawerError,
+          cashPrintError: cashPrintError,
         );
       }
 
@@ -1380,6 +1423,7 @@ class DashboardController extends _$DashboardController {
           wasEnding: true,
           shiftKey: shiftKey,
           drawerCountError: drawerError,
+          cashPrintError: cashPrintError,
         );
       } catch (e, st) {
         debugPrint('toggleShift: shift ended but report failed: $e\n$st');
@@ -1388,6 +1432,7 @@ class DashboardController extends _$DashboardController {
           printError: e,
           shiftKey: shiftKey,
           drawerCountError: drawerError,
+          cashPrintError: cashPrintError,
         );
       }
     } finally {
