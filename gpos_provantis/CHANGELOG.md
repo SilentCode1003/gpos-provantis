@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.4.0](https://github.com/SilentCode1003/gpos-provantis/compare/gpos_provantis-v1.3.0...gpos_provantis-v1.4.0) (2026-11-13)
+
+
+### Features
+
+* Add toggle for sub printer to print an order slip either automatically, ([8699104](https://github.com/SilentCode1003/gpos-provantis/commit/86991049dd6531be489eef4d3a8402a36d67d0ad))
+* Added money_format to provider a utility globally on the app to reuse on ([9b0222f](https://github.com/SilentCode1003/gpos-provantis/commit/9b0222f5b4a0b3fb2e7572464b355039bdbea934))
+* Faster login. Login credentials are now saved. Turn it on at the settings. ([9f5ff07](https://github.com/SilentCode1003/gpos-provantis/commit/9f5ff072f2aaff5560f3c0a6b14be5343ce0eca5))
+* New developer logging on the settings page to only be accessed by the ([0f1e2f3](https://github.com/SilentCode1003/gpos-provantis/commit/0f1e2f38f1c2d95c90022b6d6d8c27c0acf8968b))
+
+
+### Bug Fixes
+
+* Added "Reprint" text to the bottom of the physical receipt. ([53f5e2b](https://github.com/SilentCode1003/gpos-provantis/commit/53f5e2b45ee888851b19bb7fd14824dd651d4ea0))
+* Display the POS ID inside the settings top right instead of the "REGISTER: ([0f130c4](https://github.com/SilentCode1003/gpos-provantis/commit/0f130c44e3c477c4fbe6873184d8e23170938a6d))
+* E-Payment methods will now show methods in smaller form for quicker ([2849133](https://github.com/SilentCode1003/gpos-provantis/commit/28491333a0eb87cfa551f32c929f080b94117f7b))
+* Error 400 will now be managed by the application and is fixed. ([0f1e2f3](https://github.com/SilentCode1003/gpos-provantis/commit/0f1e2f38f1c2d95c90022b6d6d8c27c0acf8968b))
+* Fixed cash report printing on endshift report. ([c806221](https://github.com/SilentCode1003/gpos-provantis/commit/c806221a9cc1315e09b2c6493eeb7f430c068acb))
+* Reference ID on the payments modal will now show properly and does not ([2849133](https://github.com/SilentCode1003/gpos-provantis/commit/28491333a0eb87cfa551f32c929f080b94117f7b))
+* Updated toast for phone screens. ([c806221](https://github.com/SilentCode1003/gpos-provantis/commit/c806221a9cc1315e09b2c6493eeb7f430c068acb))
+
 ## [1.3.0](https://github.com/SilentCode1003/gpos-provantis/compare/gpos_provantis-v1.2.0...gpos_provantis-v1.3.0) (2026-11-04)
 
 
