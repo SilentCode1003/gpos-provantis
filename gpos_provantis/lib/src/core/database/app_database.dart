@@ -49,6 +49,7 @@ import 'tables/login_credentials_table.dart';
 import 'tables/email_table.dart';
 import 'tables/sales_purchase_order_table.dart';
 import 'tables/product_image_table.dart';
+import 'tables/app_log_table.dart';
 
 import 'daos/domain_config_dao.dart';
 import 'daos/branch_config_dao.dart';
@@ -96,6 +97,7 @@ part 'app_database.g.dart';
     EmailTable,
     SalesPurchaseOrderTable,
     ProductImageTable,
+    AppLogTable,
   ],
   daos: [DomainConfigDao, BranchConfigDao, PosConfigDao],
 )

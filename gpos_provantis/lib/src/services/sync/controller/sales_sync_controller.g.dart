@@ -42,7 +42,7 @@ final class SalesSyncControllerProvider
 }
 
 String _$salesSyncControllerHash() =>
-    r'39c6c69b3e6cfc47bd26a10d173ec644d71588c0';
+    r'80124d8eb031ba5105f38a0eeda1e13e180a4876';
 
 abstract class _$SalesSyncController extends $Notifier<SalesSyncState> {
   SalesSyncState build();

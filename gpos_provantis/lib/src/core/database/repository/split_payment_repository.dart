@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:gpos_provantis/src/core/network/api_client.dart';
+import 'package:gpos_provantis/src/services/app_logger.dart';
 import 'package:gpos_provantis/src/core/network/domain_provider.dart';
 import 'package:gpos_provantis/src/core/database/app_database.dart';
 import 'package:gpos_provantis/src/core/database/daos/split_payment_dao.dart';
@@ -64,11 +65,17 @@ class SplitPaymentRepository {
         data: SplitPaymentDto.fromTableData(row).toApiJson(),
       );
     } on DioException catch (e) {
-      if (_isAlreadyOnServer(e.response?.data)) return;
+      if (_isAlreadyOnServer(e.response?.data)) {
+        await _logAlreadyOnServer(row);
+        return;
+      }
       rethrow;
     }
 
-    if (_isAlreadyOnServer(response.data)) return;
+    if (_isAlreadyOnServer(response.data)) {
+      await _logAlreadyOnServer(row);
+      return;
+    }
 
     final body = response.data;
     final msg = body is Map ? body['msg']?.toString() : null;
@@ -94,9 +101,35 @@ class SplitPaymentRepository {
           await submitSplitPayment(row);
           await _dao.markSynced(row.id, DateTime.now());
           synced++;
-        } catch (e) {
+        } catch (e, st) {
           debugPrint('SplitPayment: could not send ${row.detailId}: $e');
           await _dao.markAttemptFailed(row.id, _describe(e));
+          final log = _ref.read(appLoggerProvider);
+          final details = {
+            'attempts': row.attempts + 1,
+            'total': row.total,
+            'first': row.firstPaymentType,
+            'second': row.secondPaymentType,
+            'createdAt': row.createdAt.toIso8601String(),
+          };
+          if (e is DioException && e.response == null) {
+            // Offline / timeout: retried automatically, so only a warning.
+            await log.warn(
+              'split.upload',
+              'Could not reach the server: ${_describe(e)}',
+              detailId: row.detailId,
+              context: details,
+            );
+          } else {
+            await log.error(
+              'split.upload',
+              'Split payment not accepted: ${_describe(e)}',
+              detailId: row.detailId,
+              error: e,
+              stackTrace: st,
+              context: details,
+            );
+          }
         }
       }
       // Housekeeping after each sync; never affects the send result.
@@ -135,6 +168,21 @@ class SplitPaymentRepository {
       debugPrint('SplitPayment: could not remove old sales: $e');
       return 0;
     }
+  }
+
+  Future<void> _logAlreadyOnServer(SplitPaymentTableData row) {
+    return _ref
+        .read(appLoggerProvider)
+        .warn(
+          'split.upload',
+          'Server already had this split sale (already exist), so it was '
+              'marked as synced.',
+          detailId: row.detailId,
+          context: {
+            'total': row.total,
+            'createdAt': row.createdAt.toIso8601String(),
+          },
+        );
   }
 
   /// The server's reply when the receipt id is already stored:

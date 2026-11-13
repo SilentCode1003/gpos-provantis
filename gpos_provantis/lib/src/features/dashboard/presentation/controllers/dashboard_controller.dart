@@ -36,6 +36,7 @@ import 'package:gpos_provantis/src/core/printutil/cash_drawer_opener.dart'
     show cashDrawerOpenerProvider;
 import 'package:gpos_provantis/src/services/customer_service.dart';
 import 'package:gpos_provantis/src/services/sales_purchase_order_service.dart';
+import 'package:gpos_provantis/src/services/app_logger.dart';
 import 'package:gpos_provantis/src/services/split_payment_service.dart';
 import 'package:gpos_provantis/src/services/sync/post_transaction_sync.dart';
 import 'package:gpos_provantis/src/core/database/domain/split_payment_dto.dart'
@@ -1769,9 +1770,20 @@ class DashboardController extends _$DashboardController {
       // Settings > Sync > "Sync after each sale". Fire-and-forget: the sale is
       // already saved, and this checks the setting and the connection itself.
       unawaited(postSale.run());
-    } on DuplicateDetailIdException {
+    } on DuplicateDetailIdException catch (e, st) {
       // The reserved receipt number belongs to another sale: drop it so the
       // next attempt takes a fresh one.
+      unawaited(
+        ref
+            .read(appLoggerProvider)
+            .error(
+              'sale.checkout',
+              'Sale not recorded: the receipt number belongs to a different sale.',
+              detailId: _reservedDetailId,
+              error: e,
+              stackTrace: st,
+            ),
+      );
       _releaseDetailId();
       toast.error(
         'That receipt number was already used, so the sale was not recorded. '
@@ -1780,6 +1792,18 @@ class DashboardController extends _$DashboardController {
       rethrow;
     } catch (e, st) {
       debugPrint('Sale failed: $e\n$st');
+      unawaited(
+        ref
+            .read(appLoggerProvider)
+            .error(
+              'sale.checkout',
+              'Sale failed: ${_describeSaleFailure(e)}',
+              detailId: _reservedDetailId,
+              error: e,
+              stackTrace: st,
+              context: {'cartLines': state.cartLines.length},
+            ),
+      );
       toast.error(_describeSaleFailure(e));
       rethrow;
     } finally {

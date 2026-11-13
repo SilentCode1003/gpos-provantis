@@ -21345,6 +21345,516 @@ class ProductImageTableCompanion
   }
 }
 
+class $AppLogTableTable extends AppLogTable
+    with TableInfo<$AppLogTableTable, AppLogTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AppLogTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    clientDefault: () => DateTime.now(),
+  );
+  static const VerificationMeta _levelMeta = const VerificationMeta('level');
+  @override
+  late final GeneratedColumn<String> level = GeneratedColumn<String>(
+    'level',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _messageMeta = const VerificationMeta(
+    'message',
+  );
+  @override
+  late final GeneratedColumn<String> message = GeneratedColumn<String>(
+    'message',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _detailIdMeta = const VerificationMeta(
+    'detailId',
+  );
+  @override
+  late final GeneratedColumn<String> detailId = GeneratedColumn<String>(
+    'detail_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _contextMeta = const VerificationMeta(
+    'context',
+  );
+  @override
+  late final GeneratedColumn<String> context = GeneratedColumn<String>(
+    'context',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _stackTraceMeta = const VerificationMeta(
+    'stackTrace',
+  );
+  @override
+  late final GeneratedColumn<String> stackTrace = GeneratedColumn<String>(
+    'stack_trace',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    createdAt,
+    level,
+    source,
+    message,
+    detailId,
+    context,
+    stackTrace,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'app_log_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AppLogTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('level')) {
+      context.handle(
+        _levelMeta,
+        level.isAcceptableOrUnknown(data['level']!, _levelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_levelMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    if (data.containsKey('message')) {
+      context.handle(
+        _messageMeta,
+        message.isAcceptableOrUnknown(data['message']!, _messageMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_messageMeta);
+    }
+    if (data.containsKey('detail_id')) {
+      context.handle(
+        _detailIdMeta,
+        detailId.isAcceptableOrUnknown(data['detail_id']!, _detailIdMeta),
+      );
+    }
+    if (data.containsKey('context')) {
+      context.handle(
+        _contextMeta,
+        this.context.isAcceptableOrUnknown(data['context']!, _contextMeta),
+      );
+    }
+    if (data.containsKey('stack_trace')) {
+      context.handle(
+        _stackTraceMeta,
+        stackTrace.isAcceptableOrUnknown(data['stack_trace']!, _stackTraceMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AppLogTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AppLogTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      level: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}level'],
+      )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      message: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message'],
+      )!,
+      detailId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}detail_id'],
+      ),
+      context: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}context'],
+      ),
+      stackTrace: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}stack_trace'],
+      ),
+    );
+  }
+
+  @override
+  $AppLogTableTable createAlias(String alias) {
+    return $AppLogTableTable(attachedDatabase, alias);
+  }
+}
+
+class AppLogTableData extends DataClass implements Insertable<AppLogTableData> {
+  final int id;
+  final DateTime createdAt;
+
+  /// `INFO`, `WARN` or `ERROR`.
+  final String level;
+
+  /// Where it came from, e.g. `sales.upload`.
+  final String source;
+  final String message;
+
+  /// The receipt (OR) number this entry is about, so a transaction can be
+  /// searched by its number.
+  final String? detailId;
+
+  /// JSON with the details (status code, server reply, the sale's amounts).
+  final String? context;
+  final String? stackTrace;
+  const AppLogTableData({
+    required this.id,
+    required this.createdAt,
+    required this.level,
+    required this.source,
+    required this.message,
+    this.detailId,
+    this.context,
+    this.stackTrace,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['level'] = Variable<String>(level);
+    map['source'] = Variable<String>(source);
+    map['message'] = Variable<String>(message);
+    if (!nullToAbsent || detailId != null) {
+      map['detail_id'] = Variable<String>(detailId);
+    }
+    if (!nullToAbsent || context != null) {
+      map['context'] = Variable<String>(context);
+    }
+    if (!nullToAbsent || stackTrace != null) {
+      map['stack_trace'] = Variable<String>(stackTrace);
+    }
+    return map;
+  }
+
+  AppLogTableCompanion toCompanion(bool nullToAbsent) {
+    return AppLogTableCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      level: Value(level),
+      source: Value(source),
+      message: Value(message),
+      detailId: detailId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(detailId),
+      context: context == null && nullToAbsent
+          ? const Value.absent()
+          : Value(context),
+      stackTrace: stackTrace == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stackTrace),
+    );
+  }
+
+  factory AppLogTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AppLogTableData(
+      id: serializer.fromJson<int>(json['id']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      level: serializer.fromJson<String>(json['level']),
+      source: serializer.fromJson<String>(json['source']),
+      message: serializer.fromJson<String>(json['message']),
+      detailId: serializer.fromJson<String?>(json['detailId']),
+      context: serializer.fromJson<String?>(json['context']),
+      stackTrace: serializer.fromJson<String?>(json['stackTrace']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'level': serializer.toJson<String>(level),
+      'source': serializer.toJson<String>(source),
+      'message': serializer.toJson<String>(message),
+      'detailId': serializer.toJson<String?>(detailId),
+      'context': serializer.toJson<String?>(context),
+      'stackTrace': serializer.toJson<String?>(stackTrace),
+    };
+  }
+
+  AppLogTableData copyWith({
+    int? id,
+    DateTime? createdAt,
+    String? level,
+    String? source,
+    String? message,
+    Value<String?> detailId = const Value.absent(),
+    Value<String?> context = const Value.absent(),
+    Value<String?> stackTrace = const Value.absent(),
+  }) => AppLogTableData(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    level: level ?? this.level,
+    source: source ?? this.source,
+    message: message ?? this.message,
+    detailId: detailId.present ? detailId.value : this.detailId,
+    context: context.present ? context.value : this.context,
+    stackTrace: stackTrace.present ? stackTrace.value : this.stackTrace,
+  );
+  AppLogTableData copyWithCompanion(AppLogTableCompanion data) {
+    return AppLogTableData(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      level: data.level.present ? data.level.value : this.level,
+      source: data.source.present ? data.source.value : this.source,
+      message: data.message.present ? data.message.value : this.message,
+      detailId: data.detailId.present ? data.detailId.value : this.detailId,
+      context: data.context.present ? data.context.value : this.context,
+      stackTrace: data.stackTrace.present
+          ? data.stackTrace.value
+          : this.stackTrace,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppLogTableData(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('level: $level, ')
+          ..write('source: $source, ')
+          ..write('message: $message, ')
+          ..write('detailId: $detailId, ')
+          ..write('context: $context, ')
+          ..write('stackTrace: $stackTrace')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    level,
+    source,
+    message,
+    detailId,
+    context,
+    stackTrace,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AppLogTableData &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.level == this.level &&
+          other.source == this.source &&
+          other.message == this.message &&
+          other.detailId == this.detailId &&
+          other.context == this.context &&
+          other.stackTrace == this.stackTrace);
+}
+
+class AppLogTableCompanion extends UpdateCompanion<AppLogTableData> {
+  final Value<int> id;
+  final Value<DateTime> createdAt;
+  final Value<String> level;
+  final Value<String> source;
+  final Value<String> message;
+  final Value<String?> detailId;
+  final Value<String?> context;
+  final Value<String?> stackTrace;
+  const AppLogTableCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.level = const Value.absent(),
+    this.source = const Value.absent(),
+    this.message = const Value.absent(),
+    this.detailId = const Value.absent(),
+    this.context = const Value.absent(),
+    this.stackTrace = const Value.absent(),
+  });
+  AppLogTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String level,
+    required String source,
+    required String message,
+    this.detailId = const Value.absent(),
+    this.context = const Value.absent(),
+    this.stackTrace = const Value.absent(),
+  }) : level = Value(level),
+       source = Value(source),
+       message = Value(message);
+  static Insertable<AppLogTableData> custom({
+    Expression<int>? id,
+    Expression<DateTime>? createdAt,
+    Expression<String>? level,
+    Expression<String>? source,
+    Expression<String>? message,
+    Expression<String>? detailId,
+    Expression<String>? context,
+    Expression<String>? stackTrace,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (level != null) 'level': level,
+      if (source != null) 'source': source,
+      if (message != null) 'message': message,
+      if (detailId != null) 'detail_id': detailId,
+      if (context != null) 'context': context,
+      if (stackTrace != null) 'stack_trace': stackTrace,
+    });
+  }
+
+  AppLogTableCompanion copyWith({
+    Value<int>? id,
+    Value<DateTime>? createdAt,
+    Value<String>? level,
+    Value<String>? source,
+    Value<String>? message,
+    Value<String?>? detailId,
+    Value<String?>? context,
+    Value<String?>? stackTrace,
+  }) {
+    return AppLogTableCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      level: level ?? this.level,
+      source: source ?? this.source,
+      message: message ?? this.message,
+      detailId: detailId ?? this.detailId,
+      context: context ?? this.context,
+      stackTrace: stackTrace ?? this.stackTrace,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (level.present) {
+      map['level'] = Variable<String>(level.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (message.present) {
+      map['message'] = Variable<String>(message.value);
+    }
+    if (detailId.present) {
+      map['detail_id'] = Variable<String>(detailId.value);
+    }
+    if (context.present) {
+      map['context'] = Variable<String>(context.value);
+    }
+    if (stackTrace.present) {
+      map['stack_trace'] = Variable<String>(stackTrace.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppLogTableCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('level: $level, ')
+          ..write('source: $source, ')
+          ..write('message: $message, ')
+          ..write('detailId: $detailId, ')
+          ..write('context: $context, ')
+          ..write('stackTrace: $stackTrace')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -21412,6 +21922,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $SalesPurchaseOrderTableTable(this);
   late final $ProductImageTableTable productImageTable =
       $ProductImageTableTable(this);
+  late final $AppLogTableTable appLogTable = $AppLogTableTable(this);
   late final DomainConfigDao domainConfigDao = DomainConfigDao(
     this as AppDatabase,
   );
@@ -21462,6 +21973,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     emailTable,
     salesPurchaseOrderTable,
     productImageTable,
+    appLogTable,
   ];
 }
 
@@ -32449,6 +32961,259 @@ typedef $$ProductImageTableTableProcessedTableManager =
       ProductImageTableData,
       PrefetchHooks Function()
     >;
+typedef $$AppLogTableTableCreateCompanionBuilder =
+    AppLogTableCompanion Function({
+      Value<int> id,
+      Value<DateTime> createdAt,
+      required String level,
+      required String source,
+      required String message,
+      Value<String?> detailId,
+      Value<String?> context,
+      Value<String?> stackTrace,
+    });
+typedef $$AppLogTableTableUpdateCompanionBuilder =
+    AppLogTableCompanion Function({
+      Value<int> id,
+      Value<DateTime> createdAt,
+      Value<String> level,
+      Value<String> source,
+      Value<String> message,
+      Value<String?> detailId,
+      Value<String?> context,
+      Value<String?> stackTrace,
+    });
+
+class $$AppLogTableTableFilterComposer
+    extends Composer<_$AppDatabase, $AppLogTableTable> {
+  $$AppLogTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get message => $composableBuilder(
+    column: $table.message,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get detailId => $composableBuilder(
+    column: $table.detailId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get context => $composableBuilder(
+    column: $table.context,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get stackTrace => $composableBuilder(
+    column: $table.stackTrace,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AppLogTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $AppLogTableTable> {
+  $$AppLogTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get message => $composableBuilder(
+    column: $table.message,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get detailId => $composableBuilder(
+    column: $table.detailId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get context => $composableBuilder(
+    column: $table.context,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get stackTrace => $composableBuilder(
+    column: $table.stackTrace,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AppLogTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AppLogTableTable> {
+  $$AppLogTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get level =>
+      $composableBuilder(column: $table.level, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get message =>
+      $composableBuilder(column: $table.message, builder: (column) => column);
+
+  GeneratedColumn<String> get detailId =>
+      $composableBuilder(column: $table.detailId, builder: (column) => column);
+
+  GeneratedColumn<String> get context =>
+      $composableBuilder(column: $table.context, builder: (column) => column);
+
+  GeneratedColumn<String> get stackTrace => $composableBuilder(
+    column: $table.stackTrace,
+    builder: (column) => column,
+  );
+}
+
+class $$AppLogTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AppLogTableTable,
+          AppLogTableData,
+          $$AppLogTableTableFilterComposer,
+          $$AppLogTableTableOrderingComposer,
+          $$AppLogTableTableAnnotationComposer,
+          $$AppLogTableTableCreateCompanionBuilder,
+          $$AppLogTableTableUpdateCompanionBuilder,
+          (
+            AppLogTableData,
+            BaseReferences<_$AppDatabase, $AppLogTableTable, AppLogTableData>,
+          ),
+          AppLogTableData,
+          PrefetchHooks Function()
+        > {
+  $$AppLogTableTableTableManager(_$AppDatabase db, $AppLogTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AppLogTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AppLogTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AppLogTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<String> level = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<String> message = const Value.absent(),
+                Value<String?> detailId = const Value.absent(),
+                Value<String?> context = const Value.absent(),
+                Value<String?> stackTrace = const Value.absent(),
+              }) => AppLogTableCompanion(
+                id: id,
+                createdAt: createdAt,
+                level: level,
+                source: source,
+                message: message,
+                detailId: detailId,
+                context: context,
+                stackTrace: stackTrace,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                required String level,
+                required String source,
+                required String message,
+                Value<String?> detailId = const Value.absent(),
+                Value<String?> context = const Value.absent(),
+                Value<String?> stackTrace = const Value.absent(),
+              }) => AppLogTableCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                level: level,
+                source: source,
+                message: message,
+                detailId: detailId,
+                context: context,
+                stackTrace: stackTrace,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AppLogTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AppLogTableTable,
+      AppLogTableData,
+      $$AppLogTableTableFilterComposer,
+      $$AppLogTableTableOrderingComposer,
+      $$AppLogTableTableAnnotationComposer,
+      $$AppLogTableTableCreateCompanionBuilder,
+      $$AppLogTableTableUpdateCompanionBuilder,
+      (
+        AppLogTableData,
+        BaseReferences<_$AppDatabase, $AppLogTableTable, AppLogTableData>,
+      ),
+      AppLogTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -32541,6 +33306,8 @@ class $AppDatabaseManager {
       );
   $$ProductImageTableTableTableManager get productImageTable =>
       $$ProductImageTableTableTableManager(_db, _db.productImageTable);
+  $$AppLogTableTableTableManager get appLogTable =>
+      $$AppLogTableTableTableManager(_db, _db.appLogTable);
 }
 
 // **************************************************************************

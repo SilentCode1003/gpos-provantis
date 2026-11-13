@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:gpos_provantis/src/core/database/providers/settings_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/repository/sales_repository.dart';
+import 'package:gpos_provantis/src/services/app_logger.dart';
 
 part 'sales_sync_controller.g.dart';
 
@@ -108,7 +109,15 @@ class SalesSyncController extends _$SalesSyncController {
         status: SalesSyncStatus.idle,
         lastSyncedCount: syncedCount,
       );
-    } catch (error) {
+    } catch (error, stack) {
+      ref
+          .read(appLoggerProvider)
+          .error(
+            'sales.sync',
+            'Sales sync pass failed.',
+            error: error,
+            stackTrace: stack,
+          );
       state = state.copyWith(
         status: SalesSyncStatus.failed,
         lastError: error.toString(),

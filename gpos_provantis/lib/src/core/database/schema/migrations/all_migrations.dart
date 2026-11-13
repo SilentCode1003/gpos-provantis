@@ -1,6 +1,7 @@
 import 'db_migration.dart';
 import 'migration_11_13_26.dart';
 import 'migration_11_13_26_r1.dart';
+import 'migration_11_13_26_r2.dart';
 
 /// Every migration, oldest first. This is the only file to touch when you
 /// add one:
@@ -16,4 +17,5 @@ import 'migration_11_13_26_r1.dart';
 const List<DbMigration> allMigrations = [
   Migration111326(),
   Migration111326R1(),
+  Migration111326R2(),
 ];

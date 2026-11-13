@@ -18,6 +18,7 @@ import '../panels/about_panel.dart';
 import '../panels/counter_display_panel.dart';
 import '../panels/guides_panel.dart';
 import '../panels/factory_reset_panel.dart';
+import '../panels/developer_logs_panel.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -82,6 +83,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       label: 'Guides',
       icon: Icons.menu_book_rounded,
       builder: GuidesPanel.new,
+    ),
+    SettingsSection(
+      label: 'Developer',
+      icon: Icons.terminal_rounded,
+      builder: DeveloperLogsPanel.new,
     ),
     SettingsSection(
       label: 'Factory Reset',
