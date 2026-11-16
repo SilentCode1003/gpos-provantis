@@ -49,6 +49,7 @@ import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
         ReceiptSaleData,
         ReceiptLineItem,
         receiptGeneratorProvider;
+import 'package:gpos_provantis/src/core/printutil/order_slip_generator.dart';
 import 'package:gpos_provantis/src/shared/widgets/toast_emitter.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/denomination_count_sheet.dart'
     show DenominationCountResult;
@@ -1954,6 +1955,11 @@ class DashboardController extends _$DashboardController {
       printReceipt: () =>
           ref.read(receiptGeneratorProvider).printForSale(receipt),
     );
+    // Order slip on the sub printer, per the Order Slip setting (off / auto /
+    // ask). Never throws: the sale is already saved.
+    await ref
+        .read(orderSlipGeneratorProvider)
+        .handleAfterSale(OrderSlipData.fromSale(receipt));
   }
 
   Future<void> createSaleFromEPayment(PaymentState paymentState) =>
@@ -2030,6 +2036,11 @@ class DashboardController extends _$DashboardController {
       printReceipt: () =>
           ref.read(receiptGeneratorProvider).printForSale(receipt),
     );
+    // Order slip on the sub printer, per the Order Slip setting (off / auto /
+    // ask). Never throws: the sale is already saved.
+    await ref
+        .read(orderSlipGeneratorProvider)
+        .handleAfterSale(OrderSlipData.fromSale(receipt));
   }
 
   Future<void> createSaleFromCashEPaymentSplit(PaymentState paymentState) =>
@@ -2147,6 +2158,11 @@ class DashboardController extends _$DashboardController {
       printReceipt: () =>
           ref.read(receiptGeneratorProvider).printForSale(receipt),
     );
+    // Order slip on the sub printer, per the Order Slip setting (off / auto /
+    // ask). Never throws: the sale is already saved.
+    await ref
+        .read(orderSlipGeneratorProvider)
+        .handleAfterSale(OrderSlipData.fromSale(receipt));
   }
 
   /// A sale paid with two e-payments (e.g. GCASH + BANK TRANSFER).
@@ -2256,6 +2272,11 @@ class DashboardController extends _$DashboardController {
       printReceipt: () =>
           ref.read(receiptGeneratorProvider).printForSale(receipt),
     );
+    // Order slip on the sub printer, per the Order Slip setting (off / auto /
+    // ask). Never throws: the sale is already saved.
+    await ref
+        .read(orderSlipGeneratorProvider)
+        .handleAfterSale(OrderSlipData.fromSale(receipt));
   }
 }
 

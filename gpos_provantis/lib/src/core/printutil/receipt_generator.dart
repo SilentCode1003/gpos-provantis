@@ -185,7 +185,7 @@ class ReceiptGenerator {
       logo: logo,
     );
 
-    await _sendToPrinter(printer, bytes);
+    await sendToPrinter(printer, bytes);
   }
 
   static List<int> _buildTicketBytes({
@@ -559,7 +559,7 @@ class ReceiptGenerator {
         '${twoDigits(dateTime.hour)}:${twoDigits(dateTime.minute)}';
   }
 
-  Future<void> _sendToPrinter(PrinterDto printer, List<int> bytes) async {
+  Future<void> sendToPrinter(PrinterDto printer, List<int> bytes) async {
     switch (printer.connectionType) {
       case 'WIFI':
         try {
