@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/shared/widgets/toast_emitter.dart';
 
-enum AppToastType { neutral, success, warning, error }
+enum AppToastType { neutral, success, warning, error, loading }
 
 /// Shows the toasts that controllers raise through [toastEmitterProvider].
 ///
@@ -48,6 +48,15 @@ class _AppToastHostState extends ConsumerState<AppToastHost> {
   void _onEvent(ToastEvent event) {
     if (!mounted) return;
 
+    // Toasts raised through ToastEmitter.loading are tracked by emitter id.
+    // The prefix keeps them from ever colliding with AppToast's own ids.
+    final key = event.id == null ? null : 'emitter:${event.id}';
+
+    if (event.dismiss) {
+      if (key != null) AppToast._dismissKey(key);
+      return;
+    }
+
     final overlay =
         widget.navigatorKey?.currentState?.overlay ??
         Overlay.maybeOf(context, rootOverlay: true);
@@ -64,6 +73,7 @@ class _AppToastHostState extends ConsumerState<AppToastHost> {
       message: event.message,
       type: _typeFor(event.kind),
       duration: event.duration,
+      key: key,
     );
   }
 
@@ -77,6 +87,8 @@ class _AppToastHostState extends ConsumerState<AppToastHost> {
         return AppToastType.error;
       case ToastKind.info:
         return AppToastType.neutral;
+      case ToastKind.loading:
+        return AppToastType.loading;
     }
   }
 
@@ -96,7 +108,9 @@ class _ToastEntry {
   final Object id;
   final String message;
   final AppToastType type;
-  final Duration duration;
+
+  /// Null means the toast has no timer and stays until it is removed.
+  final Duration? duration;
 }
 
 class _ToastQueue extends ChangeNotifier {
@@ -106,15 +120,30 @@ class _ToastQueue extends ChangeNotifier {
   final List<_ToastEntry> entries = [];
 
   void add(_ToastEntry entry) {
-    // The same message again (a double-tapped button failing twice) replaces
-    // the one on screen instead of stacking a copy, and restarts its timer so
-    // the cashier sees that the second attempt was answered too.
-    entries.removeWhere(
-      (e) => e.message == entry.message && e.type == entry.type,
-    );
+    if (entry.duration == null) {
+      // A toast that stays (loading) is identified by its id: a new text for
+      // the same id changes it where it is, keeping its place in the stack.
+      final i = entries.indexWhere((e) => e.id == entry.id);
+      if (i >= 0) {
+        entries[i] = entry;
+        notifyListeners();
+        return;
+      }
+    } else {
+      // The same message again (a double-tapped button failing twice)
+      // replaces the one on screen instead of stacking a copy, and restarts
+      // its timer so the cashier sees that the second attempt was answered
+      // too.
+      entries.removeWhere(
+        (e) => e.message == entry.message && e.type == entry.type,
+      );
+    }
     entries.add(entry);
     while (entries.length > maxVisible) {
-      entries.removeAt(0);
+      // Drop the oldest toast that has a timer. One that stays (loading) is
+      // only dropped if every toast on screen is one.
+      final i = entries.indexWhere((e) => e.duration != null);
+      entries.removeAt(i >= 0 ? i : 0);
     }
     notifyListeners();
   }
@@ -138,8 +167,10 @@ abstract class AppToast {
 
   /// How long each kind stays up. Problems stay longer than confirmations, so
   /// a cashier glancing at the customer still has time to read them.
-  static Duration defaultDurationFor(AppToastType type) {
+  static Duration? defaultDurationFor(AppToastType type) {
     switch (type) {
+      case AppToastType.loading:
+        return null; // stays until dismissed
       case AppToastType.success:
       case AppToastType.neutral:
         return const Duration(seconds: 3);
@@ -178,22 +209,28 @@ abstract class AppToast {
     required String message,
     required AppToastType type,
     Duration? duration,
+    Object? key,
   }) {
     final text = message.trim();
     if (text.isEmpty) return;
 
     _ensureHostOn(overlay);
 
-    final id = _nextId++;
     _queue.add(
       _ToastEntry(
-        id: id,
+        id: key ?? _nextId++,
         message: text,
         type: type,
-        duration: duration ?? defaultDurationFor(type),
+        // A loading toast never gets a timer, whatever duration was passed.
+        duration: type == AppToastType.loading
+            ? null
+            : duration ?? defaultDurationFor(type),
       ),
     );
   }
+
+  /// Removes the toast with this key (see ToastEmitter.loading).
+  static void _dismissKey(Object key) => _queue.remove(key);
 
   static void _ensureHostOn(OverlayState overlay) {
     final existing = _hostEntry;
@@ -316,7 +353,7 @@ class _AppToastView extends StatefulWidget {
 
   final String message;
   final AppToastType type;
-  final Duration duration;
+  final Duration? duration;
   final VoidCallback onDismiss;
 
   @override
@@ -346,7 +383,8 @@ class _AppToastViewState extends State<_AppToastView>
     _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
     _controller.forward();
 
-    _dismissTimer = Timer(widget.duration, _close);
+    final duration = widget.duration;
+    if (duration != null) _dismissTimer = Timer(duration, _close);
   }
 
   @override
@@ -381,6 +419,7 @@ class _AppToastViewState extends State<_AppToastView>
         return colors.isDark ? _warningFillDark : _warningFill;
       case AppToastType.error:
         return colors.isDark ? colors.dangerContainer : colors.danger;
+      case AppToastType.loading:
       case AppToastType.neutral:
         return colors.isDark ? colors.surfaceVariant : colors.textPrimary;
     }
@@ -394,6 +433,7 @@ class _AppToastViewState extends State<_AppToastView>
         return colors.isDark ? _warningContentDark : _warningContent;
       case AppToastType.error:
         return colors.isDark ? colors.onDangerContainer : colors.onDanger;
+      case AppToastType.loading:
       case AppToastType.neutral:
         return colors.isDark ? colors.textPrimary : colors.surface;
     }
@@ -409,6 +449,7 @@ class _AppToastViewState extends State<_AppToastView>
         return Icons.warning_amber_rounded;
       case AppToastType.error:
         return Icons.error_rounded;
+      case AppToastType.loading: // drawn as a spinner in build()
       case AppToastType.neutral:
         return null;
     }
@@ -419,6 +460,7 @@ class _AppToastViewState extends State<_AppToastView>
     final colors = context.colors;
     final contentColor = _contentColor(colors);
     final icon = _icon;
+    final isLoading = widget.type == AppToastType.loading;
 
     return Padding(
       padding: const EdgeInsets.only(top: 8),
@@ -433,7 +475,9 @@ class _AppToastViewState extends State<_AppToastView>
               borderRadius: BorderRadius.circular(10),
               child: InkWell(
                 borderRadius: BorderRadius.circular(10),
-                onTap: _close,
+                // A loading toast is dismissed by the work that raised it, not
+                // by a tap: dismissing it early would hide that it is running.
+                onTap: isLoading ? null : _close,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -443,7 +487,20 @@ class _AppToastViewState extends State<_AppToastView>
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (icon != null) ...[
+                      if (isLoading) ...[
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: Padding(
+                            padding: const EdgeInsets.all(2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: contentColor,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                      ] else if (icon != null) ...[
                         Icon(icon, size: 20, color: contentColor),
                         const SizedBox(width: 10),
                       ],

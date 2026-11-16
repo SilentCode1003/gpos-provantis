@@ -1,4 +1,5 @@
 import 'dart:isolate';
+import 'dart:typed_data';
 
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:image/image.dart' as img;
@@ -13,6 +14,7 @@ import 'package:gpos_provantis/src/core/database/providers/settings_dao_provider
 import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/pos_config_dao_provider.dart';
 import 'package:gpos_provantis/src/services/printing/bluetooth_printing.dart';
+import 'package:gpos_provantis/src/services/printing/integrated_printing.dart';
 import 'package:gpos_provantis/src/services/printing/usb_printing.dart';
 import 'package:gpos_provantis/src/services/printing/wifi_printing.dart';
 import 'package:gpos_provantis/src/services/printing/test_ticket.dart'
@@ -115,6 +117,7 @@ class ReceiptGenerator {
   final _wifiPrinterService = WifiPrinterService();
   final _usbPrinterService = UsbPrinterService();
   final _bluetoothPrinterService = BluetoothPrinterService();
+  final _integratedPrinterService = IntegratedPrinterService();
 
   // The byte-building helpers below are static on purpose: they run on a
   // background isolate (see _buildTicketBytesInBackground) and so must not
@@ -162,6 +165,38 @@ class ReceiptGenerator {
     final branch = await ref.read(branchConfigDaoProvider).getBranch();
     final posConfig = await ref.read(posConfigDaoProvider).getPos();
 
+    // The built-in Landi printer can't take ESC/POS bytes: it wants a plain
+    // text receipt plus an optional logo image, so it gets its own path.
+    if (printer.connectionType == IntegratedPrinterService.connectionType) {
+      final logo = await decodeBranchLogo(
+        branch?.logo ?? '',
+        maxWidthPx: 250,
+        maxHeightPx: 250,
+      );
+      final text = _buildIntegratedText(
+        sale: sale,
+        settings: settings,
+        serialNumber: posConfig?.serial ?? '',
+        branchName: branch?.branchName ?? 'UNREGISTERED',
+        branchAddress: branch?.address ?? '',
+      );
+      try {
+        await _integratedPrinterService.printReceipt(
+          text: text,
+          logoPng: logo == null
+              ? null
+              : Uint8List.fromList(img.encodePng(logo)),
+          printer: printer,
+        );
+      } catch (e) {
+        // The service's messages are already written for the cashier.
+        throw ReceiptPrintException(
+          e.toString().replaceFirst('Exception: ', ''),
+        );
+      }
+      return;
+    }
+
     // Needs the asset bundle, so it must be loaded here on the main isolate.
     final profile = await CapabilityProfile.load();
 
@@ -185,7 +220,7 @@ class ReceiptGenerator {
       logo: logo,
     );
 
-    await _sendToPrinter(printer, bytes);
+    await sendToPrinter(printer, bytes);
   }
 
   static List<int> _buildTicketBytes({
@@ -485,6 +520,156 @@ class ReceiptGenerator {
     return bytes;
   }
 
+  /// The same receipt as [_buildTicketBytes], as plain fixed-width text for the
+  /// built-in Landi printer (which does its own layout and has no bold/size
+  /// control). Keep the two in step when the receipt content changes.
+  ///
+  /// Cheap string work, so unlike the ESC/POS version it stays on the main
+  /// isolate.
+  static String _buildIntegratedText({
+    required ReceiptSaleData sale,
+    required SettingsDto settings,
+    required String serialNumber,
+    required String branchName,
+    required String branchAddress,
+  }) {
+    const layout = ReceiptTextLayout(IntegratedPrinterService.columns);
+    final lines = <String>[];
+
+    void add(String text) => lines.addAll(layout.wrap(text));
+    void center(String text) => lines.addAll(layout.center(text));
+    void rule([String char = '-']) => lines.add(layout.hr(char));
+    void amount(String label, double value) =>
+        lines.addAll(layout.leftRight(label, _formatCurrency(value)));
+    // Same as the narrow-paper layout of _kv: one line each, left aligned.
+    void kv(
+      String leftLabel,
+      String leftValue,
+      String rightLabel,
+      String rightValue, {
+      bool reversedRight = false,
+    }) {
+      add('$leftLabel: $leftValue');
+      add(
+        reversedRight ? '$rightValue:$rightLabel' : '$rightLabel: $rightValue',
+      );
+    }
+
+    // (The logo is sent as an image by the caller, before this text.)
+    center(branchName);
+    lines.add('');
+    if (branchAddress.trim().isNotEmpty) center(branchAddress);
+    if (settings.birAccredited) {
+      center('VAT REG TIN: ${settings.vatReg}');
+    }
+
+    rule();
+
+    kv('OR', sale.detailId, 'DATE', _formatDate(sale.dateTime));
+
+    if (sale.paymentType == 'EPAYMENT' || sale.paymentType == 'SPLIT') {
+      kv('REF#', sale.referenceId, 'TYPE', sale.paymentName);
+    }
+    if (sale.paymentType == 'E2E') {
+      kv('REF#', sale.referenceId, 'TYPE', sale.paymentName);
+      kv('REF#', sale.secondReferenceId, 'TYPE', sale.secondPaymentName);
+    }
+
+    add('PAYMENT TYPE: ${sale.paymentType}');
+
+    rule();
+
+    kv('CASHIER', sale.cashier, 'STAFF', sale.cashier, reversedRight: true);
+    kv('POS', sale.posId, 'SHIFT', sale.shift, reversedRight: true);
+    kv('SN#', serialNumber, 'BRANCH', sale.branchId, reversedRight: true);
+
+    rule();
+
+    for (final item in sale.items) {
+      // Quantity first, so a long name that wraps can't strand the quantity
+      // on a line of its own.
+      lines.addAll(
+        layout.leftRight(
+          '${item.quantity} x ${item.name}',
+          _formatCurrency(item.lineTotal),
+        ),
+      );
+    }
+
+    rule();
+    center('--Total Items ${sale.totalItemCount}--');
+    rule();
+
+    amount('TOTAL AMOUNT', sale.total);
+
+    if (sale.discountLabel != null) {
+      amount('DISCOUNT (${sale.discountLabel})', -sale.discountAmount);
+    }
+
+    if (sale.paymentType == 'CASH' || sale.paymentType == 'SPLIT') {
+      amount('CASH', sale.cash);
+    }
+    if (sale.paymentType == 'EPAYMENT') {
+      amount(sale.paymentName, sale.cash);
+    }
+    if (sale.paymentType == 'SPLIT') {
+      amount(sale.paymentName, sale.ecash);
+    }
+    if (sale.paymentType == 'E2E') {
+      amount(sale.paymentName, sale.ecash);
+      amount(sale.secondPaymentName, sale.secondAmount);
+    }
+
+    amount('CHANGE', sale.changeDue);
+
+    if (settings.showVatOnReceipt) {
+      final vatable = double.parse((sale.total / 1.12).toStringAsFixed(2));
+      final vatAmount = sale.total - vatable;
+      amount('Vatable', vatable);
+      amount('VAT Amount', vatAmount);
+      amount('VAT Exempt', 0);
+      amount('Zero Rated', 0);
+
+      rule();
+      // Label, then a full line to write on (a 32-column line is too short to
+      // hold both).
+      for (final label in const [
+        'Customer Name:',
+        'Customer Address:',
+        'Customer TIN:',
+        'Business Type:',
+      ]) {
+        add(label);
+        rule('_');
+      }
+    }
+
+    if (settings.birAccredited) {
+      rule();
+      center(settings.companyName);
+      center(settings.address);
+      center('VAT REG: ${settings.vatReg}');
+      center('ACCREDITATION NO: ${settings.accreditationNo}');
+      center('VALID UNTIL: ${settings.validUntil}');
+      center('PTU: ${settings.permitToUse}');
+    }
+
+    if (settings.showOfficialReceiptMessageAtTheBottom) {
+      lines.add('');
+      // Two dashes each side, not three: with three it is 33 characters and
+      // would not fit on one 32-character line.
+      center('--THIS IS AN OFFICIAL RECEIPT--');
+    }
+
+    if (sale.isReprint) {
+      lines.add('');
+      center('*** REPRINT ***');
+    }
+
+    // Trailing blank lines push the receipt past the tear bar.
+    return '${lines.join('\n')}\n\n\n\n';
+  }
+
   static List<int> _kv(
     Generator ticket,
     bool wide,
@@ -559,7 +744,7 @@ class ReceiptGenerator {
         '${twoDigits(dateTime.hour)}:${twoDigits(dateTime.minute)}';
   }
 
-  Future<void> _sendToPrinter(PrinterDto printer, List<int> bytes) async {
+  Future<void> sendToPrinter(PrinterDto printer, List<int> bytes) async {
     switch (printer.connectionType) {
       case 'WIFI':
         try {
@@ -611,6 +796,16 @@ class ReceiptGenerator {
           );
         }
         break;
+
+      case 'INTEGRATED':
+        // The Landi SDK takes text, not ESC/POS bytes, so a byte-based ticket
+        // can't be sent here. Receipts go through printForSale's own path; any
+        // other ticket type needs a text version built like
+        // _buildIntegratedText.
+        throw ReceiptPrintException(
+          'Printer "${printer.name}" is the built-in printer, which can '
+          'only print receipts for now.',
+        );
 
       default:
         throw ReceiptPrintException(
