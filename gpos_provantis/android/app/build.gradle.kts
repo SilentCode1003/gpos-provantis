@@ -35,10 +35,21 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+
+            // Keeps the Landi SDK (reached by reflection) from being stripped.
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Landi built-in printer SDK. The file lives in android/app/libs/.
+    implementation(files("libs/LandiPrinterSDK.aar"))
 }

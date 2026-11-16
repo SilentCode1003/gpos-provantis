@@ -12,6 +12,7 @@ import 'package:gpos_provantis/src/core/database/providers/settings_dao_provider
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import '../screens/settings_shared.dart';
 import 'package:gpos_provantis/src/services/printing/bluetooth_printing.dart';
+import 'package:gpos_provantis/src/services/printing/integrated_printing.dart';
 import 'package:gpos_provantis/src/services/printing/usb_printing.dart';
 import 'package:gpos_provantis/src/services/printing/wifi_printing.dart';
 import 'package:flutter_thermal_printer/utils/printer.dart';
@@ -20,6 +21,7 @@ IconData _connectionTypeIcon(String type) => switch (type) {
   'BLUETOOTH' => Icons.bluetooth_rounded,
   'WIFI' => Icons.wifi_rounded,
   'USB' => Icons.usb_rounded,
+  'INTEGRATED' => Icons.point_of_sale_rounded,
   _ => Icons.print_outlined,
 };
 
@@ -53,6 +55,7 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
   final _usbPrinterService = UsbPrinterService();
   final _bluetoothPrinterService = BluetoothPrinterService();
   final _wifiPrinterService = WifiPrinterService();
+  final _integratedPrinterService = IntegratedPrinterService();
 
   Future<void> _openAddPrinterSheet() async {
     final result = await showModalBottomSheet<PrinterDto>(
@@ -175,6 +178,8 @@ class _PrintersPanelState extends ConsumerState<PrintersPanel> {
           await _wifiPrinterService.printTestPage(printer);
         case 'BLUETOOTH':
           await _bluetoothPrinterService.printTestPage(printer);
+        case 'INTEGRATED':
+          await _integratedPrinterService.printTestPage(printer);
         default:
           throw Exception('Unknown connection type: ${printer.connectionType}');
       }
@@ -423,7 +428,7 @@ class _PrinterRow extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '${_connectionLabel(printer.connectionType)} · '
-                      '${printer.address} · ${printer.paperSize}mm'
+                      '${_addressText(printer)} · ${printer.paperSize}mm'
                       '${printer.hasCashDrawer ? ' · Cash drawer' : ''}',
                       style: AppTypography.ui(
                         fontSize: 13,
@@ -466,8 +471,15 @@ String _connectionLabel(String type) => switch (type) {
   'BLUETOOTH' => 'Bluetooth',
   'WIFI' => 'Wi-Fi',
   'USB' => 'USB',
+  'INTEGRATED' => 'Built-in',
   _ => type,
 };
+
+/// What to show as the printer's "address". The built-in printer has none.
+String _addressText(PrinterDto printer) =>
+    printer.connectionType == IntegratedPrinterService.connectionType
+    ? 'This device'
+    : printer.address;
 
 class _AddPrinterSlot extends StatelessWidget {
   const _AddPrinterSlot({required this.onTap});
@@ -865,7 +877,7 @@ class _PrinterPickerSheet extends StatelessWidget {
                       title: printer.name,
                       subtitle:
                           '${_connectionLabel(printer.connectionType)} · '
-                          '${printer.address}',
+                          '${_addressText(printer)}',
                       selected: printer.id == selectedId,
                       onTap: () =>
                           Navigator.of(context).pop(_PickResult(printer.id)),
@@ -971,7 +983,7 @@ class _PickerTile extends StatelessWidget {
   }
 }
 
-const _connectionTypes = ['BLUETOOTH', 'WIFI', 'USB'];
+const _connectionTypes = ['BLUETOOTH', 'WIFI', 'USB', 'INTEGRATED'];
 const _paperSizes = ['58', '72', '80'];
 
 class _PrinterFormSheet extends ConsumerStatefulWidget {
@@ -1024,8 +1036,12 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
     'BLUETOOTH' => 'Bluetooth device',
     'WIFI' => 'IP address',
     'USB' => 'Device path / port',
+    'INTEGRATED' => 'Printer',
     _ => 'Address',
   };
+
+  bool get _isIntegrated =>
+      _connectionType == IntegratedPrinterService.connectionType;
 
   String get _addressHint => switch (_connectionType) {
     'BLUETOOTH' => '00:11:22:33:44:55',
@@ -1088,11 +1104,14 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
   void _submit() {
     final formValid = _formKey.currentState!.validate();
     final addressMissing = _addressController.text.trim().isEmpty;
+    // The built-in printer is a fixed 58 mm head with nothing to address, so
+    // neither field is asked for.
+    final paperSize = _isIntegrated ? '58' : _paperSize;
     setState(() {
       _showConnectionError = _connectionType == null;
-      _showPaperSizeError = _paperSize == null;
+      _showPaperSizeError = paperSize == null;
     });
-    if (!formValid || _connectionType == null || _paperSize == null) return;
+    if (!formValid || _connectionType == null || paperSize == null) return;
     if (_usesScanner && addressMissing) {
       setState(() {});
       return;
@@ -1104,8 +1123,10 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
           DateTime.now().microsecondsSinceEpoch.toString(),
       name: _nameController.text.trim(),
       connectionType: _connectionType!,
-      address: _addressController.text.trim(),
-      paperSize: _paperSize!,
+      address: _isIntegrated
+          ? IntegratedPrinterService.defaultAddress
+          : _addressController.text.trim(),
+      paperSize: paperSize,
       isEnabled: _isEnabled,
       hasCashDrawer: _hasCashDrawer,
     );
@@ -1203,10 +1224,9 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
 
                     const _FieldLabel('Connection type'),
                     const SizedBox(height: Space.sm),
-                    SegmentedTouchControl(
+                    _ConnectionTypeGrid(
                       options: _connectionTypes,
                       selected: _connectionType,
-                      iconFor: _connectionTypeIcon,
                       onSelected: (value) {
                         final changed = value != _connectionType;
                         setState(() {
@@ -1218,6 +1238,10 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
                             _addressController.clear();
                             _selectedUsbDevice = null;
                             _selectedBleDevice = null;
+                          }
+                          if (_isIntegrated &&
+                              _nameController.text.trim().isEmpty) {
+                            _nameController.text = 'Built-in printer';
                           }
                         });
                         final usbScan = ref.read(
@@ -1278,6 +1302,8 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
                           });
                         },
                       )
+                    else if (_isIntegrated)
+                      const _IntegratedPrinterNote()
                     else
                       _TouchTextField(
                         controller: _addressController,
@@ -1300,22 +1326,24 @@ class _PrinterFormSheetState extends ConsumerState<_PrinterFormSheet> {
                     ],
                     const SizedBox(height: Space.xxl),
 
-                    const _FieldLabel('Paper size'),
-                    const SizedBox(height: Space.sm),
-                    SegmentedTouchControl(
-                      options: _paperSizes,
-                      selected: _paperSize,
-                      labelFor: (size) => '${size}mm',
-                      onSelected: (value) => setState(() {
-                        _paperSize = value;
-                        _showPaperSizeError = false;
-                      }),
-                    ),
-                    if (_showPaperSizeError) ...[
+                    if (!_isIntegrated) ...[
+                      const _FieldLabel('Paper size'),
                       const SizedBox(height: Space.sm),
-                      const _ErrorText('Select a paper size'),
+                      SegmentedTouchControl(
+                        options: _paperSizes,
+                        selected: _paperSize,
+                        labelFor: (size) => '${size}mm',
+                        onSelected: (value) => setState(() {
+                          _paperSize = value;
+                          _showPaperSizeError = false;
+                        }),
+                      ),
+                      if (_showPaperSizeError) ...[
+                        const SizedBox(height: Space.sm),
+                        const _ErrorText('Select a paper size'),
+                      ],
+                      const SizedBox(height: Space.xxl),
                     ],
-                    const SizedBox(height: Space.xxl),
 
                     _ToggleRow(
                       title: 'Enabled',
@@ -1546,6 +1574,131 @@ class _ScanDevicePicker extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Connection type picker. Two tiles per row on a phone and four in a row when
+/// there is room, so labels never have to shrink to fit.
+class _ConnectionTypeGrid extends StatelessWidget {
+  const _ConnectionTypeGrid({
+    required this.options,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final List<String> options;
+  final String? selected;
+  final ValueChanged<String> onSelected;
+
+  /// Below this width a row holds two tiles instead of four.
+  static const _fourAcrossFrom = 480.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final perRow = constraints.maxWidth >= _fourAcrossFrom
+            ? options.length
+            : 2;
+        final tileWidth =
+            (constraints.maxWidth - Space.md * (perRow - 1)) / perRow;
+
+        return Wrap(
+          spacing: Space.md,
+          runSpacing: Space.md,
+          children: [
+            for (final option in options)
+              SizedBox(
+                width: tileWidth,
+                child: Material(
+                  color: option == selected
+                      ? colors.primary
+                      : colors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(14),
+                  child: InkWell(
+                    onTap: () => onSelected(option),
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      height: 76,
+                      padding: const EdgeInsets.symmetric(horizontal: Space.sm),
+                      alignment: Alignment.center,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _connectionTypeIcon(option),
+                            size: 26,
+                            color: option == selected
+                                ? colors.onPrimary
+                                : colors.textSecondary,
+                          ),
+                          const SizedBox(height: Space.xs),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              _connectionLabel(option),
+                              maxLines: 1,
+                              style: AppTypography.ui(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: option == selected
+                                    ? colors.onPrimary
+                                    : colors.textPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Shown instead of the address field for the printer built into the device.
+class _IntegratedPrinterNote extends StatelessWidget {
+  const _IntegratedPrinterNote();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Container(
+      padding: const EdgeInsets.all(Space.md),
+      decoration: BoxDecoration(
+        color: colors.surfaceVariant,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info_outline_rounded,
+            size: 20,
+            color: colors.textSecondary,
+          ),
+          const SizedBox(width: Space.md),
+          Expanded(
+            child: Text(
+              'Uses the printer built into this device (Landi handheld POS). '
+              'No address or paper size is needed — it prints at 58mm.',
+              style: AppTypography.ui(
+                fontSize: 14,
+                height: 1.4,
+                color: colors.textSecondary,
+              ),
+            ),
+          ),
         ],
       ),
     );
