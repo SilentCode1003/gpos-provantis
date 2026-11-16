@@ -50,6 +50,7 @@ import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
         ReceiptLineItem,
         receiptGeneratorProvider;
 import 'package:gpos_provantis/src/core/printutil/order_slip_generator.dart';
+import 'package:gpos_provantis/src/core/printutil/print_queue.dart';
 import 'package:gpos_provantis/src/shared/widgets/toast_emitter.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/widgets/dashboardWidgets/others_sheet/denomination_count_sheet.dart'
     show DenominationCountResult;
@@ -1748,9 +1749,9 @@ class DashboardController extends _$DashboardController {
   ///
   /// Also the one place a failed sale is announced, so every payment method
   /// reports failure the same way. (Success is announced by
-  /// [_printReceiptAndAnnounce], because only that step knows whether the
-  /// receipt printed.) The exception is still rethrown so the payment modal
-  /// can release its lock and stay open for a retry.
+  /// [_announceSaleAndPrintInBackground], right after the sale is saved.) The
+  /// exception is still rethrown so the payment modal can release its lock and
+  /// stay open for a retry.
   Future<void> _runSaleOnce(Future<void> Function() saveSale) async {
     final toast = ref.read(toastEmitterProvider);
     final postSale = ref.read(postTransactionSyncProvider);
@@ -1812,55 +1813,105 @@ class DashboardController extends _$DashboardController {
     }
   }
 
-  /// Prints the receipt of a sale that is ALREADY saved, then tells the
-  /// cashier how it went.
+  /// Announces a sale that is ALREADY saved, then hands everything that
+  /// touches a printer (cash drawer, receipt, order slip) to the background
+  /// [PrintQueue] and returns without waiting for it.
   ///
-  /// A print problem is reported here instead of thrown: the sale is done and
-  /// the cart is cleared, so surfacing it as a failed payment would invite the
-  /// cashier to ring the same sale up twice.
-  Future<void> _printReceiptAndAnnounce({
+  /// Printing used to be awaited inside the sale, so an offline printer kept
+  /// the cashier on the payment screen for the length of the connection
+  /// timeout. Now the sale is completed and announced immediately; the queue
+  /// shows a "Printing…" indicator while it works and reports a problem
+  /// afterwards.
+  ///
+  /// A print problem is reported as a warning instead of thrown: the sale is
+  /// done and the cart is cleared, so surfacing it as a failed payment would
+  /// invite the cashier to ring the same sale up twice.
+  ///
+  /// Order inside the queue is the same as before: cash drawer, then receipt,
+  /// then (once the queue is free again) the order slip.
+  ///
+  /// Everything the background job needs is read from `ref` HERE, before the
+  /// job runs: this controller can be disposed by then, and `ref` must not be
+  /// touched afterwards (see _resolveShiftKey).
+  Future<void> _announceSaleAndPrintInBackground({
     required ToastEmitter toast,
     required String detailId,
     required double total,
-    required Future<void> Function() printReceipt,
+    required ReceiptSaleData receipt,
+    required bool openDrawer,
   }) async {
-    final label = 'Sale #$detailId (₱${total.toStringAsFixed(2)})';
-    try {
-      await printReceipt();
-      toast.success('$label completed.');
-    } catch (e, st) {
-      debugPrint('Sale $detailId saved but the receipt did not print: $e\n$st');
-      toast.warning(
-        '$label was recorded, but the receipt did not print: '
-        '${_describeErrorSentence(e)} Do not ring it up again; use RE-PRINT.',
-      );
-    }
-  }
+    toast.success('Sale #$detailId (₱${total.toStringAsFixed(2)}) completed.');
 
-  /// Pops the cash drawer for a sale that took cash.
-  ///
-  /// Does nothing unless an enabled printer has a cash drawer (printer
-  /// settings). A problem is reported here instead of thrown, for the same
-  /// reason as [_printReceiptAndAnnounce]: the sale is already saved, so it
-  /// must not look like a failed payment.
-  Future<void> _openCashDrawerAfterSale({
-    required ToastEmitter toast,
-    required String detailId,
-  }) async {
-    // ref.read happens before the await (see _resolveShiftKey for why).
-    final opener = ref.read(cashDrawerOpenerProvider);
-    try {
-      if (!await isCashDrawerEnabled()) return;
-      await opener.open();
-    } catch (e, st) {
-      debugPrint(
-        'Sale $detailId saved but the cash drawer did not open: $e\n$st',
-      );
-      toast.warning(
-        'Sale #$detailId was recorded, but the cash drawer did not open: '
-        '${_describeErrorSentence(e)}',
-      );
+    final queue = ref.read(printQueueProvider.notifier);
+    final receiptGenerator = ref.read(receiptGeneratorProvider);
+    final orderSlips = ref.read(orderSlipGeneratorProvider);
+    final drawerOpener = ref.read(cashDrawerOpenerProvider);
+
+    // Only a local database read, so it stays in the sale path; the slow part
+    // (talking to the printer) happens in the queued job below.
+    var drawerEnabled = false;
+    if (openDrawer) {
+      try {
+        drawerEnabled = await isCashDrawerEnabled();
+      } catch (e, st) {
+        debugPrint(
+          'Sale $detailId saved but the cash drawer setting could not be '
+          'read: $e\n$st',
+        );
+        toast.warning(
+          'Sale #$detailId was recorded, but the cash drawer did not open: '
+          '${_describeErrorSentence(e)}',
+        );
+      }
     }
+
+    final job = queue.enqueue(
+      label: 'Sale #$detailId',
+      run: () async {
+        // Cash was taken, so pop the drawer before the receipt starts
+        // printing (both go to the same printer, one after the other).
+        if (drawerEnabled) {
+          try {
+            await drawerOpener.open();
+          } catch (e, st) {
+            debugPrint(
+              'Sale $detailId saved but the cash drawer did not open: '
+              '$e\n$st',
+            );
+            toast.warning(
+              'Sale #$detailId was recorded, but the cash drawer did not '
+              'open: ${_describeErrorSentence(e)}',
+            );
+          }
+        }
+
+        try {
+          await receiptGenerator.printForSale(receipt);
+        } catch (e, st) {
+          debugPrint(
+            'Sale $detailId saved but the receipt did not print: $e\n$st',
+          );
+          toast.warning(
+            'Sale #$detailId was recorded, but the receipt did not print: '
+            '${_describeErrorSentence(e)} Do not ring it up again; use '
+            'RE-PRINT.',
+          );
+        }
+      },
+    );
+
+    // Order slip on the sub printer, per the Order Slip setting (off / auto /
+    // ask). Runs after the receipt, as before, but outside the queue so it
+    // can never hold up the next receipt. Never throws: the sale is already
+    // saved.
+    unawaited(() async {
+      await job;
+      try {
+        await orderSlips.handleAfterSale(OrderSlipData.fromSale(receipt));
+      } catch (e, st) {
+        debugPrint('Sale $detailId: order slip step threw: $e\n$st');
+      }
+    }());
   }
 
   Future<void> createSaleFromCash() => _runSaleOnce(_createSaleFromCash);
@@ -1930,10 +1981,6 @@ class DashboardController extends _$DashboardController {
     clearCart();
     clearDiscount();
 
-    // Cash was taken, so pop the drawer before the receipt starts printing
-    // (both go to the same printer, so they are sent one after the other).
-    await _openCashDrawerAfterSale(toast: toast, detailId: detailId);
-
     final receipt = _receiptDataFromCheckout(
       state: saleState,
       detailId: detailId,
@@ -1948,18 +1995,15 @@ class DashboardController extends _$DashboardController {
       paymentName: 'CASH',
     );
 
-    await _printReceiptAndAnnounce(
+    // Cash was taken, so the drawer pops (in the background, before the
+    // receipt prints).
+    await _announceSaleAndPrintInBackground(
       toast: toast,
       detailId: detailId,
       total: total,
-      printReceipt: () =>
-          ref.read(receiptGeneratorProvider).printForSale(receipt),
+      receipt: receipt,
+      openDrawer: true,
     );
-    // Order slip on the sub printer, per the Order Slip setting (off / auto /
-    // ask). Never throws: the sale is already saved.
-    await ref
-        .read(orderSlipGeneratorProvider)
-        .handleAfterSale(OrderSlipData.fromSale(receipt));
   }
 
   Future<void> createSaleFromEPayment(PaymentState paymentState) =>
@@ -2029,18 +2073,13 @@ class DashboardController extends _$DashboardController {
       paymentName: method.label,
     );
 
-    await _printReceiptAndAnnounce(
+    await _announceSaleAndPrintInBackground(
       toast: toast,
       detailId: detailId,
       total: total,
-      printReceipt: () =>
-          ref.read(receiptGeneratorProvider).printForSale(receipt),
+      receipt: receipt,
+      openDrawer: false,
     );
-    // Order slip on the sub printer, per the Order Slip setting (off / auto /
-    // ask). Never throws: the sale is already saved.
-    await ref
-        .read(orderSlipGeneratorProvider)
-        .handleAfterSale(OrderSlipData.fromSale(receipt));
   }
 
   Future<void> createSaleFromCashEPaymentSplit(PaymentState paymentState) =>
@@ -2132,11 +2171,6 @@ class DashboardController extends _$DashboardController {
     clearCart();
     clearDiscount();
 
-    // Only the cash part touches the drawer; skipped if the cash slot was 0.
-    if (cashAmount > 0) {
-      await _openCashDrawerAfterSale(toast: toast, detailId: detailId);
-    }
-
     final receipt = _receiptDataFromCheckout(
       state: saleState,
       detailId: detailId,
@@ -2151,18 +2185,14 @@ class DashboardController extends _$DashboardController {
       paymentName: paymentName,
     );
 
-    await _printReceiptAndAnnounce(
+    // Only the cash part touches the drawer; skipped if the cash slot was 0.
+    await _announceSaleAndPrintInBackground(
       toast: toast,
       detailId: detailId,
       total: total,
-      printReceipt: () =>
-          ref.read(receiptGeneratorProvider).printForSale(receipt),
+      receipt: receipt,
+      openDrawer: cashAmount > 0,
     );
-    // Order slip on the sub printer, per the Order Slip setting (off / auto /
-    // ask). Never throws: the sale is already saved.
-    await ref
-        .read(orderSlipGeneratorProvider)
-        .handleAfterSale(OrderSlipData.fromSale(receipt));
   }
 
   /// A sale paid with two e-payments (e.g. GCASH + BANK TRANSFER).
@@ -2265,18 +2295,13 @@ class DashboardController extends _$DashboardController {
       secondAmount: secondAmount,
     );
 
-    await _printReceiptAndAnnounce(
+    await _announceSaleAndPrintInBackground(
       toast: toast,
       detailId: detailId,
       total: total,
-      printReceipt: () =>
-          ref.read(receiptGeneratorProvider).printForSale(receipt),
+      receipt: receipt,
+      openDrawer: false,
     );
-    // Order slip on the sub printer, per the Order Slip setting (off / auto /
-    // ask). Never throws: the sale is already saved.
-    await ref
-        .read(orderSlipGeneratorProvider)
-        .handleAfterSale(OrderSlipData.fromSale(receipt));
   }
 }
 
