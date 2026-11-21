@@ -9,6 +9,8 @@ import 'package:gpos_provantis/src/core/database/domain/settings_dto.dart';
 import 'package:gpos_provantis/src/core/database/providers/printer_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/settings_dao_provider.dart';
 import 'package:gpos_provantis/src/services/printing/bluetooth_printing.dart';
+import 'package:gpos_provantis/src/services/printing/integrated_printing.dart'
+    show IntegratedPrinterService, ReceiptTextLayout;
 import 'package:gpos_provantis/src/services/printing/usb_printing.dart';
 import 'package:gpos_provantis/src/services/printing/wifi_printing.dart';
 import 'package:gpos_provantis/src/services/printing/test_ticket.dart'
@@ -90,6 +92,7 @@ class CashDropGenerator {
   final _wifiPrinterService = WifiPrinterService();
   final _usbPrinterService = UsbPrinterService();
   final _bluetoothPrinterService = BluetoothPrinterService();
+  final _integratedPrinterService = IntegratedPrinterService();
 
   String _formatCurrency(double value) => toCurrencyString(value.toString());
 
@@ -101,6 +104,14 @@ class CashDropGenerator {
     PrinterRole role = PrinterRole.main,
   }) async {
     final printer = await _resolvePrinter(role);
+
+    // The built-in Landi printer doesn't take ESC/POS bytes: it takes plain
+    // text and lays it out itself, so it gets its own path.
+    if (printer.connectionType == IntegratedPrinterService.connectionType) {
+      await _printOnIntegrated(printer, slip);
+      return;
+    }
+
     final paper = parsePaperSize(printer.paperSize);
     final profile = await CapabilityProfile.load();
 
@@ -321,6 +332,57 @@ class CashDropGenerator {
         ),
       ]),
     ];
+  }
+
+  Future<void> _printOnIntegrated(
+    PrinterDto printer,
+    CashDropSlipData slip,
+  ) async {
+    final text = _buildSlipText(slip);
+    try {
+      // Trailing blank lines push the slip past the tear bar (same as the
+      // integrated printer's test page).
+      await _integratedPrinterService.printReceipt(
+        text: '$text\n\n\n\n',
+        printer: printer,
+      );
+    } catch (e) {
+      // IntegratedPrinterService throws plain Exceptions with a message that is
+      // already fit to show; re-wrap so callers only ever see ReceiptPrintException.
+      throw ReceiptPrintException(
+        e.toString().replaceFirst(RegExp(r'^Exception:\s*'), ''),
+      );
+    }
+  }
+
+  /// Plain-text version of the CASH DROP SLIP for the built-in (Landi) printer: the
+  /// same content as [_buildSlipBytes], laid out for 32 characters per line.
+  String _buildSlipText(CashDropSlipData slip) {
+    const layout = ReceiptTextLayout(IntegratedPrinterService.columns);
+    final lines = <String>[
+      if (slip.isReprint) ...layout.center('**REPRINT**'),
+      ...layout.center('CASH DROP SLIP'),
+      layout.hr(),
+      // One pair per line, like the 58mm ESC/POS layout.
+      ...layout.wrap('CASHIER: ${slip.cashier}'),
+      ...layout.wrap('BRANCH: ${slip.branchId}'),
+      ...layout.wrap('SHIFT: ${slip.shift}'),
+      ...layout.wrap('POS ID: ${slip.posId}'),
+      layout.hr(),
+      ...layout.center('DATE: ${slip.shiftDate}'),
+      layout.hr(),
+      ...layout.leftRight('DESC  QTY x VALUE', 'TOTAL'),
+      layout.hr(),
+      for (final line in slip.lines)
+        // A long label wraps; the amount sits on its last line.
+        ...layout.leftRight(
+          '${line.label}  ${line.quantity} x ${line.value}',
+          _formatCurrency(line.lineTotal),
+        ),
+      layout.hr(),
+      ...layout.leftRight('TOTAL', _formatCurrency(slip.total)),
+    ];
+    return lines.join('\n');
   }
 
   Future<void> _sendToPrinter(PrinterDto printer, List<int> bytes) async {

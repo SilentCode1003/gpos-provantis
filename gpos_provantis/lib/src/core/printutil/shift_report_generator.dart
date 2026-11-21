@@ -1,4 +1,5 @@
 import 'dart:isolate';
+import 'dart:typed_data';
 
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:image/image.dart' as img;
@@ -13,6 +14,8 @@ import 'package:gpos_provantis/src/core/database/providers/settings_dao_provider
 import 'package:gpos_provantis/src/core/database/providers/branch_config_dao_provider.dart';
 import 'package:gpos_provantis/src/core/database/providers/pos_config_dao_provider.dart';
 import 'package:gpos_provantis/src/services/printing/bluetooth_printing.dart';
+import 'package:gpos_provantis/src/services/printing/integrated_printing.dart'
+    show IntegratedPrinterService, ReceiptTextLayout;
 import 'package:gpos_provantis/src/services/printing/usb_printing.dart';
 import 'package:gpos_provantis/src/services/printing/wifi_printing.dart';
 import 'package:gpos_provantis/src/services/printing/test_ticket.dart'
@@ -140,6 +143,7 @@ class ShiftReportPrinterService {
   final _wifiPrinterService = WifiPrinterService();
   final _usbPrinterService = UsbPrinterService();
   final _bluetoothPrinterService = BluetoothPrinterService();
+  final _integratedPrinterService = IntegratedPrinterService();
 
   // The byte-building helpers below are static on purpose: they run on a
   // background isolate (see _buildReportBytesInBackground) and so must not
@@ -187,14 +191,29 @@ class ShiftReportPrinterService {
     final branch = await ref.read(branchConfigDaoProvider).getBranch();
     final posConfig = await ref.read(posConfigDaoProvider).getPos();
 
-    // Needs the asset bundle, so it must be loaded here on the main isolate.
-    final profile = await CapabilityProfile.load();
-
     final logo = await decodeBranchLogo(
       branch?.logo ?? '',
       maxWidthPx: 250,
       maxHeightPx: 250,
     );
+
+    // The built-in Landi printer doesn't take ESC/POS bytes: it takes plain
+    // text (plus an optional PNG logo) and lays it out itself. The text is
+    // cheap to build, so there is no background isolate on this path.
+    if (printer.connectionType == IntegratedPrinterService.connectionType) {
+      final text = buildReportText(
+        report: report,
+        settings: settings,
+        serialNumber: posConfig?.serial ?? '',
+        branchName: branch?.branchName ?? 'UNREGISTERED',
+        branchAddress: branch?.address ?? '',
+      );
+      await _printOnIntegrated(printer, text, logo);
+      return;
+    }
+
+    // Needs the asset bundle, so it must be loaded here on the main isolate.
+    final profile = await CapabilityProfile.load();
 
     // The CPU-heavy part (ESC/POS encoding, logo rasterising) runs off the
     // UI thread. Database reads, the logo decode and the actual printing stay
@@ -333,6 +352,100 @@ class ShiftReportPrinterService {
     bytes += ticket.cut();
 
     return bytes;
+  }
+
+  Future<void> _printOnIntegrated(
+    PrinterDto printer,
+    String text,
+    img.Image? logo,
+  ) async {
+    try {
+      await _integratedPrinterService.printReceipt(
+        // Trailing blank lines push the report past the tear bar.
+        text: '$text\n\n\n\n',
+        logoPng: logo == null ? null : Uint8List.fromList(img.encodePng(logo)),
+        printer: printer,
+      );
+    } catch (e) {
+      // IntegratedPrinterService throws plain Exceptions with a message that is
+      // already fit to show; re-wrap so callers only ever see ReceiptPrintException.
+      throw ReceiptPrintException(
+        e.toString().replaceFirst(RegExp(r'^Exception:\s*'), ''),
+      );
+    }
+  }
+
+  /// Plain-text Z-reading for the built-in (Landi) printer: the same content
+  /// as [_buildReportBytes], laid out for 32 characters per line. The logo is
+  /// sent separately. Static and free of Ref / DAOs so it stays easy to test.
+  static String buildReportText({
+    required ShiftReportPrintData report,
+    required SettingsDto settings,
+    required String serialNumber,
+    required String branchName,
+    required String branchAddress,
+    int columns = IntegratedPrinterService.columns,
+  }) {
+    final layout = ReceiptTextLayout(columns);
+
+    List<String> lineSection(String title, List<ShiftReportLine> rows) {
+      if (rows.isEmpty) return const [];
+      return [
+        layout.hr(),
+        ...layout.center(title),
+        layout.hr(),
+        for (final row in rows)
+          // A long name wraps; the amount sits on its last line.
+          ...layout.leftRight(
+            '${row.name} x ${row.quantity}',
+            _formatCurrency(row.total),
+          ),
+      ];
+    }
+
+    List<String> amountSection(String title, List<ShiftReportAmountLine> rows) {
+      if (rows.isEmpty) return const [];
+      return [
+        layout.hr(),
+        ...layout.center(title),
+        layout.hr(),
+        for (final row in rows)
+          ...layout.leftRight(row.label, _formatCurrency(row.total)),
+      ];
+    }
+
+    final lines = <String>[
+      if (report.isReprint) ...layout.center('**REPRINT**'),
+      ...layout.center(branchName),
+      if (branchAddress.trim().isNotEmpty) ...layout.center(branchAddress),
+      if (settings.birAccredited)
+        ...layout.center('VAT REG TIN: ${settings.vatReg}'),
+      layout.hr(),
+      ...layout.center('Z-READING'),
+      '',
+      // Short values sit on the right; free-text values wrap on their own.
+      ...layout.leftRight('DATE', report.date),
+      ...layout.leftRight('POSID', '${report.posId}'),
+      ...layout.leftRight('SHIFT', '${report.shift}'),
+      ...layout.wrap('CASHIER: ${report.cashier}'),
+      ...layout.wrap('SN#: $serialNumber'),
+      ...layout.wrap('BRANCH: $branchName'),
+      layout.hr(),
+      ...layout.leftRight('SLS BEG', _formatCurrency(report.salesBeginning)),
+      ...layout.leftRight('RCPT BEG', '${report.receiptBeginning}'),
+      ...layout.leftRight('SLS END', _formatCurrency(report.salesEnding)),
+      ...layout.leftRight('RCPT END', '${report.receiptEnding}'),
+      ...lineSection('--SOLD ITEMS--', report.soldItems),
+      ...lineSection('--SOLD SERVICES--', report.soldServices),
+      ...lineSection('--SOLD PACKAGES--', report.soldPackages),
+      ...amountSection('--PAYMENTS SUMMARY--', report.paymentSummary),
+      ...amountSection('--STAFF SALES--', report.staffSales),
+      layout.hr(),
+      ...layout.center('--TOTAL SUMMARY--'),
+      layout.hr(),
+      ...layout.leftRight('TOTAL SALES', _formatCurrency(report.totalSales)),
+    ];
+    return lines.join('\n');
   }
 
   /// "DESC / QTY / TOTAL" table (wide) or "name x qty" + amount (narrow).

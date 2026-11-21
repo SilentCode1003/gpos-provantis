@@ -6,7 +6,7 @@ import 'package:image/image.dart' as img;
 import 'package:flutter_multi_formatter/formatters/formatter_utils.dart';
 import 'package:riverpod/riverpod.dart';
 
-import 'package:gpos_provantis/src/core/database/daos/printer_dao.dart';
+// import 'package:gpos_provantis/src/core/database/daos/printer_dao.dart';
 import 'package:gpos_provantis/src/core/database/domain/printer_dto.dart';
 import 'package:gpos_provantis/src/core/database/domain/settings_dto.dart';
 import 'package:gpos_provantis/src/core/database/providers/printer_dao_provider.dart';

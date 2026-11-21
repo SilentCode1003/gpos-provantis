@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:gpos_provantis/src/core/widgets/order_slip_prompt.dart';
 import 'package:gpos_provantis/src/core/theme/theme.dart';
-import '../controllers/dashboard_controller.dart';
 import '../widgets/dashboardWidgets/dashboard_constants.dart';
 import '../widgets/dashboardWidgets/dashboard_layout.dart';
 
@@ -18,12 +18,16 @@ class DashboardScreen extends ConsumerWidget {
     // already be subtracted.
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
 
-    return Scaffold(
-      backgroundColor: colors.background,
-      body: SafeArea(
-        child: isWide
-            ? const WideLayout()
-            : PhoneLayout(hideCartBar: keyboardOpen),
+    // Shows the "Print order slip?" dialog when a finished sale queues one.
+    // It lives here (a route, so below the Navigator) because it opens a dialog.
+    return OrderSlipPromptHost(
+      child: Scaffold(
+        backgroundColor: colors.background,
+        body: SafeArea(
+          child: isWide
+              ? const WideLayout()
+              : PhoneLayout(hideCartBar: keyboardOpen),
+        ),
       ),
     );
   }

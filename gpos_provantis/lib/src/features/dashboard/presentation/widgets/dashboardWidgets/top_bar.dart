@@ -19,8 +19,18 @@ import 'package:gpos_provantis/src/cleaners/synced_data_cleaner.dart';
 
 const double _topBarHeight = 100;
 
+/// Phone: one slim two-line bar (branch name over a single info line).
+const double _compactTopBarHeight = 64;
+const double _compactAvatarSize = 44;
+
+double _ringWidthFor(double size) => size < 60 ? 2.5 : 3.5;
+
 class TopBar extends ConsumerWidget {
-  const TopBar({super.key});
+  const TopBar({super.key, this.compact});
+
+  /// Slim phone version. When null it is picked automatically: compact on
+  /// screens whose shortest side is under 600dp.
+  final bool? compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,6 +39,16 @@ class TopBar extends ConsumerWidget {
     final detailID = _watchDetailID(ref);
     final shiftID = _watchShiftID(ref);
     final isShiftOpen = ref.watch(isShiftOpenProvider);
+
+    final isCompact = compact ?? MediaQuery.sizeOf(context).shortestSide < 600;
+    if (isCompact) {
+      return _CompactTopBar(
+        branchName: branchName,
+        detailId: detailID,
+        shiftId: shiftID,
+        isShiftOpen: isShiftOpen,
+      );
+    }
 
     return Container(
       width: double.infinity,
@@ -57,7 +77,7 @@ class TopBar extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 12),
-          const _ProfileMenu(),
+          const _ProfileMenu(avatarSize: _topBarTapTarget),
         ],
       ),
     );
@@ -275,7 +295,9 @@ class _InfoDivider extends StatelessWidget {
 }
 
 class _ClockStatusItem extends StatefulWidget {
-  const _ClockStatusItem();
+  const _ClockStatusItem({this.compact = false});
+
+  final bool compact;
 
   @override
   State<_ClockStatusItem> createState() => _ClockStatusItemState();
@@ -324,7 +346,180 @@ class _ClockStatusItemState extends State<_ClockStatusItem> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.compact) return _CompactStat(value: _formatted);
     return _InfoItem(label: 'Time', value: _formatted);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Compact (phone) bar
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Phone top bar: the branch name on the first line, and Time · Shift · OR
+/// number together on a single second line. FittedBox shrinks that line on
+/// very narrow screens so all three are always visible, never scrolled away.
+class _CompactTopBar extends StatelessWidget {
+  const _CompactTopBar({
+    required this.branchName,
+    required this.detailId,
+    required this.shiftId,
+    required this.isShiftOpen,
+  });
+
+  final String branchName;
+  final String detailId;
+  final String shiftId;
+  final bool isShiftOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Container(
+      width: double.infinity,
+      height: _compactTopBarHeight,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border(bottom: BorderSide(color: colors.borderSubtle)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  branchName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.display(
+                    color: colors.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const _ClockStatusItem(compact: true),
+                      const _CompactDot(),
+                      if (isShiftOpen)
+                        _CompactStat(label: 'Shift', value: shiftId)
+                      else
+                        const _CompactNoShift(),
+                      const _CompactDot(),
+                      _CompactStat(label: 'OR', value: detailId),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          const _ProfileMenu(avatarSize: _compactAvatarSize),
+        ],
+      ),
+    );
+  }
+}
+
+/// "SHIFT 12": a tiny caps label inline with its value.
+class _CompactStat extends StatelessWidget {
+  const _CompactStat({this.label, required this.value});
+
+  final String? label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Text.rich(
+      TextSpan(
+        children: [
+          if (label != null)
+            TextSpan(
+              text: '${label!.toUpperCase()} ',
+              style: AppTypography.ui(
+                color: colors.textSecondary,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.6,
+              ),
+            ),
+          TextSpan(
+            text: value,
+            style: AppTypography.ui(
+              color: colors.textPrimary,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+            ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+          ),
+        ],
+      ),
+      maxLines: 1,
+    );
+  }
+}
+
+class _CompactDot extends StatelessWidget {
+  const _CompactDot();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Container(
+      width: 3,
+      height: 3,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: colors.textDisabled,
+      ),
+    );
+  }
+}
+
+/// Small red pill that replaces the shift readout while no shift is open.
+class _CompactNoShift extends StatelessWidget {
+  const _CompactNoShift();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+      decoration: BoxDecoration(
+        color: colors.danger.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: colors.danger.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.warning_amber_rounded, size: 14, color: colors.danger),
+          const SizedBox(width: 4),
+          Text(
+            'NO ACTIVE SHIFT',
+            style: AppTypography.ui(
+              color: colors.danger,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -346,7 +541,9 @@ const double _profileMenuHeight = 176;
 const Duration _profileMenuMorphDuration = Duration(milliseconds: 260);
 
 class _ProfileMenu extends ConsumerStatefulWidget {
-  const _ProfileMenu();
+  const _ProfileMenu({required this.avatarSize});
+
+  final double avatarSize;
 
   @override
   ConsumerState<_ProfileMenu> createState() => _ProfileMenuState();
@@ -421,6 +618,7 @@ class _ProfileMenuState extends ConsumerState<_ProfileMenu>
     _isOpen = true;
     _overlayEntry = OverlayEntry(
       builder: (context) => _ProfileMenuOverlay(
+        avatarSize: widget.avatarSize,
         layerLink: _layerLink,
         controller: _controller,
         onSelected: _handleSelection,
@@ -451,18 +649,21 @@ class _ProfileMenuState extends ConsumerState<_ProfileMenu>
       child: GestureDetector(
         onTap: _toggle,
         child: Container(
-          width: _topBarTapTarget,
-          height: _topBarTapTarget,
+          width: widget.avatarSize,
+          height: widget.avatarSize,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: colors.surfaceVariant,
 
-            border: Border.all(color: borderColor, width: 3.5),
+            border: Border.all(
+              color: borderColor,
+              width: _ringWidthFor(widget.avatarSize),
+            ),
           ),
           alignment: Alignment.center,
 
-          child: const ClipOval(child: _BranchLogo()),
+          child: ClipOval(child: _BranchLogo(size: widget.avatarSize)),
         ),
       ),
     );
@@ -471,12 +672,14 @@ class _ProfileMenuState extends ConsumerState<_ProfileMenu>
 
 class _ProfileMenuOverlay extends ConsumerWidget {
   const _ProfileMenuOverlay({
+    required this.avatarSize,
     required this.layerLink,
     required this.controller,
     required this.onSelected,
     required this.onDismiss,
   });
 
+  final double avatarSize;
   final LayerLink layerLink;
   final AnimationController controller;
   final ValueChanged<_ProfileMenuAction> onSelected;
@@ -509,23 +712,15 @@ class _ProfileMenuOverlay extends ConsumerWidget {
             builder: (context, child) {
               final clampedT = _panelProgress(controller);
 
-              final width = _lerp(
-                _topBarTapTarget,
-                _profileMenuWidth,
-                clampedT,
-              );
-              final height = _lerp(
-                _topBarTapTarget,
-                _profileMenuHeight,
-                clampedT,
-              );
+              final width = _lerp(avatarSize, _profileMenuWidth, clampedT);
+              final height = _lerp(avatarSize, _profileMenuHeight, clampedT);
 
-              final radius = _lerp(_topBarTapTarget / 2, 20, clampedT);
+              final radius = _lerp(avatarSize / 2, 20, clampedT);
 
               // The health ring melts into a hairline border as the panel
               // opens, so the open menu still reads as a card on dark mode
               // (where a shadow would be invisible).
-              final borderWidth = _lerp(3.5, 1, clampedT);
+              final borderWidth = _lerp(_ringWidthFor(avatarSize), 1, clampedT);
               final ringColor = Color.lerp(
                 borderColor,
                 colors.border,
@@ -563,11 +758,7 @@ class _ProfileMenuOverlay extends ConsumerWidget {
               animation: controller,
               builder: (context, _) {
                 final clampedT = _panelProgress(controller);
-                final width = _lerp(
-                  _topBarTapTarget,
-                  _profileMenuWidth,
-                  clampedT,
-                );
+                final width = _lerp(avatarSize, _profileMenuWidth, clampedT);
 
                 final avatarOpacity = (1 - controller.value / _avatarFadeOutEnd)
                     .clamp(0.0, 1.0);
@@ -582,7 +773,7 @@ class _ProfileMenuOverlay extends ConsumerWidget {
                     if (avatarOpacity > 0)
                       Opacity(
                         opacity: avatarOpacity,
-                        child: const ClipOval(child: _BranchLogo()),
+                        child: ClipOval(child: _BranchLogo(size: avatarSize)),
                       ),
 
                     if (menuT > 0)
@@ -651,7 +842,9 @@ class _ProfileMenuOverlay extends ConsumerWidget {
 }
 
 class _BranchLogo extends ConsumerWidget {
-  const _BranchLogo();
+  const _BranchLogo({required this.size});
+
+  final double size;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -664,30 +857,30 @@ class _BranchLogo extends ConsumerWidget {
 
     final decoded = _decodeLogoBytes(rawLogo);
     if (decoded == null) {
-      return const _BranchLogoFallback();
+      return _BranchLogoFallback(size: size);
     }
 
     switch (decoded.format) {
       case _LogoFormat.svg:
         return SvgPicture.memory(
           decoded.bytes,
-          width: _topBarTapTarget,
-          height: _topBarTapTarget,
+          width: size,
+          height: size,
           fit: BoxFit.cover,
 
-          placeholderBuilder: (context) => const _BranchLogoFallback(),
+          placeholderBuilder: (context) => _BranchLogoFallback(size: size),
           errorBuilder: (context, error, stackTrace) =>
-              const _BranchLogoFallback(),
+              _BranchLogoFallback(size: size),
         );
       case _LogoFormat.raster:
         return Image.memory(
           decoded.bytes,
-          width: _topBarTapTarget,
-          height: _topBarTapTarget,
+          width: size,
+          height: size,
           fit: BoxFit.cover,
 
           errorBuilder: (context, error, stackTrace) =>
-              const _BranchLogoFallback(),
+              _BranchLogoFallback(size: size),
         );
     }
   }
@@ -741,7 +934,9 @@ _LogoFormat _sniffLogoFormat(Uint8List bytes) {
 /// Shown when the branch has no (or an unreadable) logo. It used to be a
 /// white icon on a pale grey circle, which vanished in light mode.
 class _BranchLogoFallback extends StatelessWidget {
-  const _BranchLogoFallback();
+  const _BranchLogoFallback({this.size = _topBarTapTarget});
+
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -752,7 +947,7 @@ class _BranchLogoFallback extends StatelessWidget {
       alignment: Alignment.center,
       child: Icon(
         Icons.storefront_rounded,
-        size: 34,
+        size: size * 0.47,
         color: colors.onPrimaryContainer,
       ),
     );

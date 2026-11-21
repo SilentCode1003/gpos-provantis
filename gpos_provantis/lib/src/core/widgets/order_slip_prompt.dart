@@ -40,25 +40,32 @@ class _OrderSlipPromptHostState extends ConsumerState<OrderSlipPromptHost> {
     if (queue.isEmpty) return;
 
     final request = queue.first;
+
+    // Grabbed BEFORE the dialog opens. If this screen is disposed while the
+    // prompt is still up, `ref` can no longer be used, but these still work.
+    final queueNotifier = ref.read(orderSlipPromptQueueProvider.notifier);
+    final generator = ref.read(orderSlipGeneratorProvider);
+
     _showing = true;
-
-    final shouldPrint =
-        await showDialog<bool>(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => OrderSlipPromptDialog(request: request),
-        ) ??
-        false;
-
-    // Answered either way, so it leaves the queue.
-    ref.read(orderSlipPromptQueueProvider.notifier).resolve(request);
-    _showing = false;
+    var shouldPrint = false;
+    try {
+      shouldPrint =
+          await showDialog<bool>(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => OrderSlipPromptDialog(request: request),
+          ) ??
+          false;
+    } finally {
+      // Answered either way (or the dialog failed to open), so it leaves the
+      // queue and can't block the ones behind it.
+      queueNotifier.resolve(request);
+      _showing = false;
+    }
 
     if (shouldPrint) {
       // Not awaited: the next prompt (if any) shouldn't wait on the printer.
-      unawaited(
-        ref.read(orderSlipGeneratorProvider).printConfirmed(request.data),
-      );
+      unawaited(generator.printConfirmed(request.data));
     }
 
     if (mounted) unawaited(_showNext());
