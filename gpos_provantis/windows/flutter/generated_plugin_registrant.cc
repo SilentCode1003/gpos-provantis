@@ -11,7 +11,7 @@
 #include <permission_handler_windows/permission_handler_windows_plugin.h>
 #include <restart_app/restart_app_plugin_c_api.h>
 #include <screen_retriever_windows/screen_retriever_windows_plugin_c_api.h>
-#include <sqlite3_flutter_libs/sqlite3_flutter_libs_plugin.h>
+#include <sqlcipher_flutter_libs/sqlite3_flutter_libs_plugin.h>
 #include <universal_ble/universal_ble_plugin_c_api.h>
 #include <url_launcher_windows/url_launcher_windows.h>
 #include <window_manager/window_manager_plugin.h>

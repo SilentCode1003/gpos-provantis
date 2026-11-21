@@ -40,9 +40,14 @@ class PhoneCartBar extends ConsumerWidget {
       dashboardControllerProvider.select((s) => s.itemCount),
     );
     final total = ref.watch(dashboardControllerProvider.select((s) => s.total));
+    final isShiftOpen = ref.watch(isShiftOpenProvider);
     final hasItems = itemCount > 0;
 
-    final fg = hasItems ? colors.onPrimary : colors.textDisabled;
+    // With the shift closed the bar is a locked placeholder, even if items
+    // are still in the cart: the cashier can't open the cart to charge.
+    final canOpen = hasItems && isShiftOpen;
+
+    final fg = canOpen ? colors.onPrimary : colors.textDisabled;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -68,21 +73,23 @@ class PhoneCartBar extends ConsumerWidget {
       child: SizedBox(
         height: primaryTapTarget,
         child: Material(
-          color: hasItems ? colors.primary : colors.disabledFill,
+          color: canOpen ? colors.primary : colors.disabledFill,
           borderRadius: BorderRadius.circular(16),
           child: InkWell(
-            onTap: hasItems ? () => showPhoneCartSheet(context) : null,
+            onTap: canOpen ? () => showPhoneCartSheet(context) : null,
             borderRadius: BorderRadius.circular(16),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               child: Row(
                 children: [
-                  if (hasItems)
+                  if (canOpen)
+                    // A fixed height keeps the badge from stretching to the
+                    // full height of the bar (an aligned Container fills the
+                    // Row's cross axis, which made it a tall oval). Min width
+                    // equals the height, so one digit is a true circle.
                     Container(
-                      constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
-                      ),
+                      height: 32,
+                      constraints: const BoxConstraints(minWidth: 32),
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
@@ -104,11 +111,21 @@ class PhoneCartBar extends ConsumerWidget {
                       ),
                     )
                   else
-                    Icon(PhosphorIcons.shoppingCart, size: 24, color: fg),
+                    Icon(
+                      isShiftOpen
+                          ? PhosphorIcons.shoppingCart
+                          : Icons.lock_outline_rounded,
+                      size: 24,
+                      color: fg,
+                    ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      hasItems ? 'View cart' : 'Cart is empty',
+                      !isShiftOpen
+                          ? 'Shift is closed'
+                          : hasItems
+                          ? 'View cart'
+                          : 'Cart is empty',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.ui(
@@ -118,7 +135,7 @@ class PhoneCartBar extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  if (hasItems) ...[
+                  if (canOpen) ...[
                     const SizedBox(width: 8),
                     Text(
                       formatPeso(total),

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:gpos_provantis/src/core/theme/theme.dart';
 import 'package:gpos_provantis/src/features/dashboard/presentation/controllers/dashboard_controller.dart'
-    show isShiftOpenProvider;
+    show dashboardControllerProvider, isShiftOpenProvider;
 import 'barcode_scan_bar.dart';
 import 'cart_panel.dart';
 import 'catalog_panel.dart';
@@ -34,7 +34,10 @@ class WideLayout extends StatelessWidget {
 /// collapses into a bar docked at the bottom that opens the full cart as a
 /// sheet. The product sheet slides over the catalog only, so the cart bar
 /// stays visible while items are being added.
-class PhoneLayout extends StatelessWidget {
+///
+/// With an empty cart the bar is not shown at all, so the catalog gets the
+/// full height until the first item is added.
+class PhoneLayout extends ConsumerWidget {
   const PhoneLayout({super.key, this.hideCartBar = false});
 
   /// True while the on-screen keyboard is up (the barcode field), so the
@@ -42,11 +45,15 @@ class PhoneLayout extends StatelessWidget {
   final bool hideCartBar;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasItems = ref.watch(
+      dashboardControllerProvider.select((s) => s.itemCount > 0),
+    );
+
     return Column(
       children: [
-        const Expanded(child: _CatalogPanelWithSheet()),
-        if (!hideCartBar) const PhoneCartBar(),
+        const Expanded(child: _CatalogPanelWithSheet(compactScanner: true)),
+        if (!hideCartBar && hasItems) const PhoneCartBar(),
       ],
     );
   }
@@ -73,7 +80,10 @@ class _PanelDivider extends StatelessWidget {
 }
 
 class _CatalogPanelWithSheet extends ConsumerWidget {
-  const _CatalogPanelWithSheet();
+  const _CatalogPanelWithSheet({this.compactScanner = false});
+
+  /// On phones the barcode bar collapses into a round button (bottom right).
+  final bool compactScanner;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -89,7 +99,9 @@ class _CatalogPanelWithSheet extends ConsumerWidget {
           left: 16,
           right: 16,
           bottom: 16,
-          child: isShiftOpen ? const BarcodeScanBar() : const SizedBox.shrink(),
+          child: isShiftOpen
+              ? BarcodeScanBar(compact: compactScanner)
+              : const SizedBox.shrink(),
         ),
         const CatalogSheet(),
       ],

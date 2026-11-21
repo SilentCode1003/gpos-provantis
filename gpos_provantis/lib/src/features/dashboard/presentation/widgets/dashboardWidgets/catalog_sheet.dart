@@ -139,6 +139,9 @@ class _CatalogSheetState extends ConsumerState<CatalogSheet>
             );
           },
           child: _CatalogSheetChrome(
+            // Phones: no side drag handle and no bottom Close button (the X in
+            // the header closes the sheet), so the grid gets the room.
+            compact: sheetWidth < catalogCompactMaxWidth,
             onDragStart: _onDragStart,
             onDragUpdate: (d) => _onDragUpdate(d, sheetWidth),
             onDragEnd: (d) => _onDragEnd(d, sheetWidth),
@@ -178,11 +181,14 @@ class _ScrimOverlay extends StatelessWidget {
 
 class _CatalogSheetChrome extends StatelessWidget {
   const _CatalogSheetChrome({
+    required this.compact,
     required this.onDragStart,
     required this.onDragUpdate,
     required this.onDragEnd,
   });
 
+  /// True on phones (see [catalogCompactMaxWidth]).
+  final bool compact;
   final GestureDragStartCallback onDragStart;
   final GestureDragUpdateCallback onDragUpdate;
   final GestureDragEndCallback onDragEnd;
@@ -197,17 +203,20 @@ class _CatalogSheetChrome extends StatelessWidget {
       // border in _CatalogSheetContent instead.
       elevation: colors.isDark ? 0 : 8,
       shadowColor: colors.shadow,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _DragHandle(
-            onDragStart: onDragStart,
-            onDragUpdate: onDragUpdate,
-            onDragEnd: onDragEnd,
-          ),
-          const Expanded(child: _CatalogSheetContent()),
-        ],
-      ),
+      child: compact
+          // Phones: just the content, edge to edge. No swipe-to-close strip.
+          ? const _CatalogSheetContent(compact: true)
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _DragHandle(
+                  onDragStart: onDragStart,
+                  onDragUpdate: onDragUpdate,
+                  onDragEnd: onDragEnd,
+                ),
+                const Expanded(child: _CatalogSheetContent()),
+              ],
+            ),
     );
   }
 }
@@ -256,7 +265,11 @@ class _DragHandle extends StatelessWidget {
 }
 
 class _CatalogSheetContent extends StatelessWidget {
-  const _CatalogSheetContent();
+  const _CatalogSheetContent({this.compact = false});
+
+  /// Phones: no left edge line (the sheet is full width, there is no handle
+  /// strip next to it) and no bottom Close button; the header's X closes it.
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -265,29 +278,34 @@ class _CatalogSheetContent extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.background,
-        border: Border(left: BorderSide(color: colors.borderSubtle)),
+        border: compact
+            ? null
+            : Border(left: BorderSide(color: colors.borderSubtle)),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          _CatalogSheetHeader(),
+          // Phones: a one-row header (category dropdown, search button, X).
+          compact ? const _CompactCatalogHeader() : const _CatalogSheetHeader(),
           Expanded(
             // The grid fills the whole area under the header and the category
             // notch floats on top of it, so products scroll behind the notch
             // (clipBehavior.none lets the notch overlap the header's border).
+            // Phones have no notch: the categories are the header's dropdown.
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                ProductGrid(),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: _CompactCategoryStrip(),
-                ),
+                ProductGrid(compact: compact),
+                if (!compact)
+                  const Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: _CompactCategoryStrip(),
+                  ),
               ],
             ),
           ),
-          _CatalogSheetFooter(),
+          if (!compact) const _CatalogSheetFooter(),
         ],
       ),
     );
@@ -347,6 +365,23 @@ final TextStyle _summaryStyle = AppTypography.ui(
   fontWeight: FontWeight.w500,
 ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
 
+/// "123 items · 8 categories" (or results while searching), shown under the
+/// category name. Null when there is nothing to say.
+String? _catalogSummary({
+  required int totalItems,
+  required int categoryCount,
+  required String query,
+}) {
+  if (totalItems > 0) {
+    final noun = query.isEmpty
+        ? (totalItems == 1 ? 'item' : 'items')
+        : (totalItems == 1 ? 'result' : 'results');
+    return '${formatCount(totalItems)} $noun · '
+        '$categoryCount ${categoryCount == 1 ? 'category' : 'categories'}';
+  }
+  return query.isNotEmpty ? 'No results' : null;
+}
+
 class _CatalogSheetHeader extends ConsumerWidget {
   const _CatalogSheetHeader();
 
@@ -384,18 +419,11 @@ class _CatalogSheetHeader extends ConsumerWidget {
       (sum, section) => sum + section.products.length,
     );
 
-    String? summary;
-    if (totalItems > 0) {
-      final noun = query.isEmpty
-          ? (totalItems == 1 ? 'item' : 'items')
-          : (totalItems == 1 ? 'result' : 'results');
-      final categoryCount = sections.length;
-      summary =
-          '${formatCount(totalItems)} $noun \u00b7 '
-          '$categoryCount ${categoryCount == 1 ? 'category' : 'categories'}';
-    } else if (query.isNotEmpty) {
-      summary = 'No results';
-    }
+    final summary = _catalogSummary(
+      totalItems: totalItems,
+      categoryCount: sections.length,
+      query: query,
+    );
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 8, 14),
@@ -482,8 +510,362 @@ class _CatalogSheetHeader extends ConsumerWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Phone header: category dropdown + search button + close (X), one row
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// The phone version of [_CatalogSheetHeader], built to give the product list
+/// as much height as possible:
+///
+///  * one row instead of title + always-visible search field (~55px shorter);
+///  * the category name doubles as a dropdown: it follows the grid as it
+///    scrolls and, tapped, lists every category with its product count so one
+///    tap jumps to it (this replaces the chip strip that floated over the grid);
+///  * a search button opens the search field below the row (and closes it
+///    again); closing it also clears the search so no hidden filter is left
+///    narrowing the list;
+///  * the X stays where it was, at the right.
+class _CompactCatalogHeader extends ConsumerStatefulWidget {
+  const _CompactCatalogHeader();
+
+  @override
+  ConsumerState<_CompactCatalogHeader> createState() =>
+      _CompactCatalogHeaderState();
+}
+
+class _CompactCatalogHeaderState extends ConsumerState<_CompactCatalogHeader> {
+  bool _searchOpen = false;
+
+  void _toggleSearch() {
+    if (_searchOpen) {
+      final notifier = ref.read(dashboardControllerProvider.notifier);
+      if (ref.read(dashboardControllerProvider).catalogSearchQuery.isNotEmpty) {
+        notifier.setCatalogSearchQuery('');
+      }
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
+    setState(() => _searchOpen = !_searchOpen);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final controller = ref.watch(dashboardControllerProvider.notifier);
+    // Refresh if categories / products change (e.g. after a sync).
+    ref.watch(catalogSourcesProvider);
+
+    // Closing the sheet clears the search (see the grid), so fold the bar away
+    // too; it opens fresh next time.
+    ref.listen(
+      dashboardControllerProvider.select((s) => s.isCatalogSheetOpen),
+      (previous, isOpen) {
+        if (!isOpen && _searchOpen) setState(() => _searchOpen = false);
+      },
+    );
+
+    final openedCategoryId = ref.watch(
+      dashboardControllerProvider.select((s) => s.catalogSheetCategoryId),
+    );
+    // Follows the section currently at the top of the grid.
+    final categoryId =
+        ref.watch(catalogActiveSectionProvider) ?? openedCategoryId;
+    final categoryName = controller.categories
+        .firstWhere(
+          (c) => c.id == categoryId,
+          orElse: () => const Category(id: '', name: '', icon: ''),
+        )
+        .name;
+
+    final hidden = ref.watch(hiddenCategoryCodesProvider);
+    final query = ref
+        .watch(dashboardControllerProvider.select((s) => s.catalogSearchQuery))
+        .trim();
+    // Same cached list the grid built. The dropdown lists exactly these, so
+    // every entry has a section to jump to (while searching, only categories
+    // with matches).
+    final sections = controller.catalogSections(
+      filterVisibleCategories(controller.categories, hidden),
+    );
+    final totalItems = sections.fold<int>(
+      0,
+      (sum, section) => sum + section.products.length,
+    );
+    final summary = _catalogSummary(
+      totalItems: totalItems,
+      categoryCount: sections.length,
+      query: query,
+    );
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 6, 8, 8),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border(bottom: BorderSide(color: colors.borderSubtle)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _CategoryDropdown(
+                  activeId: categoryId,
+                  name: categoryName,
+                  summary: summary,
+                  sections: sections,
+                ),
+              ),
+              _HeaderCircleButton(
+                icon: Icons.search_rounded,
+                tooltip: _searchOpen ? 'Close search' : 'Search products',
+                // Lit while the bar is open or a search is active.
+                selected: _searchOpen || query.isNotEmpty,
+                onTap: _toggleSearch,
+              ),
+              _HeaderCircleButton(
+                icon: Icons.close_rounded,
+                tooltip: 'Close',
+                onTap: controller.closeCatalogSheet,
+              ),
+            ],
+          ),
+          // Slides open / shut under the row; the field takes focus as soon as
+          // it appears so the keyboard comes up ready to type.
+          AnimatedSize(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: _searchOpen
+                ? const Padding(
+                    padding: EdgeInsets.fromLTRB(0, 4, 8, 0),
+                    child: _CatalogSearchField(autofocus: true),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A round header button (search, close): 40px circle in a [minTapTarget] hit
+/// area, the same look as the X in the wide header.
+class _HeaderCircleButton extends StatelessWidget {
+  const _HeaderCircleButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.selected = false,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  /// Highlighted (e.g. the search button while the bar is open).
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: SizedBox(
+            width: minTapTarget,
+            height: minTapTarget,
+            child: Center(
+              child: Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: selected
+                      ? colors.primaryContainer
+                      : colors.surfaceVariant,
+                ),
+                child: Icon(
+                  icon,
+                  size: 22,
+                  color: selected
+                      ? colors.onPrimaryContainer
+                      : colors.textPrimary,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The category name with a chevron; tapping it opens a menu of every
+/// category (with its product count) and jumps the grid to the one picked.
+/// With only one category there is nothing to pick, so it's just the title.
+class _CategoryDropdown extends ConsumerWidget {
+  const _CategoryDropdown({
+    required this.activeId,
+    required this.name,
+    required this.summary,
+    required this.sections,
+  });
+
+  final String? activeId;
+  final String name;
+  final String? summary;
+  final List<CatalogSection> sections;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final canPick = sections.length > 1;
+
+    // Name + chevron over the summary line: about 45px, so it fits the 48px
+    // row the buttons set and costs no extra height.
+    final label = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.display(
+                  color: colors.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ),
+            if (canPick) ...[
+              const SizedBox(width: 2),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 24,
+                color: colors.textSecondary,
+              ),
+            ],
+          ],
+        ),
+        if (summary != null)
+          Text(
+            summary!,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: _summaryStyle.copyWith(color: colors.textSecondary),
+          ),
+      ],
+    );
+
+    final content = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: minTapTarget),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: label,
+        ),
+      ),
+    );
+
+    if (!canPick) return content;
+
+    // The Material clips the tap ripple to rounded corners.
+    return Material(
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      clipBehavior: Clip.antiAlias,
+      child: PopupMenuButton<String>(
+        tooltip: 'Jump to category',
+        position: PopupMenuPosition.under,
+        offset: const Offset(0, 4),
+        color: colors.surfaceRaised,
+        elevation: 6,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: colors.borderSubtle),
+        ),
+        constraints: const BoxConstraints(minWidth: 220, maxWidth: 320),
+        onSelected: (id) =>
+            ref.read(catalogScrollRequestProvider.notifier).request(id),
+        itemBuilder: (context) => [
+          for (final section in sections)
+            PopupMenuItem<String>(
+              value: section.category.id,
+              child: _CategoryMenuRow(
+                name: section.category.name,
+                count: section.products.length,
+                selected: section.category.id == activeId,
+              ),
+            ),
+        ],
+        child: content,
+      ),
+    );
+  }
+}
+
+class _CategoryMenuRow extends StatelessWidget {
+  const _CategoryMenuRow({
+    required this.name,
+    required this.count,
+    required this.selected,
+  });
+
+  final String name;
+  final int count;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.ui(
+              color: selected ? colors.primary : colors.textPrimary,
+              fontSize: 15,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          formatCount(count),
+          style: _summaryStyle.copyWith(color: colors.textSecondary),
+        ),
+        if (selected) ...[
+          const SizedBox(width: 8),
+          Icon(Icons.check_rounded, size: 18, color: colors.primary),
+        ],
+      ],
+    );
+  }
+}
+
 class _CatalogSearchField extends ConsumerStatefulWidget {
-  const _CatalogSearchField();
+  const _CatalogSearchField({this.autofocus = false});
+
+  /// Take focus (and raise the keyboard) as soon as the field appears.
+  final bool autofocus;
 
   @override
   ConsumerState<_CatalogSearchField> createState() =>
@@ -528,6 +910,7 @@ class _CatalogSearchFieldState extends ConsumerState<_CatalogSearchField> {
       height: minTapTarget,
       child: TextField(
         controller: _textController,
+        autofocus: widget.autofocus,
         onChanged: notifier.setCatalogSearchQuery,
         style: AppTypography.ui(color: colors.textPrimary, fontSize: 15),
         decoration: InputDecoration(

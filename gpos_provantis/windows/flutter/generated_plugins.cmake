@@ -8,7 +8,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   permission_handler_windows
   restart_app
   screen_retriever_windows
-  sqlite3_flutter_libs
+  sqlcipher_flutter_libs
   universal_ble
   url_launcher_windows
   window_manager

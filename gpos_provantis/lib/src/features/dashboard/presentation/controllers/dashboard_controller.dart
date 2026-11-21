@@ -1914,9 +1914,13 @@ class DashboardController extends _$DashboardController {
     }());
   }
 
-  Future<void> createSaleFromCash() => _runSaleOnce(_createSaleFromCash);
+  /// [cashTendered] is what the customer actually handed over (e.g. 2000 for
+  /// a 1500 sale). It is what gets recorded as the cash, so the receipt can
+  /// work out and print the change.
+  Future<void> createSaleFromCash({required double cashTendered}) =>
+      _runSaleOnce(() => _createSaleFromCash(cashTendered));
 
-  Future<void> _createSaleFromCash() async {
+  Future<void> _createSaleFromCash(double cashTendered) async {
     final toast = ref.read(toastEmitterProvider);
     final identity = await _PosIdentity.resolve(ref);
     final cashier = await _resolveCashier(ref);
@@ -1924,6 +1928,12 @@ class DashboardController extends _$DashboardController {
     final detailId = await _reserveDetailId();
 
     final total = state.total;
+
+    if (cashTendered < total - 0.01) {
+      throw StateError(
+        'Cash tendered ($cashTendered) is less than the sale total ($total).',
+      );
+    }
 
     final saleState = state;
 
@@ -1938,7 +1948,7 @@ class DashboardController extends _$DashboardController {
       items: Value(_buildItemsJson(state)),
       total: Value(_formatMoney(total)),
       cashier: Value(cashier),
-      cash: Value(_formatMoney(total)),
+      cash: Value(_formatMoney(cashTendered)),
       ecash: const Value('0.0'),
       branch: Value(branch),
       discountDetail: Value(_buildDiscountDetailJson(state, detailId)),
@@ -1969,7 +1979,7 @@ class DashboardController extends _$DashboardController {
             branchId: branch,
             posId: identity.posId,
             detailId: detailId,
-            cash: total,
+            cash: cashTendered,
             total: total,
           );
     } catch (e, st) {
@@ -1989,7 +1999,7 @@ class DashboardController extends _$DashboardController {
       cashier: cashier,
       branchId: branch,
       paymentType: 'CASH',
-      cash: total,
+      cash: cashTendered,
       ecash: 0,
       referenceId: 'CASH',
       paymentName: 'CASH',

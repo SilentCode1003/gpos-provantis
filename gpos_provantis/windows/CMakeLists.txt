@@ -2,6 +2,27 @@
 cmake_minimum_required(VERSION 3.14)
 project(gpos_provantis LANGUAGES CXX)
 
+# Point CMake at OpenSSL (needed by sqlcipher_flutter_libs). CMake's finder
+# does not search the lib/VC/x64/MD subfolder, so the library is set directly.
+set(OPENSSL_ROOT_DIR "C:/Program Files/OpenSSL-Win64" CACHE PATH "" FORCE)
+set(OPENSSL_CRYPTO_LIBRARY
+    "C:/Program Files/OpenSSL-Win64/lib/VC/x64/MD/libcrypto.lib"
+    CACHE FILEPATH "" FORCE)
+# On MSVC, CMake's finder rebuilds OPENSSL_CRYPTO_LIBRARY from these
+# per-configuration variables, so they are set as well.
+set(LIB_EAY_RELEASE
+    "C:/Program Files/OpenSSL-Win64/lib/VC/x64/MD/libcrypto.lib"
+    CACHE FILEPATH "" FORCE)
+set(LIB_EAY_DEBUG
+    "C:/Program Files/OpenSSL-Win64/lib/VC/x64/MDd/libcrypto.lib"
+    CACHE FILEPATH "" FORCE)
+set(SSL_EAY_RELEASE
+    "C:/Program Files/OpenSSL-Win64/lib/VC/x64/MD/libssl.lib"
+    CACHE FILEPATH "" FORCE)
+set(SSL_EAY_DEBUG
+    "C:/Program Files/OpenSSL-Win64/lib/VC/x64/MDd/libssl.lib"
+    CACHE FILEPATH "" FORCE)
+
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
 set(BINARY_NAME "gpos_provantis")

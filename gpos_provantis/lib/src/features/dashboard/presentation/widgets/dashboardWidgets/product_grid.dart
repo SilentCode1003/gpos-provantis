@@ -99,6 +99,40 @@ double _sectionTileHeight(bool images, double tileWidth, double imageHeight) =>
     ? imageHeight + _imageInset * 2 + _cardTextAreaHeight
     : tileWidth / _tileAspectRatio;
 
+/// Phones get a LIST instead of a grid: one product per row, with a small
+/// picture on the left, name + SKU in the middle and price + add badge on the
+/// right. A row is much shorter than a grid card, so far more products fit on
+/// screen at once and the cashier scrolls less to find an item.
+///
+/// The list is used whenever the grid's own width is below
+/// [_listModeMaxWidth]. Wider layouts (tablets) keep the grid above.
+///
+/// [catalogCompactMaxWidth] is the one "phone vs wide" cutoff: the catalog
+/// sheet (catalog_sheet.dart) uses the same number to drop its side drag handle
+/// and bottom Close button on phones, so the two always switch together.
+///
+/// Row heights are FIXED, so the scroll maths stays exact. Rows with a picture
+/// are [_listThumbSize] + 2 * [_listImageInset] tall; rows without one
+/// (pictures switched off in settings, or services / packages / add-ons) are
+/// shorter.
+const double catalogCompactMaxWidth = 600;
+const double _listModeMaxWidth = catalogCompactMaxWidth;
+const double _listGap = 8;
+const double _listThumbSize = 72;
+const double _listImageInset = 8;
+const double _listRowHeightWithImage = _listThumbSize + _listImageInset * 2;
+const double _listRowHeightPlain = 76;
+const double _listPriceMaxWidth = 104;
+const double _listCornerRadius = 14;
+
+/// Whether a section's products get a picture at all (services, packages and
+/// add-ons never do).
+bool _sectionHasPictures(CatalogSection s) =>
+    s.products.isNotEmpty && !s.products.first.isService;
+
+double _listRowHeight(bool images) =>
+    images ? _listRowHeightWithImage : _listRowHeightPlain;
+
 /// A section counts as "current" once its header is within this many pixels
 /// of the top edge.
 const double _spyLead = 48;
@@ -142,6 +176,12 @@ final TextStyle _priceStyle = AppTypography.ui(
   fontSize: 18,
   fontWeight: FontWeight.w600,
 ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
+// Slightly smaller price for the list rows, where it shares the row's right
+// edge with the add badge.
+final TextStyle _listPriceStyle = AppTypography.ui(
+  fontSize: 16,
+  fontWeight: FontWeight.w600,
+).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
 final TextStyle _badgeCountStyle = AppTypography.ui(
   fontSize: 14,
   fontWeight: FontWeight.w600,
@@ -152,7 +192,12 @@ final TextStyle _outOfStockStyle = AppTypography.ui(
 );
 
 class ProductGrid extends ConsumerWidget {
-  const ProductGrid({super.key});
+  const ProductGrid({super.key, this.compact});
+
+  /// Phone layout (one product per row, no category strip floating over the
+  /// top). The catalog sheet decides this once for everything it shows; when
+  /// it is null the grid decides from its own width.
+  final bool? compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -195,7 +240,7 @@ class ProductGrid extends ConsumerWidget {
       );
     }
 
-    return _SectionedGrid(sections: sections, query: query);
+    return _SectionedGrid(sections: sections, query: query, compact: compact);
   }
 }
 
@@ -204,10 +249,15 @@ class ProductGrid extends ConsumerWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _SectionedGrid extends ConsumerStatefulWidget {
-  const _SectionedGrid({required this.sections, required this.query});
+  const _SectionedGrid({
+    required this.sections,
+    required this.query,
+    this.compact,
+  });
 
   final List<CatalogSection> sections;
   final String query;
+  final bool? compact;
 
   @override
   ConsumerState<_SectionedGrid> createState() => _SectionedGridState();
@@ -378,12 +428,16 @@ class _SectionedGridState extends ConsumerState<_SectionedGrid> {
               height: constraints.maxHeight,
               sections: widget.sections,
               showImages: showImages,
+              compact: widget.compact,
             );
             _layout = layout;
 
             // Decode pictures at their real on-screen pixel size, never bigger.
+            // (List rows use a small fixed-size thumbnail, grid cards a
+            // full-width picture.)
             final imageCachePx =
-                (layout.tileWidth * MediaQuery.devicePixelRatioOf(context))
+                ((layout.isList ? _listThumbSize : layout.tileWidth) *
+                        MediaQuery.devicePixelRatioOf(context))
                     .round();
 
             return CustomScrollView(
@@ -397,15 +451,17 @@ class _SectionedGridState extends ConsumerState<_SectionedGrid> {
               // fast fling arrives.
               cacheExtent: _warm ? _warmCacheExtent : 0,
               slivers: [
-                // Room for the notch that floats over the top of the grid.
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: catalogNotchHeight),
-                ),
+                // Room for the notch that floats over the top of the grid
+                // (none on phones: there the categories are a dropdown in the
+                // sheet header).
+                SliverToBoxAdapter(child: SizedBox(height: layout.topInset)),
                 for (final section in widget.sections) ...[
                   SliverToBoxAdapter(
                     child: _SectionHeader(
                       title: section.category.name,
                       count: section.products.length,
+                      // Phones only: long titles scroll, count sits right.
+                      scrollTitle: layout.isList,
                     ),
                   ),
                   SliverPadding(
@@ -418,26 +474,39 @@ class _SectionedGridState extends ConsumerState<_SectionedGrid> {
                     sliver: SliverGrid(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: layout.columns,
-                        mainAxisSpacing: _gridGap,
-                        crossAxisSpacing: _gridGap,
+                        mainAxisSpacing: layout.gap,
+                        crossAxisSpacing: layout.gap,
                         childAspectRatio: layout.aspectFor(section),
                       ),
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           final product = section.products[index];
-                          // 0 = plain card (no picture area).
+                          // 0 = plain card / row (no picture). In list mode
+                          // this is the thumbnail's size instead.
                           final imageHeight = layout.hasImages(section)
-                              ? layout.imageHeight
+                              ? (layout.isList
+                                    ? _listThumbSize
+                                    : layout.imageHeight)
                               : 0.0;
                           if (_showSkeleton) {
-                            return _SkeletonCard(imageHeight: imageHeight);
+                            return _SkeletonCard(
+                              imageHeight: imageHeight,
+                              isList: layout.isList,
+                            );
                           }
                           return _ProductCard(
                             key: ValueKey(product.id),
                             product: product,
                             imageHeight: imageHeight,
                             imageCachePx: imageCachePx,
-                            onTap: () => notifier.addToCart(product),
+                            isList: layout.isList,
+                            onTap: () {
+                              // The product sheet can't be opened with the
+                              // shift closed; this stops a stray tap (e.g. a
+                              // sheet still animating away) from adding.
+                              if (!ref.read(isShiftOpenProvider)) return;
+                              notifier.addToCart(product);
+                            },
                           );
                         },
                         childCount: section.products.length,
@@ -470,6 +539,10 @@ class _GridLayout {
     required this.tail,
     required this.tileWidth,
     required this.imageHeight,
+    this.isList = false,
+    this.listPictures = false,
+    this.gap = _gridGap,
+    this.topInset = catalogNotchHeight,
   });
 
   static const empty = _GridLayout(
@@ -480,6 +553,21 @@ class _GridLayout {
     tileWidth: 0,
     imageHeight: 0,
   );
+
+  /// True on narrow (phone) widths: one product per row instead of a grid.
+  final bool isList;
+
+  /// List mode only: whether rows get a picture on the left (the "Show product
+  /// images" setting). Sections of services / packages never do.
+  final bool listPictures;
+
+  /// Space between tiles / rows.
+  final double gap;
+
+  /// Empty room above the first section: the height of the category notch on
+  /// wide layouts, 0 on phones (no notch there). Sections' [starts] are
+  /// measured from the end of this space.
+  final double topInset;
 
   final int columns;
   final List<String> sectionIds;
@@ -496,10 +584,13 @@ class _GridLayout {
   /// when the tiles are too narrow for one.
   final double imageHeight;
 
-  bool hasImages(CatalogSection s) => _sectionHasImages(s, imageHeight);
+  bool hasImages(CatalogSection s) => isList
+      ? listPictures && _sectionHasPictures(s)
+      : _sectionHasImages(s, imageHeight);
 
-  double tileHeightFor(CatalogSection s) =>
-      _sectionTileHeight(hasImages(s), tileWidth, imageHeight);
+  double tileHeightFor(CatalogSection s) => isList
+      ? _listRowHeight(hasImages(s))
+      : _sectionTileHeight(hasImages(s), tileWidth, imageHeight);
 
   double aspectFor(CatalogSection s) {
     final h = tileHeightFor(s);
@@ -511,16 +602,25 @@ class _GridLayout {
     required double height,
     required List<CatalogSection> sections,
     bool showImages = true,
+    bool? compact,
   }) {
-    final crossExtent = math.max(0.0, width - _gridHorizontalPadding * 2);
-    final columns = math.max(
-      1,
-      (crossExtent / (_maxTileExtent + _gridGap)).ceil(),
-    );
-    final tileWidth =
-        math.max(0.0, crossExtent - _gridGap * (columns - 1)) / columns;
+    // Phones: one product per row (see the note above [_listModeMaxWidth]).
+    // The catalog sheet passes [compact] so the grid, the header and the
+    // footer always agree; on its own the grid goes by its own width.
+    final isList = compact ?? width < _listModeMaxWidth;
+    final gap = isList ? _listGap : _gridGap;
+    final topInset = isList ? 0.0 : catalogNotchHeight;
 
-    final imageHeight = showImages && tileWidth >= _minTileWidthForImage
+    final crossExtent = math.max(0.0, width - _gridHorizontalPadding * 2);
+    final columns = isList
+        ? 1
+        : math.max(1, (crossExtent / (_maxTileExtent + _gridGap)).ceil());
+    final tileWidth =
+        math.max(0.0, crossExtent - gap * (columns - 1)) / columns;
+
+    // Grid mode only: the list draws its own small fixed-size picture.
+    final imageHeight =
+        !isList && showImages && tileWidth >= _minTileWidthForImage
         ? math.min(
             _maxImageHeight,
             tileWidth / _imageTileAspectRatio -
@@ -535,15 +635,18 @@ class _GridLayout {
     var lastExtent = 0.0;
 
     for (final section in sections) {
-      final tileHeight = _sectionTileHeight(
-        _sectionHasImages(section, imageHeight),
-        tileWidth,
-        imageHeight,
-      );
+      final double tileHeight;
+      if (isList) {
+        tileHeight = _listRowHeight(showImages && _sectionHasPictures(section));
+      } else {
+        tileHeight = _sectionTileHeight(
+          _sectionHasImages(section, imageHeight),
+          tileWidth,
+          imageHeight,
+        );
+      }
       final rows = (section.products.length / columns).ceil();
-      final gridHeight = rows == 0
-          ? 0.0
-          : rows * tileHeight + (rows - 1) * _gridGap;
+      final gridHeight = rows == 0 ? 0.0 : rows * tileHeight + (rows - 1) * gap;
       final extent =
           _headerExtent + _gridTopPadding + gridHeight + _sectionBottomPadding;
 
@@ -557,12 +660,13 @@ class _GridLayout {
       columns: columns,
       tileWidth: tileWidth,
       imageHeight: imageHeight,
+      isList: isList,
+      listPictures: showImages,
+      gap: gap,
+      topInset: topInset,
       sectionIds: ids,
       starts: starts,
-      tail: math.max(
-        _sectionBottomPadding,
-        height - lastExtent - catalogNotchHeight,
-      ),
+      tail: math.max(_sectionBottomPadding, height - lastExtent - topInset),
     );
   }
 
@@ -575,15 +679,53 @@ class _GridLayout {
   }
 }
 
+/// Section title row.
+///
+/// Wide layouts: title, then the count badge, then a divider line filling the
+/// rest of the row (long titles end in "…").
+///
+/// Phones ([scrollTitle]): the title takes all the room up to the count badge,
+/// which sits at the right edge so every header lines up. A title too long to
+/// fit slowly scrolls to the left so it can be read in full (see
+/// [_MarqueeText]). The divider is dropped there: the title needs that space.
+/// The row has the same height either way, so the scroll maths is unaffected.
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.count});
+  const _SectionHeader({
+    required this.title,
+    required this.count,
+    this.scrollTitle = false,
+  });
 
   final String title;
   final int count;
+  final bool scrollTitle;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+
+    final titleStyle = AppTypography.display(
+      color: colors.textPrimary,
+      fontSize: 20,
+      fontWeight: FontWeight.w600,
+      letterSpacing: -0.2,
+    );
+
+    final countBadge = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+      decoration: BoxDecoration(
+        color: colors.surfaceVariant,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        '$count',
+        style: AppTypography.ui(
+          color: colors.textSecondary,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+      ),
+    );
 
     return SizedBox(
       height: _headerExtent,
@@ -596,51 +738,225 @@ class _SectionHeader extends StatelessWidget {
         ),
         child: Align(
           alignment: Alignment.bottomLeft,
-          child: Row(
-            children: [
-              Flexible(
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.display(
-                    color: colors.textPrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                decoration: BoxDecoration(
-                  color: colors.surfaceVariant,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  '$count',
-                  style:
-                      AppTypography.ui(
-                        color: colors.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ).copyWith(
-                        fontFeatures: const [FontFeature.tabularFigures()],
+          child: scrollTitle
+              ? Row(
+                  children: [
+                    Expanded(
+                      child: _MarqueeText(text: title, style: titleStyle),
+                    ),
+                    const SizedBox(width: 12),
+                    countBadge,
+                  ],
+                )
+              : Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: titleStyle,
                       ),
+                    ),
+                    const SizedBox(width: 10),
+                    countBadge,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Divider(
+                        height: 1,
+                        color: colors.border.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Divider(
-                  height: 1,
-                  color: colors.border.withValues(alpha: 0.6),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Scrolling title ("news ticker") for long category names on phones
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Scroll speed, in logical pixels per second. Slow on purpose: roughly one
+/// word per second at the title's size, so it can be read while it moves.
+const double _marqueeSpeed = 30;
+
+/// The title waits this long at the start before it begins to move, so the
+/// first words can be read standing still.
+const int _marqueeStartHoldMs = 1800;
+
+/// It waits this long once the last letter is showing.
+const int _marqueeEndHoldMs = 1200;
+
+/// The quick fade out / in that hides the jump back to the start.
+const int _marqueeFadeMs = 220;
+
+/// Extra room after the last letter, so it doesn't stop flush against the edge.
+const double _marqueeTailGap = 6;
+
+/// A single line of text that scrolls to the left when it is too long for its
+/// space, and is a plain [Text] when it fits.
+///
+/// One cycle: hold at the start, glide left until the end is showing, hold,
+/// fade out, jump back, fade in, repeat.
+///
+/// Kept cheap for weak devices: nothing animates unless the text really
+/// overflows; the motion is a Transform (no re-layout, no re-measuring each
+/// frame); a single controller drives it, and it stops by itself when the
+/// widget is off-screen or removed (Flutter's tickers do that). When the
+/// system "reduce motion" / "remove animations" setting is on, nothing moves
+/// and the text just ends in "…" as it did before.
+class _MarqueeText extends StatefulWidget {
+  const _MarqueeText({required this.text, required this.style});
+
+  final String text;
+  final TextStyle style;
+
+  @override
+  State<_MarqueeText> createState() => _MarqueeTextState();
+}
+
+class _MarqueeTextState extends State<_MarqueeText>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(vsync: this);
+
+  /// How far the text has to travel, or 0 when it fits / no animation.
+  double _distance = 0;
+
+  @override
+  void didUpdateWidget(covariant _MarqueeText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text || oldWidget.style != widget.style) {
+      // Different text: start over from the beginning.
+      _controller
+        ..stop()
+        ..value = 0;
+      _distance = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  int _scrollMs(double distance) => (distance / _marqueeSpeed * 1000).round();
+
+  int _cycleMs(double distance) =>
+      _marqueeStartHoldMs +
+      _scrollMs(distance) +
+      _marqueeEndHoldMs +
+      _marqueeFadeMs * 2;
+
+  /// Starts / stops the loop when the distance to travel changes. Done after
+  /// the frame so the controller isn't touched in the middle of a build.
+  void _sync(double distance) {
+    if ((distance - _distance).abs() < 0.5) return;
+    _distance = distance;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_distance <= 0) {
+        _controller
+          ..stop()
+          ..value = 0;
+        return;
+      }
+      _controller.duration = Duration(milliseconds: _cycleMs(_distance));
+      _controller.repeat();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final style = widget.style;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final textScaler = MediaQuery.textScalerOf(context);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final painter = TextPainter(
+          text: TextSpan(text: widget.text, style: style),
+          maxLines: 1,
+          textDirection: Directionality.of(context),
+          textScaler: textScaler,
+        )..layout();
+        final textWidth = painter.width;
+        final textHeight = painter.height;
+        painter.dispose();
+
+        final overflow = textWidth - constraints.maxWidth;
+        if (overflow <= 0.5 || reduceMotion) {
+          _sync(0);
+          return Text(
+            widget.text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          );
+        }
+
+        final distance = overflow + _marqueeTailGap;
+        _sync(distance);
+
+        final scrollMs = _scrollMs(distance);
+        final cycleMs = _cycleMs(distance);
+        const holdEnd = _marqueeStartHoldMs;
+        final scrollEnd = holdEnd + scrollMs;
+        final endHoldEnd = scrollEnd + _marqueeEndHoldMs;
+        final fadeOutEnd = endHoldEnd + _marqueeFadeMs;
+
+        return RepaintBoundary(
+          child: SizedBox(
+            height: textHeight,
+            child: ClipRect(
+              child: OverflowBox(
+                alignment: Alignment.centerLeft,
+                minWidth: 0,
+                maxWidth: double.infinity,
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  // The text itself is built once; only the offset and the
+                  // opacity change from frame to frame.
+                  child: Text(
+                    widget.text,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.visible,
+                    style: style,
+                  ),
+                  builder: (context, child) {
+                    final t = _controller.value * cycleMs;
+                    var dx = 0.0;
+                    var opacity = 1.0;
+                    if (t < holdEnd) {
+                      // Waiting at the start.
+                    } else if (t < scrollEnd) {
+                      dx = -distance * (t - holdEnd) / scrollMs;
+                    } else if (t < endHoldEnd) {
+                      dx = -distance;
+                    } else if (t < fadeOutEnd) {
+                      dx = -distance;
+                      opacity = 1 - (t - endHoldEnd) / _marqueeFadeMs;
+                    } else {
+                      opacity = (t - fadeOutEnd) / _marqueeFadeMs;
+                    }
+                    return Opacity(
+                      opacity: opacity.clamp(0.0, 1.0),
+                      child: Transform.translate(
+                        offset: Offset(dx, 0),
+                        child: child,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -702,10 +1018,14 @@ class _StateMessage extends StatelessWidget {
 /// Cheap stand-in for a product card, shown while the sheet slides in. Just a
 /// few plain boxes: no ripple, no text layout, no provider watching.
 class _SkeletonCard extends StatelessWidget {
-  const _SkeletonCard({this.imageHeight = 0});
+  const _SkeletonCard({this.imageHeight = 0, this.isList = false});
 
-  /// Same picture area the real card will have (0 = plain card).
+  /// Same picture area the real card will have (0 = plain card). In list mode
+  /// this is the size of the square thumbnail on the left.
   final double imageHeight;
+
+  /// Draw a list row instead of a grid card.
+  final bool isList;
 
   @override
   Widget build(BuildContext context) {
@@ -736,9 +1056,57 @@ class _SkeletonCard extends StatelessWidget {
 
     final decoration = BoxDecoration(
       color: colors.surfaceRaised,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(isList ? _listCornerRadius : 18),
       border: Border.all(color: colors.border.withValues(alpha: 0.4)),
     );
+
+    if (isList) {
+      final hasThumb = imageHeight > 0;
+      return Container(
+        decoration: decoration,
+        child: Row(
+          children: [
+            if (hasThumb)
+              Padding(
+                padding: const EdgeInsets.all(_listImageInset),
+                child: Container(
+                  width: imageHeight,
+                  height: imageHeight,
+                  decoration: BoxDecoration(
+                    color: colors.surfaceVariant,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(hasThumb ? 4 : 16, 0, 8, 0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    bar(0.8, 14),
+                    const SizedBox(height: 8),
+                    bar(0.5, 14),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Container(
+                width: 64,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: colors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     if (imageHeight > 0) {
       return Container(
@@ -841,14 +1209,21 @@ class _ProductCard extends StatefulWidget {
     required this.onTap,
     this.imageHeight = 0,
     this.imageCachePx = 0,
+    this.isList = false,
   });
 
   final Product product;
   final VoidCallback onTap;
 
   /// Height of the picture area at the top of the card, or 0 for a plain card.
+  /// In list mode this is the size of the square thumbnail on the left (0 =
+  /// no thumbnail).
   final double imageHeight;
   final int imageCachePx;
+
+  /// Draw a compact list row (picture left, name + SKU middle, price + badge
+  /// right) instead of a grid card. Used on phones.
+  final bool isList;
 
   @override
   State<_ProductCard> createState() => _ProductCardState();
@@ -884,41 +1259,45 @@ class _ProductCardState extends State<_ProductCard> {
 
     final textColor = isOutOfStock ? colors.textDisabled : colors.textPrimary;
 
-    // Name, SKU and price: the same in both card styles.
-    final details = <Widget>[
-      // The name yields space first: it's clipped (never the price) if the
-      // card is too short for everything. The SKU is laid out first and
-      // always shows; the name takes whatever height is left.
-      Expanded(
-        child: ClipRect(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Flexible(
-                child: Text(
-                  product.name,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: _productNameStyle.copyWith(color: textColor),
-                ),
-              ),
-              if (product.sku.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  product.sku,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: _skuStyle.copyWith(
-                    color: isOutOfStock
-                        ? colors.textDisabled
-                        : colors.textSecondary,
-                  ),
-                ),
-              ],
-            ],
+    final isList = widget.isList;
+
+    // The name yields space first: it's clipped (never the price) if the
+    // card is too short for everything. The SKU is laid out first and
+    // always shows; the name takes whatever height is left. Shared by both
+    // card styles (the list row allows 2 lines of name, the grid card 3).
+    final nameBlock = ClipRect(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Flexible(
+            child: Text(
+              product.name,
+              maxLines: isList ? 2 : 3,
+              overflow: TextOverflow.ellipsis,
+              style: _productNameStyle.copyWith(color: textColor),
+            ),
           ),
-        ),
+          if (product.sku.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              product.sku,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: _skuStyle.copyWith(
+                color: isOutOfStock
+                    ? colors.textDisabled
+                    : colors.textSecondary,
+              ),
+            ),
+          ],
+        ],
       ),
+    );
+
+    // Name, SKU and price of the grid card.
+    final details = <Widget>[
+      Expanded(child: nameBlock),
       const SizedBox(height: 8),
       // Out of stock sits ABOVE the price, so the price always gets the
       // card's full width.
@@ -941,38 +1320,17 @@ class _ProductCardState extends State<_ProductCard> {
 
     final showImage = widget.imageHeight > 0;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: isOutOfStock ? null : widget.onTap,
-      onTapDown: isOutOfStock ? null : (_) => _setPressed(true),
-      onTapUp: isOutOfStock ? null : (_) => _setPressed(false),
-      onTapCancel: isOutOfStock ? null : () => _setPressed(false),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: primaryTapTarget),
-        padding: showImage
-            ? EdgeInsets.zero
-            : const EdgeInsets.fromLTRB(16, 16, 12, 12),
-        decoration: BoxDecoration(
-          color: fill,
-          borderRadius: BorderRadius.circular(18),
-          border: isOutOfStock
-              ? null
-              : Border.all(
-                  color: isInCart
-                      ? colors.primary
-                      : colors.border.withValues(alpha: 0.6),
-                  width: isInCart ? 1.5 : 1,
-                ),
-        ),
-        child: showImage
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Picture area. Selecting the product never waits on it: the
-                  // card is tappable from its first frame and the picture
-                  // fills in later.
-                  Padding(
-                    padding: const EdgeInsets.all(_imageInset),
+    // List row: picture left, name + SKU in the middle (vertically centred),
+    // price with the add badge (or the out-of-stock tag) stacked on the right.
+    final Widget? listBody = isList
+        ? Row(
+            children: [
+              if (showImage)
+                Padding(
+                  padding: const EdgeInsets.all(_listImageInset),
+                  child: SizedBox(
+                    width: widget.imageHeight,
+                    height: widget.imageHeight,
                     child: _ProductThumb(
                       productId: int.tryParse(product.id),
                       height: widget.imageHeight,
@@ -982,26 +1340,107 @@ class _ProductCardState extends State<_ProductCard> {
                       iconColor: colors.textDisabled,
                     ),
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        _imageInset + 4,
-                        0,
-                        _imageInset + 2,
-                        10,
+                ),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(showImage ? 4 : 16, 8, 8, 8),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: nameBlock,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: _listPriceMaxWidth,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: details,
+                      child: _PriceText(
+                        price: product.price,
+                        color: textColor,
+                        compact: true,
                       ),
                     ),
-                  ),
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: details,
+                    const SizedBox(height: 6),
+                    if (isOutOfStock)
+                      _OutOfStockTag(colors: colors)
+                    else
+                      _AddBadge(quantity: inCart, colors: colors),
+                  ],
+                ),
               ),
+            ],
+          )
+        : null;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: isOutOfStock ? null : widget.onTap,
+      onTapDown: isOutOfStock ? null : (_) => _setPressed(true),
+      onTapUp: isOutOfStock ? null : (_) => _setPressed(false),
+      onTapCancel: isOutOfStock ? null : () => _setPressed(false),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: primaryTapTarget),
+        padding: isList || showImage
+            ? EdgeInsets.zero
+            : const EdgeInsets.fromLTRB(16, 16, 12, 12),
+        decoration: BoxDecoration(
+          color: fill,
+          borderRadius: BorderRadius.circular(isList ? _listCornerRadius : 18),
+          border: isOutOfStock
+              ? null
+              : Border.all(
+                  color: isInCart
+                      ? colors.primary
+                      : colors.border.withValues(alpha: 0.6),
+                  width: isInCart ? 1.5 : 1,
+                ),
+        ),
+        child:
+            listBody ??
+            (showImage
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Picture area. Selecting the product never waits on it: the
+                      // card is tappable from its first frame and the picture
+                      // fills in later.
+                      Padding(
+                        padding: const EdgeInsets.all(_imageInset),
+                        child: _ProductThumb(
+                          productId: int.tryParse(product.id),
+                          height: widget.imageHeight,
+                          cachePx: widget.imageCachePx,
+                          dimmed: isOutOfStock,
+                          placeholder: colors.surfaceVariant,
+                          iconColor: colors.textDisabled,
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            _imageInset + 4,
+                            0,
+                            _imageInset + 2,
+                            10,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: details,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: details,
+                  )),
       ),
     );
   }
@@ -1010,22 +1449,29 @@ class _ProductCardState extends State<_ProductCard> {
 /// The full price, always. If it's too wide for the space it shrinks to fit
 /// rather than ending in "…", since a cut-off price is a pricing mistake
 /// waiting to happen at the till.
+///
+/// [compact] is the list-row version: slightly smaller and right-aligned.
 class _PriceText extends StatelessWidget {
-  const _PriceText({required this.price, required this.color});
+  const _PriceText({
+    required this.price,
+    required this.color,
+    this.compact = false,
+  });
 
   final double price;
   final Color color;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     return FittedBox(
       fit: BoxFit.scaleDown,
-      alignment: Alignment.centerLeft,
+      alignment: compact ? Alignment.centerRight : Alignment.centerLeft,
       child: Text(
         formatPeso(price),
         maxLines: 1,
         softWrap: false,
-        style: _priceStyle.copyWith(color: color),
+        style: (compact ? _listPriceStyle : _priceStyle).copyWith(color: color),
       ),
     );
   }

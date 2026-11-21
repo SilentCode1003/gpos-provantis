@@ -14,6 +14,8 @@ import 'package:gpos_provantis/src/core/printutil/receipt_generator.dart'
         ReceiptPrintException,
         ReceiptSaleData,
         receiptGeneratorProvider;
+import 'package:gpos_provantis/src/services/printing/integrated_printing.dart'
+    show IntegratedPrinterService, ReceiptTextLayout;
 import 'package:gpos_provantis/src/services/printing/test_ticket.dart'
     show parsePaperSize;
 import 'package:gpos_provantis/src/shared/widgets/toast_emitter.dart';
@@ -81,6 +83,9 @@ class OrderSlipGenerator {
 
   final Ref ref;
 
+  /// Stateless, so one instance is enough.
+  final IntegratedPrinterService _integrated = IntegratedPrinterService();
+
   /// Call once a sale is saved. Does what the Order Slip setting says:
   ///
   /// * [OrderSlipMode.off]  - nothing.
@@ -119,6 +124,13 @@ class OrderSlipGenerator {
   Future<void> printSlip(OrderSlipData data) async {
     final printer = await _resolveSubPrinter();
 
+    // The built-in Landi printer doesn't take ESC/POS bytes: it takes plain
+    // text and lays it out itself, so it gets its own path.
+    if (printer.connectionType == IntegratedPrinterService.connectionType) {
+      await _printOnIntegrated(printer, data);
+      return;
+    }
+
     // Needs the asset bundle, so it is loaded here on the main isolate.
     final profile = await CapabilityProfile.load();
 
@@ -131,6 +143,17 @@ class OrderSlipGenerator {
     );
 
     await ref.read(receiptGeneratorProvider).sendToPrinter(printer, bytes);
+  }
+
+  Future<void> _printOnIntegrated(
+    PrinterDto printer,
+    OrderSlipData data,
+  ) async {
+    final text = buildSlipText(data: data);
+
+    // Trailing blank lines push the slip past the tear bar (same as the
+    // integrated printer's test page).
+    await _integrated.printReceipt(text: '$text\n\n\n\n', printer: printer);
   }
 
   /// Used when the cashier taps Print in the prompt: prints, then reports how
@@ -306,6 +329,35 @@ class OrderSlipGenerator {
     bytes += ticket.feed(2);
     bytes += ticket.cut();
     return bytes;
+  }
+
+  /// Builds the plain-text slip for the built-in (Landi) printer: the same
+  /// content as [buildSlipBytes], laid out for [columns] characters per line.
+  /// Static and free of Ref / DAOs so it stays easy to test.
+  static String buildSlipText({
+    required OrderSlipData data,
+    int columns = IntegratedPrinterService.columns,
+  }) {
+    final layout = ReceiptTextLayout(columns);
+    final lines = <String>[
+      ...layout.center('ORDER SLIP'),
+      layout.hr('='),
+      // Stacked, like the 58mm ESC/POS layout: the date doesn't fit beside
+      // the OR number on 32 characters.
+      ...layout.wrap('OR REF# ${data.detailId}'),
+      'DATE: ${_formatDate(data.dateTime)}',
+      layout.hr(),
+      ...layout.center('--Item List--'),
+      layout.hr(),
+      ...layout.leftRight('DESCRIPTION', 'QTY'),
+      layout.hr(),
+      for (final item in data.items)
+        // A long name wraps; the quantity sits on its last line.
+        ...layout.leftRight(item.name, '${item.quantity}'),
+      layout.hr(),
+      ...layout.center('--Total Items ${data.totalItemCount}--'),
+    ];
+    return lines.join('\n');
   }
 
   static String _formatDate(DateTime dateTime) {

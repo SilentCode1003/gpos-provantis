@@ -122,6 +122,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
                   canRemoveAll: isShiftOpen,
                   onRemoveAll: () => _handleRemoveAll(context),
                   onClose: widget.onClose,
+                  compact: widget._embedded,
                 ),
                 Expanded(
                   child: AnimatedSwitcher(
@@ -140,7 +141,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
                           ),
                   ),
                 ),
-                _CartFooter(shiftOpen: isShiftOpen),
+                _CartFooter(shiftOpen: isShiftOpen, compact: widget._embedded),
               ],
             ),
           ),
@@ -218,10 +219,14 @@ class _CartHeader extends StatelessWidget {
     required this.onRemoveAll,
     this.canRemoveAll = true,
     this.onClose,
+    this.compact = false,
   });
 
   final int itemCount;
   final VoidCallback onRemoveAll;
+
+  /// Phone sheet: "Remove all" is just a trash icon, no label.
+  final bool compact;
 
   /// False while the shift is closed: the "Remove all" button is hidden.
   final bool canRemoveAll;
@@ -289,7 +294,8 @@ class _CartHeader extends StatelessWidget {
               ],
             ),
           ),
-          if (hasItems && canRemoveAll) _RemoveAllButton(onTap: onRemoveAll),
+          if (hasItems && canRemoveAll)
+            _RemoveAllButton(onTap: onRemoveAll, iconOnly: compact),
           if (onClose != null) ...[
             const SizedBox(width: 8),
             Material(
@@ -317,13 +323,35 @@ class _CartHeader extends StatelessWidget {
 }
 
 class _RemoveAllButton extends StatelessWidget {
-  const _RemoveAllButton({required this.onTap});
+  const _RemoveAllButton({required this.onTap, this.iconOnly = false});
 
   final VoidCallback onTap;
+
+  /// Just the trash icon in a round button (phone sheet).
+  final bool iconOnly;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+
+    if (iconOnly) {
+      return Tooltip(
+        message: 'Remove all',
+        child: Material(
+          color: colors.danger.withValues(alpha: 0.10),
+          shape: const CircleBorder(),
+          child: InkWell(
+            onTap: onTap,
+            customBorder: const CircleBorder(),
+            child: SizedBox(
+              width: minTapTarget,
+              height: minTapTarget,
+              child: Icon(PhosphorIcons.trash, size: 22, color: colors.danger),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Material(
       color: colors.danger.withValues(alpha: 0.10),
@@ -635,8 +663,6 @@ class _CartLineTile extends ConsumerWidget {
 
   final CartLine line;
 
-  static const double _avatarSize = 44;
-
   Future<bool> _confirmRemove(BuildContext context) async {
     final confirmed = await showConfirmDialog(
       context,
@@ -664,8 +690,6 @@ class _CartLineTile extends ConsumerWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _Monogram(name: line.product.name, size: _avatarSize),
-              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -710,7 +734,6 @@ class _CartLineTile extends ConsumerWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              const SizedBox(width: _avatarSize + 12),
               _QuantityStepper(
                 quantity: line.quantity,
                 onDecrement: () => notifier.decrementLine(line.product.id),
@@ -743,41 +766,6 @@ class _CartLineTile extends ConsumerWidget {
           onDismissed: (_) => notifier.removeLine(line.product.id),
           background: _SwipeToRemoveBackground(colors: colors),
           child: card,
-        ),
-      ),
-    );
-  }
-}
-
-/// Soft initial-letter tile standing in for a product photo.
-class _Monogram extends StatelessWidget {
-  const _Monogram({required this.name, required this.size});
-
-  final String name;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final trimmed = name.trim();
-    final letter = trimmed.isEmpty
-        ? '?'
-        : trimmed.characters.first.toUpperCase();
-
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: colors.primaryContainer,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        letter,
-        style: AppTypography.display(
-          color: colors.onPrimaryContainer,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -941,15 +929,23 @@ class _StepperButton extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _CartFooter extends ConsumerWidget {
-  const _CartFooter({required this.shiftOpen});
+  const _CartFooter({required this.shiftOpen, this.compact = false});
 
   /// False while the shift is closed: no discount, no charging.
   final bool shiftOpen;
+
+  /// Phone sheet: the discount is a "%" button beside Charge, and Charge
+  /// doesn't repeat the total (the Total row is right above it).
+  final bool compact;
 
   /// Charge: first ask who the customer is (if the store has that switched
   /// on), then go on to payment. Closing the customer sheet without choosing
   /// stops here, so nothing is charged by accident.
   Future<void> _charge(BuildContext context, WidgetRef ref) async {
+    // The Charge button is already disabled while the shift is closed; this
+    // keeps any other path into _charge from starting a payment either.
+    if (!ref.read(isShiftOpenProvider)) return;
+
     final proceed = await CustomerPanel.promptBeforePayment(context, ref);
     if (!proceed || !context.mounted) return;
     showPaymentModal(context);
@@ -1000,14 +996,18 @@ class _CartFooter extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _DiscountTile(
-            enabled: canAct,
-            applied: discount != null,
-            title: discount != null ? discount.name : 'Add discount',
-            subtitle: discount != null ? '${discount.rate}% off applied' : null,
-            onTap: () => showDiscountPickerSheet(context),
-          ),
-          const SizedBox(height: 14),
+          if (!compact) ...[
+            _DiscountTile(
+              enabled: canAct,
+              applied: discount != null,
+              title: discount != null ? discount.name : 'Add discount',
+              subtitle: discount != null
+                  ? '${discount.rate}% off applied'
+                  : null,
+              onTap: () => showDiscountPickerSheet(context),
+            ),
+            const SizedBox(height: 14),
+          ],
           _TotalsRow(label: 'Subtotal', value: totals.subtotal, colors: colors),
           if (discount != null) ...[
             const SizedBox(height: 6),
@@ -1046,47 +1046,148 @@ class _CartFooter extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: primaryTapTarget,
-            child: ElevatedButton(
-              onPressed: canAct ? () => _charge(context, ref) : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colors.primary,
-                foregroundColor: colors.onPrimary,
-                disabledBackgroundColor: colors.disabledFill,
-                disabledForegroundColor: colors.textDisabled,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+          if (compact)
+            Row(
+              children: [
+                _DiscountIconButton(
+                  enabled: canAct,
+                  applied: discount != null,
+                  tooltip: discount != null
+                      ? '${discount.name} (${discount.rate}% off) – tap to change'
+                      : 'Add discount',
+                  onTap: () => showDiscountPickerSheet(context),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: primaryTapTarget,
+                    child: ElevatedButton(
+                      onPressed: canAct ? () => _charge(context, ref) : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colors.primary,
+                        foregroundColor: colors.onPrimary,
+                        disabledBackgroundColor: colors.disabledFill,
+                        disabledForegroundColor: colors.textDisabled,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Charge',
+                            style: AppTypography.ui(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(PhosphorIcons.caretRight, size: 18),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            SizedBox(
+              width: double.infinity,
+              height: primaryTapTarget,
+              child: ElevatedButton(
+                onPressed: canAct ? () => _charge(context, ref) : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colors.primary,
+                  foregroundColor: colors.onPrimary,
+                  disabledBackgroundColor: colors.disabledFill,
+                  disabledForegroundColor: colors.textDisabled,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      'Charge',
+                      style: AppTypography.ui(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      _money(totals.total),
+                      style: _amountStyle(
+                        color: canAct ? colors.onPrimary : colors.textDisabled,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(PhosphorIcons.caretRight, size: 18),
+                  ],
                 ),
               ),
-              child: Row(
-                children: [
-                  Text(
-                    'Charge',
-                    style: AppTypography.ui(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    _money(totals.total),
-                    style: _amountStyle(
-                      color: canAct ? colors.onPrimary : colors.textDisabled,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(PhosphorIcons.caretRight, size: 18),
-                ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Phone footer: a square "%" button that sits left of Charge. Neutral when no
+/// discount is set, tinted when one is applied.
+class _DiscountIconButton extends StatelessWidget {
+  const _DiscountIconButton({
+    required this.enabled,
+    required this.applied,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final bool enabled;
+  final bool applied;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    final fill = applied ? colors.primaryContainer : colors.background;
+    final fg = !enabled
+        ? colors.textDisabled
+        : applied
+        ? colors.onPrimaryContainer
+        : colors.primary;
+
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: fill,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: enabled ? onTap : null,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            width: primaryTapTarget,
+            height: primaryTapTarget,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: applied
+                    ? colors.primary.withValues(alpha: 0.45)
+                    : colors.border.withValues(alpha: 0.6),
               ),
             ),
+            child: Icon(PhosphorIcons.percent, size: 22, color: fg),
           ),
-        ],
+        ),
       ),
     );
   }

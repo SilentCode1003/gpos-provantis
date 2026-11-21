@@ -6,6 +6,8 @@ import 'package:uuid/uuid.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:sqlcipher_flutter_libs/sqlcipher_flutter_libs.dart';
+import 'package:sqlite3/open.dart';
 
 import 'schema/schema_migrator.dart';
 import 'schema/schema_seeder.dart';
@@ -56,6 +58,9 @@ import 'daos/branch_config_dao.dart';
 import 'daos/pos_config_dao.dart';
 
 part 'app_database.g.dart';
+
+/// Password used to encrypt the local database (SQLCipher).
+const String _dbPassword = '5ldevteam';
 
 @DriftDatabase(
   tables: [
@@ -159,11 +164,38 @@ class AppDatabase extends _$AppDatabase {
 
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
+    // Mobile: app documents directory.
+    // Desktop: project root (the folder that contains `lib/`, i.e. the
+    // working directory when running with `flutter run`).
+    final Directory dbFolder = (Platform.isAndroid || Platform.isIOS)
+        ? await getApplicationDocumentsDirectory()
+        : Directory.current;
 
     final file = File(p.join(dbFolder.path, 'gpos_provantis_local.sqlite'));
 
-    return NativeDatabase.createInBackground(file);
+    return NativeDatabase.createInBackground(
+      file,
+      isolateSetup: () async {
+        // Android needs to be told to load SQLCipher. Windows, Linux, iOS and
+        // macOS get it automatically from sqlcipher_flutter_libs.
+        if (Platform.isAndroid) {
+          await applyWorkaroundToOpenSqlCipherOnOldAndroidVersions();
+          open.overrideFor(OperatingSystem.android, openCipherOnAndroid);
+        }
+      },
+      setup: (rawDb) {
+        // Make sure SQLCipher is really loaded, not plain SQLite.
+        final result = rawDb.select('PRAGMA cipher_version;');
+        if (result.isEmpty) {
+          throw UnsupportedError(
+            'SQLCipher is not available on this platform.',
+          );
+        }
+
+        // Must be the first statement on the connection.
+        rawDb.execute("PRAGMA key = '$_dbPassword';");
+      },
+    );
   });
 }
 

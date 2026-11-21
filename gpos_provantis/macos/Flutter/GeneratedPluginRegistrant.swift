@@ -13,7 +13,7 @@ import pdfium_flutter
 import restart_app
 import screen_retriever_macos
 import shared_preferences_foundation
-import sqlite3_flutter_libs
+import sqlcipher_flutter_libs
 import universal_ble
 import url_launcher_macos
 import window_manager
