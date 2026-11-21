@@ -1034,7 +1034,9 @@ class _CashScreenState extends ConsumerState<_CashScreen> {
               ref: ref,
               createSale: () => ref
                   .read(dashboardControllerProvider.notifier)
-                  .createSaleFromCash(),
+                  .createSaleFromCash(
+                    cashTendered: paymentState.cashAmountTendered ?? total,
+                  ),
             )
           : null,
     );
