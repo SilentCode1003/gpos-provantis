@@ -169,6 +169,43 @@ class _ActionsRail extends ConsumerWidget {
       }
     }
 
+    // Phone: just two slim buttons side by side (Start/End shift and Others).
+    // The pinned most-used actions stay on the wide layout only.
+    if (MediaQuery.sizeOf(context).shortestSide < 600) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          border: Border(bottom: BorderSide(color: colors.borderSubtle)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _ActionButton(
+                compact: true,
+                icon: isShiftOpen ? PhosphorIcons.stop : PhosphorIcons.play,
+                label: isShiftOpen ? 'End shift' : 'Start shift',
+                tone: isShiftOpen ? _ActionTone.danger : _ActionTone.primary,
+                enabled: !isToggling,
+                loading: isToggling,
+                onTap: handleShiftTap,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _ActionButton(
+                compact: true,
+                icon: PhosphorIcons.gridNine,
+                label: 'Others',
+                onTap: () => OthersSheet.show(context),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
@@ -215,6 +252,9 @@ class _ActionsRail extends ConsumerWidget {
 
 const double _actionsRailTapTarget = 72;
 
+/// Phone: slim button height.
+const double _actionsRailCompactTapTarget = 44;
+
 enum _ActionTone { neutral, primary, danger }
 
 class _ActionButton extends StatelessWidget {
@@ -225,7 +265,11 @@ class _ActionButton extends StatelessWidget {
     this.tone = _ActionTone.neutral,
     this.enabled = true,
     this.loading = false,
+    this.compact = false,
   });
+
+  /// Slim phone version: shorter, smaller icon and text.
+  final bool compact;
 
   final IconData icon;
   final String label;
@@ -272,27 +316,33 @@ class _ActionButton extends StatelessWidget {
         onTap: enabled ? onTap : null,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          height: _actionsRailTapTarget,
-          padding: const EdgeInsets.symmetric(horizontal: 22),
+          height: compact
+              ? _actionsRailCompactTapTarget
+              : _actionsRailTapTarget,
+          padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 22),
           alignment: Alignment.center,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (loading)
                 SizedBox(
-                  width: 24,
-                  height: 24,
+                  width: compact ? 20 : 24,
+                  height: compact ? 20 : 24,
                   child: CircularProgressIndicator(strokeWidth: 2.5, color: ic),
                 )
               else
-                Icon(icon, size: 24, color: ic),
-              const SizedBox(width: 12),
-              Text(
-                label,
-                style: AppTypography.ui(
-                  color: fg,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                Icon(icon, size: compact ? 20 : 24, color: ic),
+              SizedBox(width: compact ? 8 : 12),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.ui(
+                    color: fg,
+                    fontSize: compact ? 14.5 : 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
