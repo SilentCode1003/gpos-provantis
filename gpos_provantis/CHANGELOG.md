@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.5.0](https://github.com/SilentCode1003/gpos-provantis/compare/gpos_provantis-v1.4.0...gpos_provantis-v1.5.0) (2026-11-21)
+
+
+### Features
+
+* Added encryption to the database and moved the DB to project location. ([e161320](https://github.com/SilentCode1003/gpos-provantis/commit/e161320e28152a4028ac00ba75f089378209f841))
+
+
+### Bug Fixes
+
+* Barcode scan bar is now a button on mobile to give more space to the ([c9e505a](https://github.com/SilentCode1003/gpos-provantis/commit/c9e505ab82d58abc145e77f548c4c898a8d0a27b))
+* Compressed category selection to dropdown for more vertical space. ([6d92d84](https://github.com/SilentCode1003/gpos-provantis/commit/6d92d84f21115885878fc0f1d47b16a79af08490))
+* Compressed Search from bar into button on mobile layout to give more vertical space ([6d92d84](https://github.com/SilentCode1003/gpos-provantis/commit/6d92d84f21115885878fc0f1d47b16a79af08490))
+* Dashboard top bar buttons such as Start/End shift will now be collapsible ([64216ed](https://github.com/SilentCode1003/gpos-provantis/commit/64216ed71ad19d0d2888e71ababc2288387a1d72))
+* Fixed integrated printing for different generators. ([6d92d84](https://github.com/SilentCode1003/gpos-provantis/commit/6d92d84f21115885878fc0f1d47b16a79af08490))
+* Removed the side swipe, and close button on the bottom of the catalog sheet to give more space on the product grid. ([6d92d84](https://github.com/SilentCode1003/gpos-provantis/commit/6d92d84f21115885878fc0f1d47b16a79af08490))
+* Sub Printer Order Slip prompt will now show when set to 'ASK' in settings. ([6d92d84](https://github.com/SilentCode1003/gpos-provantis/commit/6d92d84f21115885878fc0f1d47b16a79af08490))
+* Tracked files. ([fd51b24](https://github.com/SilentCode1003/gpos-provantis/commit/fd51b2432cfa31171236b02dcba53f978e82531e))
+* Updated Category labels in product grid to show all the text without wrapping. This will scroll if the label is too long. ([6d92d84](https://github.com/SilentCode1003/gpos-provantis/commit/6d92d84f21115885878fc0f1d47b16a79af08490))
+* Updated mobile layout in product grid from Boxes to List. ([6d92d84](https://github.com/SilentCode1003/gpos-provantis/commit/6d92d84f21115885878fc0f1d47b16a79af08490))
+* Updated Product Grid and Catalog Sheet to show and give more space to the product grid for UI/UX improvements. ([6d92d84](https://github.com/SilentCode1003/gpos-provantis/commit/6d92d84f21115885878fc0f1d47b16a79af08490))
+
 ## [1.4.0](https://github.com/SilentCode1003/gpos-provantis/compare/gpos_provantis-v1.3.0...gpos_provantis-v1.4.0) (2026-11-16)
 
 
