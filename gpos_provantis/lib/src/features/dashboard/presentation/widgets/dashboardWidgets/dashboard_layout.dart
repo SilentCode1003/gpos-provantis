@@ -52,7 +52,7 @@ class PhoneLayout extends ConsumerWidget {
 
     return Column(
       children: [
-        const Expanded(child: _CatalogPanelWithSheet()),
+        const Expanded(child: _CatalogPanelWithSheet(compactScanner: true)),
         if (!hideCartBar && hasItems) const PhoneCartBar(),
       ],
     );
@@ -80,7 +80,10 @@ class _PanelDivider extends StatelessWidget {
 }
 
 class _CatalogPanelWithSheet extends ConsumerWidget {
-  const _CatalogPanelWithSheet();
+  const _CatalogPanelWithSheet({this.compactScanner = false});
+
+  /// On phones the barcode bar collapses into a round button (bottom right).
+  final bool compactScanner;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -96,7 +99,9 @@ class _CatalogPanelWithSheet extends ConsumerWidget {
           left: 16,
           right: 16,
           bottom: 16,
-          child: isShiftOpen ? const BarcodeScanBar() : const SizedBox.shrink(),
+          child: isShiftOpen
+              ? BarcodeScanBar(compact: compactScanner)
+              : const SizedBox.shrink(),
         ),
         const CatalogSheet(),
       ],
